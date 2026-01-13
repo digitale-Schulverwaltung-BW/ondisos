@@ -1,6 +1,6 @@
 <?php
 
-require_once 'config.php';
+require_once 'config/config.php';
 
 // Helper: remove dangerous header characters and tags
 function sanitize_header_value(string $v): string {
@@ -10,8 +10,11 @@ function sanitize_header_value(string $v): string {
 }
 
 // Build plain text and HTML email parts from form data array
-function build_notification_email(array $formData): array {
-    $subject = "Neue Anmeldung";
+function build_notification_email(array $formData): array 
+{
+    file_put_contents('debug-email.html', 'Getting form...');
+    $form = $_REQUEST['form'];
+    $subject = "Neue Anmeldung: ".$form;
     if (!empty($formData['name'])) {
         $subject .= " von " . sanitize_header_value($formData['name']);
     }
@@ -55,7 +58,9 @@ function build_notification_email(array $formData): array {
 
 // Send notification to NOTIFY_EMAIL (defined in config)
 function send_notification_email(array $formData): String | bool {
-    $to = defined('NOTIFY_EMAIL') ? NOTIFY_EMAIL : '';
+    $form = $_REQUEST['form'];
+    $to = $configs[$form]['notify_email'] ?? '';
+    if (empty($to)) $to = defined('NOTIFY_EMAIL') ? NOTIFY_EMAIL : '';
     if (empty($to) || !filter_var($to, FILTER_VALIDATE_EMAIL)) {
         return false;
     }
@@ -99,7 +104,7 @@ function send_notification_email(array $formData): String | bool {
     // Final headers string
     $headers_str = implode("\r\n", $headers)."\r\n";
 
-    // file_put_contents('debug-email.html', $headers_str . $message);
+    file_put_contents('debug-email.html', $headers_str . $message);
 
     $success = @mail($to, $subject, $message, $headers_str, '-f '. escapeshellarg($from));
     if (!$success) {

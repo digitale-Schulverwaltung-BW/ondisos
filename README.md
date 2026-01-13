@@ -21,7 +21,7 @@ eigene Anmeldedaten-Übermittlungen beinhalten, um die schulischen Prozesse opti
 
 ## Installation
 
-Nach einem ```git clone``` in einem Verzeichnis, das intern auf einem Webserver erreichbar ist, muss die Datei ```config-sample.php``` in eine funktionierende Kopie als ```config.php``` abgelegt werden. Als Voraussetzung muss noch ein ```composer require phpoffice/phpspreadsheet``` ausgeführt werden, damit Excel-Dateien vom Skript erzeugt werden können. Wenn die Datenbank angelegt wurde, ist das Programm bereits einsatzbereit.
+Nach einem ```git clone``` in einem Verzeichnis, das intern auf einem Webserver erreichbar ist, muss die Datei ```config-sample.php``` im Verzeichnis config in eine funktionierende Kopie als ```config.php``` (auch im Verzeichnis config) abgelegt werden. Als Voraussetzung muss noch ein ```composer require phpoffice/phpspreadsheet``` ausgeführt werden, damit Excel-Dateien vom Skript erzeugt werden können. Wenn die Datenbank angelegt wurde, ist das Programm bereits einsatzbereit.
 
 
 ## Beitragen/Contributing

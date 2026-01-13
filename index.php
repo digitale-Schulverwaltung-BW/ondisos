@@ -29,7 +29,19 @@
 </head>
 <body>
 <div id="surveyContainer" style="margin: auto auto; width: 80%"></div>
+    <?php
+      // Lade die Formular-Konfiguration in Abhängigkeit vom Parameter "form" 
+      require_once 'config/config.php';
+      $form = $_REQUEST['form'] ?? 'default';
+      if (!isset($configs[$form])) {
+          echo ("Unbekanntes Formular");
+          exit;    
+      }
 
+      $formConfig = $configs[$form];
+      $formFile  = 'surveys/' . $formConfig['form'];
+      $themeFile = 'surveys/' . $formConfig['theme'];
+    ?>
   <script>
 
     
@@ -39,13 +51,13 @@
       .then(r => r.json())
       .then(d => csrfToken = d.token);
 
-    const surveyJson = <?php echo file_get_contents('zq.json'); ?>;
+    const surveyJson = <?php echo file_get_contents($formFile); ?>;
     
     const survey = new Survey.Model(surveyJson);
 
-    
+
     const theme = <?php 
-      $theme=file_get_contents('survey_theme.json');
+      $theme=file_get_contents($themeFile);
       echo ($theme?$theme:'""'); ?>;
     survey.applyTheme( theme );
 
@@ -73,7 +85,7 @@
 
               let result = null;
               try {
-                const response = await fetch("save.php", {
+                const response = await fetch("save.php?form=" + "<?php echo $form; ?>", {
                   method: "POST",
                   body: formData
                 });
