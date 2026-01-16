@@ -2,5 +2,47 @@ config.php
 debug-email.html
 debug.txt
 frontend/config/forms-config.php
+<<<<<<< HEAD
 frontend/.env
 backend/.env
+=======
+
+# Environment files - NEVER commit these!
+.env
+.env.local
+.env.*.local
+
+# Old config files (migration)
+inc/config.php
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# Uploads (if stored locally)
+uploads/*
+!uploads/.gitkeep
+
+# Composer
+vendor/
+composer.lock
+
+# Backup files
+*.bak
+*.backup
+>>>>>>> refactor
