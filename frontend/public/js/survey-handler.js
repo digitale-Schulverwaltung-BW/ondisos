@@ -93,6 +93,9 @@ class SurveyHandler {
             .filter(k => k.startsWith('consent_'))
             .forEach(k => delete data[k]);
 
+        // Extract field types from survey definition
+        data._fieldTypes = this.extractFieldTypes(sender);
+
         // Prepare form data
         const formData = new FormData();
         formData.append('survey_data', JSON.stringify(data));
@@ -119,6 +122,31 @@ class SurveyHandler {
             console.error('Submission error:', error);
             this.showError('Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
         }
+    }
+
+    /**
+     * Extract field types from survey model
+     * Returns object mapping field names to their types
+     */
+    extractFieldTypes(sender) {
+        const fieldTypes = {};
+
+        sender.getAllQuestions().forEach(question => {
+            const name = question.name;
+            const type = question.getType();
+
+            // Build type info object
+            const typeInfo = { type };
+
+            // Include inputType for text fields (date, email, tel, etc.)
+            if (type === 'text' && question.inputType) {
+                typeInfo.inputType = question.inputType;
+            }
+
+            fieldTypes[name] = typeInfo;
+        });
+
+        return fieldTypes;
     }
 
     /**

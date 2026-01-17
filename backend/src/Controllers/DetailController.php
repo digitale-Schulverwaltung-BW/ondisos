@@ -54,15 +54,25 @@ class DetailController
             return [];
         }
 
+        // Extract field types metadata if present
+        $fieldTypes = $anmeldung->data['_fieldTypes'] ?? [];
+
         $structured = [];
 
         foreach ($anmeldung->data as $key => $value) {
+            // Skip internal metadata fields
+            if (str_starts_with($key, '_')) {
+                continue;
+            }
+
+            $storedType = $fieldTypes[$key] ?? null;
+
             $structured[] = [
                 'key' => $key,
                 'label' => $this->humanizeKey($key),
                 'value' => $value,
-                'type' => $this->detectValueType($value),
-                'isFile' => $this->isFileReference($key, $value)
+                'type' => $this->detectValueType($value, $storedType),
+                'isFile' => $this->isFileField($key, $value, $storedType)
             ];
         }
 
@@ -86,13 +96,40 @@ class DetailController
 
     /**
      * Detect the type of value for better rendering
+     * Uses stored SurveyJS type info if available, falls back to heuristics
      */
-    private function detectValueType(mixed $value): string
+    private function detectValueType(mixed $value, ?array $storedType = null): string
     {
+        // Use stored type info from SurveyJS if available
+        if ($storedType !== null) {
+            $type = $storedType['type'] ?? null;
+            $inputType = $storedType['inputType'] ?? null;
+
+            // Map SurveyJS inputType to display type
+            if ($inputType === 'date') {
+                return 'date';
+            }
+            if ($inputType === 'email') {
+                return 'email';
+            }
+            if ($inputType === 'url') {
+                return 'url';
+            }
+
+            // Map SurveyJS type to display type
+            if ($type === 'boolean') {
+                return 'boolean';
+            }
+            if ($type === 'checkbox' || $type === 'tagbox') {
+                return 'array';
+            }
+        }
+
+        // Fall back to heuristics for backwards compatibility
         if (is_array($value)) {
             return 'array';
         }
-        
+
         if (is_bool($value)) {
             return 'boolean';
         }
@@ -120,17 +157,24 @@ class DetailController
     }
 
     /**
-     * Check if key/value might be a file reference
+     * Check if field is a file field
+     * Uses stored SurveyJS type if available, falls back to heuristics
      */
-    private function isFileReference(string $key, mixed $value): bool
+    private function isFileField(string $key, mixed $value, ?array $storedType = null): bool
     {
+        // Use stored type from SurveyJS if available
+        if ($storedType !== null) {
+            return ($storedType['type'] ?? '') === 'file';
+        }
+
+        // Fall back to heuristics for backwards compatibility
         if (!is_string($value)) {
             return false;
         }
 
         // Check common file field names
         $fileKeywords = ['file', 'upload', 'document', 'attachment', 'foto', 'bild', 'image'];
-        
+
         foreach ($fileKeywords as $keyword) {
             if (stripos($key, $keyword) !== false) {
                 return true;
@@ -139,7 +183,7 @@ class DetailController
 
         // Check file extensions
         $extensions = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx'];
-        
+
         foreach ($extensions as $ext) {
             if (str_ends_with(strtolower($value), ".$ext")) {
                 return true;

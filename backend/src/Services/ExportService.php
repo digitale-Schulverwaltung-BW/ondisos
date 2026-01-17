@@ -57,7 +57,7 @@ class ExportService
 
     /**
      * Extract all unique column names from anmeldungen data
-     * 
+     *
      * @param Anmeldung[] $anmeldungen
      * @return string[]
      */
@@ -71,6 +71,11 @@ class ExportService
             }
 
             foreach ($anmeldung->data as $key => $value) {
+                // Skip internal metadata fields (e.g., _fieldTypes)
+                if (str_starts_with($key, '_')) {
+                    continue;
+                }
+
                 // Skip nested arrays for now, or flatten them
                 if (!is_array($value)) {
                     $columnSet[$key] = true;
