@@ -12,7 +12,10 @@ $controller = new DownloadController();
 
 try {
     $fileName = $_GET['file'] ?? '';
-    $controller->download($fileName);
+    $mode = $_GET['mode'] ?? 'download';
+    $inline = ($mode === 'view');
+
+    $controller->download($fileName, $inline);
 } catch (InvalidArgumentException $e) {
     http_response_code(404);
     header('Content-Type: text/html; charset=utf-8');

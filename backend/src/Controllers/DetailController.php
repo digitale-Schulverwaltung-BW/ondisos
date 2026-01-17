@@ -219,7 +219,7 @@ class DetailController
                 'size' => $fileSize,
                 'sizeFormatted' => $this->formatFileSize($fileSize),
                 'extension' => pathinfo($fileName, PATHINFO_EXTENSION),
-                'downloadUrl' => 'download.php?file=' . urlencode($fileName)
+                'downloadUrl' => 'download.php?file=' . urlencode($fileName) . '&mode=view'
             ];
         }
 

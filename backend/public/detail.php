@@ -117,9 +117,41 @@ require __DIR__ . '/../inc/header.php';
                                 
                                 switch ($type) {
                                     case 'array':
-                                        echo '<pre class="mb-0 small">' 
-                                           . htmlspecialchars(json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) 
-                                           . '</pre>';
+                                        // Check if this is a SurveyJS file upload with base64 content
+                                        $isBase64Files = is_array($value)
+                                            && !empty($value)
+                                            && isset($value[0]['content'])
+                                            && is_string($value[0]['content'])
+                                            && str_starts_with($value[0]['content'], 'data:');
+
+                                        if ($isBase64Files) {
+                                            // Render base64 images/files
+                                            foreach ($value as $file) {
+                                                $content = $file['content'] ?? '';
+                                                $name = $file['name'] ?? 'unnamed';
+                                                $type = $file['type'] ?? '';
+
+                                                // Check if it's an image
+                                                if (str_starts_with($content, 'data:image/')) {
+                                                    echo '<div class="mb-2">';
+                                                    echo '<img src="' . htmlspecialchars($content) . '" alt="' . htmlspecialchars($name) . '" class="img-fluid" style="max-width: 100%; max-height: 400px;">';
+                                                    echo '<br><small class="text-muted">' . htmlspecialchars($name) . '</small>';
+                                                    echo '</div>';
+                                                } else {
+                                                    // For other file types (PDFs, etc.), show download link
+                                                    echo '<div class="mb-2">';
+                                                    echo '<a href="' . htmlspecialchars($content) . '" download="' . htmlspecialchars($name) . '" class="btn btn-sm btn-outline-primary">';
+                                                    echo '<i class="bi bi-download"></i> ' . htmlspecialchars($name);
+                                                    echo '</a>';
+                                                    echo '</div>';
+                                                }
+                                            }
+                                        } else {
+                                            // Default: show as formatted JSON
+                                            echo '<pre class="mb-0 small">'
+                                               . htmlspecialchars(json_encode($value, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))
+                                               . '</pre>';
+                                        }
                                         break;
                                     
                                     case 'boolean':
@@ -147,7 +179,10 @@ require __DIR__ . '/../inc/header.php';
                                     
                                     default:
                                         if ($field['isFile'] && !empty($value)) {
+                                            $fileUrl = 'download.php?file=' . urlencode((string)$value) . '&mode=view';
+                                            echo '<a href="' . htmlspecialchars($fileUrl) . '" target="_blank" rel="noopener noreferrer">';
                                             echo '<code>' . htmlspecialchars($value) . '</code>';
+                                            echo '</a>';
                                             echo ' <span class="badge bg-info">Datei</span>';
                                         } else {
                                             echo nl2br(htmlspecialchars((string)$value));
@@ -172,14 +207,16 @@ require __DIR__ . '/../inc/header.php';
             <div class="card-body">
                 <div class="list-group">
                     <?php foreach ($uploadedFiles as $file): ?>
-                        <a href="<?= htmlspecialchars($file['downloadUrl']) ?>" 
+                        <a href="<?= htmlspecialchars($file['downloadUrl']) ?>"
+                           target="_blank"
+                           rel="noopener noreferrer"
                            class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
                             <div>
                                 <i class="bi bi-file-earmark"></i>
                                 <?= htmlspecialchars($file['name']) ?>
                                 <small class="text-muted">(<?= htmlspecialchars($file['sizeFormatted']) ?>)</small>
                             </div>
-                            <span class="badge bg-primary">Download</span>
+                            <span class="badge bg-primary">Ansehen</span>
                         </a>
                     <?php endforeach; ?>
                 </div>

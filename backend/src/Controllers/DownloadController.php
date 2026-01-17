@@ -14,10 +14,12 @@ class DownloadController
 
     /**
      * Handle file download request
-     * 
+     *
+     * @param string $fileName The file to download/view
+     * @param bool $inline If true, display inline (browser viewer); if false, force download
      * @throws InvalidArgumentException
      */
-    public function download(string $fileName): void
+    public function download(string $fileName, bool $inline = false): void
     {
         // Validate filename
         $this->validateFileName($fileName);
@@ -33,7 +35,7 @@ class DownloadController
         // Check file is within upload directory (prevent directory traversal)
         $realPath = realpath($filePath);
         $uploadDir = realpath(self::UPLOAD_DIR);
-        
+
         if ($realPath === false || $uploadDir === false || !str_starts_with($realPath, $uploadDir)) {
             throw new InvalidArgumentException('Ungültiger Dateipfad');
         }
@@ -45,7 +47,11 @@ class DownloadController
 
         // Send headers
         header('Content-Type: ' . $mimeType);
-        header('Content-Disposition: attachment; filename="' . $this->sanitizeFileName($fileName) . '"');
+
+        // Inline for browser viewing (PDFs, images) or attachment for download
+        $disposition = $inline ? 'inline' : 'attachment';
+        header('Content-Disposition: ' . $disposition . '; filename="' . $this->sanitizeFileName($fileName) . '"');
+
         header('Content-Length: ' . $fileSize);
         header('Cache-Control: no-cache, must-revalidate');
         header('Pragma: no-cache');
