@@ -18,16 +18,24 @@ $statusService = new StatusService($repository);
 $exportService = new ExportService($repository, $statusService);
 
 try {
-    // Get filter from request
-    $formularFilter = isset($_GET['form']) && $_GET['form'] !== '' 
-        ? trim($_GET['form']) 
+    // Check for single ID export
+    $id = isset($_GET['id']) && $_GET['id'] !== ''
+        ? (int)$_GET['id']
         : null;
 
-    // Get export data
-    $exportData = $exportService->getExportData($formularFilter);
+    // Get filter from request
+    $formularFilter = isset($_GET['form']) && $_GET['form'] !== ''
+        ? trim($_GET['form'])
+        : null;
 
-    // Generate filename
-    $filename = $exportService->generateFilename($formularFilter);
+    // Get export data (single record or filtered list)
+    if ($id !== null) {
+        $exportData = $exportService->getExportDataById($id);
+        $filename = $exportService->generateFilename(null, $id);
+    } else {
+        $exportData = $exportService->getExportData($formularFilter);
+        $filename = $exportService->generateFilename($formularFilter);
+    }
 
     // Build spreadsheet
     $builder = new SpreadsheetBuilder($exportService);

@@ -137,12 +137,51 @@ class ExportService
     }
 
     /**
+     * Get export data for a single Anmeldung by ID
+     *
+     * @return array{
+     *   rows: Anmeldung[],
+     *   columns: string[],
+     *   metadata: array
+     * }
+     * @throws \InvalidArgumentException
+     */
+    public function getExportDataById(int $id): array
+    {
+        $anmeldung = $this->repository->findById($id);
+
+        if ($anmeldung === null) {
+            throw new \InvalidArgumentException('Eintrag nicht gefunden');
+        }
+
+        $anmeldungen = [$anmeldung];
+        $columns = $this->extractColumns($anmeldungen);
+        sort($columns);
+
+        return [
+            'rows' => $anmeldungen,
+            'columns' => $columns,
+            'metadata' => [
+                'exportDate' => new \DateTimeImmutable(),
+                'filter' => $anmeldung->formular,
+                'totalRows' => 1,
+                'singleExport' => true
+            ]
+        ];
+    }
+
+    /**
      * Generate filename for export
      */
-    public function generateFilename(?string $formularFilter = null): string
+    public function generateFilename(?string $formularFilter = null, ?int $id = null): string
     {
         $timestamp = date('Y-m-d_H-i');
-        
+
+        // Single record export
+        if ($id !== null) {
+            return "anmeldung_{$id}_{$timestamp}.xlsx";
+        }
+
         if ($formularFilter !== null && $formularFilter !== '') {
             // Sanitize form name for filename
             $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $formularFilter);

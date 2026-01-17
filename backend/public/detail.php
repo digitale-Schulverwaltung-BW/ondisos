@@ -189,11 +189,16 @@ require __DIR__ . '/../inc/header.php';
 
     <!-- Actions -->
     <div class="d-flex gap-2 mb-4">
-        <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>" 
+        <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>"
            class="btn btn-secondary">
             ← Zurück
         </a>
-        
+
+        <a href="excel_export.php?id=<?= $anmeldung->id ?>"
+           class="btn btn-success">
+            Excel herunterladen
+        </a>
+
         <?php if (!$anmeldung->deleted): ?>
             <button class="btn btn-warning" onclick="alert('Status ändern - TODO')">
                 Status ändern

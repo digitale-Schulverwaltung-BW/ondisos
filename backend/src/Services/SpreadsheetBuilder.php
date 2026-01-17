@@ -70,8 +70,7 @@ class SpreadsheetBuilder
         // Only add Formular column if we're exporting multiple forms
         if ($includeFormular) {
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Formular');
-        }        
-        $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Formular');
+        }
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Version');
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Name');
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'E-Mail');
@@ -122,8 +121,7 @@ class SpreadsheetBuilder
             // Only add Formular column if we're exporting multiple forms
             if ($includeFormular) {
                 $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formular);
-            }            
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formular);
+            }
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formularVersion ?? '');
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->name ?? '');
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->email ?? '');
