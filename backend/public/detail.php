@@ -136,6 +136,9 @@ require __DIR__ . '/../inc/header.php';
                                                     echo '<div class="mb-2">';
                                                     echo '<img src="' . htmlspecialchars($content) . '" alt="' . htmlspecialchars($name) . '" class="img-fluid" style="max-width: 100%; max-height: 400px;">';
                                                     echo '<br><small class="text-muted">' . htmlspecialchars($name) . '</small>';
+                                                    echo '<br><a href="' . htmlspecialchars($content) . '" download="' . htmlspecialchars($name) . '" class="btn btn-sm btn-outline-primary mt-1">';
+                                                    echo '<i class="bi bi-download"></i> Herunterladen';
+                                                    echo '</a>';
                                                     echo '</div>';
                                                 } else {
                                                     // For other file types (PDFs, etc.), show download link
