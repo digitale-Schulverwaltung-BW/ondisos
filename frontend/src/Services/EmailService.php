@@ -77,6 +77,11 @@ class EmailService
         $html .= "<tbody>";
 
         foreach ($formData as $key => $value) {
+            // Skip internal metadata fields (e.g., _fieldTypes)
+            if (str_starts_with($key, '_')) {
+                continue;
+            }
+
             if ($value === null || $value === '') {
                 continue;
             }

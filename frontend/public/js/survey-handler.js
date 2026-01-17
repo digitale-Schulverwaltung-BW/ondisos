@@ -24,9 +24,11 @@ class SurveyHandler {
         this.survey = new Survey.Model(surveyJson);
 
         // Apply theme
-        if (this.config.theme) {
+        if (this.config.themeJson || this.config.themeUrl) {
             const theme = await this.loadTheme();
-            this.survey.applyTheme(theme);
+            if (theme) {
+                this.survey.applyTheme(theme);
+            }
         }
 
         // Setup completion handler
