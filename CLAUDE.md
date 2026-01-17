@@ -121,7 +121,7 @@ projekt/
    ↓
 2. AnmeldungController holt Daten via Repository
    ↓
-3. Status wird automatisch "neu" → "gelesen" gesetzt
+3. Status wird automatisch "neu" → "exportiert" gesetzt (bei Excel-Export)
    ↓
 4. Admin kann:
    - Einzeln ansehen (detail.php)
@@ -155,7 +155,7 @@ CREATE TABLE anmeldungen (
 
 **Wichtige Felder:**
 - `data`: JSON mit allen Formulardaten
-- `status`: neu, gelesen, in_bearbeitung, akzeptiert, abgelehnt, archiviert
+- `status`: neu, exportiert, in_bearbeitung, akzeptiert, abgelehnt, archiviert
 - `deleted`: Soft-delete Flag
 - `deleted_at`: Timestamp für Soft-delete
 
@@ -272,8 +272,8 @@ return [
 
 ```
 neu (User submitted)
-  ↓ (beim Ansehen/Export wenn AUTO_MARK_AS_READ=true)
-gelesen
+  ↓ (beim Excel-Export wenn AUTO_MARK_AS_READ=true)
+exportiert
   ↓ (manuell)
 in_bearbeitung
   ↓ (manuell)
@@ -376,8 +376,8 @@ http://anmeldung.example.com/index.php?form=bs
 # 1. Übersicht
 http://intranet.example.com/backend/
 
-# 2. Detail ansehen (Status sollte → "gelesen")
-# 3. Excel Export testen
+# 2. Excel Export testen (Status sollte → "exportiert")
+# 3. Detail ansehen
 # 4. Bulk-Action: Archivieren
 # 5. Papierkorb prüfen
 ```

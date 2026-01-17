@@ -8,7 +8,7 @@ namespace App\Models;
 enum AnmeldungStatus: string
 {
     case NEU = 'neu';
-    case GELESEN = 'gelesen';
+    case EXPORTIERT = 'exportiert';
     case IN_BEARBEITUNG = 'in_bearbeitung';
     case AKZEPTIERT = 'akzeptiert';
     case ABGELEHNT = 'abgelehnt';
@@ -21,7 +21,7 @@ enum AnmeldungStatus: string
     {
         return match($this) {
             self::NEU => 'Neu',
-            self::GELESEN => 'Gelesen',
+            self::EXPORTIERT => 'Exportiert',
             self::IN_BEARBEITUNG => 'In Bearbeitung',
             self::AKZEPTIERT => 'Akzeptiert',
             self::ABGELEHNT => 'Abgelehnt',
@@ -36,7 +36,7 @@ enum AnmeldungStatus: string
     {
         return match($this) {
             self::NEU => 'badge bg-primary',
-            self::GELESEN => 'badge bg-info',
+            self::EXPORTIERT => 'badge bg-info',
             self::IN_BEARBEITUNG => 'badge bg-warning text-dark',
             self::AKZEPTIERT => 'badge bg-success',
             self::ABGELEHNT => 'badge bg-danger',
@@ -55,7 +55,7 @@ enum AnmeldungStatus: string
 
         return match($value) {
             'neu' => self::NEU,
-            'gelesen' => self::GELESEN,
+            'exportiert' => self::EXPORTIERT,
             'in_bearbeitung' => self::IN_BEARBEITUNG,
             'akzeptiert' => self::AKZEPTIERT,
             'abgelehnt' => self::ABGELEHNT,

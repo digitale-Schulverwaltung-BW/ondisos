@@ -31,11 +31,11 @@ class ExportService
         // Get all non-deleted anmeldungen
         $anmeldungen = $this->repository->findForExport($formularFilter);
 
-        // Auto-mark as read if enabled
+        // Auto-mark as exported if enabled
         $config = Config::getInstance();
         if ($config->autoMarkAsRead) {
             $ids = array_map(fn($a) => $a->id, $anmeldungen);
-            $this->statusService->markMultipleAsRead($ids);
+            $this->statusService->markMultipleAsExported($ids);
         }
 
         // Extract all unique column names from data

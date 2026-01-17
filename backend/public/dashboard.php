@@ -59,7 +59,7 @@ require __DIR__ . '/../inc/header.php';
         <?php
         $statusLabels = [
             'neu' => ['label' => 'Neue', 'class' => 'primary', 'icon' => '📬'],
-            'gelesen' => ['label' => 'Gelesen', 'class' => 'info', 'icon' => '👁️'],
+            'exportiert' => ['label' => 'Exportiert', 'class' => 'info', 'icon' => '📤'],
             'in_bearbeitung' => ['label' => 'In Bearbeitung', 'class' => 'warning', 'icon' => '⚙️'],
             'akzeptiert' => ['label' => 'Akzeptiert', 'class' => 'success', 'icon' => '✅'],
             'abgelehnt' => ['label' => 'Abgelehnt', 'class' => 'danger', 'icon' => '❌'],

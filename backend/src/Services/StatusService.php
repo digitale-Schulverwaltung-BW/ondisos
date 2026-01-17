@@ -15,35 +15,35 @@ class StatusService
     ) {}
 
     /**
-     * Mark anmeldung as read (if currently "neu")
+     * Mark anmeldung as exported (if currently "neu")
      */
-    public function markAsRead(int $id): bool
+    public function markAsExported(int $id): bool
     {
-        // Only mark as read if status is currently "neu"
+        // Only mark as exported if status is currently "neu"
         $anmeldung = $this->repository->findById($id);
-        
+
         if ($anmeldung === null) {
             return false;
         }
 
         if ($anmeldung->status === 'neu') {
-            return $this->repository->updateStatus($id, AnmeldungStatus::GELESEN->value);
+            return $this->repository->updateStatus($id, AnmeldungStatus::EXPORTIERT->value);
         }
 
-        return true; // Already read or processed
+        return true; // Already exported or processed
     }
 
     /**
-     * Mark multiple anmeldungen as read
-     * 
+     * Mark multiple anmeldungen as exported
+     *
      * @param int[] $ids
      */
-    public function markMultipleAsRead(array $ids): int
+    public function markMultipleAsExported(array $ids): int
     {
         $markedCount = 0;
 
         foreach ($ids as $id) {
-            if ($this->markAsRead($id)) {
+            if ($this->markAsExported($id)) {
                 $markedCount++;
             }
         }
