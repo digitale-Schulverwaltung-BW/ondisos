@@ -166,16 +166,17 @@ class SurveyHandler {
      */
     showPrefillLink(link) {
         const completed = document.querySelector('.sd-completedpage');
-        
+
         if (completed) {
             const linkDiv = document.createElement('div');
             linkDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 4px;';
             linkDiv.innerHTML = `
                 <strong>🔗 Weitere Anmeldungen?</strong>
-                <p>Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden:</p>
-                <input type="text" value="${this.escapeHtml(link)}" 
-                    readonly onclick="this.select()" 
-                    style="width: 100%; padding: 8px; font-family: monospace;">
+                <p style="margin-bottom: 10px;">Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden
+                (Sie können diesen Link auch in Ihren Bookmarks abspeichern!):</p>
+                <input type="text" value="${this.escapeHtml(link)}"
+                    readonly onclick="this.select()"
+                    style="width: 100%; max-width: 100%; padding: 8px; margin-bottom: 10px; font-family: monospace; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; display: block;">
                 <button onclick="navigator.clipboard.writeText('${this.escapeHtml(link)}'); alert('Link kopiert!')">
                     📋 In Zwischenablage kopieren
                 </button>
