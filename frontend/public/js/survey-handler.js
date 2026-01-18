@@ -140,20 +140,23 @@ class SurveyHandler {
         // Submit to server
         try {
             const result = await this.submitForm(formData);
-            
+
             if (!result.success) {
                 this.showError(result.error || 'Ein Fehler ist aufgetreten');
-            } else if (result.warnings && result.warnings.length > 0) {
-                this.showWarnings(result.warnings);
+            } else {
+                // Show warnings if any
+                if (result.warnings && result.warnings.length > 0) {
+                    this.showWarnings(result.warnings);
+                }
+
+                // Show prefill link if provided
+                if (result.prefill_link) {
+                    this.showPrefillLink(result.prefill_link);
+                }
             }
         } catch (error) {
             console.error('Submission error:', error);
             this.showError('Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
-        }
-        const result = await this.submitForm(formData);
-        
-        if (result.success && result.prefill_link) {
-            this.showPrefillLink(result.prefill_link);
         }        
     }
 
