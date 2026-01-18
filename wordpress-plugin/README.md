@@ -5,9 +5,10 @@ WordPress integration wrapper for the Anmeldung Forms system using **symlink arc
 ## Quick Start
 
 ```bash
-# 1. Create symlink in WordPress plugins directory
+# 1. Create TWO symlinks in WordPress plugins directory
 cd /var/www/html/wp-content/plugins/
 ln -s /path/to/ondisos/wordpress-plugin anmeldung-forms
+ln -s /path/to/ondisos/frontend anmeldung-forms-frontend
 
 # 2. Activate plugin in WordPress Admin
 # 3. Configure settings (Settings → Anmeldung Forms)

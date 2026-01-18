@@ -28,12 +28,22 @@ class SurveyHandlerWP {
      */
     async init() {
         try {
-            // Decode base64-encoded JSON from data attributes
-            const surveyJsonB64 = this.container.dataset.surveyJson;
-            const themeJsonB64 = this.container.dataset.themeJson;
+            // Load JSON from script tags (UTF-8 safe)
+            const surveyScriptId = this.container.dataset.surveyJsonId;
+            const themeScriptId = this.container.dataset.themeJsonId;
 
-            this.surveyJson = JSON.parse(atob(surveyJsonB64));
-            this.themeJson = JSON.parse(atob(themeJsonB64));
+            const surveyScript = document.getElementById(surveyScriptId);
+            const themeScript = document.getElementById(themeScriptId);
+
+            if (!surveyScript) {
+                throw new Error('Survey JSON script tag not found: ' + surveyScriptId);
+            }
+            if (!themeScript) {
+                throw new Error('Theme JSON script tag not found: ' + themeScriptId);
+            }
+
+            this.surveyJson = JSON.parse(surveyScript.textContent);
+            this.themeJson = JSON.parse(themeScript.textContent);
             this.prefillData = this.container.dataset.prefill || '';
 
             // Get prefill data if present

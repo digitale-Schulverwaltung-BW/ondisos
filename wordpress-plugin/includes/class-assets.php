@@ -33,8 +33,9 @@ class Assets
     public function __construct()
     {
         // Calculate frontend assets URL
-        // Since we're using symlinks, we need to go up one level from wordpress-plugin
-        $this->frontend_assets_url = plugin_dir_url(dirname(ANMELDUNG_PLUGIN_FILE)) . 'frontend/public/assets/';
+        // Uses the anmeldung-forms-frontend symlink created during installation
+        // This symlink points to the frontend/ directory in the git repo
+        $this->frontend_assets_url = plugins_url('anmeldung-forms-frontend/public/assets/');
 
         // Enqueue assets on frontend
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);

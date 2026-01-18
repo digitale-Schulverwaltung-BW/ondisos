@@ -46,23 +46,43 @@ Ensure your repository has this structure:
     └── ...
 ```
 
-### 3. Create Symlink
+### 3. Create Symlinks
 
-Navigate to your WordPress plugins directory and create the symlink:
+Navigate to your WordPress plugins directory and create **two symlinks** (one for the plugin, one for frontend assets):
 
 ```bash
 # Navigate to WordPress plugins directory
 cd /var/www/html/wp-content/plugins/
 
-# Create symlink (adjust source path to your repository location)
+# Create symlink for plugin (adjust source path to your repository location)
 ln -s /path/to/your/projects/ondisos/wordpress-plugin anmeldung-forms
 
-# Verify symlink was created
-ls -la anmeldung-forms
-# Should show: anmeldung-forms -> /path/to/your/projects/ondisos/wordpress-plugin
+# Create symlink for frontend assets (REQUIRED for SurveyJS libraries)
+ln -s /path/to/your/projects/ondisos/frontend anmeldung-forms-frontend
+
+# Verify both symlinks were created
+ls -la | grep anmeldung
+# Should show:
+# anmeldung-forms -> /path/to/your/projects/ondisos/wordpress-plugin
+# anmeldung-forms-frontend -> /path/to/your/projects/ondisos/frontend
 ```
 
 **Important:** Use **absolute paths** for the symlink source, not relative paths.
+
+**Why two symlinks?**
+- `anmeldung-forms`: The WordPress plugin code
+- `anmeldung-forms-frontend`: The SurveyJS assets, fonts, and form definitions (must be web-accessible)
+
+**Alternative: Use the automated script**
+
+```bash
+# Edit SYMLINK-SETUP.sh to set your paths
+nano /path/to/your/projects/ondisos/wordpress-plugin/SYMLINK-SETUP.sh
+
+# Make executable and run
+chmod +x /path/to/your/projects/ondisos/wordpress-plugin/SYMLINK-SETUP.sh
+sudo /path/to/your/projects/ondisos/wordpress-plugin/SYMLINK-SETUP.sh
+```
 
 ### 4. Set Permissions
 
