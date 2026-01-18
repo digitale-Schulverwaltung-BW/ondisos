@@ -192,13 +192,17 @@ class Shortcode
     ): string {
         $container_id = 'anmeldung-container-' . esc_attr($form_key);
 
+        // Base64 encode JSON to avoid HTML attribute issues with quotes/special chars
+        $survey_json_b64 = base64_encode($survey_json);
+        $theme_json_b64 = base64_encode($theme_json);
+
         ob_start();
         ?>
         <div id="<?php echo $container_id; ?>"
              class="anmeldung-survey-container"
              data-form-key="<?php echo esc_attr($form_key); ?>"
-             data-survey-json="<?php echo esc_attr($survey_json); ?>"
-             data-theme-json="<?php echo esc_attr($theme_json); ?>"
+             data-survey-json="<?php echo esc_attr($survey_json_b64); ?>"
+             data-theme-json="<?php echo esc_attr($theme_json_b64); ?>"
              data-prefill="<?php echo esc_attr($prefill_data); ?>"
              data-nonce="<?php echo esc_attr($nonce); ?>"
              data-ajax-url="<?php echo esc_url($ajax_url); ?>">

@@ -28,9 +28,12 @@ class SurveyHandlerWP {
      */
     async init() {
         try {
-            // Parse JSON from data attributes
-            this.surveyJson = JSON.parse(this.container.dataset.surveyJson);
-            this.themeJson = JSON.parse(this.container.dataset.themeJson);
+            // Decode base64-encoded JSON from data attributes
+            const surveyJsonB64 = this.container.dataset.surveyJson;
+            const themeJsonB64 = this.container.dataset.themeJson;
+
+            this.surveyJson = JSON.parse(atob(surveyJsonB64));
+            this.themeJson = JSON.parse(atob(themeJsonB64));
             this.prefillData = this.container.dataset.prefill || '';
 
             // Get prefill data if present
@@ -61,7 +64,9 @@ class SurveyHandlerWP {
 
         } catch (error) {
             console.error('Survey initialization failed:', error);
-            this.showError('Formular konnte nicht geladen werden. Bitte laden Sie die Seite neu.');
+            console.error('Error details:', error.message);
+            console.error('Stack:', error.stack);
+            this.showError('Formular konnte nicht geladen werden: ' + error.message);
         }
     }
 
