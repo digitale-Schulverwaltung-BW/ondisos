@@ -17,12 +17,21 @@ class SurveyHandler {
         // Fetch CSRF token
         await this.fetchCsrfToken();
 
+        // Check for prefill parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const prefillData = this.getPrefillData(urlParams);
+
         // Load survey JSON
         const surveyJson = await this.loadSurveyJson();
         
         // Create survey model
         this.survey = new Survey.Model(surveyJson);
 
+        // Apply prefill data
+        if (prefillData) {
+            this.survey.data = prefillData;
+            this.survey.mode = 'edit'; // Allow editing
+        }
         // Apply theme
         if (this.config.themeJson || this.config.themeUrl) {
             const theme = await this.loadTheme();
@@ -36,6 +45,23 @@ class SurveyHandler {
 
         // Render survey
         this.survey.render(document.getElementById(this.config.containerId));
+    }
+
+    /**
+     * Retrieve and decode prefill data from URL parameter
+     * Returns null if no valid data is found
+     */
+    getPrefillData(urlParams) {
+        const prefillParam = urlParams.get('prefill');
+        if (!prefillParam) return null;
+        
+        try {
+            const decoded = atob(prefillParam);
+            return JSON.parse(decoded);
+        } catch (e) {
+            console.error('Invalid prefill data:', e);
+            return null;
+        }
     }
 
     /**
@@ -124,8 +150,36 @@ class SurveyHandler {
             console.error('Submission error:', error);
             this.showError('Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
         }
+        const result = await this.submitForm(formData);
+        
+        if (result.success && result.prefill_link) {
+            this.showPrefillLink(result.prefill_link);
+        }        
     }
 
+    /**
+     * Show prefill link in completed page
+     * 
+     */
+    showPrefillLink(link) {
+        const completed = document.querySelector('.sd-completedpage');
+        
+        if (completed) {
+            const linkDiv = document.createElement('div');
+            linkDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 4px;';
+            linkDiv.innerHTML = `
+                <strong>🔗 Weitere Anmeldungen?</strong>
+                <p>Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden:</p>
+                <input type="text" value="${this.escapeHtml(link)}" 
+                    readonly onclick="this.select()" 
+                    style="width: 100%; padding: 8px; font-family: monospace;">
+                <button onclick="navigator.clipboard.writeText('${this.escapeHtml(link)}'); alert('Link kopiert!')">
+                    📋 In Zwischenablage kopieren
+                </button>
+            `;
+            completed.appendChild(linkDiv);
+        }
+    }
     /**
      * Extract field types from survey model
      * Returns object mapping field names to their types

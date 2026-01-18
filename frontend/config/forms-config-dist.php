@@ -5,6 +5,11 @@ return [
         'form'  => 'bs.json',
         'theme' => 'survey_theme.json',
         'notify_email' => 'sekretariat@example.com',
+        'prefill_fields' => [
+            'unternehmen',
+            'ansprechpartner',
+            'kontakt_email'
+        ]        
     ],
     'bk' => [
         'db' => true,

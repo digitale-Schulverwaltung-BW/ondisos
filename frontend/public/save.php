@@ -64,6 +64,12 @@ try {
     // 8. Regenerate CSRF token for next submission
     if ($result['success']) {
         CsrfProtection::regenerate();
+        // Generate prefill link
+        $prefillLink = $anmeldungService->generatePrefillLink(
+            $formKey,
+            $surveyData
+        );
+        $result['prefill_link'] = $prefillLink;
     }
 
     // 9. Return result

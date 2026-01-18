@@ -117,6 +117,7 @@ $csrfToken = CsrfProtection::getToken();
     
     <script>
         // Configure survey
+        console.log('Theme JSON:', <?= $themeJson ?>);
         window.surveyConfig = {
             formKey: <?= json_encode($formKey) ?>,
             version: '2026-01-v3',

@@ -120,6 +120,38 @@ class AnmeldungService
             ARRAY_FILTER_USE_KEY
         );
     }
+    /**
+     * Generate pre-fill link for given form and submitted data
+     * to pre-fill fields specified in the prefill_fields in the forms-config.php.
+     */
+
+    public function generatePrefillLink(
+        string $formKey,
+        array $submittedData
+    ): ?string {
+        $config = FormConfig::get($formKey);
+        $prefillFields = $config['prefill_fields'] ?? [];
+        
+        if (empty($prefillFields)) {
+            return null; // Kein Pre-fill für dieses Formular
+        }
+        
+        // Nur relevante Felder extrahieren
+        $prefillData = array_intersect_key(
+            $submittedData,
+            array_flip($prefillFields)
+        );
+        
+        if (empty($prefillData)) {
+            return null;
+        }
+        
+        // Als Base64 encoden (verschlüsseln bringt keine zusätzliche Sicherheit, da beim Abruf der URL 
+        // die Daten wieder sichtbar werden)
+        $encoded = base64_encode(json_encode($prefillData));
+        
+        return $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "?form={$formKey}&prefill={$encoded}";
+    }
 
     /**
      * Get client IP address (behind proxy-aware)
