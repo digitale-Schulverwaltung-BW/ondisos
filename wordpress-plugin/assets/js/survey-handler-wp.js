@@ -15,6 +15,7 @@ class SurveyHandlerWP {
     constructor(container) {
         this.container = container;
         this.formKey = container.dataset.formKey;
+        this.version = container.dataset.version || '1.0.0';
         this.surveyJson = null;
         this.themeJson = null;
         this.prefillData = '';
@@ -131,6 +132,7 @@ class SurveyHandlerWP {
         formData.append('survey_data', JSON.stringify(data));
         formData.append('meta', JSON.stringify({
             formular: this.formKey,
+            version: this.version,
             timestamp: new Date().toISOString()
         }));
 

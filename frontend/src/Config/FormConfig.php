@@ -131,11 +131,20 @@ class FormConfig
     {
         $config = self::get($formKey);
         $email = $config['notify_email'] ?? null;
-        
+
         if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
             return $email;
         }
-        
+
         return null;
+    }
+
+    /**
+     * Get form version
+     */
+    public static function getVersion(string $formKey): string
+    {
+        $config = self::get($formKey);
+        return $config['version'] ?? '1.0.0';
     }
 }

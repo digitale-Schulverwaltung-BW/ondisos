@@ -63,6 +63,9 @@ class Shortcode
             return $this->render_error('Error: ' . esc_html($e->getMessage()));
         }
 
+        // Get form version
+        $version = FormConfig::getVersion($form_key);
+
         // Generate WP nonce for CSRF protection
         $nonce = wp_create_nonce('anmeldung_submit_' . $form_key);
 
@@ -76,7 +79,7 @@ class Shortcode
         do_action('anmeldung_enqueue_assets', $form_key);
 
         // Render container
-        return $this->render_container($form_key, $survey_json, $theme_json, $nonce, $ajax_url, $prefill_data);
+        return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data);
     }
 
     /**
@@ -177,6 +180,7 @@ class Shortcode
      * @param string $form_key Form key
      * @param string $survey_json Survey JSON
      * @param string $theme_json Theme JSON
+     * @param string $version Form version
      * @param string $nonce WP nonce
      * @param string $ajax_url AJAX URL
      * @param string $prefill_data Prefill data (base64)
@@ -186,6 +190,7 @@ class Shortcode
         string $form_key,
         string $survey_json,
         string $theme_json,
+        string $version,
         string $nonce,
         string $ajax_url,
         string $prefill_data
@@ -199,6 +204,7 @@ class Shortcode
         <div id="<?php echo $container_id; ?>"
              class="anmeldung-survey-container"
              data-form-key="<?php echo esc_attr($form_key); ?>"
+             data-version="<?php echo esc_attr($version); ?>"
              data-survey-json-id="<?php echo esc_attr($survey_script_id); ?>"
              data-theme-json-id="<?php echo esc_attr($theme_script_id); ?>"
              data-prefill="<?php echo esc_attr($prefill_data); ?>"
