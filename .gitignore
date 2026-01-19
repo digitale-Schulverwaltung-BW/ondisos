@@ -48,3 +48,4 @@ composer.lock
 >>>>>>> refactor
 frontend/surveys/uploadtest.json
 backend/cache/last_expunge.txt
+backend/cache/last_expunge.txt
