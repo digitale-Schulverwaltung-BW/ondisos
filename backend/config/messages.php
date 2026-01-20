@@ -264,4 +264,18 @@ return [
             'internal_server_error' => 'Internal server error',
         ],
     ],
+
+    /**
+     * PDF Error Messages
+     */
+    'pdf' => [
+        'errors' => [
+            'missing_token' => 'Fehlender Download-Token',
+            'invalid_token' => 'Ungültiger oder abgelaufener Token',
+            'not_enabled' => 'PDF-Download ist für dieses Formular nicht aktiviert',
+            'download_failed_title' => 'PDF-Download nicht möglich',
+            'download_failed_hint' => 'Der Link ist möglicherweise abgelaufen (gültig 30 Min.) oder ungültig.',
+            'unexpected_error' => 'Ein unerwarteter Fehler ist beim PDF-Download aufgetreten. {{contact}}',
+        ],
+    ],
 ];

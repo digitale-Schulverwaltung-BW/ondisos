@@ -8,6 +8,8 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 use App\Repositories\AnmeldungRepository;
 use App\Validators\AnmeldungValidator;
 use App\Services\MessageService as M;
+use App\Services\PdfTokenService;
+use App\Config\FormConfig;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -102,12 +104,42 @@ try {
         $email ?? 'none'
     ));
 
-    // Return success
-    http_response_code(201);
-    echo json_encode([
+    // Prepare response
+    $response = [
         'success' => true,
         'id' => $id
-    ]);
+    ];
+
+    // Check if PDF is enabled for this form
+    if (FormConfig::exists($formKey)) {
+        $formConfig = FormConfig::get($formKey);
+        $pdfConfig = $formConfig['pdf'] ?? null;
+
+        if ($pdfConfig && ($pdfConfig['enabled'] ?? false)) {
+            try {
+                // Generate PDF token
+                $tokenService = new PdfTokenService();
+                $lifetime = $pdfConfig['token_lifetime'] ?? PdfTokenService::getDefaultLifetime();
+                $token = $tokenService->generateToken($id, $lifetime);
+
+                // Add PDF download info to response
+                $response['pdf_download'] = [
+                    'enabled' => true,
+                    'required' => $pdfConfig['required'] ?? false,
+                    'url' => '/backend/public/pdf/download.php?token=' . $token,
+                    'title' => $pdfConfig['download_title'] ?? 'Bestätigung herunterladen',
+                    'expires_in' => $lifetime
+                ];
+            } catch (\Throwable $e) {
+                // If token generation fails, log but don't fail the whole request
+                error_log('PDF token generation failed: ' . $e->getMessage());
+            }
+        }
+    }
+
+    // Return success
+    http_response_code(201);
+    echo json_encode($response);
 
 } catch (JsonException $e) {
     http_response_code(400);

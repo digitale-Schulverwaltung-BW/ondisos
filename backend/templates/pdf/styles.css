@@ -1,0 +1,198 @@
+/*
+ * PDF Styles - mPDF Compatible
+ *
+ * Note: mPDF supports only a subset of CSS!
+ * Avoid: flexbox, transform, advanced gradients, etc.
+ * Use: tables for layout, basic styling only
+ */
+
+/* Base Styles */
+body {
+    font-family: DejaVu Sans, sans-serif;
+    font-size: 11pt;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Header */
+.header {
+    text-align: center;
+    border-bottom: 2px solid #2c3e50;
+    padding-bottom: 15px;
+    margin-bottom: 25px;
+}
+
+.logo-container {
+    margin-bottom: 10px;
+}
+
+.header img.logo {
+    max-width: 150px;
+    height: auto;
+}
+
+.header-title {
+    font-size: 14pt;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-top: 10px;
+}
+
+/* Content */
+.content {
+    padding: 0 10px;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 18pt;
+    margin: 20px 0 15px 0;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+}
+
+h2 {
+    color: #34495e;
+    font-size: 14pt;
+    margin: 25px 0 12px 0;
+}
+
+h3 {
+    color: #34495e;
+    font-size: 12pt;
+    margin: 15px 0 8px 0;
+}
+
+.intro {
+    margin-bottom: 20px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #3498db;
+    color: #555;
+    font-size: 10pt;
+}
+
+/* Meta Table (Referenznummer, etc.) */
+.meta-table {
+    width: 100%;
+    margin: 20px 0;
+    border-collapse: collapse;
+    font-size: 10pt;
+}
+
+.meta-table th {
+    text-align: left;
+    padding: 6px 10px;
+    width: 30%;
+    color: #666;
+    font-weight: normal;
+}
+
+.meta-table td {
+    padding: 6px 10px;
+    color: #333;
+}
+
+.meta-table tr {
+    border-bottom: 1px solid #eee;
+}
+
+/* Data Table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0 30px 0;
+}
+
+.data-table thead th {
+    background-color: #3498db;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #2980b9;
+}
+
+.data-table tbody th {
+    background-color: #ecf0f1;
+    padding: 8px 10px;
+    text-align: left;
+    font-weight: bold;
+    vertical-align: top;
+    border: 1px solid #ddd;
+}
+
+.data-table tbody td {
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.no-data {
+    color: #999;
+    font-style: italic;
+    padding: 15px;
+    text-align: center;
+}
+
+/* Custom Sections */
+.custom-section {
+    margin: 25px 0;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #3498db;
+}
+
+.custom-section h3 {
+    margin-top: 0;
+    color: #2c3e50;
+}
+
+.section-content {
+    margin-top: 8px;
+    line-height: 1.8;
+}
+
+/* Footer */
+.footer {
+    margin-top: 40px;
+    padding-top: 15px;
+    border-top: 1px solid #ccc;
+    font-size: 9pt;
+    color: #777;
+}
+
+.footer-text {
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.footer-meta {
+    margin-top: 10px;
+    font-size: 8pt;
+    color: #999;
+    text-align: center;
+}
+
+/* Utility Classes */
+.text-center {
+    text-align: center;
+}
+
+.text-right {
+    text-align: right;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.italic {
+    font-style: italic;
+}

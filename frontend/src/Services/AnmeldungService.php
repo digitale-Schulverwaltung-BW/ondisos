@@ -16,8 +16,8 @@ class AnmeldungService
 
     /**
      * Process anmeldung submission
-     * 
-     * @return array{success: bool, id?: int, error?: string, warnings?: array}
+     *
+     * @return array{success: bool, id?: int, error?: string, warnings?: array, pdf_download?: array}
      */
     public function processSubmission(
         string $formKey,
@@ -56,6 +56,7 @@ class AnmeldungService
         ];
 
         $warnings = [];
+        $pdfDownload = null;
 
         // Submit to backend (if configured)
         if (FormConfig::shouldSaveToDb($formKey)) {
@@ -76,6 +77,11 @@ class AnmeldungService
             if (isset($result['file_upload_warning'])) {
                 $warnings[] = $result['file_upload_warning'];
             }
+
+            // Check for PDF download info
+            if (isset($result['pdf_download'])) {
+                $pdfDownload = $result['pdf_download'];
+            }
         } else {
             // No DB save - just log it
             error_log("Form submission (no DB): $formKey");
@@ -84,7 +90,7 @@ class AnmeldungService
 
         // Send notification email
         $notificationEmail = FormConfig::getNotificationEmail($formKey);
-        
+
         if ($notificationEmail && $this->emailService) {
             try {
                 $emailSent = $this->emailService->sendNotification(
@@ -102,11 +108,18 @@ class AnmeldungService
             }
         }
 
-        return [
+        $response = [
             'success' => true,
             'id' => $submissionId ?? 0,
             'warnings' => $warnings
         ];
+
+        // Add PDF download info if available
+        if ($pdfDownload !== null) {
+            $response['pdf_download'] = $pdfDownload;
+        }
+
+        return $response;
     }
 
     /**

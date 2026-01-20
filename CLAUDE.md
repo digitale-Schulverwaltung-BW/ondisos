@@ -54,13 +54,16 @@ projekt/
     │   ├── bulk_actions.php
     │   ├── restore.php
     │   ├── hard_delete.php
+    │   ├── pdf/
+    │   │   └── download.php  # PDF Download Endpoint
     │   └── api/
-    │       ├── submit.php   # API für Frontend
-    │       └── upload.php   # File-Upload API
+    │       ├── submit.php    # API für Frontend (mit PDF Token)
+    │       └── upload.php    # File-Upload API
     ├── src/
     │   ├── Config/
     │   │   ├── Database.php
     │   │   ├── Config.php
+    │   │   ├── FormConfig.php
     │   │   └── EnvLoader.php
     │   ├── Models/
     │   │   ├── Anmeldung.php
@@ -73,7 +76,11 @@ projekt/
     │   │   ├── ExportService.php
     │   │   ├── ExpungeService.php
     │   │   ├── RequestExpungeService.php
-    │   │   └── SpreadsheetBuilder.php
+    │   │   ├── SpreadsheetBuilder.php
+    │   │   ├── PdfGeneratorService.php
+    │   │   ├── PdfTemplateRenderer.php
+    │   │   ├── PdfTokenService.php
+    │   │   └── MessageService.php
     │   ├── Controllers/
     │   │   ├── AnmeldungController.php
     │   │   ├── DetailController.php
@@ -81,13 +88,30 @@ projekt/
     │   ├── Validators/
     │   │   └── AnmeldungValidator.php
     │   └── Utils/
-    │       └── NullableHelpers.php
+    │       ├── NullableHelpers.php
+    │       └── DataFormatter.php
+    ├── templates/
+    │   └── pdf/
+    │       ├── base.php
+    │       ├── styles.css
+    │       └── sections/
+    │           ├── header.php
+    │           ├── data-table.php
+    │           ├── custom-section.php
+    │           └── footer.php
+    ├── config/
+    │   ├── messages.php
+    │   └── messages.example.php
     ├── inc/
     │   ├── bootstrap.php
     │   ├── header.php
     │   └── footer.php
     ├── uploads/
-    └── cache/
+    ├── cache/
+    ├── composer.json
+    ├── composer.lock (after install)
+    ├── vendor/ (after install)
+    └── PDF_SETUP.md
 ```
 
 ---
@@ -237,6 +261,20 @@ return [
 - File-Upload Support
 - Automatische Consent-Feld-Filterung
 - Clean JavaScript (Class-based)
+- PDF Download nach Submission:
+  - Token-basiert (HMAC-SHA256, selbstvalidierend)
+  - Konfigurierbar per Formular
+  - Automatische Anzeige nach erfolgreicher Anmeldung
+
+**PDF System:**
+- On-Demand PDF-Generierung (kein permanenter Storage)
+- HMAC-basierte Tokens (30 Min Gültigkeit, konfigurierbar)
+- Logo-Support mit automatischer Optimierung
+- Custom Sections (Pre/Post Data-Table)
+- Field-Filtering (Include/Exclude)
+- Form-Feld-Reihenfolge wird beibehalten
+- mPDF-Integration (DejaVu Sans für deutsche Umlaute)
+- Error Pages mit User-Friendly Design
 
 **Backend Admin:**
 - Übersicht mit Pagination & Filterung
@@ -265,6 +303,148 @@ return [
 - Dependency Injection vorbereitet
 - Exception Handling
 - Environment-basierte Config
+
+---
+
+## 📄 PDF Download System
+
+### Übersicht
+
+Nach erfolgreicher Formularübermittlung können Benutzer eine PDF-Bestätigung herunterladen. Das System verwendet HMAC-basierte Tokens für sichere, zeitlich begrenzte Downloads ohne Datenbank-Storage.
+
+### Architektur
+
+```
+User submits form
+  ↓
+Frontend (save.php) → Backend API (submit.php)
+  ↓
+Backend generiert PDF-Token (HMAC-SHA256)
+  ↓
+Response mit pdf_download Object
+  ↓
+Frontend (survey-handler.js) zeigt Download-Button
+  ↓
+User klickt Download → backend/public/pdf/download.php?token=...
+  ↓
+Token validieren → Anmeldung laden → PDF generieren → Download
+```
+
+### Token-Format
+
+```
+base64(id:timestamp:lifetime:hmac)
+```
+
+- **id**: Anmeldungs-ID
+- **timestamp**: Unix-Timestamp der Token-Generierung
+- **lifetime**: Gültigkeitsdauer in Sekunden
+- **hmac**: HMAC-SHA256 Signatur über id:timestamp:lifetime
+
+**Sicherheit:**
+- Self-validating (keine DB-Abfrage nötig)
+- Timing-safe Vergleich (hash_equals)
+- Kann nicht gefälscht werden ohne PDF_TOKEN_SECRET
+- Automatische Expiration
+
+### Konfiguration
+
+**Backend .env:**
+```bash
+# Min 32 Zeichen, generieren mit: openssl rand -hex 32
+PDF_TOKEN_SECRET=your-secret-key-here
+```
+
+**forms-config.php:**
+```php
+'bs' => [
+    'pdf' => [
+        'enabled' => true,
+        'required' => false,
+        'token_lifetime' => 1800,  // 30 Min
+        'logo' => '/path/to/logo.png',
+        'header_title' => 'Anmeldebestätigung',
+        'intro_text' => 'Vielen Dank...',
+        'footer_text' => 'Bei Fragen: ...',
+        'include_fields' => 'all',
+        'exclude_fields' => ['consent_datenschutz'],
+        'pre_sections' => [],   // Vor Daten-Tabelle
+        'post_sections' => [],  // Nach Daten-Tabelle
+    ],
+],
+```
+
+### Komponenten
+
+**Backend:**
+- **PdfTokenService**: Token-Generierung & Validierung
+- **PdfGeneratorService**: PDF-Erstellung mit mPDF
+- **PdfTemplateRenderer**: Template-System für PDFs
+- **DataFormatter**: Daten-Formatierung (shared mit Email)
+- **FormConfig**: PDF-Konfiguration laden
+
+**Frontend:**
+- **survey-handler.js**: PDF-Download-Button anzeigen
+- **AnmeldungService.php**: pdf_download weitergeben
+- **messages.php**: PDF-UI-Texte
+
+**Templates:**
+- `backend/templates/pdf/base.php`: Haupt-Template
+- `backend/templates/pdf/styles.css`: mPDF-kompatible Styles
+- `backend/templates/pdf/sections/`: Header, Footer, Data-Table, Custom-Section
+
+### API Response
+
+**Mit PDF:**
+```json
+{
+  "success": true,
+  "id": 123,
+  "pdf_download": {
+    "enabled": true,
+    "required": false,
+    "url": "/backend/public/pdf/download.php?token=abc...",
+    "title": "Bestätigung herunterladen",
+    "expires_in": 1800
+  }
+}
+```
+
+**Ohne PDF:**
+```json
+{
+  "success": true,
+  "id": 123
+}
+```
+
+### Dateiname-Format
+
+```
+bestaetigung-{formularname}-{id}.pdf
+```
+
+Beispiel: `bestaetigung-bs-123.pdf`
+
+### Logo-Optimierung
+
+Logos werden automatisch:
+- Auf max 150px Breite skaliert
+- In JPEG konvertiert (kleinere Dateigröße)
+- Als Base64 in PDF eingebettet
+
+### Field-Ordering
+
+Die Reihenfolge der Felder im PDF entspricht der SurveyJS-Formular-Reihenfolge.
+Metadaten `_fieldTypes` werden von survey-handler.js extrahiert und zur Sortierung verwendet.
+
+### Testing
+
+Siehe `backend/PDF_SETUP.md` für:
+- Setup-Anleitung
+- Test-Szenarien
+- Debugging
+- Troubleshooting
 
 ---
 
@@ -297,6 +477,8 @@ archiviert
 - ✅ Input Validation (AnmeldungValidator)
 - ✅ Type Safety (declare(strict_types=1))
 - ✅ Error Handling (keine sensitive Daten in Errors)
+- ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt)
+- ✅ Secret Key Management (PDF_TOKEN_SECRET in .env, min 32 Zeichen)
 
 **TODO:**
 - ⚠️ Admin Authentication aktivieren (aktuell auskommentiert in auth.php)
@@ -312,8 +494,19 @@ archiviert
 1. **Backend:**
 ```bash
 cd backend
+
+# Install Composer dependencies
+composer install
+
+# Configure environment
 cp .env.example .env
-# Edit .env
+# Edit .env - add DB credentials and PDF_TOKEN_SECRET
+
+# Generate PDF token secret
+openssl rand -hex 32
+# Add to .env: PDF_TOKEN_SECRET=<generated-key>
+
+# Create directories
 mkdir -p cache uploads logs
 chmod 755 cache uploads logs
 ```
@@ -321,13 +514,28 @@ chmod 755 cache uploads logs
 2. **Frontend:**
 ```bash
 cd frontend
+
+# Configure environment
 cp .env.example .env
-# Edit .env
+# Edit .env - add backend API URL
+
+# Configure forms (copy from dist)
+cp config/forms-config-dist.php config/forms-config.php
+# Edit config/forms-config.php - add PDF configuration per form
 ```
 
 3. **Database:**
 ```bash
 mysql -u root -p < database/schema.sql
+```
+
+4. **PDF System (optional):**
+```bash
+# Add logo (optional)
+cp your-logo.png backend/templates/pdf/logo.png
+
+# Test PDF generation
+# See backend/PDF_SETUP.md for detailed testing guide
 ```
 
 ### Apache Configuration
@@ -644,6 +852,18 @@ php -l backend/config/messages.local.php
 ---
 
 ## 🔄 Änderungshistorie
+
+### v2.2 (Januar 2026)
+- ✅ PDF Download System
+  - HMAC-basierte Token-Authentifizierung (selbstvalidierend)
+  - On-Demand PDF-Generierung (mPDF)
+  - Konfigurierbar per Formular
+  - Logo-Support mit automatischer Optimierung
+  - Custom Sections (Pre/Post Data-Table)
+  - Field-Filtering und Ordering
+  - User-Friendly Error Pages
+  - Composer-Integration
+  - Umfassende Dokumentation (PDF_SETUP.md)
 
 ### v2.1 (Januar 2026)
 - ✅ Zentrale Message-Verwaltung (MessageService)
