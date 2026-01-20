@@ -35,8 +35,22 @@ return [
 
         // Backend API Errors
         'backend_unreachable' => 'Backend-Server nicht erreichbar. {{contact}}',
+        'backend_unavailable' => 'Backend-Server nicht erreichbar. {{contact}}',
         'backend_error' => 'Fehler beim Speichern der Daten. {{contact}}',
         'timeout' => 'Zeitüberschreitung. Bitte versuchen Sie es erneut.',
+
+        // PDF Download Errors
+        'pdf' => [
+            'missing_token' => 'Fehlender Download-Token',
+            'invalid_token_format' => 'Ungültiges Token-Format',
+            'invalid_token' => 'Ungültiger oder abgelaufener Download-Link',
+            'invalid_request' => 'Ungültige Anfrage',
+            'not_found' => 'Anmeldung nicht gefunden',
+            'download_failed' => 'PDF-Download fehlgeschlagen',
+            'download_failed_title' => 'PDF-Download nicht möglich',
+            'download_failed_hint' => 'Der Download-Link ist möglicherweise abgelaufen oder ungültig. Links sind in der Regel 30 Minuten gültig.',
+        ],
+        'unexpected_error' => 'Ein unerwarteter Fehler ist aufgetreten. {{contact}}',
     ],
 
     /**

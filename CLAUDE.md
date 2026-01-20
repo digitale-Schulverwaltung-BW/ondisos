@@ -26,6 +26,8 @@ projekt/
 │   │   ├── index.php     # Formular-Anzeige
 │   │   ├── save.php      # API-Endpoint für Submissions
 │   │   ├── csrf_token.php
+│   │   ├── pdf/
+│   │   │   └── download.php  # PDF Download Proxy (leitet zu Backend)
 │   │   └── js/
 │   │       └── survey-handler.js
 │   ├── src/
@@ -269,6 +271,7 @@ return [
 **PDF System:**
 - On-Demand PDF-Generierung (kein permanenter Storage)
 - HMAC-basierte Tokens (30 Min Gültigkeit, konfigurierbar)
+- Frontend-Proxy für öffentlichen Zugriff (Backend bleibt im Intranet)
 - Logo-Support mit automatischer Optimierung
 - Custom Sections (Pre/Post Data-Table)
 - Field-Filtering (Include/Exclude)
@@ -321,14 +324,24 @@ Frontend (save.php) → Backend API (submit.php)
   ↓
 Backend generiert PDF-Token (HMAC-SHA256)
   ↓
-Response mit pdf_download Object
+Response mit pdf_download Object (URL: /pdf/download.php?token=...)
   ↓
 Frontend (survey-handler.js) zeigt Download-Button
   ↓
-User klickt Download → backend/public/pdf/download.php?token=...
+User klickt Download → Frontend Proxy (frontend/public/pdf/download.php)
   ↓
-Token validieren → Anmeldung laden → PDF generieren → Download
+Frontend Proxy leitet Anfrage weiter → Backend (backend/public/pdf/download.php)
+  ↓
+Backend: Token validieren → Anmeldung laden → PDF generieren
+  ↓
+Backend sendet PDF → Frontend Proxy → User
 ```
+
+**Wichtig:** Der Frontend-Proxy ist notwendig, weil:
+- Frontend ist öffentlich erreichbar (Internet)
+- Backend ist nur im Intranet erreichbar
+- User können das Backend nicht direkt ansprechen
+- Der Proxy leitet die Anfrage intern vom Frontend zum Backend weiter
 
 ### Token-Format
 
@@ -384,9 +397,10 @@ PDF_TOKEN_SECRET=your-secret-key-here
 - **FormConfig**: PDF-Konfiguration laden
 
 **Frontend:**
+- **pdf/download.php**: Proxy für PDF-Downloads (leitet Anfragen an Backend weiter)
 - **survey-handler.js**: PDF-Download-Button anzeigen
 - **AnmeldungService.php**: pdf_download weitergeben
-- **messages.php**: PDF-UI-Texte
+- **messages.php**: PDF-UI-Texte und Error-Messages
 
 **Templates:**
 - `backend/templates/pdf/base.php`: Haupt-Template
@@ -857,6 +871,7 @@ php -l backend/config/messages.local.php
 - ✅ PDF Download System
   - HMAC-basierte Token-Authentifizierung (selbstvalidierend)
   - On-Demand PDF-Generierung (mPDF)
+  - Frontend-Proxy für öffentlichen Zugriff (Backend bleibt im Intranet)
   - Konfigurierbar per Formular
   - Logo-Support mit automatischer Optimierung
   - Custom Sections (Pre/Post Data-Table)
