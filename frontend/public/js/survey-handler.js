@@ -56,7 +56,7 @@ class SurveyHandler {
      */
     async loadMessages() {
         try {
-            const response = await fetch('/api/messages.json.php');
+            const response = await fetch('api/messages.json.php');
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
