@@ -4,5 +4,5 @@
             <img src="<?= $logoBase64 ?>" alt="Logo" class="logo">
         </div>
     <?php endif; ?>
-    <div class="header-title">Anmeldebestätigung</div>
+    <div class="header-title"><?= htmlspecialchars($config['header_title'] ?? 'Anmeldebestätigung') ?></div>
 </div>

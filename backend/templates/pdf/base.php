@@ -11,8 +11,8 @@
     <div class="content">
         <h1><?= htmlspecialchars($config['title'] ?? 'Anmeldebestätigung') ?></h1>
 
-        <?php if (!empty($config['header_text'])): ?>
-            <p class="intro"><?= nl2br(htmlspecialchars($config['header_text'])) ?></p>
+        <?php if (!empty($config['intro_text'])): ?>
+            <p class="intro"><?= nl2br(htmlspecialchars($config['intro_text'])) ?></p>
         <?php endif; ?>
 
         <table class="meta-table">
