@@ -125,10 +125,11 @@ try {
                 // Add PDF download info to response
                 // Note: URL points to frontend proxy (not backend directly)
                 // Frontend is publicly accessible, backend is intranet-only
+                // Relative URL works for both root and subdirectory installations
                 $response['pdf_download'] = [
                     'enabled' => true,
                     'required' => $pdfConfig['required'] ?? false,
-                    'url' => '/pdf/download.php?token=' . $token,
+                    'url' => 'pdf/download.php?token=' . $token,
                     'title' => $pdfConfig['download_title'] ?? 'Bestätigung herunterladen',
                     'expires_in' => $lifetime
                 ];
