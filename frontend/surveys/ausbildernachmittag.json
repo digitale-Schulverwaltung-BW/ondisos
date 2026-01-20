@@ -23,7 +23,7 @@
           "title": "Ich möchte an der Info-Veranstaltung zu den neuen Fachinformatiker-Fachrichtungen (Beginn: 13:00 Uhr) teilnehmen",
           "choices": [
             {
-              "value": "Item 1",
+              "value": "TeilnahmeFA_FV",
               "text": "ja"
             }
           ]

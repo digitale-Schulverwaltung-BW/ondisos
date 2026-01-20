@@ -78,7 +78,13 @@ class SpreadsheetBuilder
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Erstellt am');
 
         // Dynamic columns from data
+        // Skip fields that are already exported as fixed columns
+        $skipFields = ['name', 'Name', 'email', 'email1', 'Email', 'E-mail', 'E-Mail'];
+
         foreach ($columns as $col) {
+            if (in_array($col, $skipFields, true)) {
+                continue;
+            }
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $this->humanizeColumnName($col));
         }
 
@@ -130,8 +136,16 @@ class SpreadsheetBuilder
 
             // Dynamic columns from data
             $data = $anmeldung->data ?? [];
-            
+
+            // Skip fields that are already exported as fixed columns
+            $skipFields = ['name', 'Name', 'email', 'email1', 'Email', 'E-mail', 'E-Mail'];
+
             foreach ($columns as $key) {
+                // Skip if this field is already in the fixed columns
+                if (in_array($key, $skipFields, true)) {
+                    continue;
+                }
+
                 $value = $data[$key] ?? null;
                 $formatted = $this->exportService->formatCellValue($value);
                 $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $formatted);
