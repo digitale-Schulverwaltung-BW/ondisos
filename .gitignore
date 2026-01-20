@@ -1,19 +1,21 @@
-config.php
-debug-email.html
-debug.txt
-frontend/config/forms-config.php
-<<<<<<< HEAD
-frontend/.env
-backend/.env
-=======
-
 # Environment files - NEVER commit these!
 .env
 .env.local
 .env.*.local
+frontend/.env
+backend/.env
+
+# Local message overrides - NEVER commit these!
+**/config/messages.local.php
 
 # Old config files (migration)
 inc/config.php
+config.php
+frontend/config/forms-config.php
+
+# Debug files
+debug-email.html
+debug.txt
 
 # IDE
 .idea/
@@ -33,10 +35,14 @@ logs/
 # Cache
 cache/*
 !cache/.gitkeep
+backend/cache/last_expunge.txt
 
 # Uploads (if stored locally)
 uploads/*
 !uploads/.gitkeep
+
+# Test files
+frontend/surveys/uploadtest.json
 
 # Composer
 vendor/
@@ -45,7 +51,3 @@ composer.lock
 # Backup files
 *.bak
 *.backup
->>>>>>> refactor
-frontend/surveys/uploadtest.json
-backend/cache/last_expunge.txt
-backend/cache/last_expunge.txt

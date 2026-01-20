@@ -8,12 +8,16 @@ class SurveyHandler {
         this.config = config;
         this.survey = null;
         this.csrfToken = '';
+        this.messages = null; // Will be loaded from API
     }
 
     /**
      * Initialize survey
      */
     async init() {
+        // Load messages from API
+        await this.loadMessages();
+
         // Fetch CSRF token
         await this.fetchCsrfToken();
 
@@ -48,6 +52,79 @@ class SurveyHandler {
     }
 
     /**
+     * Load messages from API
+     */
+    async loadMessages() {
+        try {
+            const response = await fetch('/api/messages.json.php');
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            this.messages = await response.json();
+        } catch (error) {
+            console.error('Failed to load messages, using defaults:', error);
+            // Fallback to default messages
+            this.messages = this.getDefaultMessages();
+        }
+    }
+
+    /**
+     * Get default fallback messages (used if API fails)
+     */
+    getDefaultMessages() {
+        return {
+            errors: {
+                csrf_load_failed: 'Sicherheitstoken konnte nicht geladen werden',
+                form_load_failed: 'Formular konnte nicht geladen werden. Bitte laden Sie die Seite neu.',
+                submission_failed: 'Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.',
+                generic_error: 'Ein Fehler ist aufgetreten',
+                data_processing_failed: 'Fehler beim Verarbeiten der Daten',
+                try_again_or_contact: 'Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.',
+            },
+            success: {
+                link_copied: 'Link kopiert!',
+            },
+            ui: {
+                prefill_link_title: '🔗 Weitere Anmeldungen?',
+                prefill_link_description: 'Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden',
+                prefill_link_bookmark: '(Sie können diesen Link auch in Ihren Bookmarks abspeichern!)',
+                copy_to_clipboard: '📋 In Zwischenablage kopieren',
+                warning: '⚠️ Hinweis:',
+            },
+        };
+    }
+
+    /**
+     * Get message by dot notation key
+     */
+    msg(key, defaultValue = '') {
+        const parts = key.split('.');
+        let value = this.messages;
+
+        for (const part of parts) {
+            if (!value || !value[part]) {
+                return defaultValue || `[missing: ${key}]`;
+            }
+            value = value[part];
+        }
+
+        return value;
+    }
+
+    /**
+     * Format message with placeholder replacement
+     */
+    formatMsg(key, replacements = {}, defaultValue = '') {
+        let message = this.msg(key, defaultValue);
+
+        Object.keys(replacements).forEach(k => {
+            message = message.replace(new RegExp(`{{${k}}}`, 'g'), replacements[k]);
+        });
+
+        return message;
+    }
+
+    /**
      * Retrieve and decode prefill data from URL parameter
      * Returns null if no valid data is found
      */
@@ -74,7 +151,7 @@ class SurveyHandler {
             this.csrfToken = data.token;
         } catch (error) {
             console.error('Failed to fetch CSRF token:', error);
-            throw new Error('Sicherheitstoken konnte nicht geladen werden');
+            throw new Error(this.msg('errors.csrf_load_failed'));
         }
     }
 
@@ -91,7 +168,7 @@ class SurveyHandler {
             return await response.json();
         }
 
-        throw new Error('No survey configuration provided');
+        throw new Error(this.msg('errors.form_config_missing', 'No survey configuration provided'));
     }
 
     /**
@@ -142,7 +219,7 @@ class SurveyHandler {
             const result = await this.submitForm(formData);
 
             if (!result.success) {
-                this.showError(result.error || 'Ein Fehler ist aufgetreten');
+                this.showError(result.error || this.msg('errors.generic_error'));
             } else {
                 // Show warnings if any
                 if (result.warnings && result.warnings.length > 0) {
@@ -156,29 +233,31 @@ class SurveyHandler {
             }
         } catch (error) {
             console.error('Submission error:', error);
-            this.showError('Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
+            this.showError(this.msg('errors.submission_failed'));
         }        
     }
 
     /**
      * Show prefill link in completed page
-     * 
      */
     showPrefillLink(link) {
         const completed = document.querySelector('.sd-completedpage');
 
         if (completed) {
             const linkDiv = document.createElement('div');
-            linkDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 4px;';
+            linkDiv.style.cssText = 'margin-top: 20px; padding: 15px; background: #e3f2fd; border-radius: 4px; border-left: 4px solid #2196f3;';
             linkDiv.innerHTML = `
-                <strong>🔗 Weitere Anmeldungen?</strong>
-                <p style="margin-bottom: 10px;">Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden
-                (Sie können diesen Link auch in Ihren Bookmarks abspeichern!):</p>
+                <strong style="display: block; margin-bottom: 8px; color: #1976d2;">${this.msg('ui.prefill_link_title')}</strong>
+                <p style="margin-bottom: 10px; line-height: 1.5;">
+                    ${this.msg('ui.prefill_link_description')}<br>
+                    <em style="color: #666;">${this.msg('ui.prefill_link_bookmark')}</em>
+                </p>
                 <input type="text" value="${this.escapeHtml(link)}"
                     readonly onclick="this.select()"
-                    style="width: 100%; max-width: 100%; padding: 8px; margin-bottom: 10px; font-family: monospace; box-sizing: border-box; overflow: hidden; text-overflow: ellipsis; display: block;">
-                <button onclick="navigator.clipboard.writeText('${this.escapeHtml(link)}'); alert('Link kopiert!')">
-                    📋 In Zwischenablage kopieren
+                    style="width: 100%; padding: 8px; margin-bottom: 10px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; border-radius: 3px;">
+                <button type="button" onclick="navigator.clipboard.writeText('${this.escapeHtml(link)}').then(() => alert('${this.msg('success.link_copied')}'))"
+                    style="padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                    ${this.msg('ui.copy_to_clipboard')}
                 </button>
             `;
             completed.appendChild(linkDiv);
@@ -252,13 +331,13 @@ class SurveyHandler {
      */
     showError(message) {
         const completed = document.querySelector('.sd-completedpage');
-        
+
         if (completed) {
             completed.innerHTML = `
                 <div style="color: #dc3545; padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
-                    <h3>Fehler beim Verarbeiten der Daten</h3>
+                    <h3>${this.msg('errors.data_processing_failed')}</h3>
                     <p>${this.escapeHtml(message)}</p>
-                    <p><small>Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.</small></p>
+                    <p><small>${this.msg('errors.try_again_or_contact')}</small></p>
                 </div>
             `;
         } else {
@@ -271,7 +350,7 @@ class SurveyHandler {
      */
     showWarnings(warnings) {
         const completed = document.querySelector('.sd-completedpage');
-        
+
         if (completed && warnings.length > 0) {
             const warningHtml = warnings
                 .map(w => `<li>${this.escapeHtml(w)}</li>`)
@@ -280,10 +359,10 @@ class SurveyHandler {
             const warningDiv = document.createElement('div');
             warningDiv.style.cssText = 'color: #856404; padding: 15px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin-top: 10px;';
             warningDiv.innerHTML = `
-                <strong>⚠️ Hinweis:</strong>
+                <strong>${this.msg('ui.warning')}</strong>
                 <ul style="margin: 5px 0 0 20px;">${warningHtml}</ul>
             `;
-            
+
             completed.appendChild(warningDiv);
         }
     }
@@ -304,7 +383,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const handler = new SurveyHandler(window.surveyConfig);
         handler.init().catch(error => {
             console.error('Survey initialization failed:', error);
-            alert('Formular konnte nicht geladen werden. Bitte laden Sie die Seite neu.');
+            // Fallback message if messages haven't loaded yet
+            const errorMsg = handler.messages
+                ? handler.msg('errors.form_load_failed')
+                : 'Formular konnte nicht geladen werden. Bitte laden Sie die Seite neu.';
+            alert(errorMsg);
         });
     }
 });

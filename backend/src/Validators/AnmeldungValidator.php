@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace App\Validators;
 
+use App\Services\MessageService as M;
+
 class AnmeldungValidator
 {
     private array $errors = [];
@@ -17,28 +19,28 @@ class AnmeldungValidator
         $this->errors = [];
 
         // Required fields
-        $this->validateRequired($data, 'formular', 'Formular ist erforderlich');
-        $this->validateRequired($data, 'name', 'Name ist erforderlich');
-        $this->validateRequired($data, 'email', 'E-Mail ist erforderlich');
+        $this->validateRequired($data, 'formular', M::get('validation.required_formular'));
+        $this->validateRequired($data, 'name', M::get('validation.required_name'));
+        $this->validateRequired($data, 'email', M::get('validation.required_email'));
 
         $mail=$data['email'] ?? $data['email1'] ?? $data['Email'] ?? $data['E-mail'] ?? $data['E-Mail'] ?? null;
         // Email format
         if (isset($mail) && !empty($mail)) {
             if (!filter_var($mail, FILTER_VALIDATE_EMAIL)) {
-                $this->errors['email'] = 'Ungültige E-Mail-Adresse';
+                $this->errors['email'] = M::get('validation.invalid_email');
             }
         }
 
         // Name length
         if (isset($data['name']) && strlen($data['name']) > 255) {
-            $this->errors['name'] = 'Name ist zu lang (max. 255 Zeichen)';
+            $this->errors['name'] = M::get('validation.name_too_long');
         }
 
         // Status (if provided)
         if (isset($data['status'])) {
             $allowedStatuses = ['neu', 'in_bearbeitung', 'akzeptiert', 'abgelehnt', 'archiviert'];
             if (!in_array($data['status'], $allowedStatuses, true)) {
-                $this->errors['status'] = 'Ungültiger Status';
+                $this->errors['status'] = M::get('validation.invalid_status');
             }
         }
 

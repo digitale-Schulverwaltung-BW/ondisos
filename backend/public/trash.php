@@ -10,6 +10,7 @@ use App\Repositories\AnmeldungRepository;
 use App\Services\AnmeldungService;
 use App\Controllers\AnmeldungController;
 use App\Utils\NullableHelpers as NH;
+use App\Services\MessageService as M;
 
 // Initialize dependencies
 $repository = new AnmeldungRepository();
@@ -22,35 +23,32 @@ require __DIR__ . '/../inc/header.php';
 
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>🗑️ Papierkorb</h1>
-        <a href="index.php" class="btn btn-secondary">← Zurück zur Übersicht</a>
+        <h1><?= M::get('ui.trash.title', '🗑️ Papierkorb') ?></h1>
+        <a href="index.php" class="btn btn-secondary"><?= M::get('ui.back_to_overview') ?></a>
     </div>
 
     <!-- Success/Error Messages -->
     <?php if (isset($_GET['restored'])): ?>
         <div class="alert alert-success alert-dismissible fade show">
-            <strong>✓ Wiederhergestellt!</strong> 
-            Eintrag #<?= (int)($_GET['id'] ?? 0) ?> wurde wiederhergestellt.
+            <?= M::format('success.restored', ['id' => (int)($_GET['id'] ?? 0)]) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['hard_deleted'])): ?>
         <div class="alert alert-warning alert-dismissible fade show">
-            <strong>⚠️ Permanent gelöscht!</strong> 
-            Eintrag #<?= (int)($_GET['id'] ?? 0) ?> wurde permanent aus der Datenbank entfernt.
+            <?= M::format('success.deleted', ['id' => (int)($_GET['id'] ?? 0)]) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
 
     <?php if (isset($_GET['error'])): ?>
         <div class="alert alert-danger alert-dismissible fade show">
-            <strong>❌ Fehler!</strong> 
             <?php
             echo match($_GET['error']) {
-                'not_found' => 'Eintrag wurde nicht gefunden.',
-                'failed' => 'Die Aktion konnte nicht durchgeführt werden.',
-                default => 'Ein unbekannter Fehler ist aufgetreten.'
+                'not_found' => M::get('errors.not_found'),
+                'failed' => M::get('errors.delete_failed'),
+                default => M::withContact('errors.generic_error')
             };
             ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -59,36 +57,36 @@ require __DIR__ . '/../inc/header.php';
 
     <?php if (empty($deletedEntries)): ?>
         <div class="alert alert-info">
-            <strong>ℹ️ Der Papierkorb ist leer</strong>
-            <p class="mb-0">Gelöschte Einträge erscheinen hier.</p>
+            <strong><?= M::get('ui.trash.empty') ?></strong>
+            <p class="mb-0"><?= M::get('ui.trash.empty_description', 'Gelöschte Einträge erscheinen hier.') ?></p>
         </div>
     <?php else: ?>
         <div class="alert alert-warning">
-            <strong>⚠️ Hinweis:</strong> 
-            Diese Einträge wurden gelöscht und sind für normale Benutzer nicht sichtbar.
-            <?php 
+            <strong><?= M::get('ui.warning') ?></strong>
+            <?= M::get('ui.trash.warning_description', 'Diese Einträge wurden gelöscht und sind für normale Benutzer nicht sichtbar.') ?>
+            <?php
             $config = \App\Config\Config::getInstance();
-            if ($config->autoExpungeDays > 0): 
+            if ($config->autoExpungeDays > 0):
             ?>
-                Sie werden nach <strong><?= $config->autoExpungeDays ?> Tagen</strong> permanent gelöscht.
+                <?= M::format('ui.trash.auto_delete_info', ['days' => $config->autoExpungeDays]) ?>
             <?php endif; ?>
         </div>
 
         <div class="mb-3">
-            <small class="text-muted">Anzahl: <?= count($deletedEntries) ?> Einträge</small>
+            <small class="text-muted"><?= M::format('ui.trash.entry_count', ['count' => count($deletedEntries)]) ?></small>
         </div>
 
         <table class="table table-striped table-sm">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Formular</th>
-                    <th>Name</th>
-                    <th>E-Mail</th>
-                    <th>Status</th>
-                    <th>Erstellt</th>
-                    <th>Gelöscht</th>
-                    <th>Aktionen</th>
+                    <th><?= M::get('ui.table.id') ?></th>
+                    <th><?= M::get('ui.table.form') ?></th>
+                    <th><?= M::get('ui.table.name') ?></th>
+                    <th><?= M::get('ui.table.email') ?></th>
+                    <th><?= M::get('ui.table.status') ?></th>
+                    <th><?= M::get('ui.table.created_at') ?></th>
+                    <th><?= M::get('ui.table.deleted_at') ?></th>
+                    <th><?= M::get('ui.table.actions') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -123,16 +121,16 @@ require __DIR__ . '/../inc/header.php';
                         <td>
                             <form method="post" action="restore.php" style="display: inline;">
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
-                                <button type="submit" class="btn btn-sm btn-success" 
-                                        onclick="return confirm('Eintrag #<?= $entry->id ?> wiederherstellen?')">
-                                    ↩️ Wiederherstellen
+                                <button type="submit" class="btn btn-sm btn-success"
+                                        onclick="return confirm('<?= M::format('ui.trash.confirm_restore', ['id' => $entry->id]) ?>')">
+                                    <?= M::get('ui.buttons.restore') ?>
                                 </button>
                             </form>
                             <form method="post" action="hard_delete.php" style="display: inline;">
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
                                 <button type="submit" class="btn btn-sm btn-danger"
-                                        onclick="return confirm('Eintrag #<?= $entry->id ?> PERMANENT löschen? Dies kann nicht rückgängig gemacht werden!')">
-                                    🗑️ Permanent
+                                        onclick="return confirm('<?= M::get('ui.trash.confirm_hard_delete') ?>')">
+                                    <?= M::get('ui.buttons.hard_delete') ?>
                                 </button>
                             </form>
                         </td>

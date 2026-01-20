@@ -10,6 +10,7 @@ use App\Controllers\AnmeldungController;
 use App\Services\AnmeldungService;
 use App\Repositories\AnmeldungRepository;
 use App\Utils\NullableHelpers as NH;
+use App\Services\MessageService as M;
 
 // Initialize dependencies (later: use DI Container)
 $repository = new AnmeldungRepository();
@@ -29,10 +30,10 @@ require __DIR__ . '/../inc/header.php';
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center gap-3">
-            <h1 class="mb-0">Anmeldungen</h1>
+            <h1 class="mb-0"><?= M::get('ui.anmeldungen') ?></h1>
             <form method="get" class="mb-0">
                 <select name="form" id="form" class="form-select" onchange="this.form.submit()">
-                    <option value="">Alle Formulare</option>
+                    <option value=""><?= M::get('ui.filters.all_forms') ?></option>
                     <?php foreach ($forms as $formKey): ?>
                         <option value="<?= htmlspecialchars($formKey) ?>"
                             <?= $formKey === $selectedForm ? 'selected' : '' ?>>
@@ -43,17 +44,17 @@ require __DIR__ . '/../inc/header.php';
             </form>
         </div>
         <a href="trash.php" class="btn btn-outline-secondary">
-            🗑️ Papierkorb
+            <?= M::get('ui.trash') ?>
             <?php if ($trashCount > 0): ?>
                 <span class="badge bg-danger"><?= $trashCount ?></span>
             <?php endif; ?>
         </a>
     </div>
-    
+
     <!-- Success Message -->
     <?php if (isset($_GET['bulk_success'])): ?>
         <div class="alert alert-success alert-dismissible fade show">
-            <?= htmlspecialchars($_GET['bulk_message'] ?? 'Aktion erfolgreich durchgeführt') ?>
+            <?= htmlspecialchars($_GET['bulk_message'] ?? M::get('success.bulk_action_completed', ['count' => '?', 'action' => ''])) ?>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     <?php endif; ?>
@@ -64,7 +65,7 @@ require __DIR__ . '/../inc/header.php';
             <input type="hidden" name="form" value="<?= htmlspecialchars($selectedForm) ?>">
         <?php endif; ?>
 
-        <label for="perPage" class="form-label mb-0">Einträge pro Seite:</label>
+        <label for="perPage" class="form-label mb-0"><?= M::get('ui.entries_per_page') ?></label>
         <select name="perPage" id="perPage" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
             <?php foreach ($allowedPerPage as $n): ?>
                 <option value="<?= $n ?>" <?= $n === $pagination['perPage'] ? 'selected' : '' ?>>
@@ -83,17 +84,17 @@ require __DIR__ . '/../inc/header.php';
         <!-- Action Buttons -->
         <div class="d-flex gap-2 mb-3">
             <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('archive')">
-                📦 Archivieren
+                <?= M::get('ui.buttons.archive') ?>
             </button>
             <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
-                🗑️ Löschen
+                <?= M::get('ui.buttons.delete') ?>
             </button>
             <button type="button" class="btn btn-sm btn-secondary" onclick="window.location.reload()">
                 🔄 Ansicht aktualisieren
             </button>
             <div class="ms-auto">
                 <a href="excel_export.php?<?= http_build_query($_GET) ?>" class="btn btn-sm btn-success">
-                    📥 Excel-Export
+                    <?= M::get('ui.buttons.excel_export') ?>
                 </a>
             </div>
         </div>
@@ -105,13 +106,13 @@ require __DIR__ . '/../inc/header.php';
                     <th style="width: 30px">
                         <input type="checkbox" id="selectAll" class="form-check-input">
                     </th>
-                    <th>ID</th>
-                    <?php if ($selectedForm === ''): ?><th>Formular</th><?php endif; ?>
+                    <th><?= M::get('ui.table.id') ?></th>
+                    <?php if ($selectedForm === ''): ?><th><?= M::get('ui.table.form') ?></th><?php endif; ?>
                     <th>Version</th>
-                    <th>Name</th>
-                    <th>E-Mail</th>
-                    <th>Status</th>
-                    <th>Datum</th>
+                    <th><?= M::get('ui.table.name') ?></th>
+                    <th><?= M::get('ui.table.email') ?></th>
+                    <th><?= M::get('ui.table.status') ?></th>
+                    <th><?= M::get('ui.table.date') ?></th>
                 </tr>
             </thead>
             <tbody>
@@ -185,15 +186,15 @@ document.getElementById('selectAll').addEventListener('change', function() {
 function bulkAction(action) {
     const form = document.getElementById('bulkForm');
     const checkboxes = document.querySelectorAll('.row-checkbox:checked');
-    
+
     if (checkboxes.length === 0) {
-        alert('Bitte wählen Sie mindestens einen Eintrag aus.');
+        alert('<?= M::get('errors.no_entries_selected') ?>');
         return;
     }
-    
-    const actionLabel = action === 'archive' ? 'archivieren' : 'löschen';
-    const confirmMsg = `Möchten Sie ${checkboxes.length} Einträge wirklich ${actionLabel}?`;
-    
+
+    const actionLabel = action === 'archive' ? '<?= M::get('bulk_actions.archive') ?>' : '<?= M::get('bulk_actions.delete') ?>';
+    const confirmMsg = `Möchten Sie ${checkboxes.length} Einträge wirklich ${actionLabel.toLowerCase()}?`;
+
     if (!confirm(confirmMsg)) {
         return;
     }

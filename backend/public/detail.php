@@ -9,6 +9,7 @@ require_once __DIR__ . '/../inc/auth.php';
 use App\Controllers\DetailController;
 use App\Repositories\AnmeldungRepository;
 use App\Utils\NullableHelpers as NH;
+use App\Services\MessageService as M;
 
 // Initialize dependencies
 $repository = new AnmeldungRepository();
@@ -25,10 +26,10 @@ try {
     ?>
     <div class="container mt-4">
         <div class="alert alert-danger">
-            <h4>Fehler</h4>
+            <h4><?= M::get('errors.generic_error') ?></h4>
             <p><?= htmlspecialchars($e->getMessage()) ?></p>
         </div>
-        <a href="index.php" class="btn btn-secondary">← Zurück zur Übersicht</a>
+        <a href="index.php" class="btn btn-secondary"><?= M::get('ui.back_to_overview') ?></a>
     </div>
     <?php
     require __DIR__ . '/../inc/footer.php';
@@ -41,29 +42,29 @@ require __DIR__ . '/../inc/header.php';
 <div class="container mt-4">
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Anmeldung #<?= $anmeldung->id ?></h1>
-        <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>" 
+        <h1><?= M::get('ui.detail.title') ?> #<?= $anmeldung->id ?></h1>
+        <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>"
            class="btn btn-secondary">
-            ← Zurück zur Übersicht
+            <?= M::get('ui.back_to_overview') ?>
         </a>
     </div>
 
     <!-- Meta Information Card -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Übersicht</h5>
+            <h5 class="mb-0"><?= M::get('ui.detail.basic_info') ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">Formular:</dt>
+                        <dt class="col-sm-4"><?= M::get('ui.table.form') ?>:</dt>
                         <dd class="col-sm-8"><?= NH::displayHtml($anmeldung->formular) ?></dd>
 
                         <dt class="col-sm-4">Version:</dt>
                         <dd class="col-sm-8"><?= NH::displayHtml($anmeldung->formularVersion, 'v1.0') ?></dd>
 
-                        <dt class="col-sm-4">Status:</dt>
+                        <dt class="col-sm-4"><?= M::get('ui.table.status') ?>:</dt>
                         <dd class="col-sm-8">
                             <span class="badge bg-primary">
                                 <?= NH::displayHtml($anmeldung->status) ?>
@@ -73,18 +74,18 @@ require __DIR__ . '/../inc/header.php';
                 </div>
                 <div class="col-md-6">
                     <dl class="row mb-0">
-                        <dt class="col-sm-4">Erstellt:</dt>
+                        <dt class="col-sm-4"><?= M::get('ui.table.created_at') ?>:</dt>
                         <dd class="col-sm-8"><?= $anmeldung->createdAt->format('d.m.Y H:i:s') ?></dd>
 
                         <?php if ($anmeldung->updatedAt): ?>
-                            <dt class="col-sm-4">Aktualisiert:</dt>
+                            <dt class="col-sm-4"><?= M::get('ui.table.updated_at') ?>:</dt>
                             <dd class="col-sm-8"><?= $anmeldung->updatedAt->format('d.m.Y H:i:s') ?></dd>
                         <?php endif; ?>
 
                         <?php if ($anmeldung->deleted): ?>
-                            <dt class="col-sm-4">Gelöscht:</dt>
+                            <dt class="col-sm-4"><?= M::get('ui.table.deleted_at') ?>:</dt>
                             <dd class="col-sm-8 text-danger">
-                                <?= $anmeldung->deletedAt?->format('d.m.Y H:i:s') ?? 'Ja' ?>
+                                <?= $anmeldung->deletedAt?->format('d.m.Y H:i:s') ?? M::get('ui.detail.deleted_yes', 'Ja') ?>
                             </dd>
                         <?php endif; ?>
                     </dl>
@@ -96,11 +97,11 @@ require __DIR__ . '/../inc/header.php';
     <!-- Data Card -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">Formulardaten</h5>
+            <h5 class="mb-0"><?= M::get('ui.detail.form_data') ?></h5>
         </div>
         <div class="card-body">
             <?php if (empty($structuredData)): ?>
-                <p class="text-muted">Keine Daten vorhanden</p>
+                <p class="text-muted"><?= M::get('ui.detail.no_data', 'Keine Daten vorhanden') ?></p>
             <?php else: ?>
                 <table class="table table-bordered table-sm">
                     <tbody>
@@ -137,7 +138,7 @@ require __DIR__ . '/../inc/header.php';
                                                     echo '<img src="' . htmlspecialchars($content) . '" alt="' . htmlspecialchars($name) . '" class="img-fluid" style="max-width: 100%; max-height: 400px;">';
                                                     echo '<br><small class="text-muted">' . htmlspecialchars($name) . '</small>';
                                                     echo '<br><a href="' . htmlspecialchars($content) . '" download="' . htmlspecialchars($name) . '" class="btn btn-sm btn-outline-primary mt-1">';
-                                                    echo '<i class="bi bi-download"></i> Herunterladen';
+                                                    echo '<i class="bi bi-download"></i> ' . M::get('ui.buttons.download');
                                                     echo '</a>';
                                                     echo '</div>';
                                                 } else {
@@ -156,11 +157,11 @@ require __DIR__ . '/../inc/header.php';
                                                . '</pre>';
                                         }
                                         break;
-                                    
+
                                     case 'boolean':
-                                        echo $value 
-                                            ? '<span class="badge bg-success">Ja</span>' 
-                                            : '<span class="badge bg-secondary">Nein</span>';
+                                        echo $value
+                                            ? '<span class="badge bg-success">' . M::get('ui.detail.yes', 'Ja') . '</span>'
+                                            : '<span class="badge bg-secondary">' . M::get('ui.detail.no', 'Nein') . '</span>';
                                         break;
                                     
                                     case 'url':
@@ -205,7 +206,7 @@ require __DIR__ . '/../inc/header.php';
     <?php if (!empty($uploadedFiles)): ?>
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0">Hochgeladene Dateien</h5>
+                <h5 class="mb-0"><?= M::get('ui.detail.file_uploads') ?></h5>
             </div>
             <div class="card-body">
                 <div class="list-group">
@@ -219,7 +220,7 @@ require __DIR__ . '/../inc/header.php';
                                 <?= htmlspecialchars($file['name']) ?>
                                 <small class="text-muted">(<?= htmlspecialchars($file['sizeFormatted']) ?>)</small>
                             </div>
-                            <span class="badge bg-primary">Ansehen</span>
+                            <span class="badge bg-primary"><?= M::get('ui.buttons.view') ?></span>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -231,20 +232,20 @@ require __DIR__ . '/../inc/header.php';
     <div class="d-flex gap-2 mb-4">
         <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>"
            class="btn btn-secondary">
-            ← Zurück
+            <?= M::get('ui.back_to_overview') ?>
         </a>
 
         <a href="excel_export.php?id=<?= $anmeldung->id ?>"
            class="btn btn-success">
-            Excel herunterladen
+            <?= M::get('ui.buttons.excel_export') ?>
         </a>
 
         <?php if (!$anmeldung->deleted): ?>
-            <button class="btn btn-warning" onclick="alert('Status ändern - TODO')">
-                Status ändern
+            <button class="btn btn-warning" onclick="alert('<?= M::get('ui.detail.mark_as') ?> - TODO')">
+                <?= M::get('ui.detail.mark_as') ?>
             </button>
-            <button class="btn btn-danger" onclick="if(confirm('Wirklich löschen?')) alert('Löschen - TODO')">
-                Löschen
+            <button class="btn btn-danger" onclick="if(confirm('<?= M::get('ui.trash.confirm_hard_delete', 'Wirklich löschen?') ?>')) alert('<?= M::get('ui.buttons.delete') ?> - TODO')">
+                <?= M::get('ui.buttons.delete') ?>
             </button>
         <?php endif; ?>
     </div>

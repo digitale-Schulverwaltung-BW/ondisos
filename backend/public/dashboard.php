@@ -11,6 +11,7 @@ use App\Services\ExpungeService;
 use App\Services\RequestExpungeService;
 use App\Services\StatusService;
 use App\Config\Config;
+use App\Services\MessageService as M;
 
 // Initialize services
 $repository = new AnmeldungRepository();
@@ -22,9 +23,9 @@ $requestExpungeService = new RequestExpungeService($expungeService);
 if (isset($_POST['force_expunge'])) {
     try {
         $result = $requestExpungeService->forceRun();
-        $successMessage = "Expunge erfolgreich durchgeführt. {$result['deleted']} Einträge gelöscht.";
+        $successMessage = M::format('success.expunge_completed', ['count' => $result['deleted']]);
     } catch (Throwable $e) {
-        $errorMessage = "Expunge fehlgeschlagen: " . $e->getMessage();
+        $errorMessage = M::withContact('errors.expunge_failed') . ': ' . $e->getMessage();
     }
 }
 
@@ -38,7 +39,7 @@ require __DIR__ . '/../inc/header.php';
 ?>
 
 <div class="container mt-4">
-    <h1>Dashboard</h1>
+    <h1><?= M::get('ui.dashboard') ?></h1>
 
     <?php if (isset($successMessage)): ?>
         <div class="alert alert-success alert-dismissible fade show">
@@ -58,12 +59,12 @@ require __DIR__ . '/../inc/header.php';
     <div class="row mb-4">
         <?php
         $statusLabels = [
-            'neu' => ['label' => 'Neue', 'class' => 'primary', 'icon' => '📬'],
-            'exportiert' => ['label' => 'Exportiert', 'class' => 'info', 'icon' => '📤'],
-            'in_bearbeitung' => ['label' => 'In Bearbeitung', 'class' => 'warning', 'icon' => '⚙️'],
-            'akzeptiert' => ['label' => 'Akzeptiert', 'class' => 'success', 'icon' => '✅'],
-            'abgelehnt' => ['label' => 'Abgelehnt', 'class' => 'danger', 'icon' => '❌'],
-            'archiviert' => ['label' => 'Archiviert', 'class' => 'secondary', 'icon' => '📦']
+            'neu' => ['class' => 'primary', 'icon' => '📬'],
+            'exportiert' => ['class' => 'info', 'icon' => '📤'],
+            'in_bearbeitung' => ['class' => 'warning', 'icon' => '⚙️'],
+            'akzeptiert' => ['class' => 'success', 'icon' => '✅'],
+            'abgelehnt' => ['class' => 'danger', 'icon' => '❌'],
+            'archiviert' => ['class' => 'secondary', 'icon' => '📦']
         ];
 
         foreach ($statusLabels as $status => $info):
@@ -74,7 +75,7 @@ require __DIR__ . '/../inc/header.php';
                     <div class="card-body">
                         <div class="fs-2 mb-2"><?= $info['icon'] ?></div>
                         <h3 class="card-title display-6"><?= $count ?></h3>
-                        <p class="card-text text-muted"><?= $info['label'] ?></p>
+                        <p class="card-text text-muted"><?= M::get('status.' . $status) ?></p>
                     </div>
                 </div>
             </div>
@@ -84,38 +85,38 @@ require __DIR__ . '/../inc/header.php';
     <!-- Auto-Expunge Status -->
     <div class="card mb-4">
         <div class="card-header">
-            <h5 class="mb-0">🗑️ Auto-Expunge Status</h5>
+            <h5 class="mb-0"><?= M::get('ui.dashboard.auto_expunge_status') ?></h5>
         </div>
         <div class="card-body">
             <div class="row">
                 <div class="col-md-6">
                     <dl class="row">
-                        <dt class="col-sm-5">Status:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.table.status') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($config->autoExpungeDays > 0): ?>
-                                <span class="badge bg-success">Aktiviert</span>
+                                <span class="badge bg-success"><?= M::format('expunge.enabled', ['days' => $config->autoExpungeDays]) ?></span>
                             <?php else: ?>
-                                <span class="badge bg-secondary">Deaktiviert</span>
+                                <span class="badge bg-secondary"><?= M::get('expunge.disabled') ?></span>
                             <?php endif; ?>
                         </dd>
 
-                        <dt class="col-sm-5">Löschfrist:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.dashboard.expunge_days', 'Löschfrist') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($config->autoExpungeDays > 0): ?>
-                                <?= $config->autoExpungeDays ?> Tage
+                                <?= M::format('ui.dashboard.days_count', ['days' => $config->autoExpungeDays]) ?>
                             <?php else: ?>
                                 -
                             <?php endif; ?>
                         </dd>
 
-                        <dt class="col-sm-5">Bereit zum Löschen:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.dashboard.entries_ready') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($expungePreview['count'] > 0): ?>
                                 <span class="badge bg-warning text-dark">
-                                    <?= $expungePreview['count'] ?> Einträge
+                                    <?= M::format('expunge.entries_ready', ['count' => $expungePreview['count']]) ?>
                                 </span>
                             <?php else: ?>
-                                <span class="badge bg-success">0 Einträge</span>
+                                <span class="badge bg-success"><?= M::get('expunge.no_entries_ready') ?></span>
                             <?php endif; ?>
                         </dd>
                     </dl>
@@ -123,28 +124,28 @@ require __DIR__ . '/../inc/header.php';
 
                 <div class="col-md-6">
                     <dl class="row">
-                        <dt class="col-sm-5">Letzter Lauf:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.dashboard.last_expunge') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($expungeInfo['lastRun']): ?>
                                 <?= $expungeInfo['lastRun']->format('d.m.Y H:i:s') ?>
                             <?php else: ?>
-                                <em>Noch nie ausgeführt</em>
+                                <em><?= M::get('ui.dashboard.never_run', 'Noch nie ausgeführt') ?></em>
                             <?php endif; ?>
                         </dd>
 
-                        <dt class="col-sm-5">Nächster Lauf:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.dashboard.next_expunge') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($expungeInfo['nextRun']): ?>
                                 <?= $expungeInfo['nextRun']->format('d.m.Y H:i:s') ?>
                                 <?php if ($expungeInfo['canRunNow']): ?>
-                                    <small class="text-muted">(überfällig)</small>
+                                    <small class="text-muted"><?= M::get('ui.dashboard.overdue', '(überfällig)') ?></small>
                                 <?php endif; ?>
                             <?php else: ?>
-                                <em>Bei nächstem Seitenaufruf</em>
+                                <em><?= M::get('ui.dashboard.next_page_load', 'Bei nächstem Seitenaufruf') ?></em>
                             <?php endif; ?>
                         </dd>
 
-                        <dt class="col-sm-5">Ältester Eintrag:</dt>
+                        <dt class="col-sm-5"><?= M::get('ui.dashboard.oldest_entry', 'Ältester Eintrag') ?>:</dt>
                         <dd class="col-sm-7">
                             <?php if ($expungePreview['oldest']): ?>
                                 <?= $expungePreview['oldest']->format('d.m.Y') ?>
@@ -158,20 +159,20 @@ require __DIR__ . '/../inc/header.php';
 
             <?php if ($config->autoExpungeDays > 0 && $expungePreview['count'] > 0): ?>
                 <div class="alert alert-info mt-3 mb-0">
-                    <strong>ℹ️ Hinweis:</strong> Auto-Expunge läuft automatisch alle 6 Stunden bei einem Seitenaufruf.
-                    Die nächste automatische Prüfung erfolgt 
+                    <strong><?= M::get('ui.info') ?></strong> <?= M::get('ui.dashboard.expunge_auto_info', 'Auto-Expunge läuft automatisch alle 6 Stunden bei einem Seitenaufruf.') ?>
+                    <?= M::get('ui.dashboard.next_check', 'Die nächste automatische Prüfung erfolgt') ?>
                     <?php if ($expungeInfo['nextRun']): ?>
-                        am <strong><?= $expungeInfo['nextRun']->format('d.m.Y') ?></strong> 
-                        um <strong><?= $expungeInfo['nextRun']->format('H:i') ?> Uhr</strong>.
+                        <?= M::get('ui.dashboard.on', 'am') ?> <strong><?= $expungeInfo['nextRun']->format('d.m.Y') ?></strong>
+                        <?= M::get('ui.dashboard.at', 'um') ?> <strong><?= $expungeInfo['nextRun']->format('H:i') ?> <?= M::get('ui.dashboard.oclock', 'Uhr') ?></strong>.
                     <?php else: ?>
-                        beim nächsten Seitenaufruf.
+                        <?= M::get('ui.dashboard.next_page_load', 'beim nächsten Seitenaufruf') ?>.
                     <?php endif; ?>
                 </div>
 
                 <form method="post" class="mt-3">
                     <button type="submit" name="force_expunge" class="btn btn-danger"
-                            onclick="return confirm('<?= $expungePreview['count'] ?> Einträge werden permanent gelöscht. Fortfahren?')">
-                        🗑️ Jetzt manuell ausführen
+                            onclick="return confirm('<?= M::format('ui.dashboard.confirm_expunge', ['count' => $expungePreview['count']]) ?>')">
+                        <?= M::get('ui.dashboard.run_expunge_now', '🗑️ Jetzt manuell ausführen') ?>
                     </button>
                 </form>
             <?php endif; ?>
@@ -181,21 +182,21 @@ require __DIR__ . '/../inc/header.php';
     <!-- Quick Actions -->
     <div class="card">
         <div class="card-header">
-            <h5 class="mb-0">⚡ Schnellzugriff</h5>
+            <h5 class="mb-0"><?= M::get('ui.dashboard.quick_actions', '⚡ Schnellzugriff') ?></h5>
         </div>
         <div class="card-body">
             <div class="d-flex gap-2">
                 <a href="index.php?status=neu" class="btn btn-primary">
-                    📬 Neue Anmeldungen
+                    <?= M::get('ui.dashboard.new_anmeldungen') ?>
                     <?php if (($stats['neu'] ?? 0) > 0): ?>
                         <span class="badge bg-light text-dark"><?= $stats['neu'] ?></span>
                     <?php endif; ?>
                 </a>
                 <a href="index.php" class="btn btn-secondary">
-                    📋 Alle Anmeldungen
+                    <?= M::get('ui.dashboard.all_anmeldungen', '📋 Alle Anmeldungen') ?>
                 </a>
                 <a href="excel_export.php" class="btn btn-success">
-                    📥 Excel-Export
+                    <?= M::get('ui.buttons.excel_export') ?>
                 </a>
             </div>
         </div>

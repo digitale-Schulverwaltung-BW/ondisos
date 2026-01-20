@@ -7,6 +7,7 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Repositories\AnmeldungRepository;
 use App\Validators\AnmeldungValidator;
+use App\Services\MessageService as M;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -31,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 try {
     // Validate request method
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new RuntimeException('Invalid request method', 405);
+        throw new RuntimeException(M::get('api.errors.invalid_method', 'Invalid request method'), 405);
     }
 
     // Get JSON payload
@@ -39,7 +40,7 @@ try {
     $payload = json_decode($input, true, 512, JSON_THROW_ON_ERROR);
 
     if (!is_array($payload)) {
-        throw new RuntimeException('Invalid JSON payload', 400);
+        throw new RuntimeException(M::get('errors.invalid_json'), 400);
     }
 
     // Extract data
@@ -48,11 +49,11 @@ try {
     $metadata = $payload['metadata'] ?? [];
 
     if (empty($formKey)) {
-        throw new RuntimeException('Missing form_key', 400);
+        throw new RuntimeException(M::get('api.errors.missing_form_key', 'Missing form_key'), 400);
     }
 
     if (empty($data) || !is_array($data)) {
-        throw new RuntimeException('Invalid or missing data', 400);
+        throw new RuntimeException(M::get('errors.invalid_data'), 400);
     }
 
     // Extract common fields
@@ -69,14 +70,14 @@ try {
 
     if (!$validator->validate($validationData)) {
         throw new RuntimeException(
-            'Validation failed: ' . $validator->getFirstError(),
+            M::format('api.errors.validation_failed', ['error' => $validator->getFirstError()]),
             400
         );
     }
 
     // Prepare for database
     $repository = new AnmeldungRepository();
-    
+
     $insertData = [
         'formular' => $formKey,
         'formular_version' => $metadata['version'] ?? '1.0',
@@ -90,7 +91,7 @@ try {
     $id = $repository->insert($insertData);
 
     if (!$id) {
-        throw new RuntimeException('Failed to save anmeldung', 500);
+        throw new RuntimeException(M::get('api.errors.save_failed', 'Failed to save anmeldung'), 500);
     }
 
     // Log successful submission
@@ -112,7 +113,7 @@ try {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'error' => 'Invalid JSON'
+        'error' => M::get('errors.invalid_json')
     ]);
 
 } catch (RuntimeException $e) {
@@ -129,6 +130,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Internal server error'
+        'error' => M::get('api.errors.internal_server_error', 'Internal server error')
     ]);
 }

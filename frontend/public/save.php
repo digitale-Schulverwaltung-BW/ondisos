@@ -11,38 +11,39 @@ use Frontend\Services\BackendApiClient;
 use Frontend\Services\EmailService;
 use Frontend\Utils\CsrfProtection;
 use Frontend\Config\FormConfig;
+use Frontend\Services\MessageService as M;
 
 header('Content-Type: application/json; charset=utf-8');
 
 try {
     // 1. Validate request method
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-        throw new RuntimeException('Invalid request method', 405);
+        throw new RuntimeException(M::get('api.errors.invalid_method', 'Invalid request method'), 405);
     }
 
     // 2. CSRF validation
     $csrfToken = $_POST['csrf_token'] ?? '';
-    
+
     if (!CsrfProtection::validate($csrfToken)) {
-        throw new RuntimeException('CSRF validation failed', 403);
+        throw new RuntimeException(M::get('errors.csrf_invalid'), 403);
     }
 
     // 3. Get form key
     $formKey = $_REQUEST['form'] ?? '';
-    
+
     if (empty($formKey) || !FormConfig::exists($formKey)) {
-        throw new RuntimeException('Unbekanntes Formular', 400);
+        throw new RuntimeException(M::get('errors.unknown_form'), 400);
     }
 
     // 4. Get survey data
     if (empty($_POST['survey_data'])) {
-        throw new RuntimeException('Keine Formulardaten empfangen', 400);
+        throw new RuntimeException(M::get('api.errors.no_data', 'Keine Formulardaten empfangen'), 400);
     }
 
     $surveyData = json_decode($_POST['survey_data'], true, 512, JSON_THROW_ON_ERROR);
-    
+
     if (!is_array($surveyData)) {
-        throw new RuntimeException('Ungültige Formulardaten', 400);
+        throw new RuntimeException(M::get('errors.invalid_data'), 400);
     }
 
     // 5. Get metadata
@@ -80,7 +81,7 @@ try {
     http_response_code(400);
     echo json_encode([
         'success' => false,
-        'error' => 'Ungültige JSON-Daten'
+        'error' => M::get('errors.invalid_json', 'Ungültige JSON-Daten')
     ]);
 
 } catch (RuntimeException $e) {
@@ -97,6 +98,6 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Ein unerwarteter Fehler ist aufgetreten'
+        'error' => M::withContact('errors.generic_error')
     ]);
 }

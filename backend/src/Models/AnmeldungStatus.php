@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Services\MessageService;
+
 enum AnmeldungStatus: string
 {
     case NEU = 'neu';
@@ -15,18 +17,11 @@ enum AnmeldungStatus: string
     case ARCHIVIERT = 'archiviert';
 
     /**
-     * Get German label
+     * Get German label from MessageService
      */
     public function label(): string
     {
-        return match($this) {
-            self::NEU => 'Neu',
-            self::EXPORTIERT => 'Exportiert',
-            self::IN_BEARBEITUNG => 'In Bearbeitung',
-            self::AKZEPTIERT => 'Akzeptiert',
-            self::ABGELEHNT => 'Abgelehnt',
-            self::ARCHIVIERT => 'Archiviert',
-        };
+        return MessageService::get('status.' . $this->value);
     }
 
     /**
