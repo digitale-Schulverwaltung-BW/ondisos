@@ -8,7 +8,13 @@ error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-// Autoloader
+// Load Composer autoloader (for external packages like mPDF)
+$composerAutoload = __DIR__ . '/../vendor/autoload.php';
+if (file_exists($composerAutoload)) {
+    require_once $composerAutoload;
+}
+
+// Autoloader for App\* classes
 spl_autoload_register(function (string $class) {
     // Convert namespace to file path
     // App\Models\Anmeldung -> src/Models/Anmeldung.php

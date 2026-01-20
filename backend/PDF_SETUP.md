@@ -11,7 +11,6 @@ The PDF download system generates on-demand PDF confirmations for form submissio
 - ✅ Logo support with automatic optimization
 - ✅ Token expiration (default: 30 minutes)
 - ✅ Field filtering and ordering
-
 ---
 
 ## Setup Instructions
