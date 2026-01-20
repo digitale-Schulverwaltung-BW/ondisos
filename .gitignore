@@ -36,6 +36,7 @@ logs/
 cache/*
 !cache/.gitkeep
 backend/cache/last_expunge.txt
+backend/cache/*
 
 # Uploads (if stored locally)
 uploads/*
