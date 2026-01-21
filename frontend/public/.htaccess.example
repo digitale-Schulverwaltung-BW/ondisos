@@ -1,0 +1,180 @@
+# Frontend .htaccess Configuration
+# Copy this file to .htaccess and customize as needed
+# cp .htaccess.example .htaccess
+
+# ============================================================================
+# FORCE HTTPS (Production)
+# ============================================================================
+# Uncomment the following lines to force HTTPS redirects
+# This is the RECOMMENDED way to enforce HTTPS (more performant than PHP check)
+
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#
+#     # Force HTTPS redirect
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#
+#     # Also handle requests behind a proxy/load balancer
+#     RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# ============================================================================
+# SECURITY HEADERS
+# ============================================================================
+
+<IfModule mod_headers.c>
+    # HTTP Strict Transport Security (HSTS)
+    # Forces browsers to use HTTPS for this domain for 1 year
+    # IMPORTANT: Only enable AFTER confirming HTTPS works correctly!
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Prevent clickjacking attacks (allow embedding in iframes if needed)
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Enable XSS protection in browsers
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Referrer Policy
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Content Security Policy for SurveyJS
+    # Adjust as needed - SurveyJS may require 'unsafe-inline' for styles
+    # Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://unpkg.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; font-src 'self' data:; img-src 'self' data: blob:; connect-src 'self' https:;"
+</IfModule>
+
+# ============================================================================
+# PHP SETTINGS
+# ============================================================================
+
+<IfModule mod_php.c>
+    # Hide PHP version
+    php_flag expose_php off
+
+    # Session settings
+    php_value session.cookie_httponly 1
+    php_value session.cookie_secure 1
+    php_value session.use_only_cookies 1
+</IfModule>
+
+# ============================================================================
+# DIRECTORY INDEX
+# ============================================================================
+
+DirectoryIndex index.php index.html
+
+# ============================================================================
+# FILE ACCESS RESTRICTIONS
+# ============================================================================
+
+# Deny access to .env files
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Deny access to .git directory
+<DirectoryMatch "\.git">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to composer files (if using composer in frontend)
+<FilesMatch "^(composer\.(json|lock))$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to config files
+<FilesMatch "^(config|forms-config)\.php$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to README, LICENSE, etc.
+<FilesMatch "^(README|LICENSE|CHANGELOG|CONTRIBUTING)">
+    Require all denied
+</FilesMatch>
+
+# ============================================================================
+# CACHE CONTROL
+# ============================================================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Cache static assets aggressively
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/webp "access plus 1 year"
+    ExpiresByType image/svg+xml "access plus 1 year"
+
+    # Cache CSS and JavaScript
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+    ExpiresByType application/x-javascript "access plus 1 month"
+
+    # Cache fonts
+    ExpiresByType font/woff "access plus 1 year"
+    ExpiresByType font/woff2 "access plus 1 year"
+    ExpiresByType application/font-woff "access plus 1 year"
+    ExpiresByType application/font-woff2 "access plus 1 year"
+
+    # Don't cache HTML/PHP/JSON
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# ============================================================================
+# COMPRESSION
+# ============================================================================
+
+<IfModule mod_deflate.c>
+    # Compress HTML, CSS, JavaScript, Text, XML, JSON
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+    AddOutputFilterByType DEFLATE application/xml application/xhtml+xml application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+    AddOutputFilterByType DEFLATE image/svg+xml
+</IfModule>
+
+# ============================================================================
+# CORS HEADERS (if needed for API calls)
+# ============================================================================
+# Usually handled in PHP (save.php), but can be set here as backup
+# Uncomment and adjust if needed
+
+# <IfModule mod_headers.c>
+#     # Allow cross-origin requests from specific domain
+#     Header set Access-Control-Allow-Origin "https://anmeldung.example.com"
+#     Header set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+#     Header set Access-Control-Allow-Headers "Content-Type"
+# </IfModule>
+
+# ============================================================================
+# FILE UPLOAD SIZE (if not set in php.ini)
+# ============================================================================
+
+<IfModule mod_php.c>
+    # Increase upload limits (adjust as needed)
+    # php_value upload_max_filesize 10M
+    # php_value post_max_size 10M
+    # php_value max_execution_time 300
+    # php_value max_input_time 300
+</IfModule>
+
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# Production Checklist:
+# 1. Enable HTTPS redirect (uncomment lines 10-19)
+# 2. Enable HSTS header AFTER confirming HTTPS works (uncomment line 33)
+# 3. Customize Content-Security-Policy for SurveyJS (line 49)
+# 4. Adjust CORS headers if backend is on different domain (lines 149-153)
+# 5. Test uploads work correctly with file size limits
+# 6. Test with: https://securityheaders.com/
+#

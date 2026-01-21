@@ -1,0 +1,147 @@
+# Backend .htaccess Configuration
+# Copy this file to .htaccess and customize as needed
+# cp .htaccess.example .htaccess
+
+# ============================================================================
+# FORCE HTTPS (Production)
+# ============================================================================
+# Uncomment the following lines to force HTTPS redirects
+# This is the RECOMMENDED way to enforce HTTPS (more performant than PHP check)
+
+# <IfModule mod_rewrite.c>
+#     RewriteEngine On
+#
+#     # Force HTTPS redirect
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#
+#     # Also handle requests behind a proxy/load balancer
+#     RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#     RewriteCond %{HTTPS} off
+#     RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# </IfModule>
+
+# ============================================================================
+# SECURITY HEADERS
+# ============================================================================
+
+<IfModule mod_headers.c>
+    # HTTP Strict Transport Security (HSTS)
+    # Forces browsers to use HTTPS for this domain for 1 year
+    # IMPORTANT: Only enable AFTER confirming HTTPS works correctly!
+    # Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+
+    # Prevent MIME type sniffing
+    Header always set X-Content-Type-Options "nosniff"
+
+    # Prevent clickjacking attacks
+    Header always set X-Frame-Options "SAMEORIGIN"
+
+    # Enable XSS protection in browsers
+    Header always set X-XSS-Protection "1; mode=block"
+
+    # Referrer Policy (don't leak internal URLs)
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # Content Security Policy (adjust as needed)
+    # Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:;"
+</IfModule>
+
+# ============================================================================
+# PHP SETTINGS
+# ============================================================================
+
+<IfModule mod_php.c>
+    # Hide PHP version
+    php_flag expose_php off
+
+    # Disable dangerous functions (already handled in php.ini, but as backup)
+    # php_admin_value disable_functions "exec,passthru,shell_exec,system,proc_open,popen"
+</IfModule>
+
+# ============================================================================
+# DIRECTORY INDEX
+# ============================================================================
+
+DirectoryIndex index.php index.html
+
+# ============================================================================
+# URL REWRITING (PHP Router)
+# ============================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect to index.php if file doesn't exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>
+
+# ============================================================================
+# FILE ACCESS RESTRICTIONS
+# ============================================================================
+
+# Deny access to .env files
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+
+# Deny access to .git directory
+<DirectoryMatch "\.git">
+    Require all denied
+</DirectoryMatch>
+
+# Deny access to composer files
+<FilesMatch "^(composer\.(json|lock))$">
+    Require all denied
+</FilesMatch>
+
+# Deny access to README, LICENSE, etc.
+<FilesMatch "^(README|LICENSE|CHANGELOG|CONTRIBUTING)">
+    Require all denied
+</FilesMatch>
+
+# ============================================================================
+# CACHE CONTROL
+# ============================================================================
+
+<IfModule mod_expires.c>
+    ExpiresActive On
+
+    # Cache static assets
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+
+    # Don't cache HTML/PHP
+    ExpiresByType text/html "access plus 0 seconds"
+    ExpiresByType application/json "access plus 0 seconds"
+</IfModule>
+
+# ============================================================================
+# COMPRESSION
+# ============================================================================
+
+<IfModule mod_deflate.c>
+    # Compress HTML, CSS, JavaScript, Text, XML
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css
+    AddOutputFilterByType DEFLATE application/xml application/xhtml+xml application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript application/x-javascript
+    AddOutputFilterByType DEFLATE application/json
+</IfModule>
+
+# ============================================================================
+# NOTES
+# ============================================================================
+#
+# Production Checklist:
+# 1. Enable HTTPS redirect (uncomment lines 10-19)
+# 2. Enable HSTS header AFTER confirming HTTPS works (uncomment line 29)
+# 3. Customize Content-Security-Policy if needed (line 44)
+# 4. Verify all security headers are set correctly
+# 5. Test with: https://securityheaders.com/
+#

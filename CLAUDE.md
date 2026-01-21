@@ -497,9 +497,10 @@ archiviert
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
 - ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
 - ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
+- ✅ HTTPS Enforcement (Apache .htaccess + PHP Fallback)
 
 **TODO:**
-- ⚠️ HTTPS erzwingen in Production
+- Keine offenen Security-TODOs 🎉
 
 ---
 
@@ -633,6 +634,75 @@ ADMIN_PASSWORD_HASH=$2y$10$abc123...
 - API-Submit-Endpoint (`api/submit.php`) - für Frontend-Anmeldungen
 - PDF-Download (`pdf/download.php`) - Token-basierte Auth
 - Login/Logout-Seiten
+
+---
+
+### HTTPS Enforcement (Production)
+
+Für Production-Deployments sollte HTTPS erzwungen werden. Das System bietet **zwei Ebenen** der Absicherung.
+
+#### Empfohlener Ansatz: Apache .htaccess (Primary)
+
+**Backend:**
+```bash
+cd backend/public
+cp .htaccess.example .htaccess
+
+# Uncomment HTTPS redirect lines (10-19) in .htaccess
+nano .htaccess
+```
+
+**Frontend:**
+```bash
+cd frontend/public
+cp .htaccess.example .htaccess
+
+# Uncomment HTTPS redirect lines (10-19) in .htaccess
+nano .htaccess
+```
+
+Die `.htaccess`-Dateien enthalten:
+- ✅ HTTPS Redirect (301 Permanent)
+- ✅ Security Headers (HSTS, X-Frame-Options, CSP, etc.)
+- ✅ Cache Control für Assets
+- ✅ Compression (gzip)
+- ✅ File Access Restrictions
+
+#### Fallback: PHP-Check (Secondary)
+
+Als zusätzliche Sicherheitsschicht prüft PHP automatisch HTTPS, wenn aktiviert:
+
+```bash
+# In backend/.env
+FORCE_HTTPS=true
+```
+
+**Vorteile der Zwei-Ebenen-Absicherung:**
+- **Apache .htaccess:** Schneller Redirect auf Webserver-Ebene
+- **PHP Check:** Funktioniert auch wenn .htaccess vergessen wird
+- **Proxy-Support:** Erkennt HTTPS hinter Load Balancern (X-Forwarded-Proto)
+
+#### HSTS aktivieren (Nach HTTPS-Test!)
+
+**WICHTIG:** Nur aktivieren, wenn HTTPS zu 100% funktioniert!
+
+```apache
+# In .htaccess uncomment:
+Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+```
+
+HSTS zwingt Browser, **immer** HTTPS zu verwenden. Rückgängig machen ist schwierig!
+
+#### Production Checklist
+
+1. ✅ SSL-Zertifikat installiert (z.B. Let's Encrypt)
+2. ✅ `.htaccess` aus `.htaccess.example` erstellt
+3. ✅ HTTPS Redirect in `.htaccess` aktiviert (uncomment)
+4. ✅ `FORCE_HTTPS=true` in `.env` gesetzt (Fallback)
+5. ✅ HTTPS im Browser testen (sollte funktionieren!)
+6. ✅ HTTP-to-HTTPS Redirect testen
+7. ✅ HSTS aktivieren (nach erfolgreichen Tests)
+8. ✅ Security Headers testen: https://securityheaders.com/
 
 ---
 
@@ -943,6 +1013,11 @@ php -l backend/config/messages.local.php
 - ✅ Excel-Export Verbesserungen
   - File-Upload-Felder automatisch filtern
   - Verhindert base64-Daten in Excel-Exporten
+- ✅ HTTPS Enforcement
+  - Apache .htaccess Templates mit Security Headers
+  - PHP Fallback-Check in bootstrap.php
+  - HSTS, CSP, X-Frame-Options Support
+  - Proxy/Load-Balancer Detection
 
 ### v2.2 (Januar 2026)
 - ✅ PDF Download System

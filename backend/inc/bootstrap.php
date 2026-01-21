@@ -64,6 +64,23 @@ set_exception_handler(function (Throwable $e) {
     exit;
 });
 
+// Force HTTPS in production (if enabled)
+// This is a fallback - primary enforcement should be via Apache/Nginx config
+$forceHttps = filter_var($_ENV['FORCE_HTTPS'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+if ($forceHttps && php_sapi_name() !== 'cli') {
+    // Check if request is not already HTTPS
+    $isHttps = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')
+        || (!empty($_SERVER['HTTP_X_FORWARDED_SSL']) && $_SERVER['HTTP_X_FORWARDED_SSL'] === 'on')
+        || (isset($_SERVER['SERVER_PORT']) && (int)$_SERVER['SERVER_PORT'] === 443);
+
+    if (!$isHttps) {
+        $redirectUrl = 'https://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . ($_SERVER['REQUEST_URI'] ?? '/');
+        header('Location: ' . $redirectUrl, true, 301);
+        exit('Redirecting to HTTPS...');
+    }
+}
+
 // Run auto-expunge (throttled, only runs every X hours)
 // This is non-blocking and won't affect page load
 if (!defined('SKIP_AUTO_EXPUNGE')) {
