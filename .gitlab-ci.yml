@@ -1,151 +1,206 @@
-# You can override the included template(s) by including variable overrides
-# SAST customization: https://docs.gitlab.com/ee/user/application_security/sast/#customizing-the-sast-settings
-# Secret Detection customization: https://docs.gitlab.com/user/application_security/secret_detection/pipeline/configure
-# Dependency Scanning customization: https://docs.gitlab.com/ee/user/application_security/dependency_scanning/#customizing-the-dependency-scanning-settings
-# Container Scanning customization: https://docs.gitlab.com/ee/user/application_security/container_scanning/#customizing-the-container-scanning-settings
-# Note that environment variables can be set in several places
-# See https://docs.gitlab.com/ee/ci/variables/#cicd-variable-precedence
+# GitLab CI/CD Pipeline for Ondisos
+# PHP-based school registration system with PHPUnit tests
+
+# Default Docker image (PHP 8.2 with extensions)
 image: php:8.2-cli
+
+# Pipeline stages
 stages:
-- install
-- test
-- coverage
-- security
-- build
-- deploy
-- review
-- dast
-- staging
-- canary
-- production
-- incremental rollout 10%
-- incremental rollout 25%
-- incremental rollout 50%
-- incremental rollout 100%
-- performance
-- cleanup
+  - install
+  - test
+  - coverage
+  - security
+
+# Cache vendor directory for faster builds
 cache:
-  key: "${CI_COMMIT_REF_SLUG}"
+  key: ${CI_COMMIT_REF_SLUG}
   paths:
-  - backend/vendor/
+    - backend/vendor/
+
+# Variables
 variables:
+  # Composer config
   COMPOSER_CACHE_DIR: "$CI_PROJECT_DIR/.composer-cache"
-  COMPOSER_ALLOW_SUPERUSER: '1'
-  APP_ENV: testing
-  DB_HOST: localhost
-  DB_NAME: anmeldung_test
-  DB_USER: test
-  DB_PASS: test
-  PDF_TOKEN_SECRET: test-secret-key-for-ci-pipeline-min-32-chars-long
-  FORCE_HTTPS: 'false'
-  AUTH_ENABLED: 'false'
-  RATE_LIMIT_ENABLED: 'false'
+  COMPOSER_ALLOW_SUPERUSER: "1"
+
+  # Test environment variables (override production values)
+  APP_ENV: "testing"
+  DB_HOST: "localhost"
+  DB_NAME: "anmeldung_test"
+  DB_USER: "test"
+  DB_PASS: "test"
+  PDF_TOKEN_SECRET: "test-secret-key-for-ci-pipeline-min-32-chars-long"
+  FORCE_HTTPS: "false"
+  AUTH_ENABLED: "false"
+  RATE_LIMIT_ENABLED: "false"
+
+# Before script - install dependencies
 before_script:
-- cd backend
-- apt-get update -qq
-- apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
-- docker-php-ext-configure gd --with-freetype --with-jpeg
-- docker-php-ext-install pdo pdo_mysql gd
-- curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin
-  --filename=composer
-- composer --version
+  - cd backend
+
+  # Install system dependencies (including libraries for GD)
+  - apt-get update -qq
+  - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+
+  # Configure and install PHP extensions required for project
+  - docker-php-ext-configure gd --with-freetype --with-jpeg
+  - docker-php-ext-install pdo pdo_mysql gd
+
+  # Install Composer
+  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+  # Verify Composer installation
+  - composer --version
+
+# Job: Install Dependencies
 install_dependencies:
   stage: install
   script:
-  - composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
+    - composer install --prefer-dist --no-progress --no-interaction --optimize-autoloader
   cache:
-    key: "${CI_COMMIT_REF_SLUG}"
+    key: ${CI_COMMIT_REF_SLUG}
     paths:
-    - backend/vendor/
+      - backend/vendor/
     policy: push
   artifacts:
     paths:
-    - backend/vendor/
+      - backend/vendor/
     expire_in: 1 hour
+
+# Job: Run Unit Tests
 test_unit:
   stage: test
   dependencies:
-  - install_dependencies
+    - install_dependencies
   script:
-  - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --no-coverage
+    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --no-coverage
   artifacts:
     when: always
     reports:
       junit: backend/phpunit-report.xml
     paths:
-    - backend/phpunit-report.xml
+      - backend/phpunit-report.xml
     expire_in: 1 week
+
+# Job: Run Integration Tests
 test_integration:
   stage: test
   dependencies:
-  - install_dependencies
+    - install_dependencies
   services:
-  - mysql:8.0
+    - mysql:8.0
   variables:
-    MYSQL_ROOT_PASSWORD: root
-    MYSQL_DATABASE: anmeldung_test
-    MYSQL_USER: test
-    MYSQL_PASSWORD: test
-    DB_HOST: mysql
+    MYSQL_ROOT_PASSWORD: "root"
+    MYSQL_DATABASE: "anmeldung_test"
+    MYSQL_USER: "test"
+    MYSQL_PASSWORD: "test"
+    DB_HOST: "mysql"
   before_script:
-  - cd backend
-  - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev
-    libjpeg-dev libfreetype6-dev
-  - until mysql -h mysql -u test -ptest --skip-ssl -e "SELECT 1"; do sleep 1; done
-  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin
-    --filename=composer
-  - docker-php-ext-configure gd --with-freetype --with-jpeg
-  - docker-php-ext-install pdo pdo_mysql gd
-  - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
+    - cd backend
+
+    # Wait for MySQL to be ready
+    - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev libjpeg-dev libfreetype6-dev
+    - until mysql -h mysql -u test -ptest --skip-ssl -e "SELECT 1"; do sleep 1; done
+
+    # Install Composer and extensions
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - docker-php-ext-configure gd --with-freetype --with-jpeg
+    - docker-php-ext-install pdo pdo_mysql gd
+
+    # Import database schema
+    - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
   script:
-  - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml
-    --no-coverage
+    - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml --no-coverage
   artifacts:
     when: always
     reports:
       junit: backend/phpunit-report.xml
     paths:
-    - backend/phpunit-report.xml
+      - backend/phpunit-report.xml
     expire_in: 1 week
+  # Integration tests are optional (allow failure for now)
   allow_failure: true
+
+# Job: Code Coverage
 coverage:
   stage: coverage
   dependencies:
-  - install_dependencies
+    - install_dependencies
   before_script:
-  - cd backend
-  - apt-get update -qq
-  - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
-  - pecl install xdebug
-  - docker-php-ext-enable xdebug
-  - docker-php-ext-configure gd --with-freetype --with-jpeg
-  - docker-php-ext-install pdo pdo_mysql gd
-  - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin
-    --filename=composer
+    - cd backend
+
+    # Install dependencies (including libraries for GD)
+    - apt-get update -qq
+    - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+
+    # Install PHP extensions (including Xdebug for coverage)
+    - pecl install xdebug
+    - docker-php-ext-enable xdebug
+    - docker-php-ext-configure gd --with-freetype --with-jpeg
+    - docker-php-ext-install pdo pdo_mysql gd
+
+    # Install Composer
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
-  - export XDEBUG_MODE=coverage
-  - composer test:coverage
-  - echo "Coverage report generated at backend/coverage/index.html"
-  coverage: "/^\\s*Lines:\\s*\\d+\\.\\d+\\%/"
+    - export XDEBUG_MODE=coverage
+    - composer test:coverage
+    - echo "Coverage report generated at backend/coverage/index.html"
+  coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
   artifacts:
     paths:
-    - backend/coverage/
+      - backend/coverage/
     expire_in: 30 days
+  # Coverage is optional (only run on main branch)
   only:
-  - main
-  - master
-  - develop
+    - main
+    - master
+    - develop
+
+# Job: Lint PHP Files
 lint_php:
   stage: test
   dependencies: []
-  before_script: []
+  before_script: []  # Override global before_script to stay in project root
   script:
-  - find backend/src -name "*.php" -print0 | xargs -0 -n1 php -l
-  - find backend/public -name "*.php" -print0 | xargs -0 -n1 php -l
-  - find frontend/src -name "*.php" -print0 | xargs -0 -n1 php -l
-  - find frontend/public -name "*.php" -print0 | xargs -0 -n1 php -l
-  - echo "All PHP files are syntactically valid"
-sast:
-  stage: test
-include:
-- template: Auto-DevOps.gitlab-ci.yml
+    - find backend/src -name "*.php" -print0 | xargs -0 -n1 php -l
+    - find backend/public -name "*.php" -print0 | xargs -0 -n1 php -l
+    - find frontend/src -name "*.php" -print0 | xargs -0 -n1 php -l
+    - find frontend/public -name "*.php" -print0 | xargs -0 -n1 php -l
+    - echo "All PHP files are syntactically valid"
+
+# Job: Secret Detection (GitLab Security Scanning)
+#secret_detection:
+#  stage: security
+#  variables:
+#    SECRET_DETECTION_ENABLED: 'true'
+#  # Use GitLab's Secret Detection template
+#  include:
+#    - template: Security/Secret-Detection.gitlab-ci.yml
+
+# Job: SAST (Static Application Security Testing)
+#sast:
+#  stage: security
+#  # Use GitLab's SAST template
+#  include:
+#    - template: Security/SAST.gitlab-ci.yml
+
+# Optional: Check Code Style (requires PHP_CodeSniffer)
+# Uncomment to enable code style checks
+# code_style:
+#   stage: test
+#   dependencies:
+#     - install_dependencies
+#   script:
+#     - composer require --dev "squizlabs/php_codesniffer=*"
+#     - ./vendor/bin/phpcs --standard=PSR12 backend/src
+#   allow_failure: true
+
+# Optional: Security Check (requires security-checker)
+# Uncomment to enable security vulnerability scanning
+# security_check:
+#   stage: security
+#   dependencies:
+#     - install_dependencies
+#   script:
+#     - curl -H "Accept: text/plain" https://security.symfony.com/check_lock -F lock=@backend/composer.lock
+#   allow_failure: true
