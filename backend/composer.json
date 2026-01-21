@@ -3,7 +3,7 @@
     "description": "Ondisos Backend - School Registration System Admin Interface",
     "type": "project",
     "require": {
-        "php": ">=8.1",
+        "php": ">=8.2",
         "mpdf/mpdf": "^8.2"
     },
     "require-dev": {

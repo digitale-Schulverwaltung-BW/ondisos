@@ -1,8 +1,8 @@
 # GitLab CI/CD Pipeline for Ondisos
 # PHP-based school registration system with PHPUnit tests
 
-# Default Docker image (PHP 8.1 with extensions)
-image: php:8.1-cli
+# Default Docker image (PHP 8.2 with extensions)
+image: php:8.2-cli
 
 # Pipeline stages
 stages:

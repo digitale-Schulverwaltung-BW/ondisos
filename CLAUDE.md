@@ -6,7 +6,7 @@
 
 **Stack:**
 - **Frontend:** SurveyJS, Vanilla JavaScript, Bootstrap 5
-- **Backend:** PHP 8.1+, MySQL/MariaDB
+- **Backend:** PHP 8.2+, MySQL/MariaDB
 - **Architecture:** Clean MVC mit Service Layer
 
 **Deployment:**
@@ -301,7 +301,7 @@ return [
 
 **Architecture:**
 - Clean MVC mit Service Layer
-- Type-Safe PHP 8.1+ (strict_types, typed properties)
+- Type-Safe PHP 8.2+ (strict_types, typed properties, readonly classes)
 - PSR-4 Autoloading
 - Dependency Injection vorbereitet
 - Exception Handling
@@ -1199,7 +1199,7 @@ php -l backend/config/messages.local.php
 
 **Entwickler:** [Name]
 **Stand:** Januar 2026
-**PHP Version:** 8.1+
+**PHP Version:** 8.2+
 **Database:** MySQL 8.0+ / MariaDB 10.5+
 
 ---
@@ -1290,7 +1290,7 @@ php -l backend/config/messages.local.php
 - ✅ Excel-Export mit Auto-Formatierung
 - ✅ Status-System
 - ✅ Bulk-Actions
-- ✅ Type-Safety (PHP 8.1+)
+- ✅ Type-Safety (PHP 8.2+)
 
 ### v1.0 (Original)
 - Legacy Spaghetti Code

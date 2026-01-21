@@ -4,7 +4,7 @@
 
 Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professionellem Admin-Backend.
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.1%2B-blue)](https://php.net)
+[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-production_ready-brightgreen)](https://github.com)
 
@@ -160,7 +160,7 @@ mysql -u root -p < database/schema.sql
 ┌─────────────────────────────────────────────────────────────┐
 │              Intranet (Nur für Admins/Verwaltung)           │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Backend (PHP 8.1+ MVC)                                │ │
+│  │  Backend (PHP 8.2+ MVC)                                │ │
 │  │  • API-Endpoint (submit.php)                           │ │
 │  │  • Admin-Interface (optional Login)                    │ │
 │  │  • PDF-Generator (Token-basiert)                       │ │
@@ -191,7 +191,7 @@ mysql -u root -p < database/schema.sql
 ## 💻 Systemvoraussetzungen
 
 ### Backend
-- **PHP:** 8.1 oder höher
+- **PHP:** 8.2 oder höher
 - **Webserver:** Apache/Nginx
 - **Datenbank:** MySQL 8.0+ / MariaDB 10.5+
 - **Composer:** Für Dependency Management
