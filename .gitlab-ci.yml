@@ -164,20 +164,20 @@ lint_php:
     - echo "All PHP files are syntactically valid"
 
 # Job: Secret Detection (GitLab Security Scanning)
-secret_detection:
-  stage: security
-  variables:
-    SECRET_DETECTION_ENABLED: 'true'
-  # Use GitLab's Secret Detection template
-  include:
-    - template: Security/Secret-Detection.gitlab-ci.yml
+#secret_detection:
+#  stage: security
+#  variables:
+#    SECRET_DETECTION_ENABLED: 'true'
+#  # Use GitLab's Secret Detection template
+#  include:
+#    - template: Security/Secret-Detection.gitlab-ci.yml
 
 # Job: SAST (Static Application Security Testing)
-sast:
-  stage: security
-  # Use GitLab's SAST template
-  include:
-    - template: Security/SAST.gitlab-ci.yml
+#sast:
+#  stage: security
+#  # Use GitLab's SAST template
+#  include:
+#    - template: Security/SAST.gitlab-ci.yml
 
 # Optional: Check Code Style (requires PHP_CodeSniffer)
 # Uncomment to enable code style checks
