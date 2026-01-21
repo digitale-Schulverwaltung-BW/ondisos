@@ -496,9 +496,9 @@ archiviert
 - ✅ Admin Authentication (Optional, session-basiert, mit Login/Logout)
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
 - ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
+- ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
 
 **TODO:**
-- ⚠️ Rate Limiting für API-Endpoints
 - ⚠️ HTTPS erzwingen in Production
 
 ---
@@ -670,7 +670,6 @@ http://intranet.example.com/backend/dashboard.php
 ```
 
 ---
-
 ## 🐛 Known Issues & TODOs
 
 ### Known Issues
@@ -679,11 +678,10 @@ http://intranet.example.com/backend/dashboard.php
 
 ### TODOs
 1. **PHPUnit Tests** schreiben
-2. **Rate Limiting** für API-Endpoints
-3. **Logging** verbessern (strukturiertes Logging)
-4. **Monitoring** Setup (z.B. Sentry)
-5. **API Documentation** (OpenAPI/Swagger)
-6. **Docker Setup** für einfaches Deployment
+2. **Logging** verbessern (strukturiertes Logging)
+3. **Monitoring** Setup (z.B. Sentry)
+4. **API Documentation** (OpenAPI/Swagger)
+5. **Docker Setup** für einfaches Deployment
 
 ---
 
@@ -931,6 +929,12 @@ php -l backend/config/messages.local.php
   - Bootstrap 5 Login-UI
   - Passwort-Hash-Generator Script
   - API-Endpoints bleiben öffentlich zugänglich
+- ✅ Rate Limiting System
+  - File-based Rate Limiter (keine Redis-Dependency)
+  - Konfigurierbar via .env (10 req/min default)
+  - Sliding Window Algorithm
+  - Probabilistic Cleanup
+  - HTTP 429 mit Retry-After Header
 - ✅ PDF Verbesserungen
   - Zweispaltiges Datentabellen-Layout (kompakter)
   - Logo-Support für absolute und relative Pfade
