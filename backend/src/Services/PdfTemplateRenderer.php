@@ -15,7 +15,7 @@ use App\Utils\DataFormatter;
 class PdfTemplateRenderer
 {
     private string $templatePath;
-    private const MAX_LOGO_WIDTH = 150; // pixels
+    private const MAX_LOGO_WIDTH = 300; // pixels (prevents unnecessary downscaling)
 
     public function __construct(?string $templatePath = null)
     {
@@ -41,8 +41,8 @@ class PdfTemplateRenderer
         $rawData = $anmeldung->data ?? [];
         $filteredData = DataFormatter::prepareForPdf($rawData, $pdfConfig);
 
-        // Load logo as base64
-        $logoBase64 = $this->loadLogoBase64($pdfConfig['logo'] ?? null);
+        // Load logo with dimensions
+        $logoData = $this->loadLogoData($pdfConfig['logo'] ?? null);
 
         // Load CSS
         $styles = $this->loadStyles();
@@ -53,7 +53,8 @@ class PdfTemplateRenderer
             'config' => $pdfConfig,
             'data' => $filteredData,
             'rawData' => $rawData,
-            'logoBase64' => $logoBase64,
+            'logoBase64' => $logoData['dataUri'] ?? null, // Keep for backward compat
+            'logoData' => $logoData,
             'styles' => $styles,
             'formatter' => DataFormatter::class, // For use in templates
         ];
@@ -96,17 +97,17 @@ class PdfTemplateRenderer
     }
 
     /**
-     * Load logo as base64 data URI
+     * Load logo data with dimensions
      *
      * Optimizes logo by resizing and converting to JPEG if needed.
      *
      * @param string|null $logoPath Path to logo file (absolute or relative to backend root)
-     * @return string|null Base64 data URI or null if no logo
+     * @return array{dataUri: string|null, width: int|null, height: int|null}
      */
-    private function loadLogoBase64(?string $logoPath): ?string
+    private function loadLogoData(?string $logoPath): array
     {
         if (!$logoPath) {
-            return null;
+            return ['dataUri' => null, 'width' => null, 'height' => null];
         }
 
         // Resolve path: use as-is if absolute, otherwise relative to backend root
@@ -120,25 +121,29 @@ class PdfTemplateRenderer
 
         if (!file_exists($fullPath)) {
             error_log("PDF logo not found: {$fullPath}");
-            return null;
+            return ['dataUri' => null, 'width' => null, 'height' => null];
         }
 
         try {
             // Load image
             $imageData = file_get_contents($fullPath);
             if ($imageData === false) {
-                return null;
+                return ['dataUri' => null, 'width' => null, 'height' => null];
             }
 
             $img = @imagecreatefromstring($imageData);
             if ($img === false) {
                 error_log("Failed to load logo image: {$fullPath}");
-                return null;
+                return ['dataUri' => null, 'width' => null, 'height' => null];
             }
 
             // Get original dimensions
             $originalWidth = imagesx($img);
             $originalHeight = imagesy($img);
+
+            // Track final dimensions (will be updated if resized)
+            $finalWidth = $originalWidth;
+            $finalHeight = $originalHeight;
 
             // Detect if image has transparency (PNG with alpha channel)
             $hasTransparency = false;
@@ -154,6 +159,10 @@ class PdfTemplateRenderer
             if ($originalWidth > self::MAX_LOGO_WIDTH) {
                 $newWidth = self::MAX_LOGO_WIDTH;
                 $newHeight = (int)($originalHeight * (self::MAX_LOGO_WIDTH / $originalWidth));
+
+                // Update final dimensions
+                $finalWidth = $newWidth;
+                $finalHeight = $newHeight;
 
                 // Create resized image
                 $resized = imagecreatetruecolor($newWidth, $newHeight);
@@ -207,11 +216,17 @@ class PdfTemplateRenderer
             $imageData = ob_get_clean();
             imagedestroy($img);
 
-            return "data:{$mimeType};base64," . base64_encode($imageData);
+            $dataUri = "data:{$mimeType};base64," . base64_encode($imageData);
+
+            return [
+                'dataUri' => $dataUri,
+                'width' => $finalWidth,
+                'height' => $finalHeight,
+            ];
 
         } catch (\Throwable $e) {
             error_log("Error processing logo: " . $e->getMessage());
-            return null;
+            return ['dataUri' => null, 'width' => null, 'height' => null];
         }
     }
 

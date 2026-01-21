@@ -29,7 +29,7 @@ body {
 }
 
 .header img.logo {
-    max-width: 150px;
+    /* Dimensions are set via width/height attributes for pixel-perfect rendering */
     height: auto;
 }
 
