@@ -100,7 +100,7 @@ test_integration:
 
     # Wait for MySQL to be ready
     - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev libjpeg-dev libfreetype6-dev
-    - until mysql -h mysql -u test -ptest -e "SELECT 1"; do sleep 1; done
+    - until mysql -h mysql -u test -ptest --ssl-mode=DISABLED -e "SELECT 1"; do sleep 1; done
 
     # Install Composer and extensions
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -108,7 +108,7 @@ test_integration:
     - docker-php-ext-install pdo pdo_mysql gd
 
     # Import database schema
-    - mysql -h mysql -u test -ptest anmeldung_test < ../database/schema.sql
+    - mysql -h mysql -u test -ptest --ssl-mode=DISABLED anmeldung_test < ../database/schema.sql
   script:
     - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml
   artifacts:
