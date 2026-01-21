@@ -144,7 +144,7 @@ mysql -u root -p < database/schema.sql
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Internet (Öffentlich)                     │
+│                    Internet (Öffentlich)                    │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Frontend (SurveyJS + Vanilla JS)                      │ │
 │  │  • Formulare anzeigen                                  │ │
@@ -156,7 +156,7 @@ mysql -u root -p < database/schema.sql
                      │ (Rate Limited, CORS-Protected)
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Intranet (Nur für Admins)                       │
+│              Intranet (Nur für Admins)                      │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Backend (PHP 8.1+ MVC)                                │ │
 │  │  • API-Endpoint (submit.php)                           │ │
@@ -164,7 +164,7 @@ mysql -u root -p < database/schema.sql
 │  │  • PDF-Generator (Token-basiert)                       │ │
 │  │  • Excel-Export                                        │ │
 │  └─────────────────┬──────────────────────────────────────┘ │
-│                    │                                          │
+│                    │                                        │
 │  ┌─────────────────▼──────────────────────────────────────┐ │
 │  │  MySQL/MariaDB                                         │ │
 │  │  • Anmeldungen                                         │ │
