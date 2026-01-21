@@ -23,20 +23,31 @@ class EmailService
 
     /**
      * Send notification email
+     *
+     * @param string $to Email address or comma-separated list of addresses
+     * @param string $formKey Form identifier
+     * @param array $formData Form data
+     * @return bool True if all emails were sent successfully
      */
     public function sendNotification(
         string $to,
         string $formKey,
         array $formData
     ): bool {
-        if (!filter_var($to, FILTER_VALIDATE_EMAIL)) {
-            throw new \InvalidArgumentException('Invalid email address: ' . $to);
+        // Support comma-separated email addresses
+        $recipients = array_map('trim', explode(',', $to));
+
+        // Validate all email addresses
+        foreach ($recipients as $email) {
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new \InvalidArgumentException('Invalid email address: ' . $email);
+            }
         }
 
         $parts = $this->buildEmail($formKey, $formData);
-        
+
         return $this->sendMultipartEmail(
-            to: $to,
+            to: implode(', ', $recipients), // PHP mail() accepts comma-separated addresses
             subject: $parts['subject'],
             plainBody: $parts['plain'],
             htmlBody: $parts['html'],
