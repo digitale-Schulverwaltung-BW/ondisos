@@ -43,6 +43,9 @@ return [
         'delete_failed' => 'Löschen fehlgeschlagen',
         'no_entries_selected' => 'Bitte wählen Sie mindestens einen Eintrag aus',
         'expunge_failed' => 'Expunge fehlgeschlagen',
+        'invalid_id' => 'Ungültige ID',
+        'invalid_status' => 'Ungültiger Status',
+        'status_update_failed' => 'Status-Änderung fehlgeschlagen',
     ],
 
     /**
@@ -52,7 +55,7 @@ return [
         'bulk_action_completed' => '{{count}} Einträge erfolgreich {{action}}',
         'restored' => '✓ Wiederhergestellt! Eintrag #{{id}} wurde wiederhergestellt.',
         'deleted' => '⚠️ Permanent gelöscht! Eintrag #{{id}} wurde permanent aus der Datenbank entfernt.',
-        'status_updated' => 'Status erfolgreich aktualisiert',
+        'status_updated' => 'Status von Eintrag #{{id}} erfolgreich auf "{{status}}" geändert',
         'export_completed' => 'Export erfolgreich abgeschlossen',
         'expunge_completed' => 'Expunge erfolgreich durchgeführt. {{count}} Einträge gelöscht.',
     ],
@@ -92,6 +95,9 @@ return [
             'edit' => 'Bearbeiten',
             'view' => 'Ansehen',
             'download' => 'Herunterladen',
+            'mark_in_progress' => 'In Bearbeitung',
+            'accept' => 'Akzeptieren',
+            'reject' => 'Ablehnen',
         ],
 
         // Table Headers
@@ -131,6 +137,7 @@ return [
             'yes' => 'Ja',
             'no' => 'Nein',
             'deleted_yes' => 'Ja',
+            'confirm_delete' => 'Anmeldung wirklich löschen? Diese Aktion kann rückgängig gemacht werden (Papierkorb).',
         ],
 
         // Dashboard
