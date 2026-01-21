@@ -140,6 +140,16 @@ class PdfTemplateRenderer
             $originalWidth = imagesx($img);
             $originalHeight = imagesy($img);
 
+            // Detect if image has transparency (PNG with alpha channel)
+            $hasTransparency = false;
+            if (function_exists('imagecolortransparent')) {
+                $hasTransparency = imagecolortransparent($img) >= 0;
+            }
+            if (!$hasTransparency && function_exists('imageistruecolor') && imageistruecolor($img)) {
+                // Check for alpha channel in truecolor images
+                $hasTransparency = (imagecolorat($img, 0, 0) >> 24) != 0;
+            }
+
             // Calculate new dimensions (preserve aspect ratio)
             if ($originalWidth > self::MAX_LOGO_WIDTH) {
                 $newWidth = self::MAX_LOGO_WIDTH;
@@ -148,9 +158,15 @@ class PdfTemplateRenderer
                 // Create resized image
                 $resized = imagecreatetruecolor($newWidth, $newHeight);
 
-                // Preserve transparency for PNG
-                imagealphablending($resized, false);
-                imagesavealpha($resized, true);
+                // Preserve transparency for PNG, or use white background for JPEG
+                if ($hasTransparency) {
+                    imagealphablending($resized, false);
+                    imagesavealpha($resized, true);
+                } else {
+                    // Fill with white background for JPEG conversion
+                    $white = imagecolorallocate($resized, 255, 255, 255);
+                    imagefill($resized, 0, 0, $white);
+                }
 
                 imagecopyresampled(
                     $resized,
@@ -167,15 +183,31 @@ class PdfTemplateRenderer
 
                 imagedestroy($img);
                 $img = $resized;
+            } else {
+                // No resizing needed, but may need to add white background for JPEG
+                if (!$hasTransparency) {
+                    $withBg = imagecreatetruecolor($originalWidth, $originalHeight);
+                    $white = imagecolorallocate($withBg, 255, 255, 255);
+                    imagefill($withBg, 0, 0, $white);
+                    imagecopy($withBg, $img, 0, 0, 0, 0, $originalWidth, $originalHeight);
+                    imagedestroy($img);
+                    $img = $withBg;
+                }
             }
 
-            // Convert to base64 JPEG (smaller file size)
+            // Convert to base64: PNG if transparent, JPEG otherwise (smaller file size)
             ob_start();
-            imagejpeg($img, null, 85); // 85% quality
+            if ($hasTransparency) {
+                imagepng($img, null, 6); // PNG with compression level 6
+                $mimeType = 'image/png';
+            } else {
+                imagejpeg($img, null, 85); // JPEG 85% quality
+                $mimeType = 'image/jpeg';
+            }
             $imageData = ob_get_clean();
             imagedestroy($img);
 
-            return 'data:image/jpeg;base64,' . base64_encode($imageData);
+            return "data:{$mimeType};base64," . base64_encode($imageData);
 
         } catch (\Throwable $e) {
             error_log("Error processing logo: " . $e->getMessage());
