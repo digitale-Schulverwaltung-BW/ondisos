@@ -100,7 +100,7 @@ class PdfTemplateRenderer
      *
      * Optimizes logo by resizing and converting to JPEG if needed.
      *
-     * @param string|null $logoPath Path to logo file (relative to backend root)
+     * @param string|null $logoPath Path to logo file (absolute or relative to backend root)
      * @return string|null Base64 data URI or null if no logo
      */
     private function loadLogoBase64(?string $logoPath): ?string
@@ -109,8 +109,14 @@ class PdfTemplateRenderer
             return null;
         }
 
-        // Resolve path relative to backend root
-        $fullPath = __DIR__ . '/../../' . $logoPath;
+        // Resolve path: use as-is if absolute, otherwise relative to backend root
+        if (str_starts_with($logoPath, '/')) {
+            // Absolute path - use directly
+            $fullPath = $logoPath;
+        } else {
+            // Relative path - resolve from backend root
+            $fullPath = __DIR__ . '/../../' . $logoPath;
+        }
 
         if (!file_exists($fullPath)) {
             error_log("PDF logo not found: {$fullPath}");
