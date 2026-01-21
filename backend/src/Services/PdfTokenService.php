@@ -119,7 +119,7 @@ class PdfTokenService
      */
     private function isExpired(int $timestamp, int $lifetime): bool
     {
-        return (time() - $timestamp) > $lifetime;
+        return (time() - $timestamp) >= $lifetime;
     }
 
     /**
