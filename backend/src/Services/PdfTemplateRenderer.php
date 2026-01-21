@@ -145,14 +145,17 @@ class PdfTemplateRenderer
             $finalWidth = $originalWidth;
             $finalHeight = $originalHeight;
 
-            // Detect if image has transparency (PNG with alpha channel)
+            // Detect if image has transparency by checking file extension
+            // This is more reliable than pixel-based detection
             $hasTransparency = false;
-            if (function_exists('imagecolortransparent')) {
-                $hasTransparency = imagecolortransparent($img) >= 0;
+            $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
+            if ($extension === 'png') {
+                // PNG files may have transparency - check if alpha channel is used
+                $hasTransparency = $this->pngHasAlphaChannel($img);
             }
-            if (!$hasTransparency && function_exists('imageistruecolor') && imageistruecolor($img)) {
-                // Check for alpha channel in truecolor images
-                $hasTransparency = (imagecolorat($img, 0, 0) >> 24) != 0;
+            // GIF can also have transparency
+            if ($extension === 'gif' && function_exists('imagecolortransparent')) {
+                $hasTransparency = imagecolortransparent($img) >= 0;
             }
 
             // Calculate new dimensions (preserve aspect ratio)
@@ -228,6 +231,40 @@ class PdfTemplateRenderer
             error_log("Error processing logo: " . $e->getMessage());
             return ['dataUri' => null, 'width' => null, 'height' => null];
         }
+    }
+
+    /**
+     * Check if PNG image has alpha channel (transparency)
+     *
+     * Scans the image to detect if any pixel uses the alpha channel.
+     * More reliable than checking a single pixel.
+     *
+     * @param \GdImage $img GD image resource
+     * @return bool True if alpha channel is used
+     */
+    private function pngHasAlphaChannel($img): bool
+    {
+        // Check a sample of pixels (not all for performance)
+        // If any pixel has alpha != 127 (opaque), we have transparency
+        $width = imagesx($img);
+        $height = imagesy($img);
+
+        // Sample every 10th pixel for performance
+        $step = 10;
+        for ($x = 0; $x < $width; $x += $step) {
+            for ($y = 0; $y < $height; $y += $step) {
+                $rgba = imagecolorat($img, $x, $y);
+                $alpha = ($rgba & 0x7F000000) >> 24;
+
+                // Alpha channel: 0 = opaque, 127 = transparent
+                // If we find any transparency, return true
+                if ($alpha > 0) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**
