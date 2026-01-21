@@ -3,12 +3,16 @@
 
 declare(strict_types=1);
 
+// Skip auth check - this API is called from frontend and doesn't use session auth
+define('SKIP_AUTH_CHECK', true);
+
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Repositories\AnmeldungRepository;
 use App\Validators\AnmeldungValidator;
 use App\Services\MessageService as M;
 use App\Services\PdfTokenService;
+use App\Services\RateLimiter;
 use App\Config\FormConfig;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -29,6 +33,35 @@ if (in_array($origin, $allowedOrigins, true)) {
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
     exit;
+}
+
+// Rate Limiting (if enabled)
+$rateLimitEnabled = filter_var($_ENV['RATE_LIMIT_ENABLED'] ?? 'true', FILTER_VALIDATE_BOOLEAN);
+if ($rateLimitEnabled) {
+    $rateLimitMax = (int)($_ENV['RATE_LIMIT_MAX'] ?? 10);
+    $rateLimitWindow = (int)($_ENV['RATE_LIMIT_WINDOW'] ?? 60);
+
+    $rateLimiter = new RateLimiter(
+        __DIR__ . '/../../cache/ratelimit',
+        $rateLimitMax,
+        $rateLimitWindow
+    );
+
+    // Use IP + User-Agent for better identification
+    $identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    $identifier .= ':' . substr(md5($userAgent), 0, 8);
+
+    if (!$rateLimiter->isAllowed($identifier)) {
+        $retryAfter = $rateLimiter->getRetryAfter($identifier);
+        header('Retry-After: ' . $retryAfter);
+        http_response_code(429);
+        echo json_encode([
+            'error' => M::get('api.errors.rate_limit', 'Too many requests. Please try again later.'),
+            'retry_after' => $retryAfter,
+        ]);
+        exit;
+    }
 }
 
 try {

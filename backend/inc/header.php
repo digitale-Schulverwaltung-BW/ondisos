@@ -46,10 +46,39 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/admin/">Anmeldungen</a>
+        <a class="navbar-brand" href="index.php">Anmeldungen</a>
 
-        <span class="navbar-text text-muted ms-3">
-            Admin
-        </span>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="index.php">Übersicht</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="trash.php">Papierkorb</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="dashboard.php">Dashboard</a>
+                </li>
+            </ul>
+
+            <div class="d-flex align-items-center">
+                <?php if (!empty($_SESSION['admin_logged_in'])): ?>
+                    <span class="navbar-text text-light me-3">
+                        <small>Angemeldet als: <?= htmlspecialchars($_SESSION['admin_username'] ?? 'Admin') ?></small>
+                    </span>
+                    <a href="logout.php" class="btn btn-outline-light btn-sm">
+                        Abmelden
+                    </a>
+                <?php else: ?>
+                    <span class="navbar-text text-muted">
+                        Admin
+                    </span>
+                <?php endif; ?>
+            </div>
+        </div>
     </div>
 </nav>

@@ -493,9 +493,11 @@ archiviert
 - ✅ Error Handling (keine sensitive Daten in Errors)
 - ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt)
 - ✅ Secret Key Management (PDF_TOKEN_SECRET in .env, min 32 Zeichen)
+- ✅ Admin Authentication (Optional, session-basiert, mit Login/Logout)
+- ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
+- ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
 
 **TODO:**
-- ⚠️ Admin Authentication aktivieren (aktuell auskommentiert in auth.php)
 - ⚠️ Rate Limiting für API-Endpoints
 - ⚠️ HTTPS erzwingen in Production
 
@@ -578,6 +580,60 @@ cp your-logo.png backend/templates/pdf/logo.png
 </VirtualHost>
 ```
 
+### Admin Authentication (Optional)
+
+Das Backend verfügt über ein optionales Login-System für zusätzliche Sicherheit.
+
+**Standardeinstellung:** Deaktiviert (perfekt für gesicherte Intranet-Umgebungen)
+
+#### Setup
+
+**1. Auth aktivieren (optional):**
+```bash
+# In backend/.env
+AUTH_ENABLED=true
+ADMIN_USERNAME=admin
+```
+
+**2. Passwort-Hash generieren:**
+```bash
+cd backend
+php scripts/generate-password-hash.php
+# Oder direkt mit Passwort:
+php scripts/generate-password-hash.php "dein-sicheres-passwort"
+```
+
+**3. Hash in .env eintragen:**
+```bash
+ADMIN_PASSWORD_HASH=$2y$10$abc123...
+```
+
+#### Features
+
+- ✅ **Optional aktivierbar** via `AUTH_ENABLED` in `.env`
+- ✅ **Session-basiert** mit automatischem Timeout (1h, konfigurierbar)
+- ✅ **CSRF-Protection** für Login-Formular
+- ✅ **Brute-Force-Protection** (0.5s Delay bei Fehlversuchen)
+- ✅ **Session Regeneration** gegen Session Fixation
+- ✅ **Schöne Login-UI** mit Bootstrap 5
+- ✅ **Logout-Button** in Navbar sichtbar
+- ✅ **Mobile-responsive**
+
+#### Geschützte Bereiche
+
+**Benötigen Login (nur wenn AUTH_ENABLED=true):**
+- Admin-Übersicht (`index.php`)
+- Detail-Ansicht (`detail.php`)
+- Papierkorb (`trash.php`)
+- Dashboard (`dashboard.php`)
+- Excel-Export (`excel_export.php`)
+- Alle Bulk-Actions
+
+**Immer zugänglich (unabhängig von AUTH_ENABLED):**
+- API-Submit-Endpoint (`api/submit.php`) - für Frontend-Anmeldungen
+- PDF-Download (`pdf/download.php`) - Token-basierte Auth
+- Login/Logout-Seiten
+
 ---
 
 ## 🧪 Testing
@@ -618,18 +674,16 @@ http://intranet.example.com/backend/dashboard.php
 ## 🐛 Known Issues & TODOs
 
 ### Known Issues
-- ⚠️ Auth ist auskommentiert (auth.php) → muss aktiviert werden
 - ⚠️ Email-Service nutzt PHP mail() → ggf. auf SMTP umstellen
 - ⚠️ Keine automatischen Tests vorhanden
 
 ### TODOs
-1. **Admin Authentication** implementieren
-2. **PHPUnit Tests** schreiben
-3. **Rate Limiting** für API-Endpoints
-4. **Logging** verbessern (strukturiertes Logging)
-5. **Monitoring** Setup (z.B. Sentry)
-6. **API Documentation** (OpenAPI/Swagger)
-7. **Docker Setup** für einfaches Deployment
+1. **PHPUnit Tests** schreiben
+2. **Rate Limiting** für API-Endpoints
+3. **Logging** verbessern (strukturiertes Logging)
+4. **Monitoring** Setup (z.B. Sentry)
+5. **API Documentation** (OpenAPI/Swagger)
+6. **Docker Setup** für einfaches Deployment
 
 ---
 
@@ -866,6 +920,25 @@ php -l backend/config/messages.local.php
 ---
 
 ## 🔄 Änderungshistorie
+
+### v2.3 (Januar 2026)
+- ✅ Admin Authentication System (Optional)
+  - Session-basiertes Login/Logout
+  - Optional aktivierbar via AUTH_ENABLED in .env
+  - CSRF-Protection für Login-Formular
+  - Brute-Force-Protection (0.5s Delay)
+  - Session Timeout (konfigurierbar)
+  - Bootstrap 5 Login-UI
+  - Passwort-Hash-Generator Script
+  - API-Endpoints bleiben öffentlich zugänglich
+- ✅ PDF Verbesserungen
+  - Zweispaltiges Datentabellen-Layout (kompakter)
+  - Logo-Support für absolute und relative Pfade
+  - PNG-Transparenz korrekt erhalten
+  - Explizite Dimensionen für bessere Auflösung
+- ✅ Excel-Export Verbesserungen
+  - File-Upload-Felder automatisch filtern
+  - Verhindert base64-Daten in Excel-Exporten
 
 ### v2.2 (Januar 2026)
 - ✅ PDF Download System

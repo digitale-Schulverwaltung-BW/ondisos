@@ -8,6 +8,9 @@ declare(strict_types=1);
  * No permanent storage - PDF is generated for each request.
  */
 
+// Skip auth check - this endpoint uses token-based authentication
+define('SKIP_AUTH_CHECK', true);
+
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Services\PdfGeneratorService;

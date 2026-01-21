@@ -262,6 +262,7 @@ return [
             'validation_failed' => 'Validation failed: {{error}}',
             'save_failed' => 'Failed to save anmeldung',
             'internal_server_error' => 'Internal server error',
+            'rate_limit' => 'Zu viele Anfragen. Bitte versuchen Sie es später erneut.',
         ],
     ],
 
