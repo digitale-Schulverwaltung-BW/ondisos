@@ -228,25 +228,8 @@ require __DIR__ . '/../inc/header.php';
         </div>
     <?php endif; ?>
 
-    <!-- Success/Error Messages -->
-    <?php if (!empty($_SESSION['success'])): ?>
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars($_SESSION['success']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['success']); ?>
-    <?php endif; ?>
-
-    <?php if (!empty($_SESSION['error'])): ?>
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            <?= htmlspecialchars($_SESSION['error']) ?>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <?php unset($_SESSION['error']); ?>
-    <?php endif; ?>
-
     <!-- Actions -->
-    <div class="d-flex gap-2 mb-4 flex-wrap">
+    <div class="d-flex gap-2 mb-4">
         <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>"
            class="btn btn-secondary">
             <?= M::get('ui.back_to_overview') ?>
@@ -258,53 +241,12 @@ require __DIR__ . '/../inc/header.php';
         </a>
 
         <?php if (!$anmeldung->deleted): ?>
-            <!-- Status Change Buttons -->
-            <div class="btn-group" role="group">
-                <form method="POST" action="change_status.php" class="d-inline">
-                    <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
-                    <input type="hidden" name="status" value="in_bearbeitung">
-                    <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
-                    <button type="submit" class="btn btn-warning"
-                            <?= $anmeldung->status === 'in_bearbeitung' ? 'disabled' : '' ?>>
-                        <i class="bi bi-hourglass-split"></i>
-                        <?= M::get('ui.buttons.mark_in_progress', 'In Bearbeitung') ?>
-                    </button>
-                </form>
-
-                <form method="POST" action="change_status.php" class="d-inline">
-                    <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
-                    <input type="hidden" name="status" value="akzeptiert">
-                    <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
-                    <button type="submit" class="btn btn-success"
-                            <?= $anmeldung->status === 'akzeptiert' ? 'disabled' : '' ?>>
-                        <i class="bi bi-check-circle"></i>
-                        <?= M::get('ui.buttons.accept', 'Akzeptieren') ?>
-                    </button>
-                </form>
-
-                <form method="POST" action="change_status.php" class="d-inline">
-                    <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
-                    <input type="hidden" name="status" value="abgelehnt">
-                    <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
-                    <button type="submit" class="btn btn-danger"
-                            <?= $anmeldung->status === 'abgelehnt' ? 'disabled' : '' ?>>
-                        <i class="bi bi-x-circle"></i>
-                        <?= M::get('ui.buttons.reject', 'Ablehnen') ?>
-                    </button>
-                </form>
-            </div>
-
-            <!-- Delete Button -->
-            <form method="POST" action="change_status.php" class="d-inline"
-                  onsubmit="return confirm('<?= M::get('ui.detail.confirm_delete', 'Wirklich löschen?') ?>')">
-                <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
-                <input type="hidden" name="action" value="delete">
-                <input type="hidden" name="return_url" value="index.php?form=<?= urlencode($anmeldung->formular) ?>">
-                <button type="submit" class="btn btn-outline-danger">
-                    <i class="bi bi-trash"></i>
-                    <?= M::get('ui.buttons.delete') ?>
-                </button>
-            </form>
+            <button class="btn btn-warning" onclick="alert('<?= M::get('ui.detail.mark_as') ?> - TODO')">
+                <?= M::get('ui.detail.mark_as') ?>
+            </button>
+            <button class="btn btn-danger" onclick="if(confirm('<?= M::get('ui.trash.confirm_hard_delete', 'Wirklich löschen?') ?>')) alert('<?= M::get('ui.buttons.delete') ?> - TODO')">
+                <?= M::get('ui.buttons.delete') ?>
+            </button>
         <?php endif; ?>
     </div>
 </div>

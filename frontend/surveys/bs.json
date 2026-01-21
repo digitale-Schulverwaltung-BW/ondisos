@@ -61,8 +61,7 @@
     {
       "name": "page1",
       "title": {
-        "de": "Schülerdaten",
-        "default": "Angaben Schülerin/Schüler"
+        "de": "Schülerdaten"
       },
       "elements": [
         {
@@ -860,8 +859,7 @@
     {
       "name": "page3",
       "title": {
-        "de": "Eltern",
-        "default": "Angaben Eltern"
+        "de": "Eltern"
       },
       "elements": [
         {
@@ -1054,8 +1052,7 @@
     {
       "name": "page4",
       "title": {
-        "de": "Schulische Vorbildung",
-        "default": "Schullaufbahn"
+        "de": "Schulische Vorbildung"
       },
       "elements": [
         {
@@ -1068,96 +1065,73 @@
           "isRequired": true,
           "choices": [
             {
-              "value": "oA",
-              "text": "ohne Abschluss"
+              "value": "WRSA ",
+              "text": {
+                "de": " Werkrealschulabschluss",
+                "default": "Werkrealschulabschluss"
+              }
             },
             {
-              "value": "KV",
-              "text": "Keine Vorbildung"
+              "value": "WRSA-GMS ",
+              "text": {
+                "de": " Werkrealschulabschluss an einer Gemeinschaftsschule",
+                "default": "Werkrealschule an Gemeinschaftsschule"
+              }
             },
             {
-              "value": "oHA",
-              "text": "ohne Hauptschulabschluss"
+              "value": "RSA-WRS ",
+              "text": {
+                "de": " Realschulabschluss an einer Werkrealschule",
+                "default": "Realschulabschluss an WRS"
+              }
             },
             {
-              "value": "AF",
-              "text": "Abschluss Förderschule"
+              "value": "RSA-GMS ",
+              "text": " Realschulabschluss an einer Gemeinschaftsschule"
             },
             {
-              "value": "A8WRS",
-              "text": "Abschluss Klasse 8 Werkreal-/Hauptschule (nur für 2BF)"
+              "value": "RSA-RS ",
+              "text": " Realschulabschluss an einer Realschule"
             },
             {
-              "value": "HSA",
-              "text": "Hauptschulabschluss"
+              "value": "RSA-GYM ",
+              "text": " Realschulabschluss an einem Gymnasium"
             },
             {
-              "value": "HSA-GMS",
-              "text": "Hauptschulabschluss an einer Gemeinschaftsschule"
+              "value": "FSR-mBABS ",
+              "text": " Fachschulreife oder mittlerer Bildungsabschluss (BS (9+3)"
             },
             {
-              "value": "HSA-VZ10",
-              "text": "mit Hauptschulabschluss (bzw. Versetzungszeugnis in die 10. Klasse)"
+              "value": "FSR ",
+              "text": " Fachschulreife oder vergleichbarer Abschluss"
             },
             {
-              "value": "WRSA",
-              "text": "Werkrealschulabschluss"
+              "value": "FHR ",
+              "text": " Fachhochschulreife"
             },
             {
-              "value": "WRSA-GMS",
-              "text": "Werkrealschulabschluss an einer Gemeinschaftsschule"
+              "value": "HRa ",
+              "text": " Hochschulreife, allgemein"
             },
             {
-              "value": "RSA-WRS",
-              "text": "Realschulabschluss an einer Werkrealschule"
+              "value": "HRf ",
+              "text": " Hochschulreife, fachgebunden"
             },
             {
-              "value": "RSA-GMS",
-              "text": "Realschulabschluss an einer Gemeinschaftsschule"
+              "value": "HRa-GMS ",
+              "text": " Hochschulreife an der Gemeinschaftsschule"
             },
             {
-              "value": "RSA-RS",
-              "text": "Realschulabschluss an einer Realschule"
+              "value": "Sonst (AS) ",
+              "text": " Sonst. Abschluss (allg. bildend)"
             },
             {
-              "value": "RSA-GYM",
-              "text": "Realschulabschluss an einem Gymnasium"
+              "value": "A (BS) ",
+              "text": " Abschlusszeugnis (beruflich)"
             },
             {
-              "value": "FSR-mBABS",
-              "text": "Fachschulreife oder mittlerer Bildungsabschluss (BS (9+3)"
-            },
-            {
-              "value": "FSR",
-              "text": "Fachschulreife oder vergleichbarer Abschluss"
-            },
-            {
-              "value": "FHR",
-              "text": "Fachhochschulreife"
-            },
-            {
-              "value": "HRa",
-              "text": "Hochschulreife, allgemein"
-            },
-            {
-              "value": "HRf",
-              "text": "Hochschulreife, fachgebunden"
-            },
-            {
-              "value": "HRa-GMS",
-              "text": "Hochschulreife an der Gemeinschaftsschule"
-            },
-            {
-              "value": "Sonst (AS)",
-              "text": "Sonst. Abschluss (allg. bildend)"
-            },
-            {
-              "value": "A (BS)",
-              "text": "Abschlusszeugnis (beruflich)"
-            },
-            {
-              "value": "Sonst (BS)",
-              "text": "mit sonstigem beruflichen Abschluss"
+              "value": "Sonst (BS) ",
+              "text": " mit sonstigem beruflichen Abschluss"
             }
           ],
           "placeholder": "auswählen..."
@@ -1166,11 +1140,9 @@
           "type": "text",
           "name": "an_Schule",
           "title": {
-            "de": "an Schule (Name und Ort der Schule):",
-            "default": "an Schule"
+            "de": "an Schule (Name und Ort der Schule):"
           },
           "titleLocation": "left",
-          "description": "(Name und Ort der Schule)",
           "isRequired": true,
           "placeholder": {
             "de": "Schule, an der dieser Abschluss erreicht wurde",
@@ -1181,51 +1153,6 @@
           "type": "html",
           "name": "question30",
           "html": "<h4>Ausbildung</h4>"
-        },
-        {
-          "type": "panel",
-          "name": "panel6",
-          "elements": [
-            {
-              "type": "html",
-              "name": "question3",
-              "html": "Angaben nach Ausbildungsvertrag:"
-            },
-            {
-              "type": "text",
-              "name": "Beginn_Ausbildung",
-              "title": "Beginn Ausbildung",
-              "titleLocation": "left",
-              "inputType": "date"
-            },
-            {
-              "type": "boolean",
-              "name": "question5",
-              "startWithNewLine": false,
-              "title": "Einstieg ins 2. Ausbildungsjahr:",
-              "titleLocation": "left",
-              "isRequired": true,
-              "labelTrue": "Ja",
-              "labelFalse": "Nein"
-            },
-            {
-              "type": "text",
-              "name": "question1",
-              "title": "Ende Ausbildung",
-              "titleLocation": "left",
-              "inputType": "date"
-            },
-            {
-              "type": "boolean",
-              "name": "question6",
-              "startWithNewLine": false,
-              "title": "Umschulung:",
-              "titleLocation": "left",
-              "isRequired": true,
-              "labelTrue": "Ja",
-              "labelFalse": "Nein"
-            }
-          ]
         },
         {
           "type": "text",
@@ -1242,108 +1169,27 @@
         },
         {
           "type": "text",
-          "name": "question8",
-          "title": {
-            "de": "Ausbildungsbetrieb:",
-            "default": "Ausbilder:"
-          },
+          "name": "Berufsschule",
+          "title": "Besuch der Berufsschule",
           "titleLocation": "left",
-          "isRequired": true,
-          "placeholder": {
-            "de": "Name und Ort Ausbildungsbetrieb",
-            "default": "Name und Ort des Ausbildungsbetriebs"
-          }
+          "description": "Bitte ändern, falls nicht Heinrich-Hertz-Schule",
+          "defaultValue": "Heinrich-Hertz-Schule Karlsruhe",
+          "isRequired": true
         },
         {
-          "type": "panel",
-          "name": "panel7",
-          "elements": [
+          "type": "checkbox",
+          "name": "consent_question34",
+          "title": {
+            "de": "Einverständnis Betrieb:",
+            "default": "Einverständnis Betrieb"
+          },
+          "isRequired": true,
+          "choices": [
             {
-              "type": "text",
-              "name": "question7",
-              "title": "Straße",
-              "titleLocation": "left",
-              "showNumber": false,
-              "isRequired": true
-            },
-            {
-              "type": "text",
-              "name": "question9",
-              "startWithNewLine": false,
-              "title": "Hausnummer",
-              "titleLocation": "left",
-              "showNumber": false,
-              "isRequired": true
-            },
-            {
-              "type": "text",
-              "name": "question10",
-              "title": "PLZ",
-              "titleLocation": "left",
-              "showNumber": false,
-              "isRequired": true,
-              "inputSize": 7
-            },
-            {
-              "type": "text",
-              "name": "question11",
-              "startWithNewLine": false,
-              "title": "Ort",
-              "titleLocation": "left",
-              "showNumber": false,
-              "isRequired": true
-            },
-            {
-              "type": "text",
-              "name": "question12",
-              "title": "(Mobil-) Telefon",
-              "titleLocation": "left",
-              "showNumber": false,
-              "isRequired": true,
-              "inputType": "tel"
-            },
-            {
-              "type": "text",
-              "name": "question13",
-              "title": "E-Mail Adresse",
-              "titleLocation": "left",
-              "isRequired": true,
-              "inputType": "email"
+              "value": "Item 1",
+              "text": "Der Ausbildungsbetrieb ist mit der Zusatzqualifikation einverstanden und stellt mich für die Unterrichte frei"
             }
           ]
-        },
-        {
-          "type": "file",
-          "name": "question14",
-          "title": "Erste Seite Ausbildungsvertrag",
-          "description": "Bitte laden Sie hier die erste Seite Ihres Ausbildungsvertrags hoch.",
-          "isRequired": true,
-          "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB."
-        },
-        {
-          "type": "file",
-          "name": "question15",
-          "title": "Weitere Unterlagen (optional)",
-          "description": "Laden Sie weitere Unterlagen hier hoch, die Sie uns übermitteln wollen. z.B. Gestattung einer anderen Berufsschule.",
-          "isRequired": true,
-          "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB."
-        }
-      ]
-    },
-    {
-      "name": "page2",
-      "title": "Absenden",
-      "elements": [
-        {
-          "type": "comment",
-          "name": "question16",
-          "title": "Anmerkungen",
-          "description": "(z.B. Teilnahme an Fördermaßnahmen, EQJ, Schulwechsel oder andere Mitteilungen an die Schule)\n\nAusbildungsbetriebe, deren Ausbildungsstätte vom Firmensitz abweicht, werden gebeten, hier ihre zweite Adresse zu erfassen:"
-        },
-        {
-          "type": "html",
-          "name": "question18",
-          "html": "Mit dem Absenden <b>bestätige</b> ich die <b>Richtigkeit und Vollständigkeit</b> der gemachten Angaben.<br /><br />\n\nWir (Auszubildende/Auszubildender bzw. Ausbildungsbetrieb) verpflichten uns, alle für die Schule relevanten <b>Änderungen</b> (z.B. Umzug, neue Telefon-/Mobilnummer, neue E-Mail-Adresse, Umzug des Betriebs, Kündigung usw.) dem Sekretariat der Heinrich-Hertz-Schule umgehend <b>mitzuteilen</b> (E-Mail: sekretariat@hhs.karlsruhe.de oder telefonisch unter 0721-133-4847)."
         }
       ]
     }
