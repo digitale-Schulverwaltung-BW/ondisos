@@ -62,22 +62,21 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 ## 📸 Screenshots
 
 ### Frontend - Anmeldeformular
-_[TODO: Screenshot des SurveyJS-Formulars]_
+![SurveyJS-Formular](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/b32a146edec9929f742809cd87546c7c/Formular.png){width=900 height=563}
 
 > Modernes, interaktives Formular mit Validierung und File-Upload
 
 ### Backend - Übersicht
-_[TODO: Screenshot der Admin-Übersicht mit DataTables]_
-
+![Screenshot der Admin-Übersicht mit DataTables](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/6834d5b418cda1b8c5635958d6eaee58/Backend.png){width=900 height=422}
 > Übersichtliche Verwaltung aller Anmeldungen mit Filterung und Status
 
 ### Backend - Dashboard
-_[TODO: Screenshot des Dashboards mit Statistiken]_
+![Screenshot des Dashboards mit Statistiken](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/c5689efe4273b33d30ccd1cd9ec70d09/Dashboard.png){width=861 height=600}
 
 > Statistiken und Übersicht über alle Anmeldungen
 
 ### PDF-Bestätigung
-_[TODO: Screenshot einer generierten PDF-Bestätigung]_
+![Screenshot einer generierten PDF-Bestätigung](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/510cb1e6bff83f66fdc9b72acbff8e28/PDF.png){width=490 height=600}
 
 > Automatisch generierte PDF-Bestätigung mit Schul-Logo
 
