@@ -145,18 +145,13 @@ class PdfTemplateRenderer
             $finalWidth = $originalWidth;
             $finalHeight = $originalHeight;
 
-            // Detect if image has transparency by checking file extension
-            // This is more reliable than pixel-based detection
-            $hasTransparency = false;
+            // Detect if image has transparency by file extension
+            // PNG and GIF support transparency - keep them as PNG to preserve it
             $extension = strtolower(pathinfo($fullPath, PATHINFO_EXTENSION));
-            if ($extension === 'png') {
-                // PNG files may have transparency - check if alpha channel is used
-                $hasTransparency = $this->pngHasAlphaChannel($img);
-            }
-            // GIF can also have transparency
-            if ($extension === 'gif' && function_exists('imagecolortransparent')) {
-                $hasTransparency = imagecolortransparent($img) >= 0;
-            }
+            $hasTransparency = in_array($extension, ['png', 'gif'], true);
+
+            // For PNG/GIF, always preserve as PNG even if currently no transparency is used
+            // This is simpler and more reliable than pixel-by-pixel alpha detection
 
             // Calculate new dimensions (preserve aspect ratio)
             if ($originalWidth > self::MAX_LOGO_WIDTH) {

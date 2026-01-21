@@ -22,7 +22,7 @@ return [
         'pdf' => [
             'enabled' => true,
             'required' => false,  // If true, user must download PDF before continuing
-            'title' => 'Anmeldebestätigung',
+            'title' => 'Berufsschule', // "Anmeldebestätigung" wird bereits im Header ausgegeben
             'download_title' => 'Bestätigung als PDF herunterladen',
             'token_lifetime' => 1800,  // 30 minutes in seconds
 
