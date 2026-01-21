@@ -73,7 +73,7 @@ test_unit:
   dependencies:
     - install_dependencies
   script:
-    - composer test -- --testsuite=Unit --testdox
+    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml
   artifacts:
     when: always
     reports:
@@ -99,7 +99,7 @@ test_integration:
     - cd backend
 
     # Wait for MySQL to be ready
-    - apt-get update -qq && apt-get install -y -qq git unzip mysql-client libpng-dev libjpeg-dev libfreetype6-dev
+    - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev libjpeg-dev libfreetype6-dev
     - until mysql -h mysql -u test -ptest -e "SELECT 1"; do sleep 1; done
 
     # Install Composer and extensions
@@ -110,7 +110,7 @@ test_integration:
     # Import database schema
     - mysql -h mysql -u test -ptest anmeldung_test < ../database/schema.sql
   script:
-    - composer test -- --testsuite=Integration --testdox
+    - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml
   artifacts:
     when: always
     reports:
@@ -159,6 +159,7 @@ coverage:
 lint_php:
   stage: test
   dependencies: []
+  before_script: []  # Override global before_script to stay in project root
   script:
     - find backend/src -name "*.php" -print0 | xargs -0 -n1 php -l
     - find backend/public -name "*.php" -print0 | xargs -0 -n1 php -l
