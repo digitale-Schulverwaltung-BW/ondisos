@@ -108,7 +108,7 @@ test_integration:
     - docker-php-ext-install pdo pdo_mysql gd
 
     # Import database schema
-    - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../../database/schema.sql
+    - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
   script:
     - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml --no-coverage
   artifacts:
@@ -142,6 +142,7 @@ coverage:
     # Install Composer
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
+    - export XDEBUG_MODE=coverage
     - composer test:coverage
     - echo "Coverage report generated at backend/coverage/index.html"
   coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
