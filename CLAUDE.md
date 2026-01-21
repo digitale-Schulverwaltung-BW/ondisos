@@ -708,6 +708,201 @@ HSTS zwingt Browser, **immer** HTTPS zu verwenden. Rückgängig machen ist schwi
 
 ## 🧪 Testing
 
+### Automated Tests (PHPUnit)
+
+Das Projekt verfügt über eine umfassende PHPUnit Test-Suite mit Unit- und Integration-Tests.
+
+#### Test-Struktur
+
+```
+backend/tests/
+├── bootstrap.php              # Test-Setup (Autoloader, Env-Variablen)
+├── Unit/                      # Unit Tests (ohne DB)
+│   └── Services/
+│       ├── RateLimiterTest.php       # 11 Tests
+│       ├── PdfTokenServiceTest.php   # 20 Tests
+│       └── MessageServiceTest.php    # 30+ Tests
+└── Integration/               # Integration Tests (mit DB)
+    └── (zukünftige Tests)
+```
+
+#### Tests lokal ausführen
+
+**1. Dependencies installieren:**
+```bash
+cd backend
+composer install
+```
+
+**2. Alle Tests ausführen:**
+```bash
+composer test
+# oder direkt:
+./vendor/bin/phpunit
+```
+
+**3. Nur Unit Tests:**
+```bash
+composer test -- --testsuite=Unit
+```
+
+**4. Nur Integration Tests:**
+```bash
+composer test -- --testsuite=Integration
+```
+
+**5. Spezifische Test-Klasse:**
+```bash
+composer test:filter RateLimiterTest
+# oder:
+./vendor/bin/phpunit --filter RateLimiterTest
+```
+
+**6. Mit Code Coverage:**
+```bash
+composer test:coverage
+# Generiert: backend/coverage/index.html
+```
+
+**7. Mit ausführlicher Ausgabe (testdox):**
+```bash
+composer test -- --testdox
+```
+
+#### Test-Konfiguration
+
+**phpunit.xml:**
+- Bootstrap: `tests/bootstrap.php`
+- Test-Suites: Unit, Integration
+- Test-Environment-Variablen
+- Coverage-Excludes: Config, NullableHelpers
+
+**tests/bootstrap.php:**
+- Lädt Composer Autoloader
+- Setzt Test-Environment-Variablen
+- Definiert Test-Konstanten: `TESTING`, `SKIP_AUTO_EXPUNGE`, `SKIP_AUTH_CHECK`
+
+#### Bestehende Tests
+
+**RateLimiterTest (11 Tests):**
+- Request-Tracking und Limit-Enforcement
+- Window-Expiration
+- getRemainingRequests() und getRetryAfter()
+- Identifier-Isolation
+- Reset-Funktionalität
+- Corrupted-Storage-Handling
+- Special-Characters in Identifiers
+
+**PdfTokenServiceTest (20 Tests):**
+- Token-Generierung (Base64, Format, Parts)
+- Token-Validierung (gültig, abgelaufen, manipuliert)
+- HMAC-Sicherheit (Timing-safe Vergleich)
+- Malformed-Token-Handling
+- Edge-Cases (große IDs, Zero-Lifetime)
+
+**MessageServiceTest (30+ Tests):**
+- Dot-Notation-Access (nested keys)
+- Placeholder-Replacement
+- withContact() Helper
+- Local-Overrides (messages.local.php)
+- Deep-Merge-Funktionalität
+- Cache-Reset
+- Edge-Cases (empty keys, missing messages)
+
+#### Neue Tests schreiben
+
+**1. Test-Klasse erstellen:**
+```php
+<?php
+declare(strict_types=1);
+
+namespace Tests\Unit\Services;
+
+use PHPUnit\Framework\TestCase;
+
+class MyServiceTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+        // Setup vor jedem Test
+    }
+
+    public function testSomething(): void
+    {
+        $this->assertTrue(true);
+    }
+}
+```
+
+**2. Best Practices:**
+- Namespace: `Tests\Unit\*` oder `Tests\Integration\*`
+- Strict types: `declare(strict_types=1)`
+- setUp/tearDown für Initialisierung/Cleanup
+- Descriptive test names: `testMethodDoesWhatWhenCondition`
+- Use type hints für alle Parameter
+- Test eine Sache pro Test-Methode
+
+**3. Test ausführen:**
+```bash
+composer test:filter MyServiceTest
+```
+
+### GitLab CI/CD Pipeline
+
+Das Projekt verfügt über eine automatisierte GitLab CI/CD Pipeline:
+
+#### Pipeline Stages
+
+```
+install → test → coverage → security
+```
+
+**install:**
+- `install_dependencies`: Composer install, Cache vendor/
+
+**test:**
+- `test_unit`: Unit Tests mit testdox, JUnit-Report
+- `test_integration`: Integration Tests mit MySQL 8.0 (allow_failure)
+- `lint_php`: PHP Syntax-Check für alle .php-Dateien
+
+**coverage:**
+- `coverage`: Code Coverage mit Xdebug (nur main/master/develop)
+  - HTML-Report als Artefakt (30 Tage)
+  - Coverage-Prozentsatz in Pipeline sichtbar
+
+**security:**
+- `secret_detection`: GitLab Secret Detection
+- `sast`: Static Application Security Testing
+
+#### Pipeline lokal testen
+
+**Mit GitLab Runner:**
+```bash
+# GitLab Runner installieren
+curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+sudo apt-get install gitlab-runner
+
+# Pipeline lokal ausführen
+gitlab-runner exec docker test_unit
+```
+
+**Mit Docker direkt:**
+```bash
+docker run --rm -v $(pwd):/app -w /app/backend php:8.1-cli \
+  bash -c "apt-get update && apt-get install -y git unzip && \
+  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
+  composer install && composer test"
+```
+
+#### Pipeline-Konfiguration anpassen
+
+**.gitlab-ci.yml:**
+- PHP-Version ändern: `image: php:8.2-cli`
+- Test-Kommandos anpassen: `script: - composer test:filter MyTest`
+- Coverage nur auf bestimmten Branches: `only: - production`
+- Optionale Jobs aktivieren: Code Style, Security Check auskommentieren
+
 ### Manual Tests
 
 **Frontend Submission:**
@@ -739,19 +934,41 @@ http://intranet.example.com/backend/dashboard.php
 # Sollte zeigen: Letzter Lauf, Nächster Lauf, Anzahl bereit
 ```
 
+### Test Coverage Ziele
+
+**Aktuell getestet:**
+- ✅ RateLimiter (100%)
+- ✅ PdfTokenService (100%)
+- ✅ MessageService (100%)
+
+**Noch nicht getestet:**
+- ⏳ AnmeldungService
+- ⏳ ExportService
+- ⏳ StatusService
+- ⏳ ExpungeService
+- ⏳ AnmeldungValidator
+- ⏳ PdfGeneratorService
+- ⏳ AnmeldungRepository (Integration Tests)
+
+**Langfristig:**
+- Target: >80% Code Coverage
+- Integration Tests mit Test-Datenbank
+- E2E Tests für kritische User-Flows
+
 ---
 ## 🐛 Known Issues & TODOs
 
 ### Known Issues
 - ⚠️ Email-Service nutzt PHP mail() → ggf. auf SMTP umstellen
-- ⚠️ Keine automatischen Tests vorhanden
 
 ### TODOs
-1. **PHPUnit Tests** schreiben
-2. **Logging** verbessern (strukturiertes Logging)
-3. **Monitoring** Setup (z.B. Sentry)
-4. **API Documentation** (OpenAPI/Swagger)
-5. **Docker Setup** für einfaches Deployment
+1. ✅ **PHPUnit Tests** schreiben (Done: RateLimiter, PdfTokenService, MessageService)
+2. **Weitere Unit Tests** für Services, Repositories, Validators
+3. **Integration Tests** mit Test-Datenbank
+4. **Logging** verbessern (strukturiertes Logging)
+5. **Monitoring** Setup (z.B. Sentry)
+6. **API Documentation** (OpenAPI/Swagger)
+7. **Docker Setup** für einfaches Deployment
 
 ---
 
@@ -988,6 +1205,31 @@ php -l backend/config/messages.local.php
 ---
 
 ## 🔄 Änderungshistorie
+
+### v2.4 (Januar 2026)
+- ✅ PHPUnit Test-Suite implementiert
+  - PHPUnit 10.5 als dev-dependency
+  - Separate Test-Suites: Unit, Integration
+  - tests/bootstrap.php für Test-Setup
+  - Test-Environment-Variablen in phpunit.xml
+  - Composer Scripts: test, test:coverage, test:filter
+- ✅ Umfassende Unit Tests
+  - RateLimiterTest: 11 Tests (Request-Tracking, Window-Expiration, etc.)
+  - PdfTokenServiceTest: 20 Tests (Token-Generierung, Validierung, HMAC-Sicherheit)
+  - MessageServiceTest: 30+ Tests (Dot-Notation, Placeholders, Local-Overrides)
+- ✅ GitLab CI/CD Pipeline
+  - Stages: install, test, coverage, security
+  - Automated Unit Tests mit JUnit-Reports
+  - Integration Tests mit MySQL 8.0 (optional)
+  - Code Coverage mit Xdebug (HTML-Report als Artefakt)
+  - PHP Syntax-Linting
+  - Secret Detection und SAST
+- ✅ Dokumentation
+  - Umfassender Testing-Guide in CLAUDE.md
+  - Test-Struktur und Ausführung
+  - Best Practices für neue Tests
+  - GitLab CI/CD Erklärung
+  - Coverage Ziele
 
 ### v2.3 (Januar 2026)
 - ✅ Admin Authentication System (Optional)

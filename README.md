@@ -400,19 +400,21 @@ Für Open Source Projekte ist eine klare Lizenz wichtig. Empfohlen:
 
 ## 📊 Projekt-Status
 
-**Version:** v2.3 (Januar 2026)
+**Version:** v2.4 (Januar 2026)
 **Status:** ✅ Production Ready
 
 ### Changelog
 
 Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für vollständige Release Notes.
 
-**Aktuelles Release (v2.3):**
+**Aktuelles Release (v2.4):**
+- ✅ PHPUnit Test-Suite (Unit Tests für RateLimiter, PdfTokenService, MessageService)
+- ✅ GitLab CI/CD Pipeline (Automated Tests, Coverage, Security)
 - ✅ Optionales Admin-Login-System
 - ✅ Zweispaltiges PDF-Layout
 - ✅ Rate Limiting für API
 - ✅ Excel-Export: File-Upload-Filterung
-- ✅ Verbesserte PDF-Logo-Darstellung
+- ✅ HTTPS Enforcement
 
 ---
 
@@ -427,7 +429,9 @@ Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für voll
 ## 🎯 Roadmap
 
 ### In Planung
-- [ ] PHPUnit Tests schreiben
+- [x] PHPUnit Tests schreiben (✅ v2.4: RateLimiter, PdfTokenService, MessageService)
+- [ ] Weitere Unit Tests (Services, Repositories, Validators)
+- [ ] Integration Tests mit Test-Datenbank
 - [ ] Logging verbessern (strukturiertes Logging)
 - [ ] Monitoring Setup (z.B. Sentry)
 - [ ] API Documentation (OpenAPI/Swagger)
