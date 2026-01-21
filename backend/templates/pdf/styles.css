@@ -99,23 +99,16 @@ h3 {
     border-bottom: 1px solid #eee;
 }
 
-/* Data Table */
+/* Data Table - Zweispaltiges Layout */
 .data-table {
     width: 100%;
     border-collapse: collapse;
     margin: 15px 0 30px 0;
-}
-
-.data-table thead th {
-    background-color: #3498db;
-    color: white;
-    padding: 10px;
-    text-align: left;
-    font-weight: bold;
-    border: 1px solid #2980b9;
+    table-layout: fixed;
 }
 
 .data-table tbody th {
+    width: 20%;
     background-color: #ecf0f1;
     padding: 8px 10px;
     text-align: left;
@@ -125,6 +118,7 @@ h3 {
 }
 
 .data-table tbody td {
+    width: 30%;
     padding: 8px 10px;
     border: 1px solid #ddd;
     vertical-align: top;

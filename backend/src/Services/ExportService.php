@@ -70,9 +70,17 @@ class ExportService
                 continue;
             }
 
+            // Get field types metadata if available
+            $fieldTypes = $anmeldung->data['_fieldTypes'] ?? [];
+
             foreach ($anmeldung->data as $key => $value) {
                 // Skip internal metadata fields (e.g., _fieldTypes)
                 if (str_starts_with($key, '_')) {
+                    continue;
+                }
+
+                // Skip file upload fields (they contain base64 data)
+                if ($this->isFileUploadField($key, $fieldTypes, $value)) {
                     continue;
                 }
 
@@ -87,6 +95,52 @@ class ExportService
         }
 
         return array_keys($columnSet);
+    }
+
+    /**
+     * Check if a field is a file upload field
+     *
+     * @param string $fieldName
+     * @param array $fieldTypes _fieldTypes metadata from survey
+     * @param mixed $value Field value
+     * @return bool
+     */
+    private function isFileUploadField(string $fieldName, array $fieldTypes, mixed $value): bool
+    {
+        // Check via _fieldTypes metadata (most reliable)
+        if (isset($fieldTypes[$fieldName])) {
+            $type = is_array($fieldTypes[$fieldName])
+                ? ($fieldTypes[$fieldName]['type'] ?? null)
+                : $fieldTypes[$fieldName];
+
+            if ($type === 'file') {
+                return true;
+            }
+        }
+
+        // Fallback: Heuristic detection of base64 data
+        if (is_string($value)) {
+            // Check for data URI scheme (data:image/png;base64,...)
+            if (preg_match('/^data:[^;]+;base64,/', $value)) {
+                return true;
+            }
+
+            // Check for very long strings that look like base64
+            // (likely inline file data even without data URI)
+            if (strlen($value) > 1000 && preg_match('/^[A-Za-z0-9+\/=]+$/', $value)) {
+                return true;
+            }
+        }
+
+        // Check for array of file objects (alternative upload format)
+        if (is_array($value) && !empty($value)) {
+            $firstItem = reset($value);
+            if (is_array($firstItem) && isset($firstItem['content']) && isset($firstItem['name'])) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -107,16 +161,31 @@ class ExportService
             return $this->flattenArray($value);
         }
 
-        // Check if value looks like an ISO date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
-        if (is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
-            try {
-                $date = new \DateTimeImmutable($value);
-                // Format as German date (dd.mm.yyyy)
-                return $date->format('d.m.Y');
-            } catch (\Exception $e) {
-                // Not a valid date, return as-is
-                return (string)$value;
+        // Safety check: Detect and handle base64/upload data that slipped through
+        if (is_string($value)) {
+            // Check for data URI (should have been filtered already)
+            if (preg_match('/^data:[^;]+;base64,/', $value)) {
+                return '[Datei-Upload]';
             }
+
+            // Check for very long strings (likely base64 data)
+            if (strlen($value) > 1000 && preg_match('/^[A-Za-z0-9+\/=]+$/', $value)) {
+                return '[Datei-Upload]';
+            }
+
+            // Check if value looks like an ISO date (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+            if (preg_match('/^\d{4}-\d{2}-\d{2}/', $value)) {
+                try {
+                    $date = new \DateTimeImmutable($value);
+                    // Format as German date (dd.mm.yyyy)
+                    return $date->format('d.m.Y');
+                } catch (\Exception $e) {
+                    // Not a valid date, return as-is
+                    return $value;
+                }
+            }
+
+            return $value;
         }
 
         return (string)$value;
