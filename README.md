@@ -28,34 +28,34 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 ## ✨ Features
 
 ### Frontend (Öffentlich)
-- 📝 **Interaktive Formulare** mit SurveyJS
-- 🎨 **Modernes UI** mit Bootstrap 5
-- 📱 **Mobile-responsive** Design
-- 🔒 **CSRF-Protection** für sichere Übermittlung
-- 📄 **PDF-Bestätigung** nach Anmeldung (optional)
-- 📤 **File-Upload** Support
-- 🌍 **DSGVO-konform** (lokale Fonts, keine Google-CDN)
+- **Interaktive Formulare** mit SurveyJS
+- **Modernes UI** mit Bootstrap 5
+- **Mobile-responsive** Design
+- **CSRF-Protection** für sichere Übermittlung
+- **PDF-Bestätigung** nach Anmeldung (optional)
+- **File-Upload** Support
+- **DSGVO-konform** (lokale Fonts, keine Google-CDN)
 
 ### Backend (Admin-Bereich)
-- 📊 **Übersichtliche Verwaltung** aller Anmeldungen
-- 🔍 **Filterung & Suche** mit DataTables
-- 📥 **Excel-Export** mit Auto-Formatierung
-- 📈 **Dashboard** mit Statistiken
-- 🗂️ **Status-System** (neu, exportiert, in Bearbeitung, akzeptiert, abgelehnt, archiviert)
-- 🗑️ **Soft-Delete** mit Papierkorb
-- 🔄 **Bulk-Actions** (Archivieren, Löschen, Wiederherstellen)
-- 🔐 **Optionale Authentifizierung** (session-basiert)
-- 🤖 **Auto-Expunge** (automatisches Löschen archivierter Einträge)
+- **Übersichtliche Verwaltung** aller Anmeldungen
+- **Filterung & Suche** mit DataTables
+- **Excel-Export** mit Auto-Formatierung
+- **Dashboard** mit Statistiken
+- **Status-System** (neu, exportiert, in Bearbeitung, akzeptiert, abgelehnt, archiviert)
+- **Soft-Delete** mit Papierkorb
+- **Bulk-Actions** (Archivieren, Löschen, Wiederherstellen)
+- **Optionale Authentifizierung** (session-basiert)
+- **Auto-Expunge** (automatisches Löschen archivierter Einträge)
 
 ### Technische Features
-- 🏗️ **Clean Architecture** (MVC + Service Layer)
-- 🔒 **Security First** (Prepared Statements, XSS-Protection, Input Validation)
-- 📄 **PDF-System** mit Token-Authentifizierung
-- ⚡ **Rate Limiting** gegen API-Abuse
-- 🌐 **Mehrere Formulare** pro Installation
-- 📧 **Email-Benachrichtigungen** bei neuen Anmeldungen
-- 🎨 **Anpassbare Messages** (zentrale Message-Verwaltung)
-- 🔧 **Konfigurierbar** via `.env`
+- **Clean Architecture** (MVC + Service Layer)
+- **Security First** (Prepared Statements, XSS-Protection, Input Validation)
+- **PDF-System** mit Token-Authentifizierung
+- **Rate Limiting** gegen API-Abuse
+- **Mehrere Formulare** pro Installation
+- **Email-Benachrichtigungen** bei neuen Anmeldungen
+- **Anpassbare Messages** (zentrale Message-Verwaltung)
+- **Konfigurierbar** via `.env`
 
 ---
 
@@ -85,9 +85,10 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 ## 🚀 Quick Start
 
 ### 1. Repository klonen
+Dies muss auf dem Frontend- und dem Backend-System erfolgen!
 
 ```bash
-git clone https://github.com/your-org/ondisos.git
+git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git
 cd ondisos
 ```
 
@@ -126,6 +127,7 @@ nano config/forms-config.php
 ```
 
 ### 4. Datenbank erstellen
+(Backend!)
 
 ```bash
 mysql -u root -p < database/schema.sql
@@ -156,7 +158,7 @@ mysql -u root -p < database/schema.sql
                      │ (Rate Limited, CORS-Protected)
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
-│              Intranet (Nur für Admins)                      │
+│              Intranet (Nur für Admins/Verwaltung)           │
 │  ┌────────────────────────────────────────────────────────┐ │
 │  │  Backend (PHP 8.1+ MVC)                                │ │
 │  │  • API-Endpoint (submit.php)                           │ │
