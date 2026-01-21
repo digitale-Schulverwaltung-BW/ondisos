@@ -132,6 +132,11 @@ class ExportService
             }
         }
 
+        // Check for single file object
+        if (is_array($value) && isset($value['name']) && isset($value['content'])) {
+            return true;
+        }
+
         // Check for array of file objects (alternative upload format)
         if (is_array($value) && !empty($value)) {
             $firstItem = reset($value);
@@ -156,8 +161,22 @@ class ExportService
             return $value ? 'Ja' : 'Nein';
         }
 
+        // Check arrays FIRST for file uploads before flattening!
         if (is_array($value)) {
-            // Flatten array to comma-separated string
+            // Check for single file object
+            if (isset($value['name']) && isset($value['content'])) {
+                return '[Datei-Upload]';
+            }
+
+            // Check for array of file objects
+            if (!empty($value)) {
+                $firstItem = reset($value);
+                if (is_array($firstItem) && isset($firstItem['content']) && isset($firstItem['name'])) {
+                    return '[Datei-Upload]';
+                }
+            }
+
+            // Not a file upload - flatten array to comma-separated string
             return $this->flattenArray($value);
         }
 
