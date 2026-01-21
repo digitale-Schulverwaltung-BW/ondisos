@@ -73,7 +73,7 @@ test_unit:
   dependencies:
     - install_dependencies
   script:
-    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml
+    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --no-coverage
   artifacts:
     when: always
     reports:
@@ -110,7 +110,7 @@ test_integration:
     # Import database schema
     - mysql -h mysql -u test -ptest --ssl-mode=DISABLED anmeldung_test < ../database/schema.sql
   script:
-    - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml
+    - composer test -- --testsuite=Integration --testdox --log-junit phpunit-report.xml --no-coverage
   artifacts:
     when: always
     reports:
