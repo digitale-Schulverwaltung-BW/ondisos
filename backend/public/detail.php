@@ -66,7 +66,11 @@ require __DIR__ . '/../inc/header.php';
 
                         <dt class="col-sm-4"><?= M::get('ui.table.status') ?>:</dt>
                         <dd class="col-sm-8">
-                            <span class="badge bg-primary">
+                            <?php 
+                                $statusEnum = \App\Models\AnmeldungStatus::tryFromString($anmeldung->status);
+                                $badgeClass = $statusEnum?->badgeClass() ?? 'badge bg-secondary';                                
+                            ?>
+                            <span class="<?= $badgeClass ?>">
                                 <?= NH::displayHtml($anmeldung->status) ?>
                             </span>
                         </dd>
@@ -258,6 +262,9 @@ require __DIR__ . '/../inc/header.php';
         </a>
 
         <?php if (!$anmeldung->deleted): ?>
+            <div style="margin-top: auto; margin-bottom:auto;">
+                Status ändern:
+            </div>
             <!-- Status Change Buttons -->
             <div class="btn-group" role="group">
                 <form method="POST" action="change_status.php" class="d-inline">
@@ -265,9 +272,9 @@ require __DIR__ . '/../inc/header.php';
                     <input type="hidden" name="status" value="in_bearbeitung">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
                     <button type="submit" class="btn btn-warning"
+                            title="<?= M::get('ui.detail.status_in_progress', 'In Bearbeitung') ?>"
                             <?= $anmeldung->status === 'in_bearbeitung' ? 'disabled' : '' ?>>
-                        <i class="bi bi-hourglass-split"></i>
-                        <?= M::get('ui.buttons.mark_in_progress', 'In Bearbeitung') ?>
+                        <i class="bi bi-hourglass-split"></i>📝
                     </button>
                 </form>
 
@@ -276,20 +283,21 @@ require __DIR__ . '/../inc/header.php';
                     <input type="hidden" name="status" value="akzeptiert">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
                     <button type="submit" class="btn btn-success"
+                            title="<?= M::get('ui.detail.status_accepted', 'Akzeptiert') ?>"
                             <?= $anmeldung->status === 'akzeptiert' ? 'disabled' : '' ?>>
-                        <i class="bi bi-check-circle"></i>
-                        <?= M::get('ui.buttons.accept', 'Akzeptieren') ?>
+                        <i class="bi bi-check-circle"></i>☑️
                     </button>
                 </form>
 
                 <form method="POST" action="change_status.php" class="d-inline">
+                   
                     <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                     <input type="hidden" name="status" value="abgelehnt">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
                     <button type="submit" class="btn btn-danger"
-                            <?= $anmeldung->status === 'abgelehnt' ? 'disabled' : '' ?>>
-                        <i class="bi bi-x-circle"></i>
-                        <?= M::get('ui.buttons.reject', 'Ablehnen') ?>
+                            title="<?= M::get('ui.detail.status_rejected', 'Abgelehnt') ?>"
+                            <?= $anmeldung->status === 'abgelehnt' ? 'disabled' : '' ?>>                        
+                        <i class="bi bi-x-circle"></i>👎
                     </button>
                 </form>
             </div>
