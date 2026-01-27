@@ -7,7 +7,8 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-production_ready-brightgreen)](https://github.com)
-
+[![Pipeline Status](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg)](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/openbrowsersignage/-/commits/main)
+[![Coverage](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg)](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/openbrowsersignage/-/commits/main)
 ---
 
 ## 📋 Inhaltsverzeichnis
