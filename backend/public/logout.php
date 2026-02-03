@@ -10,6 +10,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// Regenerate session ID before destroying to prevent session fixation
+// This invalidates the old session ID, preventing reuse
+session_regenerate_id(true);
+
 // Clear all session data
 $_SESSION = [];
 

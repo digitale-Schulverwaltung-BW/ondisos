@@ -1,0 +1,475 @@
+<?php
+declare(strict_types=1);
+
+namespace Tests\Unit\Services;
+
+use App\Services\ExportService;
+use App\Services\StatusService;
+use App\Repositories\AnmeldungRepository;
+use App\Models\Anmeldung;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Tests for ExportService - especially SQL injection prevention
+ */
+class ExportServiceTest extends TestCase
+{
+    private AnmeldungRepository $mockRepository;
+    private StatusService $mockStatusService;
+    private ExportService $service;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Create mocks
+        $this->mockRepository = $this->createMock(AnmeldungRepository::class);
+        $this->mockStatusService = $this->createMock(StatusService::class);
+
+        // Create service with mocked dependencies
+        $this->service = new ExportService(
+            $this->mockRepository,
+            $this->mockStatusService
+        );
+    }
+
+    /**
+     * Test that SQL injection attempts in formular filter are rejected
+     */
+    public function testGetExportDataRejectsSqlInjection(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Ungültiger Formularname');
+
+        // Try SQL injection via formular filter
+        $this->service->getExportData("bs' OR '1'='1");
+    }
+
+    /**
+     * Test that semicolons are blocked (SQL command separator)
+     */
+    public function testGetExportDataRejectsSemicolon(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Ungültiger Formularname');
+
+        $this->service->getExportData('bs;DROP TABLE anmeldungen');
+    }
+
+    /**
+     * Test that special SQL characters are blocked
+     */
+    public function testGetExportDataRejectsSpecialCharacters(): void
+    {
+        $invalidFilters = [
+            "bs'--",
+            'bs#comment',
+            'bs/*comment*/',
+            'bs@test',
+            'bs test', // space
+            'bs"test',
+            'bs`test',
+        ];
+
+        foreach ($invalidFilters as $filter) {
+            try {
+                $this->service->getExportData($filter);
+                $this->fail("Expected exception for invalid filter: $filter");
+            } catch (\InvalidArgumentException $e) {
+                $this->assertStringContainsString('Ungültiger Formularname', $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * Test that null filter is accepted (no filter applied)
+     */
+    public function testGetExportDataAcceptsNullFilter(): void
+    {
+        // Mock repository to return empty array
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->with(null)
+            ->willReturn([]);
+
+        // Should not throw exception
+        $result = $this->service->getExportData(null);
+
+        $this->assertIsArray($result);
+        $this->assertArrayHasKey('rows', $result);
+        $this->assertArrayHasKey('columns', $result);
+        $this->assertArrayHasKey('metadata', $result);
+        $this->assertEmpty($result['rows']);
+    }
+
+    /**
+     * Test that empty string filter is accepted (no filter applied)
+     */
+    public function testGetExportDataAcceptsEmptyStringFilter(): void
+    {
+        // Mock repository to return empty array
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->with('')
+            ->willReturn([]);
+
+        // Should not throw exception
+        $result = $this->service->getExportData('');
+
+        $this->assertIsArray($result);
+        $this->assertEmpty($result['rows']);
+    }
+
+    /**
+     * Test that valid formular names are accepted
+     */
+    public function testGetExportDataAcceptsValidNames(): void
+    {
+        $validNames = ['bs', 'bk', 'form123', 'test-form', 'test_form'];
+
+        foreach ($validNames as $name) {
+            // Mock repository for each call
+            $this->mockRepository
+                ->expects($this->once())
+                ->method('findForExport')
+                ->with($name)
+                ->willReturn([]);
+
+            // Should not throw exception
+            $result = $this->service->getExportData($name);
+            $this->assertIsArray($result);
+
+            // Reset mock for next iteration
+            $this->setUp();
+        }
+    }
+
+    /**
+     * Test that export data structure is correct
+     */
+    public function testGetExportDataReturnsCorrectStructure(): void
+    {
+        // Create mock anmeldung
+        $mockAnmeldung = new Anmeldung(
+            id: 1,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'Test User',
+            email: 'test@example.com',
+            status: 'neu',
+            data: ['field1' => 'value1', 'field2' => 'value2'],
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null
+        );
+
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->with('bs')
+            ->willReturn([$mockAnmeldung]);
+
+        $result = $this->service->getExportData('bs');
+
+        // Check structure
+        $this->assertArrayHasKey('rows', $result);
+        $this->assertArrayHasKey('columns', $result);
+        $this->assertArrayHasKey('metadata', $result);
+
+        // Check rows
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame($mockAnmeldung, $result['rows'][0]);
+
+        // Check columns (should be sorted alphabetically)
+        $this->assertContains('field1', $result['columns']);
+        $this->assertContains('field2', $result['columns']);
+        $this->assertEquals(['field1', 'field2'], $result['columns']);
+
+        // Check metadata
+        $this->assertEquals('bs', $result['metadata']['filter']);
+        $this->assertEquals(1, $result['metadata']['totalRows']);
+        $this->assertInstanceOf(\DateTimeImmutable::class, $result['metadata']['exportDate']);
+    }
+
+    /**
+     * Test that internal metadata fields are excluded from columns
+     */
+    public function testGetExportDataExcludesInternalMetadata(): void
+    {
+        $mockAnmeldung = new Anmeldung(
+            id: 1,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'Test User',
+            email: 'test@example.com',
+            status: 'neu',
+            data: [
+                'field1' => 'value1',
+                '_fieldTypes' => ['field1' => 'text'], // Should be excluded
+                '_internal' => 'data', // Should be excluded
+            ],
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null
+        );
+
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->with(null)
+            ->willReturn([$mockAnmeldung]);
+
+        $result = $this->service->getExportData();
+
+        // Only field1 should be in columns, not _fieldTypes or _internal
+        $this->assertEquals(['field1'], $result['columns']);
+    }
+
+    /**
+     * Test that file upload fields are excluded from columns
+     */
+    public function testGetExportDataExcludesFileUploadFields(): void
+    {
+        $mockAnmeldung = new Anmeldung(
+            id: 1,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'John Doe',
+            email: 'john@example.com',
+            status: 'neu',
+            data: [
+                'name' => 'John Doe',
+                'upload' => 'data:image/png;base64,iVBORw0KGgoAAAANS...', // Should be excluded
+                '_fieldTypes' => ['upload' => 'file'],
+            ],
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null
+        );
+
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->with(null)
+            ->willReturn([$mockAnmeldung]);
+
+        $result = $this->service->getExportData();
+
+        // Only 'name' should be in columns, not 'upload'
+        $this->assertEquals(['name'], $result['columns']);
+    }
+
+    /**
+     * Test formatCellValue with various data types
+     */
+    public function testFormatCellValueWithNull(): void
+    {
+        $this->assertEquals('', $this->service->formatCellValue(null));
+    }
+
+    public function testFormatCellValueWithBoolean(): void
+    {
+        $this->assertEquals('Ja', $this->service->formatCellValue(true));
+        $this->assertEquals('Nein', $this->service->formatCellValue(false));
+    }
+
+    public function testFormatCellValueWithString(): void
+    {
+        $this->assertEquals('Hello World', $this->service->formatCellValue('Hello World'));
+    }
+
+    public function testFormatCellValueWithNumber(): void
+    {
+        $this->assertEquals('42', $this->service->formatCellValue(42));
+        $this->assertEquals('3.14', $this->service->formatCellValue(3.14));
+    }
+
+    public function testFormatCellValueWithArray(): void
+    {
+        $array = ['item1', 'item2', 'item3'];
+        $result = $this->service->formatCellValue($array);
+        $this->assertEquals('item1, item2, item3', $result);
+    }
+
+    public function testFormatCellValueWithDate(): void
+    {
+        // ISO date should be converted to German format
+        $result = $this->service->formatCellValue('2026-01-15');
+        $this->assertEquals('15.01.2026', $result);
+
+        // ISO datetime should be converted
+        $result = $this->service->formatCellValue('2026-01-15 14:30:00');
+        $this->assertEquals('15.01.2026', $result);
+    }
+
+    public function testFormatCellValueWithInvalidDate(): void
+    {
+        // Invalid date format should be returned as-is
+        $result = $this->service->formatCellValue('not-a-date');
+        $this->assertEquals('not-a-date', $result);
+    }
+
+    public function testFormatCellValueWithBase64Data(): void
+    {
+        // Data URI should be replaced with placeholder
+        $base64 = 'data:image/png;base64,' . str_repeat('A', 1000);
+        $result = $this->service->formatCellValue($base64);
+        $this->assertEquals('[Datei-Upload]', $result);
+
+        // Long base64-like string should be replaced
+        $longBase64 = str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=', 20);
+        $result = $this->service->formatCellValue($longBase64);
+        $this->assertEquals('[Datei-Upload]', $result);
+    }
+
+    public function testFormatCellValueWithFileObject(): void
+    {
+        // Single file object
+        $fileObject = ['name' => 'test.pdf', 'content' => 'base64data'];
+        $result = $this->service->formatCellValue($fileObject);
+        $this->assertEquals('[Datei-Upload]', $result);
+
+        // Array of file objects
+        $fileArray = [
+            ['name' => 'test1.pdf', 'content' => 'base64data1'],
+            ['name' => 'test2.pdf', 'content' => 'base64data2'],
+        ];
+        $result = $this->service->formatCellValue($fileArray);
+        $this->assertEquals('[Datei-Upload]', $result);
+    }
+
+    /**
+     * Test generateFilename with SQL injection attempts
+     */
+    public function testGenerateFilenameRejectsSqlInjection(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Ungültiger Formularname');
+
+        $this->service->generateFilename("bs' OR '1'='1");
+    }
+
+    public function testGenerateFilenameRejectsSpecialCharacters(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service->generateFilename('bs;DROP TABLE anmeldungen');
+    }
+
+    public function testGenerateFilenameWithNullFilter(): void
+    {
+        $result = $this->service->generateFilename(null);
+        $this->assertMatchesRegularExpression('/^anmeldungen_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.xlsx$/', $result);
+    }
+
+    public function testGenerateFilenameWithValidFilter(): void
+    {
+        $result = $this->service->generateFilename('bs');
+        $this->assertMatchesRegularExpression('/^anmeldungen_bs_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.xlsx$/', $result);
+    }
+
+    public function testGenerateFilenameWithId(): void
+    {
+        $result = $this->service->generateFilename(null, 42);
+        $this->assertMatchesRegularExpression('/^anmeldung_42_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.xlsx$/', $result);
+    }
+
+    /**
+     * Test getExportDataById with invalid ID
+     */
+    public function testGetExportDataByIdThrowsExceptionForInvalidId(): void
+    {
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findById')
+            ->with(999)
+            ->willReturn(null);
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Eintrag nicht gefunden');
+
+        $this->service->getExportDataById(999);
+    }
+
+    /**
+     * Test getExportDataById with valid ID
+     */
+    public function testGetExportDataByIdReturnsCorrectStructure(): void
+    {
+        $mockAnmeldung = new Anmeldung(
+            id: 42,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'Test User',
+            email: 'test@example.com',
+            status: 'neu',
+            data: ['field1' => 'value1'],
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null
+        );
+
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findById')
+            ->with(42)
+            ->willReturn($mockAnmeldung);
+
+        $result = $this->service->getExportDataById(42);
+
+        // Check structure
+        $this->assertArrayHasKey('rows', $result);
+        $this->assertArrayHasKey('columns', $result);
+        $this->assertArrayHasKey('metadata', $result);
+
+        // Check data
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame($mockAnmeldung, $result['rows'][0]);
+        $this->assertEquals(['field1'], $result['columns']);
+
+        // Check metadata
+        $this->assertEquals('bs', $result['metadata']['filter']);
+        $this->assertEquals(1, $result['metadata']['totalRows']);
+        $this->assertTrue($result['metadata']['singleExport']);
+    }
+
+    /**
+     * Test that columns are sorted alphabetically
+     */
+    public function testGetExportDataSortsColumnsAlphabetically(): void
+    {
+        $mockAnmeldung = new Anmeldung(
+            id: 1,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'Test User',
+            email: 'test@example.com',
+            status: 'neu',
+            data: [
+                'zebra' => 'value1',
+                'apple' => 'value2',
+                'banana' => 'value3',
+            ],
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null
+        );
+
+        $this->mockRepository
+            ->expects($this->once())
+            ->method('findForExport')
+            ->willReturn([$mockAnmeldung]);
+
+        $result = $this->service->getExportData();
+
+        // Columns should be sorted alphabetically
+        $this->assertEquals(['apple', 'banana', 'zebra'], $result['columns']);
+    }
+}

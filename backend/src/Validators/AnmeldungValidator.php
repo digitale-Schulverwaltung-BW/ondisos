@@ -72,4 +72,36 @@ class AnmeldungValidator
     {
         return !empty($this->errors) ? reset($this->errors) : null;
     }
+
+    /**
+     * Validate formular name (filter parameter)
+     *
+     * Ensures the formular name contains only safe characters to prevent
+     * SQL injection and other injection attacks.
+     *
+     * @param string|null $formularName The formular name to validate
+     * @throws \InvalidArgumentException If formular name is invalid
+     */
+    public static function validateFormularName(?string $formularName): void
+    {
+        // Null or empty is allowed (means no filter)
+        if ($formularName === null || $formularName === '') {
+            return;
+        }
+
+        // Check for reasonable length (max 50 chars)
+        if (strlen($formularName) > 50) {
+            throw new \InvalidArgumentException(
+                M::get('validation.formular_name_too_long', 'Formularname ist zu lang (max. 50 Zeichen)')
+            );
+        }
+
+        // Only allow alphanumeric chars, underscore, and hyphen
+        // This prevents SQL injection, path traversal, and other attacks
+        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $formularName)) {
+            throw new \InvalidArgumentException(
+                M::get('validation.invalid_formular_name', 'Ungültiger Formularname (nur Buchstaben, Zahlen, _ und - erlaubt)')
+            );
+        }
+    }
 }

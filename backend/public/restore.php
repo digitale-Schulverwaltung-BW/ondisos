@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Repositories\AnmeldungRepository;
 
@@ -16,6 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $repository = new AnmeldungRepository();
 
 try {
+    // Validate CSRF token
+    csrf_validate();
+
     $id = (int)($_POST['id'] ?? 0);
     
     if ($id <= 0) {

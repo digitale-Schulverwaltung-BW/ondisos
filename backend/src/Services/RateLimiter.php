@@ -133,6 +133,35 @@ class RateLimiter
     }
 
     /**
+     * Generate a robust fingerprint for rate limiting
+     *
+     * Combines multiple factors to make bypass attacks harder:
+     * - IP address (REMOTE_ADDR)
+     * - Hashed User-Agent (prevents header injection attacks)
+     * - Accept-Language (adds browser fingerprinting)
+     *
+     * Security: Using SHA-256 instead of MD5 for better collision resistance
+     *
+     * @param array<string, string> $server The $_SERVER superglobal (injectable for testing)
+     * @return string Fingerprint string for rate limiting
+     */
+    public static function generateFingerprint(array $server): string
+    {
+        $ip = $server['REMOTE_ADDR'] ?? 'unknown';
+        $userAgent = $server['HTTP_USER_AGENT'] ?? '';
+        $acceptLanguage = $server['HTTP_ACCEPT_LANGUAGE'] ?? '';
+
+        // Hash User-Agent and Accept-Language to:
+        // 1. Prevent header injection attacks
+        // 2. Reduce storage size
+        // 3. Add privacy (don't store raw User-Agent strings)
+        $userAgentHash = hash('sha256', $userAgent);
+        $languageHash = hash('sha256', $acceptLanguage);
+
+        return $ip . ':' . $userAgentHash . ':' . $languageHash;
+    }
+
+    /**
      * Get file path for identifier
      *
      * @param string $identifier

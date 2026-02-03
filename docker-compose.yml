@@ -1,0 +1,112 @@
+services:
+  # Backend (Admin Interface)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ondisos-backend
+    ports:
+      - "9080:80"
+    volumes:
+      - ./backend:/var/www/html
+      - backend-uploads:/var/www/html/uploads
+      - backend-cache:/var/www/html/cache
+      - backend-logs:/var/www/html/logs
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=anmeldung
+      - DB_USER=anmeldung
+      - DB_PASS=secret123
+      - AUTO_EXPUNGE_DAYS=90
+      - AUTO_MARK_AS_READ=true
+      - SESSION_LIFETIME=3600
+      - SESSION_SECURE=false
+      - AUTH_ENABLED=false
+      - PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars
+      - UPLOAD_MAX_SIZE=10485760
+      - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png,gif,doc,docx
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - ondisos-network
+
+  # Frontend (Public Forms)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ondisos-frontend
+    ports:
+      - "8081:80"
+    volumes:
+      - ./frontend:/var/www/html
+    environment:
+      - BACKEND_API_URL=http://backend/api
+      - FROM_EMAIL=noreply@example.com
+      - MAIL_HEAD=Eine neue Anmeldung ist eingegangen
+      - ALLOWED_ORIGINS=http://localhost:8081
+      - UPLOAD_MAX_SIZE=10485760
+      - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png
+    depends_on:
+      - backend
+    networks:
+      - ondisos-network
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ondisos-mysql
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    environment:
+      - MYSQL_ROOT_PASSWORD=rootpass123
+      - MYSQL_DATABASE=anmeldung
+      - MYSQL_USER=anmeldung
+      - MYSQL_PASSWORD=secret123
+    command: --default-authentication-plugin=mysql_native_password
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ondisos-network
+
+  # PHPMyAdmin (Optional, for database management)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ondisos-phpmyadmin
+    ports:
+      - "8082:80"
+    environment:
+      - PMA_HOST=mysql
+      - PMA_PORT=3306
+      - PMA_USER=root
+      - PMA_PASSWORD=rootpass123
+    depends_on:
+      - mysql
+    networks:
+      - ondisos-network
+    profiles:
+      - dev
+
+volumes:
+  mysql-data:
+    driver: local
+  backend-uploads:
+    driver: local
+  backend-cache:
+    driver: local
+  backend-logs:
+    driver: local
+
+networks:
+  ondisos-network:
+    driver: bridge

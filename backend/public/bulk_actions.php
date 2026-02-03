@@ -5,10 +5,16 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Controllers\BulkActionsController;
 use App\Services\StatusService;
 use App\Repositories\AnmeldungRepository;
+
+// Validate CSRF token for POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_validate();
+}
 
 // Initialize dependencies
 $repository = new AnmeldungRepository();

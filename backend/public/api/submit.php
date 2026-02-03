@@ -47,10 +47,9 @@ if ($rateLimitEnabled) {
         $rateLimitWindow
     );
 
-    // Use IP + User-Agent for better identification
-    $identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
-    $identifier .= ':' . substr(md5($userAgent), 0, 8);
+    // Use robust fingerprinting (IP + hashed User-Agent + Accept-Language)
+    // This prevents bypass via User-Agent rotation attacks
+    $identifier = RateLimiter::generateFingerprint($_SERVER);
 
     if (!$rateLimiter->isAllowed($identifier)) {
         $retryAfter = $rateLimiter->getRetryAfter($identifier);

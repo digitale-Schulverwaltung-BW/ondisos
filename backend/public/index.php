@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Controllers\AnmeldungController;
 use App\Services\AnmeldungService;
@@ -77,6 +78,7 @@ require __DIR__ . '/../inc/header.php';
 
     <!-- Bulk Actions Form -->
     <form method="post" action="bulk_actions.php" id="bulkForm">
+        <?php csrf_field(); ?>
         <?php if ($selectedForm !== ''): ?>
             <input type="hidden" name="form" value="<?= htmlspecialchars($selectedForm) ?>">
         <?php endif; ?>

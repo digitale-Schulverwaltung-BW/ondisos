@@ -81,15 +81,21 @@ class DetailController
 
     /**
      * Convert camelCase or snake_case to readable label
+     *
+     * Security: Sanitizes key to prevent XSS attacks.
+     * Even though the view should also escape, defense-in-depth is important.
      */
     private function humanizeKey(string $key): string
     {
+        // Sanitize input to prevent XSS (defense-in-depth)
+        $key = htmlspecialchars($key, ENT_QUOTES, 'UTF-8');
+
         // Convert snake_case to spaces
         $label = str_replace('_', ' ', $key);
-        
+
         // Convert camelCase to spaces
         $label = preg_replace('/([a-z])([A-Z])/', '$1 $2', $label);
-        
+
         // Capitalize first letter of each word
         return ucwords($label);
     }

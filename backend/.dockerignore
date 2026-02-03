@@ -1,0 +1,52 @@
+# Docker ignore file for Backend
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Logs
+logs/*.log
+*.log
+
+# Cache
+cache/*
+!cache/.gitkeep
+
+# Uploads (will be mounted as volume)
+uploads/*
+!uploads/.htaccess
+!uploads/.gitignore
+!uploads/README.md
+
+# Environment
+.env.local
+.env.*.local
+
+# Composer
+vendor/
+composer.lock
+
+# Tests
+tests/
+phpunit.xml
+coverage/
+
+# Documentation (included in image for reference)
+# *.md
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.backup

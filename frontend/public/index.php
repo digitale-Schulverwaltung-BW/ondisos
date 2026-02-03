@@ -3,7 +3,7 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
+// Frontend uses SPL autoloader from bootstrap.php (no Composer needed)
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;

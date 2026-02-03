@@ -50,15 +50,49 @@ try {
         throw new RuntimeException('File too large (max ' . ($maxSize / 1048576) . 'MB)', 400);
     }
 
-    // Validate file type
-    $allowedTypes = getenv('UPLOAD_ALLOWED_TYPES') 
-        ? explode(',', getenv('UPLOAD_ALLOWED_TYPES'))
-        : ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx'];
+    // Validate file type using MIME type AND extension
+    // Security: MIME type check prevents attackers from renaming malicious files
+    // (e.g., evil.php.jpg would fail MIME check even if extension passes)
 
+    // Define allowed MIME types and their corresponding extensions
+    // NOTE: doc/docx excluded due to macro security risks
+    $allowedMimeTypes = [
+        'application/pdf' => ['pdf'],
+        'image/jpeg' => ['jpg', 'jpeg'],
+        'image/png' => ['png'],
+        'image/gif' => ['gif'],
+        'image/webp' => ['webp'],
+        'image/svg+xml' => ['svg'],
+        // Office documents excluded by default for security (can contain macros)
+        // Uncomment if needed:
+        // 'application/msword' => ['doc'],
+        // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
+    ];
+
+    // Check MIME type using finfo (reads actual file content, not just extension)
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    if ($finfo === false) {
+        throw new RuntimeException('Failed to initialize file info', 500);
+    }
+
+    $mimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+
+    if ($mimeType === false) {
+        throw new RuntimeException('Failed to detect file type', 400);
+    }
+
+    // Validate extension
     $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-    
-    if (!in_array($extension, $allowedTypes, true)) {
-        throw new RuntimeException('File type not allowed: ' . $extension, 400);
+
+    // Check if MIME type is allowed
+    if (!isset($allowedMimeTypes[$mimeType])) {
+        throw new RuntimeException('File type not allowed (MIME: ' . $mimeType . ')', 400);
+    }
+
+    // Check if extension matches the MIME type
+    if (!in_array($extension, $allowedMimeTypes[$mimeType], true)) {
+        throw new RuntimeException('File extension does not match MIME type', 400);
     }
 
     // Upload directory
@@ -68,7 +102,17 @@ try {
     }
 
     // Generate safe filename: {anmeldung_id}_{original_name}
-    $safeFilename = $anmeldungId . '_' . preg_replace('/[^a-zA-Z0-9._-]/', '_', $file['name']);
+    // 1. Use basename() to strip any path components
+    $originalName = basename($file['name']);
+
+    // 2. Validate filename contains only safe characters (no dots in middle to prevent double extensions)
+    $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
+    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $nameWithoutExt)) {
+        throw new RuntimeException('Invalid filename. Only letters, numbers, underscore and hyphen allowed.', 400);
+    }
+
+    // 3. Force the validated extension (prevents double extension attacks like evil.php.jpg)
+    $safeFilename = $anmeldungId . '_' . $nameWithoutExt . '.' . $extension;
     $targetPath = $uploadDir . '/' . $safeFilename;
 
     // Move uploaded file

@@ -11,6 +11,7 @@ use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;
 use App\Services\SpreadsheetBuilder;
 use App\Services\StatusService;
+use App\Validators\AnmeldungValidator;
 
 // Initialize dependencies
 $repository = new AnmeldungRepository();
@@ -27,6 +28,9 @@ try {
     $formularFilter = isset($_GET['form']) && $_GET['form'] !== ''
         ? trim($_GET['form'])
         : null;
+
+    // Validate formular filter to prevent SQL injection
+    AnmeldungValidator::validateFormularName($formularFilter);
 
     // Get export data (single record or filtered list)
     if ($id !== null) {

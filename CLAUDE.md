@@ -506,7 +506,67 @@ archiviert
 
 ## 🚀 Deployment
 
-### Setup
+### Docker Setup (Empfohlen für Entwicklung & Testing)
+
+Für lokale Entwicklung und Testing steht ein vollständiges Docker-Setup zur Verfügung.
+Siehe **[DOCKER.md](DOCKER.md)** für die vollständige Dokumentation.
+
+#### Quick Start
+
+```bash
+# Container starten
+docker-compose up -d
+
+# Tests ausführen
+docker-compose exec backend composer test
+
+# Logs anschauen
+docker-compose logs -f
+```
+
+#### Services
+
+| Service | URL | Beschreibung |
+|---------|-----|--------------|
+| **Backend** | http://localhost:8080 | Admin-Interface |
+| **Frontend** | http://localhost:8081 | Öffentliche Formulare |
+| **MySQL** | localhost:3306 | Datenbank |
+| **PHPMyAdmin** | http://localhost:8082 | DB-Verwaltung (dev only) |
+
+#### Vorteile
+
+- ✅ **Keine lokale PHP/MySQL-Installation nötig**
+- ✅ **Identische Umgebung für alle Entwickler**
+- ✅ **Hot-Reload** für Code-Änderungen
+- ✅ **Isolierte Test-Datenbank**
+- ✅ **Tests im Container ausführbar**
+- ✅ **Production-ähnliche Konfiguration**
+
+#### Wichtige Commands
+
+```bash
+# Tests ausführen
+docker-compose exec backend composer test
+
+# Code Coverage
+docker-compose exec backend composer test:coverage
+
+# Shell-Zugriff
+docker-compose exec backend bash
+
+# Datenbank-Zugriff
+docker-compose exec mysql mysql -u anmeldung -psecret123 anmeldung
+
+# Composer-Pakete hinzufügen
+docker-compose exec backend composer require vendor/package
+
+# Logs
+docker-compose logs -f backend
+```
+
+---
+
+### Manual Setup (Production)
 
 1. **Backend:**
 ```bash

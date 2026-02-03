@@ -7,6 +7,7 @@ namespace App\Repositories;
 
 use App\Config\Database;
 use App\Models\Anmeldung;
+use App\Validators\AnmeldungValidator;
 use mysqli;
 
 class AnmeldungRepository
@@ -29,11 +30,14 @@ class AnmeldungRepository
         int $limit = 25,
         int $offset = 0
     ): array {
+        // Defense-in-depth: validate formular filter at repository level
+        AnmeldungValidator::validateFormularName($formularFilter);
+
         $params = [];
         $types = '';
-        
+
         $countSql = "SELECT COUNT(*) AS cnt FROM anmeldungen WHERE deleted = 0";
-        $sql = "SELECT id, formular, formular_version, name, email, status, created_at 
+        $sql = "SELECT id, formular, formular_version, name, email, status, created_at
                 FROM anmeldungen WHERE deleted = 0";
 
         if ($formularFilter !== null && $formularFilter !== '') {
@@ -125,9 +129,12 @@ class AnmeldungRepository
      */
     public function findForExport(?string $formularFilter = null): array
     {
+        // Defense-in-depth: validate formular filter at repository level
+        AnmeldungValidator::validateFormularName($formularFilter);
+
         $params = [];
         $types = '';
-        
+
         $sql = "SELECT id, formular, formular_version, name, email, status, data, created_at
                 FROM anmeldungen
                 WHERE deleted = 0";

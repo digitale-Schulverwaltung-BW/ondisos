@@ -213,4 +213,187 @@ class RateLimiterTest extends TestCase
         $this->assertTrue($this->rateLimiter->isAllowed($identifier));
         $this->assertEquals(2, $this->rateLimiter->getRemainingRequests($identifier));
     }
+
+    /**
+     * Tests for generateFingerprint() - Robust request identification
+     */
+
+    public function testGenerateFingerprintWithAllHeaders(): void
+    {
+        $server = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US,en;q=0.9',
+        ];
+
+        $fingerprint = RateLimiter::generateFingerprint($server);
+
+        // Should contain IP
+        $this->assertStringContainsString('192.168.1.1', $fingerprint);
+
+        // Should contain SHA-256 hashes (64 chars each)
+        $parts = explode(':', $fingerprint);
+        $this->assertCount(3, $parts);
+        $this->assertEquals('192.168.1.1', $parts[0]);
+        $this->assertEquals(64, strlen($parts[1])); // SHA-256 hash of User-Agent
+        $this->assertEquals(64, strlen($parts[2])); // SHA-256 hash of Accept-Language
+    }
+
+    public function testGenerateFingerprintWithMissingHeaders(): void
+    {
+        $server = [
+            'REMOTE_ADDR' => '192.168.1.2',
+            // User-Agent and Accept-Language missing
+        ];
+
+        $fingerprint = RateLimiter::generateFingerprint($server);
+
+        // Should still work with default values
+        $this->assertStringContainsString('192.168.1.2', $fingerprint);
+
+        $parts = explode(':', $fingerprint);
+        $this->assertCount(3, $parts);
+
+        // Empty strings should be hashed to specific SHA-256 value
+        $emptyHash = hash('sha256', '');
+        $this->assertEquals($emptyHash, $parts[1]); // User-Agent hash
+        $this->assertEquals($emptyHash, $parts[2]); // Accept-Language hash
+    }
+
+    public function testGenerateFingerprintWithNoRemoteAddr(): void
+    {
+        $server = [
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint = RateLimiter::generateFingerprint($server);
+
+        // Should fallback to 'unknown' for IP
+        $this->assertStringStartsWith('unknown:', $fingerprint);
+    }
+
+    public function testGenerateFingerprintDifferentUserAgents(): void
+    {
+        $server1 = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows)',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $server2 = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Mac)',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint1 = RateLimiter::generateFingerprint($server1);
+        $fingerprint2 = RateLimiter::generateFingerprint($server2);
+
+        // Different User-Agents should produce different fingerprints
+        $this->assertNotEquals($fingerprint1, $fingerprint2);
+    }
+
+    public function testGenerateFingerprintDifferentIPs(): void
+    {
+        $server1 = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $server2 = [
+            'REMOTE_ADDR' => '192.168.1.2',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint1 = RateLimiter::generateFingerprint($server1);
+        $fingerprint2 = RateLimiter::generateFingerprint($server2);
+
+        // Different IPs should produce different fingerprints
+        $this->assertNotEquals($fingerprint1, $fingerprint2);
+    }
+
+    public function testGenerateFingerprintDifferentLanguages(): void
+    {
+        $server1 = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $server2 = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'de-DE',
+        ];
+
+        $fingerprint1 = RateLimiter::generateFingerprint($server1);
+        $fingerprint2 = RateLimiter::generateFingerprint($server2);
+
+        // Different Accept-Language should produce different fingerprints
+        $this->assertNotEquals($fingerprint1, $fingerprint2);
+    }
+
+    public function testGenerateFingerprintIsDeterministic(): void
+    {
+        $server = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint1 = RateLimiter::generateFingerprint($server);
+        $fingerprint2 = RateLimiter::generateFingerprint($server);
+
+        // Same input should always produce same fingerprint
+        $this->assertEquals($fingerprint1, $fingerprint2);
+    }
+
+    public function testGenerateFingerprintUsesSha256NotMd5(): void
+    {
+        $server = [
+            'REMOTE_ADDR' => '192.168.1.1',
+            'HTTP_USER_AGENT' => 'Mozilla/5.0',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint = RateLimiter::generateFingerprint($server);
+        $parts = explode(':', $fingerprint);
+
+        // SHA-256 produces 64 character hex strings
+        // MD5 produces 32 character hex strings
+        $this->assertEquals(64, strlen($parts[1]));
+        $this->assertEquals(64, strlen($parts[2]));
+
+        // Verify it's actually the SHA-256 hash
+        $expectedUserAgentHash = hash('sha256', 'Mozilla/5.0');
+        $this->assertEquals($expectedUserAgentHash, $parts[1]);
+    }
+
+    public function testGenerateFingerprintPreventsUserAgentRotation(): void
+    {
+        // Simulate attacker rotating User-Agent while keeping same IP
+        $attackerIP = '192.168.1.100';
+
+        $server1 = [
+            'REMOTE_ADDR' => $attackerIP,
+            'HTTP_USER_AGENT' => 'Mozilla/5.0 (Windows)',
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $server2 = [
+            'REMOTE_ADDR' => $attackerIP,
+            'HTTP_USER_AGENT' => 'curl/7.68.0', // Different User-Agent
+            'HTTP_ACCEPT_LANGUAGE' => 'en-US',
+        ];
+
+        $fingerprint1 = RateLimiter::generateFingerprint($server1);
+        $fingerprint2 = RateLimiter::generateFingerprint($server2);
+
+        // Different User-Agents should create different fingerprints
+        // This prevents simple User-Agent rotation attacks
+        $this->assertNotEquals($fingerprint1, $fingerprint2);
+    }
 }

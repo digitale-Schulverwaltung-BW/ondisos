@@ -9,6 +9,7 @@ use App\Repositories\AnmeldungRepository;
 use App\Models\Anmeldung;
 use App\Services\StatusService;
 use App\Config\Config;
+use App\Validators\AnmeldungValidator;
 
 class ExportService
 {
@@ -28,6 +29,9 @@ class ExportService
      */
     public function getExportData(?string $formularFilter = null): array
     {
+        // Validate formular filter to prevent SQL injection
+        AnmeldungValidator::validateFormularName($formularFilter);
+
         // Get all non-deleted anmeldungen
         $anmeldungen = $this->repository->findForExport($formularFilter);
 
@@ -268,6 +272,9 @@ class ExportService
      */
     public function generateFilename(?string $formularFilter = null, ?int $id = null): string
     {
+        // Validate formular filter to prevent injection attacks
+        AnmeldungValidator::validateFormularName($formularFilter);
+
         $timestamp = date('Y-m-d_H-i');
 
         // Single record export
@@ -276,7 +283,7 @@ class ExportService
         }
 
         if ($formularFilter !== null && $formularFilter !== '') {
-            // Sanitize form name for filename
+            // Note: formularFilter is already validated, but keep sanitization for extra safety
             $sanitized = preg_replace('/[^a-zA-Z0-9_-]/', '_', $formularFilter);
             return "anmeldungen_{$sanitized}_{$timestamp}.xlsx";
         }

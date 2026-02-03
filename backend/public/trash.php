@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Repositories\AnmeldungRepository;
 use App\Services\AnmeldungService;
@@ -120,6 +121,7 @@ require __DIR__ . '/../inc/header.php';
                         </td>
                         <td>
                             <form method="post" action="restore.php" style="display: inline;">
+                                <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
                                 <button type="submit" class="btn btn-sm btn-success"
                                         onclick="return confirm('<?= M::format('ui.trash.confirm_restore', ['id' => $entry->id]) ?>')">
@@ -127,6 +129,7 @@ require __DIR__ . '/../inc/header.php';
                                 </button>
                             </form>
                             <form method="post" action="hard_delete.php" style="display: inline;">
+                                <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
                                 <button type="submit" class="btn btn-sm btn-danger"
                                         onclick="return confirm('<?= M::get('ui.trash.confirm_hard_delete') ?>')">

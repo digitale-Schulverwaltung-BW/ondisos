@@ -32,6 +32,8 @@ $loginTime = $_SESSION['login_time'] ?? 0;
 
 if ($loginTime > 0 && (time() - $loginTime) > $sessionLifetime) {
     // Session expired
+    // Regenerate session ID before destroying to prevent session fixation
+    session_regenerate_id(true);
     session_destroy();
     header('Location: login.php?expired=1');
     exit;

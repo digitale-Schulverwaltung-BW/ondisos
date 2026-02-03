@@ -24,6 +24,9 @@ return [
         'email_too_long' => 'E-Mail ist zu lang (max. 255 Zeichen)',
         'invalid_status' => 'Ungültiger Status',
         'invalid_json' => 'Ungültige JSON-Daten',
+        'formular_name_too_long' => 'Formularname ist zu lang (max. 50 Zeichen)',
+        'invalid_formular_name' => 'Ungültiger Formularname (nur Buchstaben, Zahlen, _ und - erlaubt)',
+        'invalid_filename' => 'Ungültiger Dateiname (nur Buchstaben, Zahlen, _ und - erlaubt)',
     ],
 
     /**

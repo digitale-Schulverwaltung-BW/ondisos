@@ -11,6 +11,11 @@
 # Uploads
 /uploads/
 
+# Testing
+.phpunit.cache/
+/coverage/
+phpunit.xml.bak
+
 # IDE
 .idea/
 .vscode/

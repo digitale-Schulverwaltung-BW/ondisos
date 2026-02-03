@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Repositories\AnmeldungRepository;
+use App\Validators\AnmeldungValidator;
 
 class AnmeldungService
 {
@@ -43,6 +44,9 @@ class AnmeldungService
         // Sanitize filters
         $formularFilter = $formularFilter !== '' ? $formularFilter : null;
         $statusFilter = $statusFilter !== '' ? $statusFilter : null;
+
+        // Validate formular filter to prevent SQL injection
+        AnmeldungValidator::validateFormularName($formularFilter);
 
         // Fetch data
         $result = $this->repository->findPaginated(
