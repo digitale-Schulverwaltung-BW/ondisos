@@ -421,20 +421,92 @@ composer test -- --group=unit
 composer test -- --group=integration
 ```
 
-## Environment-Specific Configuration
+## Docker Development Environment
 
-### Development
-- `APP_ENV=development`
-- `APP_DEBUG=true`
-- `FORCE_HTTPS=false`
-- `RATE_LIMIT_ENABLED=false`
+**Alternative to local PHP installation:**
 
-### Production
-- `APP_ENV=production`
-- `APP_DEBUG=false`
-- `FORCE_HTTPS=true`
-- `RATE_LIMIT_ENABLED=true`
-- HTTPS redirect via .htaccess
+This project includes a comprehensive Docker setup that provides a complete development environment with all required PHP extensions and services.
+
+### Quick Start
+```bash
+cd /path/to/ondisos
+
+docker-compose up -d
+```
+
+### Running Tests in Docker
+```bash
+# In Backend container
+docker-compose exec backend composer test
+
+# With code coverage
+docker-compose exec backend composer test:coverage
+
+# Only unit tests
+docker-compose exec backend composer test -- --testsuite=Unit
+
+# Specific test class
+docker-compose exec backend composer test:filter AnmeldungValidatorTest
+```
+
+### Available Services
+- **Backend**: http://localhost:8080 (Admin interface)
+- **Frontend**: http://localhost:8081 (Public forms)
+- **MySQL**: localhost:3306
+- **PHPMyAdmin**: http://localhost:8082 (dev only)
+
+### Benefits
+- No local PHP installation required
+- Consistent environment across teams
+- All required extensions pre-installed
+- Hot-reload for code changes
+- Complete MySQL development database
+
+### Debugging Tests
+```bash
+# Verbose output
+docker-compose exec backend composer test -- --testdox
+
+# Debug output
+docker-compose exec backend composer test -- --debug
+
+# Single test execution
+docker-compose exec backend ./vendor/bin/phpunit tests/Unit/Validators/AnmeldungValidatorTest.php::testValidateFormularNameRejectsSqlInjection
+```
+
+### Logs and Troubleshooting
+```bash
+# All service logs
+docker-compose logs -f
+
+# Backend specific logs
+docker-compose logs -f backend
+
+# PHP error logs
+docker-compose exec backend tail -f /var/www/html/logs/php_errors.log
+
+# Apache error logs
+docker-compose exec backend tail -f /var/log/apache2/error.log
+```
+
+**Note:** The Docker environment is fully configured with all PHP extensions needed for testing, including GD, PDO, MySQL, and Xdebug for code coverage.
+
+### Testing Without Local PHP
+
+If you don't have PHP installed locally, you can use the Docker environment to run all tests:
+
+```bash
+# Run all tests
+docker-compose exec backend composer test
+
+# Run specific test
+docker-compose exec backend composer test:filter RateLimiterTest
+
+# Run with coverage
+docker-compose exec backend composer test:coverage
+```
+
+The Docker container includes all necessary PHP extensions and Composer dependencies, making it a complete development environment without requiring local PHP installation.
 
 ## Database Schema
 

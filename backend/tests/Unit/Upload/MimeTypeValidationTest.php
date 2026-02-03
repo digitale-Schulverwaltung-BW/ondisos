@@ -221,15 +221,15 @@ class MimeTypeValidationTest extends TestCase
     }
 
     /**
-     * Test that finfo_file fails gracefully for non-existent file
+     * Test that finfo_file returns false for non-existent file
      */
-    public function testFinfoFileFailsForNonExistentFile(): void
+    public function testFinfoFileReturnsFalseForNonExistentFile(): void
     {
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
         $mimeType = finfo_file($finfo, $this->testFilesDir . '/nonexistent.pdf');
         finfo_close($finfo);
 
-        $this->assertFalse($mimeType);
+        $this->assertFalse($mimeType, 'finfo_file should return false for non-existent file');
     }
 
     /**
