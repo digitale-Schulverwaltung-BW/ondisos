@@ -126,17 +126,32 @@ class FormConfig
 
     /**
      * Get notification email for form
+     *
+     * @return ?string Single email or comma-separated list of emails
      */
     public static function getNotificationEmail(string $formKey): ?string
     {
         $config = self::get($formKey);
         $email = $config['notify_email'] ?? null;
 
-        if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            return $email;
+        if (!$email) {
+            return null;
         }
 
-        return null;
+        // Support comma-separated email addresses
+        $recipients = array_map('trim', explode(',', $email));
+
+        // Validate all email addresses
+        foreach ($recipients as $recipient) {
+            if (!filter_var($recipient, FILTER_VALIDATE_EMAIL)) {
+                // Invalid email address found - skip this form's notifications
+                error_log("Invalid email address in notify_email for form '{$formKey}': {$recipient}");
+                return null;
+            }
+        }
+
+        // Return original string (might be comma-separated list)
+        return $email;
     }
 
     /**

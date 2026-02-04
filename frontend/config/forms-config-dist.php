@@ -11,7 +11,8 @@ return [
         'form'  => 'bs.json',
         'theme' => 'survey_theme.json',
         'version' => '2026-01-v2',
-        'notify_email' => 'sekretariat@example.com',
+        // Notification email(s) - supports single address or comma-separated list
+        'notify_email' => 'sekretariat@example.com, lehrer@example.com',
         'prefill_fields' => [
             'unternehmen',
             'ansprechpartner',
