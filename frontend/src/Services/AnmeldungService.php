@@ -91,9 +91,6 @@ class AnmeldungService
         // Send notification email
         $notificationEmail = FormConfig::getNotificationEmail($formKey);
 
-        // DEBUG: Log the type and value
-        error_log("DEBUG: notificationEmail type: " . gettype($notificationEmail) . ", value: " . var_export($notificationEmail, true));
-
         if ($notificationEmail && $this->emailService) {
             try {
                 $emailSent = $this->emailService->sendNotification(

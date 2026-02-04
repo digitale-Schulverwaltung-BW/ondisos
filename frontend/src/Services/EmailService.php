@@ -214,7 +214,15 @@ class EmailService
     private function formatValue(mixed $value): string
     {
         if (is_array($value)) {
-            return implode(', ', array_map('strval', $value));
+            // Handle nested arrays recursively
+            $formatted = array_map(function($item) {
+                if (is_array($item)) {
+                    // Nested array - use JSON or recursive format
+                    return $this->formatValue($item);
+                }
+                return (string)$item;
+            }, $value);
+            return implode(', ', $formatted);
         }
 
         if (is_bool($value)) {
