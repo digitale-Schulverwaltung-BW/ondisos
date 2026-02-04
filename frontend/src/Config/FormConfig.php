@@ -138,8 +138,14 @@ class FormConfig
             return null;
         }
 
-        // Support comma-separated email addresses
-        $recipients = array_map('trim', explode(',', $email));
+        // Support both string and array formats
+        if (is_array($email)) {
+            // Array format: ['email1@test.com', 'email2@test.com']
+            $recipients = array_map('trim', $email);
+        } else {
+            // String format: 'email1@test.com, email2@test.com'
+            $recipients = array_map('trim', explode(',', $email));
+        }
 
         // Validate all email addresses
         foreach ($recipients as $recipient) {
@@ -150,8 +156,8 @@ class FormConfig
             }
         }
 
-        // Return original string (might be comma-separated list)
-        return $email;
+        // Return as comma-separated string (EmailService expects string)
+        return implode(', ', $recipients);
     }
 
     /**
