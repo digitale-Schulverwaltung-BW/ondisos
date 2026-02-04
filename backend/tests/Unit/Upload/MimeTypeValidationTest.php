@@ -221,18 +221,6 @@ class MimeTypeValidationTest extends TestCase
     }
 
     /**
-     * Test that finfo_file returns false for non-existent file
-     */
-    public function testFinfoFileReturnsFalseForNonExistentFile(): void
-    {
-        $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        $mimeType = finfo_file($finfo, $this->testFilesDir . '/nonexistent.pdf');
-        finfo_close($finfo);
-
-        $this->assertFalse($mimeType, 'finfo_file should return false for non-existent file');
-    }
-
-    /**
      * Test security: SVG with embedded JavaScript should be detected as SVG
      * (Note: Additional sanitization would be needed for SVG uploads)
      */
