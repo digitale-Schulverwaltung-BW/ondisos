@@ -13,10 +13,11 @@ return [
         'version' => '2026-01-v2',
         // Notification email(s) - supports single address or comma-separated list
         'notify_email' => 'sekretariat@example.com, lehrer@example.com',
+
+        // Fields to prefill in the form when using a prefill link
+        // Note: Field names must match exactly with the form definition (bs.json)
         'prefill_fields' => [
-            'unternehmen',
-            'ansprechpartner',
-            'kontakt_email'
+            'Ausbildungsbetrieb'  // Company name - useful for registering multiple apprentices from the same company
         ],
 
         // PDF Download Configuration (optional)

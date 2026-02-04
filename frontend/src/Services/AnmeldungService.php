@@ -159,11 +159,14 @@ class AnmeldungService
             return null;
         }
         
-        // Als Base64 encoden (verschlüsseln bringt keine zusätzliche Sicherheit, da beim Abruf der URL 
+        // Als Base64 encoden (verschlüsseln bringt keine zusätzliche Sicherheit, da beim Abruf der URL
         // die Daten wieder sichtbar werden)
         $encoded = base64_encode(json_encode($prefillData));
-        
-        return $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . "?form={$formKey}&prefill={$encoded}";
+
+        // Build correct URL pointing to index.php (not save.php)
+        $baseUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
+        $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
+        return $baseUrl . $scriptPath . "/index.php?form={$formKey}&prefill={$encoded}";
     }
 
     /**
