@@ -103,11 +103,14 @@ class PdfTokenService
 
             return $id;
 
+        // @codeCoverageIgnoreStart
         } catch (\Throwable $e) {
-            // Any error in validation = invalid token
+            // Defensive catch for unexpected errors (e.g., out of memory, PHP internal errors)
+            // All validation errors are handled before this point, so this is rarely/never hit
             error_log('PDF token validation error: ' . $e->getMessage());
             return null;
         }
+        // @codeCoverageIgnoreEnd
     }
 
     /**

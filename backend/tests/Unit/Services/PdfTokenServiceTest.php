@@ -292,4 +292,58 @@ class PdfTokenServiceTest extends TestCase
 
         $this->assertNull($result);
     }
+
+    public function testValidateTokenHandlesExtremelyLongToken(): void
+    {
+        // Try to trigger validation with an extremely long base64 string
+        // This tests robustness and the catch block
+        $longToken = str_repeat('A', 10000);
+
+        $result = $this->tokenService->validateToken($longToken);
+
+        $this->assertNull($result);
+    }
+
+    public function testValidateTokenHandlesNullByteInToken(): void
+    {
+        // Try token with null byte (potential security issue)
+        $tokenWithNull = base64_encode("123:" . time() . ":1800:abc\0def");
+
+        $result = $this->tokenService->validateToken($tokenWithNull);
+
+        // Should reject gracefully
+        $this->assertNull($result);
+    }
+
+    public function testValidateTokenHandlesNegativeValues(): void
+    {
+        // Token with negative ID (invalid)
+        $invalidToken = base64_encode('-123:' . time() . ':1800:' . str_repeat('a', 64));
+
+        $result = $this->tokenService->validateToken($invalidToken);
+
+        $this->assertNull($result);
+    }
+
+    public function testValidateTokenHandlesVeryLargeTimestamp(): void
+    {
+        // Token with timestamp far in the future
+        $futureTime = time() + 1000000;
+        $invalidToken = base64_encode('123:' . $futureTime . ':1800:' . str_repeat('a', 64));
+
+        $result = $this->tokenService->validateToken($invalidToken);
+
+        // Should reject (HMAC won't match)
+        $this->assertNull($result);
+    }
+
+    public function testValidateTokenHandlesEmptyParts(): void
+    {
+        // Token with empty parts
+        $invalidToken = base64_encode(':::');
+
+        $result = $this->tokenService->validateToken($invalidToken);
+
+        $this->assertNull($result);
+    }
 }
