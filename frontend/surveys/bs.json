@@ -135,16 +135,16 @@
           ]
         },
         {
-          "type": "expression",
+          "type": "text",
           "name": "Klasse",
           "visible": false,
-          "expression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'y_E0BT' : {_Ausbildungsberuf}"
+          "setValueExpression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'y_E0BT' : {_Ausbildungsberuf}"
         },
         {
-          "type": "expression",
+          "type": "text",
           "name": "Klassengruppe",
           "visible": false,
-          "expression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'IB' : ({_Ausbildungsberuf} = 'y_E0FI' ? ({Fachrichtung} or '1') : '1')"
+          "setValueExpression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'IB' : ({_Ausbildungsberuf} = 'y_E0FI' ? ({Fachrichtung} or '1') : '1')"
         },
         {
           "type": "panel",
