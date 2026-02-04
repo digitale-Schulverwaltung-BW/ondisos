@@ -67,8 +67,8 @@
       "elements": [
         {
           "type": "dropdown",
-          "name": "Ausbildungsberuf",
-          "title": "Ausbildungsberuf",
+          "name": "_Ausbildungsberuf",
+          "title": "_Ausbildungsberuf",
           "isRequired": true,
           "choices": [
             {
@@ -112,7 +112,7 @@
         {
           "type": "dropdown",
           "name": "Fachrichtung",
-          "visibleIf": "{Ausbildungsberuf} = 'y_E0FI'",
+          "visibleIf": "{_Ausbildungsberuf} = 'y_E0FI'",
           "title": "Fachrichtung",
           "isRequired": true,
           "choices": [
@@ -426,7 +426,7 @@
           "elements": [
             {
               "type": "dropdown",
-              "name": "LAND",
+              "name": "Land",
               "title": "Staatsangehörigkeit",
               "showNumber": false,
               "isRequired": true,
@@ -1164,7 +1164,7 @@
         },
         {
           "type": "text",
-          "name": "an_Schule",
+          "name": "AbgebendeSchule",
           "title": {
             "de": "an Schule (Name und Ort der Schule):",
             "default": "an Schule"
@@ -1193,14 +1193,14 @@
             },
             {
               "type": "text",
-              "name": "Beginn_Ausbildung",
+              "name": "BeginnAusbildung",
               "title": "Beginn Ausbildung",
               "titleLocation": "left",
               "inputType": "date"
             },
             {
               "type": "boolean",
-              "name": "question5",
+              "name": "EintrittAusbildungsJahr2",
               "startWithNewLine": false,
               "title": "Einstieg ins 2. Ausbildungsjahr:",
               "titleLocation": "left",
@@ -1210,14 +1210,14 @@
             },
             {
               "type": "text",
-              "name": "question1",
+              "name": "EndeAusbildung",
               "title": "Ende Ausbildung",
               "titleLocation": "left",
               "inputType": "date"
             },
             {
               "type": "boolean",
-              "name": "question6",
+              "name": "Umschulung",
               "startWithNewLine": false,
               "title": "Umschulung:",
               "titleLocation": "left",
@@ -1260,7 +1260,7 @@
           "elements": [
             {
               "type": "text",
-              "name": "question7",
+              "name": "AusbStrasse",
               "title": "Straße",
               "titleLocation": "left",
               "showNumber": false,
@@ -1268,7 +1268,7 @@
             },
             {
               "type": "text",
-              "name": "question9",
+              "name": "AusbHausnummer",
               "startWithNewLine": false,
               "title": "Hausnummer",
               "titleLocation": "left",
@@ -1277,7 +1277,7 @@
             },
             {
               "type": "text",
-              "name": "question10",
+              "name": "AusbPLZ",
               "title": "PLZ",
               "titleLocation": "left",
               "showNumber": false,
@@ -1286,7 +1286,7 @@
             },
             {
               "type": "text",
-              "name": "question11",
+              "name": "AusbOrt",
               "startWithNewLine": false,
               "title": "Ort",
               "titleLocation": "left",
@@ -1295,7 +1295,7 @@
             },
             {
               "type": "text",
-              "name": "question12",
+              "name": "AusbTel",
               "title": "(Mobil-) Telefon",
               "titleLocation": "left",
               "showNumber": false,
@@ -1304,7 +1304,7 @@
             },
             {
               "type": "text",
-              "name": "question13",
+              "name": "AusbEmail",
               "title": "E-Mail Adresse",
               "titleLocation": "left",
               "isRequired": true,
@@ -1314,7 +1314,7 @@
         },
         {
           "type": "file",
-          "name": "question14",
+          "name": "Vertrag",
           "title": "Erste Seite Ausbildungsvertrag",
           "description": "Bitte laden Sie hier die erste Seite Ihres Ausbildungsvertrags hoch.",
           "isRequired": true,
@@ -1325,7 +1325,7 @@
           "name": "question15",
           "title": "Weitere Unterlagen (optional)",
           "description": "Laden Sie weitere Unterlagen hier hoch, die Sie uns übermitteln wollen. z.B. Gestattung einer anderen Berufsschule.",
-          "isRequired": true,
+          "isRequired": false,
           "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB."
         }
       ]
@@ -1336,7 +1336,7 @@
       "elements": [
         {
           "type": "comment",
-          "name": "question16",
+          "name": "Anmerkungen",
           "title": "Anmerkungen",
           "description": "(z.B. Teilnahme an Fördermaßnahmen, EQJ, Schulwechsel oder andere Mitteilungen an die Schule)\n\nAusbildungsbetriebe, deren Ausbildungsstätte vom Firmensitz abweicht, werden gebeten, hier ihre zweite Adresse zu erfassen:"
         },
