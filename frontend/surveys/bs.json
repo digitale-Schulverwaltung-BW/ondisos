@@ -138,7 +138,13 @@
           "type": "expression",
           "name": "Klasse",
           "visible": false,
-          "expression": "ZQFHR1"
+          "expression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'y_E0BT' : {_Ausbildungsberuf}"
+        },
+        {
+          "type": "expression",
+          "name": "Klassengruppe",
+          "visible": false,
+          "expression": "{_Ausbildungsberuf} = 'y_E0BT_I' ? 'IB' : ({_Ausbildungsberuf} = 'y_E0FI' ? ({Fachrichtung} or '1') : '1')"
         },
         {
           "type": "panel",
