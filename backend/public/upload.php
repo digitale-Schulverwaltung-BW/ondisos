@@ -6,6 +6,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Config\Config;
+use App\Validators\AnmeldungValidator;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -44,56 +45,22 @@ try {
 
     $file = $_FILES['file'];
 
-    // Validate file size (10MB default)
-    $maxSize = (int)(getenv('UPLOAD_MAX_SIZE') ?: 10485760);
-    if ($file['size'] > $maxSize) {
-        throw new RuntimeException('File too large (max ' . ($maxSize / 1048576) . 'MB)', 400);
+    // Validate file using AnmeldungValidator
+    // This performs comprehensive security checks:
+    // - File size validation
+    // - MIME type detection (content-based, not just extension)
+    // - Extension validation (must match MIME type)
+    // - Prevents disguised malicious files (e.g., evil.php.jpg)
+    $validator = new AnmeldungValidator();
+    $validationResult = $validator->validateFile($file);
+
+    if (!$validationResult['success']) {
+        throw new RuntimeException($validationResult['error'], 400);
     }
 
-    // Validate file type using MIME type AND extension
-    // Security: MIME type check prevents attackers from renaming malicious files
-    // (e.g., evil.php.jpg would fail MIME check even if extension passes)
-
-    // Define allowed MIME types and their corresponding extensions
-    // NOTE: doc/docx excluded due to macro security risks
-    $allowedMimeTypes = [
-        'application/pdf' => ['pdf'],
-        'image/jpeg' => ['jpg', 'jpeg'],
-        'image/png' => ['png'],
-        'image/gif' => ['gif'],
-        'image/webp' => ['webp'],
-        'image/svg+xml' => ['svg'],
-        // Office documents excluded by default for security (can contain macros)
-        // Uncomment if needed:
-        // 'application/msword' => ['doc'],
-        // 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' => ['docx'],
-    ];
-
-    // Check MIME type using finfo (reads actual file content, not just extension)
-    $finfo = finfo_open(FILEINFO_MIME_TYPE);
-    if ($finfo === false) {
-        throw new RuntimeException('Failed to initialize file info', 500);
-    }
-
-    $mimeType = finfo_file($finfo, $file['tmp_name']);
-    finfo_close($finfo);
-
-    if ($mimeType === false) {
-        throw new RuntimeException('Failed to detect file type', 400);
-    }
-
-    // Validate extension
-    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-
-    // Check if MIME type is allowed
-    if (!isset($allowedMimeTypes[$mimeType])) {
-        throw new RuntimeException('File type not allowed (MIME: ' . $mimeType . ')', 400);
-    }
-
-    // Check if extension matches the MIME type
-    if (!in_array($extension, $allowedMimeTypes[$mimeType], true)) {
-        throw new RuntimeException('File extension does not match MIME type', 400);
-    }
+    // Extract validated MIME type and extension
+    $mimeType = $validationResult['mime_type'];
+    $extension = $validationResult['extension'];
 
     // Upload directory
     $uploadDir = __DIR__ . '/../../uploads';

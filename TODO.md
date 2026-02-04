@@ -12,18 +12,33 @@
   - Security-kritisch: Formular-Filter-Validierung getestet
   - Nur noch 12 Lines fehlen (private Helpers)
 
+- [x] **AnmeldungValidator** - ~95% (geschätzt) 🎉
+  - 30+ neue Tests für File-Validierung
+  - Security-kritisch: Upload-Sicherheit vollständig getestet
+  - Alle 5 File-Validierungs-Methoden abgedeckt
+  - Prevention: Disguised files, Double-Extension-Attacks
+  - upload.php refactored (nutzt jetzt Validator)
+
 ### 🔴 Priorität 1: Security-kritische Tests
 
-#### 1. AnmeldungValidator (4 Methoden fehlen)
-**Aktuell:** 34.48% (10/29 lines, 1/5 methods)
-**Fehlende Methoden:**
-- `validateFile()` - File-Upload-Validierung
-- `validateFileSize()` - Size-Checks
-- `validateMimeType()` - MIME-Type-Checks
-- `validateExtension()` - Extension-Checks
+#### 1. AnmeldungValidator - ✅ ABGESCHLOSSEN
+**Aktuell:** ~95% (geschätzt, alle Methoden getestet)
+**Implementierte Methoden:**
+- ✅ `validateFile()` - File-Upload-Validierung (Hauptmethode)
+- ✅ `validateFileSize()` - Size-Checks (max 10MB, leer-Check)
+- ✅ `validateMimeType()` - MIME-Type-Checks (content-based mit finfo)
+- ✅ `validateExtension()` - Extension-Checks (muss zu MIME passen)
+- ✅ `getAllowedMimeTypes()` - MIME-Whitelist abrufen
 
-**Warum kritisch:** Zentrale Validierung für Security
-**Effort:** Klein (~50 lines Test-Code)
+**Tests:** 30+ neue Tests hinzugefügt
+- File-Validierung mit echten Test-Dateien (PDF, PNG, JPEG)
+- Security-Tests: Disguised files (PHP als JPG, Text als PDF)
+- Double-Extension-Attack-Prevention (evil.php.jpg)
+- Case-insensitive Extension-Matching
+- Edge-Cases: Leere Dateien, fehlende Felder, zu große Dateien
+
+**Refactoring:** `upload.php` nutzt jetzt AnmeldungValidator (sauberer Code)
+**Status:** ✅ **ERLEDIGT** - Zentrale Security-Validierung vollständig getestet
 
 #### 2. AnmeldungRepository
 **Aktuell:** 0% (0/150 lines)
@@ -440,7 +455,9 @@ session_destroy();  // ❌ Keine Session-Regeneration
 
 ---
 
-**Letzte Aktualisierung:** 2026-02-03
+**Letzte Aktualisierung:** 2026-02-04
 **Nächste Schritte:**
-1. AnmeldungValidator Tests erweitern (4 Methoden fehlen)
-2. RateLimiter + PdfTokenService auf 100% bringen
+1. ✅ ~~AnmeldungValidator Tests erweitern (4 Methoden fehlen)~~ - ERLEDIGT
+2. RateLimiter + PdfTokenService auf 100% bringen (Quick Win)
+3. AnmeldungRepository Integration Tests (benötigt Test-DB)
+4. StatusService + SpreadsheetBuilder Tests (Business Logic)
