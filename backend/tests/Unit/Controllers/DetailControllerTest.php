@@ -38,41 +38,44 @@ class DetailControllerTest extends TestCase
     }
 
     /**
-     * Test that normal keys are humanized correctly
+     * Test that field names are returned as-is (for downstream tool compatibility)
      */
-    public function testHumanizeKeyWithNormalInput(): void
+    public function testHumanizeKeyReturnsFieldNameAsIs(): void
     {
-        $this->assertEquals('First Name', $this->callHumanizeKey('first_name'));
-        $this->assertEquals('Last Name', $this->callHumanizeKey('lastName'));
-        $this->assertEquals('Email Address', $this->callHumanizeKey('email_address'));
+        // Field names should be returned unchanged (no transformation)
+        $this->assertEquals('first_name', $this->callHumanizeKey('first_name'));
+        $this->assertEquals('lastName', $this->callHumanizeKey('lastName'));
+        $this->assertEquals('email_address', $this->callHumanizeKey('email_address'));
+        $this->assertEquals('AusbHausnummer', $this->callHumanizeKey('AusbHausnummer'));
     }
 
     /**
-     * Test that snake_case is converted to spaces
+     * Test that snake_case is preserved (not converted)
      */
-    public function testHumanizeKeyConvertsSnakeCase(): void
+    public function testHumanizeKeyPreservesSnakeCase(): void
     {
-        $this->assertEquals('User Name', $this->callHumanizeKey('user_name'));
-        $this->assertEquals('Date Of Birth', $this->callHumanizeKey('date_of_birth'));
+        $this->assertEquals('user_name', $this->callHumanizeKey('user_name'));
+        $this->assertEquals('date_of_birth', $this->callHumanizeKey('date_of_birth'));
     }
 
     /**
-     * Test that camelCase is converted to spaces
+     * Test that camelCase is preserved (not converted)
      */
-    public function testHumanizeKeyConvertsCamelCase(): void
+    public function testHumanizeKeyPreservesCamelCase(): void
     {
-        $this->assertEquals('First Name', $this->callHumanizeKey('firstName'));
-        $this->assertEquals('Last Name', $this->callHumanizeKey('lastName'));
-        $this->assertEquals('Email Address', $this->callHumanizeKey('emailAddress'));
+        $this->assertEquals('firstName', $this->callHumanizeKey('firstName'));
+        $this->assertEquals('lastName', $this->callHumanizeKey('lastName'));
+        $this->assertEquals('emailAddress', $this->callHumanizeKey('emailAddress'));
     }
 
     /**
-     * Test that first letter of each word is capitalized
+     * Test that capitalization is preserved (not forced)
      */
-    public function testHumanizeKeyCapitalizesWords(): void
+    public function testHumanizeKeyPreservesCapitalization(): void
     {
-        $this->assertEquals('Name', $this->callHumanizeKey('name'));
-        $this->assertEquals('Full Name', $this->callHumanizeKey('full_name'));
+        $this->assertEquals('name', $this->callHumanizeKey('name'));
+        $this->assertEquals('full_name', $this->callHumanizeKey('full_name'));
+        $this->assertEquals('Name', $this->callHumanizeKey('Name'));
     }
 
     /**
@@ -102,10 +105,15 @@ class DetailControllerTest extends TestCase
 
         // Should NOT contain unescaped tags
         $this->assertStringNotContainsString('<img', $result);
-        $this->assertStringNotContainsString('onerror=', $result);
+
+        // Quotes should be escaped (this prevents the XSS attack)
+        $this->assertStringContainsString('&quot;', $result);
 
         // Should contain escaped version
         $this->assertStringContainsString('&lt;img', $result);
+
+        // Note: "onerror=" as text is not dangerous when quotes are escaped
+        // The XSS is prevented by escaping HTML tags and quotes, not the attribute name
     }
 
     /**
