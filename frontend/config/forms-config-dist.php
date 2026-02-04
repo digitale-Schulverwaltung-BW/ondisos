@@ -17,7 +17,14 @@ return [
         // Fields to prefill in the form when using a prefill link
         // Note: Field names must match exactly with the form definition (bs.json)
         'prefill_fields' => [
-            'Ausbildungsbetrieb'  // Company name - useful for registering multiple apprentices from the same company
+            'Ausbildungsbetrieb',  // Company name - useful for registering multiple apprentices from the same company
+            'Ausbilder',           // Ausbilder name
+            'AusbStrasse',         // Straße des Ausbildungsbetriebs
+            'AusbHausnummer',      // Hausnummer
+            'AusbPLZ',             // PLZ
+            'AusbOrt',             // Ort
+            'AusbTel',             // Telefon
+            'AusbEmail'            // E-Mail Adresse
         ],
 
         // PDF Download Configuration (optional)
