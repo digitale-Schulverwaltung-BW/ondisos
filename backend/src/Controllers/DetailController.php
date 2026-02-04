@@ -90,6 +90,10 @@ class DetailController
         // Sanitize input to prevent XSS (defense-in-depth)
         $key = htmlspecialchars($key, ENT_QUOTES, 'UTF-8');
 
+        // Return field name as-is for downstream tool compatibility
+        return $key;
+
+        /* Original humanization logic (disabled for field name compatibility):
         // Convert snake_case to spaces
         $label = str_replace('_', ' ', $key);
 
@@ -98,6 +102,7 @@ class DetailController
 
         // Capitalize first letter of each word
         return ucwords($label);
+        */
     }
 
     /**

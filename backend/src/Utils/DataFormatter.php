@@ -25,6 +25,10 @@ class DataFormatter
      */
     public static function humanizeKey(string $key): string
     {
+        // Return field name as-is for downstream tool compatibility
+        return $key;
+
+        /* Original humanization logic (disabled for field name compatibility):
         // Replace underscores and hyphens with spaces
         $humanized = str_replace(['_', '-'], ' ', $key);
 
@@ -35,6 +39,7 @@ class DataFormatter
         $humanized = ucwords($humanized);
 
         return $humanized;
+        */
     }
 
     /**

@@ -247,13 +247,18 @@ class SpreadsheetBuilder
      */
     private function humanizeColumnName(string $name): string
     {
+        // Return field name as-is for downstream tool compatibility
+        return $name;
+
+        /* Original humanization logic (disabled for field name compatibility):
         // Convert snake_case to spaces
         $label = str_replace('_', ' ', $name);
-        
+
         // Convert camelCase to spaces
         $label = preg_replace('/([a-z])([A-Z])/', '$1 $2', $label);
-        
+
         // Capitalize first letter of each word
         return ucwords($label);
+        */
     }
 }
