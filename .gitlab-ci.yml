@@ -78,6 +78,9 @@ test_unit:
   stage: test
   dependencies:
     - install_dependencies
+  before_script:
+    - pecl install pcov
+    - docker-php-ext-enable pcov
   script:
     - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --coverage-cobertura coverage-cobertura.xml --coverage-text --colors=never
   coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
