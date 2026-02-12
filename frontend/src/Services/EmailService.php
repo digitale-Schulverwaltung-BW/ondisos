@@ -192,11 +192,19 @@ class EmailService
     }
 
     /**
-     * Sanitize header value (prevent injection)
+     * Sanitize header value (prevent injection) and encode non-ASCII characters
+     * per RFC 2047 (=?UTF-8?B?...?= encoded-word format)
      */
     private function sanitizeHeaderValue(string $value): string
     {
-        return trim(preg_replace("/[\r\n]+/", ' ', $value));
+        $value = trim(preg_replace("/[\r\n]+/", ' ', $value));
+
+        // Only encode if non-ASCII characters are present
+        if (preg_match('/[^\x00-\x7F]/', $value)) {
+            return '=?UTF-8?B?' . base64_encode($value) . '?=';
+        }
+
+        return $value;
     }
 
     /**

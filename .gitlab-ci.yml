@@ -1,5 +1,8 @@
-# GitLab CI/CD Pipeline for Ondisos
-# PHP-based school registration system with PHPUnit tests
+# ============================================================================
+# GitLab CI/CD Pipeline for Ondisos School Registration System
+# ============================================================================
+# Stages: install → test → coverage → security → build → deploy-staging → deploy-production
+# ============================================================================
 
 # Default Docker image (PHP 8.2 with extensions)
 image: php:8.2-cli
@@ -10,6 +13,9 @@ stages:
   - test
   - coverage
   - security
+  - build
+  - deploy-staging
+  - deploy-production
 
 # Cache vendor directory for faster builds
 cache:
@@ -204,3 +210,180 @@ lint_php:
 #   script:
 #     - curl -H "Accept: text/plain" https://security.symfony.com/check_lock -F lock=@backend/composer.lock
 #   allow_failure: true
+##############
+## ============================================================================
+## Build Stage
+## ============================================================================
+#build:backend:
+#  stage: build
+#  image: composer:2
+#  cache:
+#    key: composer-$CI_COMMIT_REF_SLUG
+#    paths:
+#      - backend/vendor/
+#  script:
+#    - cd backend
+#    - composer install --no-dev --optimize-autoloader
+#    - composer dump-autoload --optimize
+#  artifacts:
+#    paths:
+#      - backend/vendor/
+#    expire_in: 1 hour
+#  only:
+#    - main
+#    - develop
+#    - /^release-.*$/
+#
+#build:docker:
+#  stage: build
+#  image: docker:24
+#  services:
+#    - docker:24-dind
+#  variables:
+#    DOCKER_DRIVER: overlay2
+#    DOCKER_TLS_CERTDIR: "/certs"
+#  before_script:
+#    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+#  script:
+#    - cd backend
+#    - docker build -t $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA .
+#    - docker build -t $CI_REGISTRY_IMAGE/backend:latest .
+#    - docker push $CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA
+#    - docker push $CI_REGISTRY_IMAGE/backend:latest
+#  only:
+#    - main
+#    - develop
+#
+## ============================================================================
+## Deploy Staging
+## ============================================================================
+#deploy:staging:
+#  stage: deploy-staging
+#  image: alpine:latest
+#  before_script:
+#    - apk add --no-cache openssh-client rsync
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+#    - ssh-keyscan -H $STAGING_SERVER >> ~/.ssh/known_hosts
+#  script:
+#    - echo "Deploying to staging server..."
+#
+#    # Rsync backend code
+#    - rsync -avz --delete --exclude='.git' --exclude='vendor' --exclude='uploads' --exclude='cache'
+#        backend/ $STAGING_USER@$STAGING_SERVER:$STAGING_PATH/backend/
+#
+#    # SSH into staging and update
+#    - ssh $STAGING_USER@$STAGING_SERVER << 'EOF'
+#        cd $STAGING_PATH/backend
+#
+#        # Pull latest images
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull
+#
+#        # Restart containers
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+#
+#        # Health check
+#        sleep 10
+#        curl -f http://localhost:8080/index.php || exit 1
+#
+#        echo "Staging deployment successful!"
+#      EOF
+#  environment:
+#    name: staging
+#    url: https://staging.intranet.example.com
+#  only:
+#    - develop
+#  when: manual
+#
+## ============================================================================
+## Deploy Production
+## ============================================================================
+#deploy:production:
+#  stage: deploy-production
+#  image: alpine:latest
+#  before_script:
+#    - apk add --no-cache openssh-client rsync
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY_PROD" | tr -d '\r' | ssh-add -
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+#    - ssh-keyscan -H $PRODUCTION_SERVER >> ~/.ssh/known_hosts
+#  script:
+#    - echo "Deploying to production server..."
+#
+#    # Backup first
+#    - ssh $PRODUCTION_USER@$PRODUCTION_SERVER << 'EOF'
+#        /usr/local/bin/ondisos-backup.sh
+#      EOF
+#
+#    # Rsync backend code
+#    - rsync -avz --delete --exclude='.git' --exclude='vendor' --exclude='uploads' --exclude='cache'
+#        backend/ $PRODUCTION_USER@$PRODUCTION_SERVER:$PRODUCTION_PATH/backend/
+#
+#    # SSH into production and update
+#    - ssh $PRODUCTION_USER@$PRODUCTION_SERVER << 'EOF'
+#        cd $PRODUCTION_PATH/backend
+#
+#        # Pull latest images
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull
+#
+#        # Rolling update (zero-downtime)
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+#
+#        # Health check
+#        sleep 15
+#        curl -f http://localhost:8080/index.php || exit 1
+#
+#        # Cleanup old images
+#        docker image prune -f
+#
+#        echo "Production deployment successful!"
+#      EOF
+#  environment:
+#    name: production
+#    url: https://intranet.example.com
+#  only:
+#    - main
+#  when: manual
+#
+## ============================================================================
+## Rollback Production
+## ============================================================================
+#rollback:production:
+#  stage: deploy-production
+#  image: alpine:latest
+#  before_script:
+#    - apk add --no-cache openssh-client
+#    - eval $(ssh-agent -s)
+#    - echo "$SSH_PRIVATE_KEY_PROD" | tr -d '\r' | ssh-add -
+#    - mkdir -p ~/.ssh
+#    - chmod 700 ~/.ssh
+#    - ssh-keyscan -H $PRODUCTION_SERVER >> ~/.ssh/known_hosts
+#  script:
+#    - echo "Rolling back production to previous version..."
+#    - ssh $PRODUCTION_USER@$PRODUCTION_SERVER << 'EOF'
+#        cd $PRODUCTION_PATH/backend
+#
+#        # Rollback to previous git commit
+#        git log --oneline -5
+#        echo "Enter commit hash to rollback to (or press Ctrl+C to abort):"
+#        read COMMIT_HASH
+#        git checkout $COMMIT_HASH
+#
+#        # Rebuild and restart
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml build backend
+#        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+#
+#        # Health check
+#        sleep 10
+#        curl -f http://localhost:8080/index.php || exit 1
+#
+#        echo "Rollback successful!"
+#      EOF
+#  environment:
+#    name: production
+#  only:
+#    - main
+#  when: manual

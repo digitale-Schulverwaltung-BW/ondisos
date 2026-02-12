@@ -1,18 +1,25 @@
 services:
+  # ============================================================================
   # Backend (Admin Interface)
+  # ============================================================================
+  # For PRODUCTION: Use this service with restart: unless-stopped
+  # For DEV/TESTING: Keep restart commented out or use restart: "no"
+  # ============================================================================
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: ondisos-backend
+    restart: unless-stopped  # Auto-start after reboot (remove for dev if desired)
     ports:
-      - "9080:80"
+      - "8080:80"  # Change to 9080 or other port if 8080 is in use
     volumes:
       - ./backend:/var/www/html
       - backend-uploads:/var/www/html/uploads
       - backend-cache:/var/www/html/cache
       - backend-logs:/var/www/html/logs
     environment:
+      # Development defaults (override with .env for production!)
       - APP_ENV=development
       - APP_DEBUG=true
       - DB_HOST=mysql
@@ -28,18 +35,28 @@ services:
       - PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars
       - UPLOAD_MAX_SIZE=10485760
       - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png,gif,doc,docx
+    # PRODUCTION: Use env_file instead of environment for secrets
+    # env_file:
+    #   - ./backend/.env
     depends_on:
       mysql:
         condition: service_healthy
     networks:
       - ondisos-network
 
+  # ============================================================================
   # Frontend (Public Forms)
+  # ============================================================================
+  # For PRODUCTION: Frontend typically runs on Apache/Nginx (not Docker)
+  # For DEV/TESTING: Keep this service enabled
+  # For PRODUCTION-ONLY-BACKEND: Comment out this entire service
+  # ============================================================================
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: ondisos-frontend
+    restart: unless-stopped  # Auto-start after reboot
     ports:
       - "8081:80"
     volumes:
@@ -55,21 +72,35 @@ services:
       - backend
     networks:
       - ondisos-network
+    profiles:
+      - dev  # Only start with --profile dev (optional)
 
+  # ============================================================================
   # MySQL Database
+  # ============================================================================
+  # For PRODUCTION: Change passwords! Use env_file or Docker secrets
+  # ============================================================================
   mysql:
     image: mysql:8.0
     container_name: ondisos-mysql
+    restart: unless-stopped  # Auto-start after reboot
     ports:
+      # DEV: Expose on all interfaces
       - "3306:3306"
+      # PRODUCTION: Expose only on localhost (uncomment below, comment above)
+      # - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     environment:
+      # IMPORTANT: Change these passwords for production!
       - MYSQL_ROOT_PASSWORD=rootpass123
       - MYSQL_DATABASE=anmeldung
       - MYSQL_USER=anmeldung
       - MYSQL_PASSWORD=secret123
+    # PRODUCTION: Use env_file or secrets instead
+    # env_file:
+    #   - ./backend/.env
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]
@@ -79,10 +110,16 @@ services:
     networks:
       - ondisos-network
 
+  # ============================================================================
   # PHPMyAdmin (Optional, for database management)
+  # ============================================================================
+  # Only for DEV: Start with --profile dev
+  # For PRODUCTION: Do NOT use (security risk)
+  # ============================================================================
   phpmyadmin:
     image: phpmyadmin:latest
     container_name: ondisos-phpmyadmin
+    restart: "no"  # Do not auto-start (dev only)
     ports:
       - "8082:80"
     environment:
@@ -95,7 +132,7 @@ services:
     networks:
       - ondisos-network
     profiles:
-      - dev
+      - dev  # Only start with: docker-compose --profile dev up
 
 volumes:
   mysql-data:
