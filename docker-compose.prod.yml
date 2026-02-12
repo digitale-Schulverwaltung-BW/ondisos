@@ -1,0 +1,81 @@
+# ============================================================================
+# Production Override for docker-compose.yml
+# ============================================================================
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# This file overrides the base docker-compose.yml with production settings:
+# - Production environment variables
+# - Secrets from .env file
+# - Resource limits
+# - Health checks
+# - MySQL localhost-only access
+# - No frontend container (frontend runs on Apache/Nginx)
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ============================================================================
+  # Backend (Production)
+  # ============================================================================
+  backend:
+    container_name: ondisos-backend-prod
+    restart: unless-stopped
+    ports:
+      - "8080:80"  # Or configure reverse proxy
+    env_file:
+      - ./backend/.env  # Load secrets from .env
+    environment:
+      # Override with production values
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - SESSION_SECURE=true
+      - AUTH_ENABLED=true
+      - FORCE_HTTPS=true
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/index.php"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ============================================================================
+  # MySQL (Production)
+  # ============================================================================
+  mysql:
+    container_name: ondisos-mysql-prod
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3306:3306"  # Localhost-only access
+    env_file:
+      - ./backend/.env  # Load DB passwords from .env
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+
+  # ============================================================================
+  # Frontend (Disabled in Production)
+  # ============================================================================
+  # Frontend typically runs on Apache/Nginx in production
+  # Uncomment if you want to run frontend in Docker too
+  # frontend:
+  #   container_name: ondisos-frontend-prod
+  #   restart: unless-stopped
+  #   env_file:
+  #     - ./frontend/.env
+
+  # ============================================================================
+  # PHPMyAdmin (Disabled in Production)
+  # ============================================================================
+  # Never run PHPMyAdmin in production!
+  # Access via: docker-compose --profile dev up phpmyadmin

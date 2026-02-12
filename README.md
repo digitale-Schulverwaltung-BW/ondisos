@@ -248,18 +248,45 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
 ## 📚 Dokumentation
 
 ### Haupt-Dokumentation
-- **[CLAUDE.md](CLAUDE.md)** - Komplette Projekt-Dokumentation
+- **[CLAUDE.md](CLAUDE.md)** - 📖 Komplette Projekt-Dokumentation
   - Architektur-Details
   - Feature-Liste
   - Konfiguration
   - API-Dokumentation
-  - Deployment-Guide
+  - Deployment-Guide (3 Optionen!)
   - Code-Konventionen
   - Troubleshooting
 
+### Deployment & Operations
+- **[DOCKER.md](DOCKER.md)** - 🐳 Docker-Deployment (Empfohlen für Production!)
+  - Quick Start
+  - Production Setup
+  - Persistenz über Reboots
+  - Secrets Management
+  - Backups & Recovery
+  - Updates & Rollbacks
+  - Monitoring & Logging
+  - Reverse Proxy Setup
+- **[CI_CD.md](CI_CD.md)** - 🚀 Automated Deployment Pipeline
+  - GitLab CI/CD Setup
+  - Automated Tests & Deployments
+  - Staging & Production Workflows
+  - Rollback-Strategien
+- **[DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)** - 🆘 Notfall-Playbook
+  - 8 Notfall-Szenarien mit Recovery-Steps
+  - Complete Outage, Data Loss, Security Breach, etc.
+  - Schritt-für-Schritt Anleitungen
+  - Prevention Best Practices
+
 ### Spezial-Dokumentation
-- **[PDF_SETUP.md](backend/PDF_SETUP.md)** - PDF-System Setup & Testing
-- **[UPLOADS.md](backend/src/UPLOADS.md)** - File-Upload Dokumentation
+- **[PDF_SETUP.md](backend/PDF_SETUP.md)** - 📄 PDF-System Setup & Testing
+- **[UPLOADS.md](backend/src/UPLOADS.md)** - 📎 File-Upload Dokumentation
+
+### Configuration Files
+- **[docker-compose.yml](docker-compose.yml)** - Dev/Testing Docker Setup
+- **[docker-compose.prod.yml](docker-compose.prod.yml)** - Production Docker Overrides
+- **[backend/.env.example](backend/.env.example)** - Backend Environment Template
+- **[frontend/.env.example](frontend/.env.example)** - Frontend Environment Template
 
 ### Code-Übersicht
 
@@ -429,14 +456,26 @@ Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für voll
 
 ## 🎯 Roadmap
 
+### Completed (v2.5 - Februar 2026)
+- [x] Docker Production Deployment (✅ DOCKER.md erweitert)
+- [x] docker-compose.prod.yml (✅ Production Overrides)
+- [x] CI/CD Pipeline (✅ GitLab CI/CD.md)
+- [x] Disaster Recovery Playbook (✅ DISASTER_RECOVERY.md)
+- [x] Improved .env.example files (✅ Backend + Frontend)
+
+### Completed (v2.4 - Januar 2026)
+- [x] PHPUnit Tests schreiben (✅ RateLimiter, PdfTokenService, MessageService)
+- [x] GitLab CI/CD Pipeline (✅ Automated Tests, Coverage, Security)
+- [x] Admin Authentication (✅ Optional, session-basiert)
+- [x] Rate Limiting (✅ File-based, 10 req/min)
+- [x] HTTPS Enforcement (✅ Apache .htaccess + PHP Fallback)
+
 ### In Planung
-- [x] PHPUnit Tests schreiben (✅ v2.4: RateLimiter, PdfTokenService, MessageService)
 - [ ] Weitere Unit Tests (Services, Repositories, Validators)
 - [ ] Integration Tests mit Test-Datenbank
 - [ ] Logging verbessern (strukturiertes Logging)
-- [ ] Monitoring Setup (z.B. Sentry)
+- [ ] Monitoring Setup (z.B. Sentry, Prometheus)
 - [ ] API Documentation (OpenAPI/Swagger)
-- [ ] Docker Setup für einfaches Deployment
 - [ ] SMTP-Support für Email-Service
 
 ### Ideen

@@ -506,69 +506,264 @@ archiviert
 
 ## 🚀 Deployment
 
-### Docker Setup (Empfohlen für Entwicklung & Testing)
+### Übersicht
 
-Für lokale Entwicklung und Testing steht ein vollständiges Docker-Setup zur Verfügung.
-Siehe **[DOCKER.md](DOCKER.md)** für die vollständige Dokumentation.
+Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 
-#### Quick Start
+| Komponente | Option 1: Docker Backend | Option 2: Komplett Manuell | Option 3: Komplett Docker |
+|------------|--------------------------|----------------------------|---------------------------|
+| **Backend** | 🐳 Docker Container | 📄 Apache/PHP | 🐳 Docker Container |
+| **Frontend** | 📄 Apache/PHP | 📄 Apache/PHP | 🐳 Docker Container |
+| **MySQL** | 🐳 Docker oder bestehend | 📄 MySQL Server | 🐳 Docker Container |
+| **Empfehlung** | ✅ **Empfohlen** | Einfachstes Setup | Dev/Testing |
+
+#### Warum Option 1 (Docker Backend)?
+
+**Vorteile:**
+- ✅ **Vereinfachte Dependencies** - Composer, mPDF, PHP 8.2+, Tests automatisch installiert
+- ✅ **Einfache Updates** - `git pull && docker-compose up -d --build`
+- ✅ **Konsistente Umgebung** - Dev = Prod, keine "works on my machine"
+- ✅ **Automatische Backups** - Volume-basierte Backups für DB und Uploads
+- ✅ **Frontend flexibel** - Läuft auf bestehendem Webserver (kann mit Wordpress koexistieren)
+
+**Wann Option 2 (Komplett Manuell)?**
+- Umgebungen ohne Docker
+- Volle Kontrolle über alle Komponenten
+- Bewährte Apache/PHP-Infrastruktur
+
+**Wann Option 3 (Komplett Docker)?**
+- Primär für Entwicklung und Testing
+- Alle Services in Containern
+- Siehe **[DOCKER.md](DOCKER.md)** für Details
+
+---
+
+### Option 1: Docker Backend + Manuelles Frontend (✅ Empfohlen)
+
+#### 1. Backend als Docker Container
+
+**Voraussetzungen:**
+- Docker Engine 20.10+ oder Docker Desktop
+- docker-compose 2.0+
+
+**Setup:**
 
 ```bash
-# Container starten
+cd backend
+
+# 1. Environment konfigurieren
+cp .env.example .env
+nano .env
+# Wichtig: DB_HOST=mysql (Docker-Service-Name)
+# Wichtig: PDF_TOKEN_SECRET generieren (siehe unten)
+
+# 2. PDF Token Secret generieren
+openssl rand -hex 32
+# In .env eintragen: PDF_TOKEN_SECRET=<generated-key>
+
+# 3. docker-compose.yml erstellen (siehe unten)
+
+# 4. Container starten
 docker-compose up -d
 
-# Tests ausführen
-docker-compose exec backend composer test
+# 5. Logs prüfen
+docker-compose logs -f backend
 
-# Logs anschauen
-docker-compose logs -f
+# 6. Testen
+curl http://your-server.com:8080/index.php
 ```
 
-#### Services
+**docker-compose.yml (Production):**
 
-| Service | URL | Beschreibung |
-|---------|-----|--------------|
-| **Backend** | http://localhost:8080 | Admin-Interface |
-| **Frontend** | http://localhost:8081 | Öffentliche Formulare |
-| **MySQL** | localhost:3306 | Datenbank |
-| **PHPMyAdmin** | http://localhost:8082 | DB-Verwaltung (dev only) |
+```yaml
+version: '3.8'
 
-#### Vorteile
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ondisos-backend
+    restart: unless-stopped  # Startet automatisch nach Reboot
+    ports:
+      - "8080:80"  # Oder anderer Port
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - SESSION_SECURE=true
+      - AUTH_ENABLED=true  # Optional
+    volumes:
+      - ./:/var/www/html
+      - backend-uploads:/var/www/html/uploads
+      - backend-cache:/var/www/html/cache
+      - backend-logs:/var/www/html/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - backend-network
 
-- ✅ **Keine lokale PHP/MySQL-Installation nötig**
-- ✅ **Identische Umgebung für alle Entwickler**
-- ✅ **Hot-Reload** für Code-Änderungen
-- ✅ **Isolierte Test-Datenbank**
-- ✅ **Tests im Container ausführbar**
-- ✅ **Production-ähnliche Konfiguration**
+  mysql:
+    image: mysql:8.0
+    container_name: ondisos-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme123}
+      MYSQL_DATABASE: anmeldung
+      MYSQL_USER: anmeldung
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret123}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+    ports:
+      - "3306:3306"  # Optional, für externen Zugriff
+    networks:
+      - backend-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-#### Wichtige Commands
+volumes:
+  mysql-data:
+    driver: local
+  backend-uploads:
+    driver: local
+  backend-cache:
+  backend-logs:
+
+networks:
+  backend-network:
+    driver: bridge
+```
+
+**Persistenz über Reboots:**
+
+Die `restart: unless-stopped` Policy sorgt dafür, dass Container automatisch nach Reboots starten.
+
+**Alternative: Systemd Service** (optional, für mehr Kontrolle)
+
+Erstelle `/etc/systemd/system/ondisos-backend.service`:
+
+```ini
+[Unit]
+Description=Ondisos Backend Docker Compose
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/path/to/ondisos/backend
+ExecStart=/usr/bin/docker-compose up -d
+ExecStop=/usr/bin/docker-compose down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target
+```
 
 ```bash
-# Tests ausführen
-docker-compose exec backend composer test
+# Aktivieren
+sudo systemctl enable ondisos-backend
+sudo systemctl start ondisos-backend
 
-# Code Coverage
-docker-compose exec backend composer test:coverage
+# Status prüfen
+sudo systemctl status ondisos-backend
+```
 
-# Shell-Zugriff
-docker-compose exec backend bash
+**Secrets Management:**
 
-# Datenbank-Zugriff
-docker-compose exec mysql mysql -u anmeldung -psecret123 anmeldung
+```bash
+# WICHTIG: .env NICHT in Git committen!
+# .gitignore prüfen:
+grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 
-# Composer-Pakete hinzufügen
-docker-compose exec backend composer require vendor/package
+# Empfohlene Secrets (mindestens ändern!):
+# - PDF_TOKEN_SECRET (32+ Zeichen)
+# - MYSQL_ROOT_PASSWORD
+# - MYSQL_PASSWORD
+# - ADMIN_PASSWORD_HASH (wenn AUTH_ENABLED=true)
+```
 
-# Logs
-docker-compose logs -f backend
+**Admin Authentication Setup:**
+
+```bash
+# 1. In .env aktivieren
+AUTH_ENABLED=true
+ADMIN_USERNAME=admin
+
+# 2. Passwort-Hash generieren
+docker-compose exec backend php scripts/generate-password-hash.php "dein-passwort"
+
+# 3. Hash in .env eintragen
+ADMIN_PASSWORD_HASH=$2y$10$abc123...
+
+# 4. Container neu starten
+docker-compose restart backend
 ```
 
 ---
 
-### Manual Setup (Production)
+#### 2. Frontend auf Apache/Nginx (Manuell)
 
-1. **Backend:**
+Das Frontend läuft auf einem klassischen Webserver (kann auf bestehendem Server mit Wordpress etc. laufen).
+
+**Setup:**
+
+```bash
+cd frontend
+
+# 1. Environment konfigurieren
+cp .env.example .env
+nano .env
+# BACKEND_API_URL=http://your-backend-server.com:8080/api
+
+# 2. Forms-Config kopieren
+cp config/forms-config-dist.php config/forms-config.php
+nano config/forms-config.php
+
+# 3. Verzeichnisse anlegen (falls nötig)
+mkdir -p cache
+chmod 755 cache
+```
+
+**Apache VirtualHost:**
+
+```apache
+<VirtualHost *:80>
+    ServerName anmeldung.example.com
+    DocumentRoot /var/www/frontend/public
+
+    <Directory /var/www/frontend/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    # Optional: HTTPS Redirect (siehe HTTPS-Section unten)
+</VirtualHost>
+```
+
+**HTTPS Setup (Empfohlen):**
+
+```bash
+# Let's Encrypt Zertifikat
+sudo certbot --apache -d anmeldung.example.com
+
+# Oder .htaccess aktivieren (siehe HTTPS-Section)
+cp public/.htaccess.example public/.htaccess
+# Uncomment HTTPS redirect lines
+```
+
+---
+
+### Option 2: Komplett Manuell
+
+Für Umgebungen ohne Docker oder bei Präferenz für klassisches Setup.
+
+#### 1. Backend Manuell
+
 ```bash
 cd backend
 
@@ -577,7 +772,12 @@ composer install
 
 # Configure environment
 cp .env.example .env
-# Edit .env - add DB credentials and PDF_TOKEN_SECRET
+nano .env
+# DB_HOST=127.0.0.1 (oder DB-Server)
+# DB_PORT=3306
+# DB_NAME=anmeldung
+# DB_USER=anmeldung
+# DB_PASS=secret
 
 # Generate PDF token secret
 openssl rand -hex 32
@@ -588,41 +788,35 @@ mkdir -p cache uploads logs
 chmod 755 cache uploads logs
 ```
 
-2. **Frontend:**
+#### 2. Frontend Manuell
+
 ```bash
 cd frontend
 
 # Configure environment
 cp .env.example .env
-# Edit .env - add backend API URL
+nano .env
+# BACKEND_API_URL=http://intranet.example.com/backend/api
 
-# Configure forms (copy from dist)
+# Configure forms
 cp config/forms-config-dist.php config/forms-config.php
-# Edit config/forms-config.php - add PDF configuration per form
+nano config/forms-config.php
 ```
 
-3. **Database:**
+#### 3. Database
+
 ```bash
 mysql -u root -p < database/schema.sql
 ```
 
-4. **PDF System (optional):**
-```bash
-# Add logo (optional)
-cp your-logo.png backend/templates/pdf/logo.png
-
-# Test PDF generation
-# See backend/PDF_SETUP.md for detailed testing guide
-```
-
-### Apache Configuration
+#### 4. Apache Configuration
 
 ```apache
 # Frontend (public)
 <VirtualHost *:80>
     ServerName anmeldung.example.com
     DocumentRoot /var/www/frontend/public
-    
+
     <Directory /var/www/frontend/public>
         AllowOverride All
         Require all granted
@@ -633,7 +827,7 @@ cp your-logo.png backend/templates/pdf/logo.png
 <VirtualHost *:80>
     ServerName intranet.example.com
     DocumentRoot /var/www/backend/public
-    
+
     <Directory /var/www/backend/public>
         AllowOverride All
         Require ip 192.168.0.0/16  # Nur Intranet
@@ -641,80 +835,160 @@ cp your-logo.png backend/templates/pdf/logo.png
 </VirtualHost>
 ```
 
-### Admin Authentication (Optional)
+#### 5. Admin Authentication (Optional)
 
-Das Backend verfügt über ein optionales Login-System für zusätzliche Sicherheit.
-
-**Standardeinstellung:** Deaktiviert (perfekt für gesicherte Intranet-Umgebungen)
-
-#### Setup
-
-**1. Auth aktivieren (optional):**
 ```bash
 # In backend/.env
 AUTH_ENABLED=true
 ADMIN_USERNAME=admin
-```
 
-**2. Passwort-Hash generieren:**
-```bash
+# Passwort-Hash generieren
 cd backend
-php scripts/generate-password-hash.php
-# Oder direkt mit Passwort:
 php scripts/generate-password-hash.php "dein-sicheres-passwort"
-```
 
-**3. Hash in .env eintragen:**
-```bash
+# Hash in .env eintragen
 ADMIN_PASSWORD_HASH=$2y$10$abc123...
 ```
 
-#### Features
+---
 
-- ✅ **Optional aktivierbar** via `AUTH_ENABLED` in `.env`
-- ✅ **Session-basiert** mit automatischem Timeout (1h, konfigurierbar)
-- ✅ **CSRF-Protection** für Login-Formular
-- ✅ **Brute-Force-Protection** (0.5s Delay bei Fehlversuchen)
-- ✅ **Session Regeneration** gegen Session Fixation
-- ✅ **Schöne Login-UI** mit Bootstrap 5
-- ✅ **Logout-Button** in Navbar sichtbar
-- ✅ **Mobile-responsive**
+### Option 3: Komplett Docker
 
-#### Geschützte Bereiche
+Beide Services (Frontend + Backend) als Container. Primär für Entwicklung und Testing.
 
-**Benötigen Login (nur wenn AUTH_ENABLED=true):**
-- Admin-Übersicht (`index.php`)
-- Detail-Ansicht (`detail.php`)
-- Papierkorb (`trash.php`)
-- Dashboard (`dashboard.php`)
-- Excel-Export (`excel_export.php`)
-- Alle Bulk-Actions
+Siehe **[DOCKER.md](DOCKER.md)** für vollständige Dokumentation.
 
-**Immer zugänglich (unabhängig von AUTH_ENABLED):**
-- API-Submit-Endpoint (`api/submit.php`) - für Frontend-Anmeldungen
-- PDF-Download (`pdf/download.php`) - Token-basierte Auth
-- Login/Logout-Seiten
+**Quick Start:**
+
+```bash
+# Container starten
+docker-compose up -d
+
+# Tests ausführen
+docker-compose exec backend composer test
+
+# Services
+# Backend:  http://localhost:8080
+# Frontend: http://localhost:8081
+# MySQL:    localhost:3306
+```
+
+---
+
+### Wartung & Updates
+
+#### Docker-Backend updaten
+
+```bash
+cd backend
+
+# 1. Code aktualisieren
+git pull origin main
+
+# 2. Container neu bauen
+docker-compose build
+
+# 3. Container neu starten (Zero-Downtime mit --no-deps möglich)
+docker-compose up -d --build backend
+
+# 4. Logs prüfen
+docker-compose logs -f backend
+
+# 5. Health Check
+curl http://your-server.com:8080/index.php
+```
+
+**Rollback bei Problemen:**
+
+```bash
+# Zu vorheriger Git-Version
+git checkout <previous-commit>
+docker-compose up -d --build backend
+```
+
+#### Manuelles Frontend/Backend updaten
+
+```bash
+cd frontend  # oder backend
+
+# 1. Code aktualisieren
+git pull origin main
+
+# 2. Dependencies aktualisieren (nur Backend)
+composer install  # Backend only
+
+# 3. Cache löschen
+rm -rf cache/*
+
+# 4. Apache neu laden (optional)
+sudo systemctl reload apache2
+```
+
+#### Backups
+
+**Docker-Volumes sichern:**
+
+```bash
+# MySQL Backup (empfohlen: täglich via Cron)
+docker-compose exec mysql mysqldump -u anmeldung -p anmeldung > backup-$(date +%Y%m%d).sql
+
+# Uploads-Volume sichern
+docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
+  alpine tar czf /backup/uploads-backup-$(date +%Y%m%d).tar.gz -C /data .
+
+# Restore MySQL
+docker-compose exec -T mysql mysql -u anmeldung -p anmeldung < backup-20260205.sql
+
+# Restore Uploads
+docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
+  alpine tar xzf /backup/uploads-backup-20260205.tar.gz -C /data
+```
+
+**Manuelle Backups:**
+
+```bash
+# Database
+mysqldump -u anmeldung -p anmeldung > backup-$(date +%Y%m%d).sql
+
+# Uploads
+tar czf uploads-backup-$(date +%Y%m%d).tar.gz backend/uploads
+
+# Restore
+mysql -u anmeldung -p anmeldung < backup-20260205.sql
+tar xzf uploads-backup-20260205.tar.gz
+```
+
+**Backup-Cron (Beispiel):**
+
+```bash
+# /etc/cron.daily/ondisos-backup.sh
+#!/bin/bash
+BACKUP_DIR="/var/backups/ondisos"
+DATE=$(date +%Y%m%d)
+
+# DB Backup
+docker-compose -f /path/to/backend/docker-compose.yml exec -T mysql \
+  mysqldump -u anmeldung -psecret123 anmeldung > "$BACKUP_DIR/db-$DATE.sql"
+
+# Alte Backups löschen (älter als 30 Tage)
+find "$BACKUP_DIR" -name "db-*.sql" -mtime +30 -delete
+
+# Ausführbar machen:
+# chmod +x /etc/cron.daily/ondisos-backup.sh
+```
 
 ---
 
 ### HTTPS Enforcement (Production)
 
-Für Production-Deployments sollte HTTPS erzwungen werden. Das System bietet **zwei Ebenen** der Absicherung.
+Für Production sollte HTTPS erzwungen werden. Das System bietet **zwei Ebenen** der Absicherung.
 
-#### Empfohlener Ansatz: Apache .htaccess (Primary)
+#### Für Manuelles Frontend/Backend
 
-**Backend:**
+**Apache .htaccess (Primary):**
+
 ```bash
-cd backend/public
-cp .htaccess.example .htaccess
-
-# Uncomment HTTPS redirect lines (10-19) in .htaccess
-nano .htaccess
-```
-
-**Frontend:**
-```bash
-cd frontend/public
+cd frontend/public  # oder backend/public
 cp .htaccess.example .htaccess
 
 # Uncomment HTTPS redirect lines (10-19) in .htaccess
@@ -728,19 +1002,54 @@ Die `.htaccess`-Dateien enthalten:
 - ✅ Compression (gzip)
 - ✅ File Access Restrictions
 
-#### Fallback: PHP-Check (Secondary)
-
-Als zusätzliche Sicherheitsschicht prüft PHP automatisch HTTPS, wenn aktiviert:
+**PHP Fallback (Secondary):**
 
 ```bash
-# In backend/.env
+# In .env
 FORCE_HTTPS=true
 ```
 
-**Vorteile der Zwei-Ebenen-Absicherung:**
-- **Apache .htaccess:** Schneller Redirect auf Webserver-Ebene
-- **PHP Check:** Funktioniert auch wenn .htaccess vergessen wird
-- **Proxy-Support:** Erkennt HTTPS hinter Load Balancern (X-Forwarded-Proto)
+#### Für Docker-Backend
+
+Docker-Container laufen typischerweise hinter einem Reverse Proxy (Nginx, Traefik, Caddy) für HTTPS.
+
+**Option A: Nginx Reverse Proxy (Empfohlen)**
+
+```nginx
+# /etc/nginx/sites-available/backend
+server {
+    listen 443 ssl http2;
+    server_name intranet.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/intranet.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/intranet.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# HTTP -> HTTPS Redirect
+server {
+    listen 80;
+    server_name intranet.example.com;
+    return 301 https://$server_name$request_uri;
+}
+```
+
+**Option B: Let's Encrypt direkt auf Host**
+
+```bash
+# Certbot mit Nginx
+sudo certbot --nginx -d intranet.example.com
+
+# Oder Apache (falls Frontend + Backend auf gleichem Host)
+sudo certbot --apache -d anmeldung.example.com -d intranet.example.com
+```
 
 #### HSTS aktivieren (Nach HTTPS-Test!)
 
@@ -751,18 +1060,68 @@ FORCE_HTTPS=true
 Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
 ```
 
+**Oder Nginx:**
+
+```nginx
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+```
+
 HSTS zwingt Browser, **immer** HTTPS zu verwenden. Rückgängig machen ist schwierig!
 
-#### Production Checklist
+---
 
-1. ✅ SSL-Zertifikat installiert (z.B. Let's Encrypt)
-2. ✅ `.htaccess` aus `.htaccess.example` erstellt
-3. ✅ HTTPS Redirect in `.htaccess` aktiviert (uncomment)
-4. ✅ `FORCE_HTTPS=true` in `.env` gesetzt (Fallback)
-5. ✅ HTTPS im Browser testen (sollte funktionieren!)
-6. ✅ HTTP-to-HTTPS Redirect testen
-7. ✅ HSTS aktivieren (nach erfolgreichen Tests)
-8. ✅ Security Headers testen: https://securityheaders.com/
+### Production Checkliste
+
+#### Alle Deployment-Optionen
+
+- [ ] **Secrets:** PDF_TOKEN_SECRET (32+ Zeichen), DB-Passwörter geändert
+- [ ] **Debugging:** `APP_DEBUG=false` in Production
+- [ ] **HTTPS:** SSL-Zertifikat installiert und aktiviert
+- [ ] **Backups:** Automatische DB-Backups konfiguriert (Cron)
+- [ ] **Admin Auth:** `AUTH_ENABLED=true` und starkes Passwort (optional)
+- [ ] **Security Headers:** HSTS, CSP, X-Frame-Options aktiv
+- [ ] **Firewall:** Unnötige Ports geschlossen (nur 80, 443, ggf. 22)
+- [ ] **Git:** `.env` nicht committed, `.gitignore` geprüft
+
+#### Docker-spezifisch (Option 1 & 3)
+
+- [ ] **Restart Policy:** `restart: unless-stopped` gesetzt
+- [ ] **Volumes:** Persistente Volumes für mysql-data, uploads
+- [ ] **Secrets:** Keine Secrets in docker-compose.yml hardcoded (use .env)
+- [ ] **Updates:** Update-Strategie dokumentiert
+- [ ] **Monitoring:** Docker-Logs rotieren (`/etc/docker/daemon.json`)
+- [ ] **Network:** Backend-Container nicht öffentlich exponiert
+- [ ] **Resource Limits:** Memory/CPU-Limits gesetzt (optional)
+
+#### Manuell-spezifisch (Option 2)
+
+- [ ] **PHP Version:** PHP 8.2+ installiert
+- [ ] **Composer:** Dependencies installiert (`composer install`)
+- [ ] **Permissions:** `uploads`, `cache`, `logs` beschreibbar (755)
+- [ ] **Apache/Nginx:** VirtualHosts konfiguriert und aktiviert
+- [ ] **MySQL:** Datenbank erstellt, User angelegt, schema.sql importiert
+
+#### Testing
+
+```bash
+# Security Headers testen
+curl -I https://anmeldung.example.com
+
+# Oder online:
+# https://securityheaders.com/
+
+# HTTPS Redirect testen
+curl -I http://anmeldung.example.com
+# Sollte: 301 Moved Permanently -> https://
+
+# Docker Health Check
+docker-compose ps
+# Sollte: State: Up (healthy)
+
+# Backend API testen
+curl http://your-backend:8080/api/submit.php
+# Sollte: JSON Response (auch wenn Fehler wg. fehlender Daten)
+```
 
 ---
 
@@ -1023,12 +1382,13 @@ http://intranet.example.com/backend/dashboard.php
 
 ### TODOs
 1. ✅ **PHPUnit Tests** schreiben (Done: RateLimiter, PdfTokenService, MessageService)
-2. **Weitere Unit Tests** für Services, Repositories, Validators
-3. **Integration Tests** mit Test-Datenbank
-4. **Logging** verbessern (strukturiertes Logging)
-5. **Monitoring** Setup (z.B. Sentry)
-6. **API Documentation** (OpenAPI/Swagger)
-7. **Docker Setup** für einfaches Deployment
+2. ✅ **Docker Setup** für Production (Done: DOCKER.md, docker-compose.prod.yml, CI/CD.md)
+3. ✅ **Disaster Recovery** Playbook (Done: DISASTER_RECOVERY.md)
+4. **Weitere Unit Tests** für Services, Repositories, Validators
+5. **Integration Tests** mit Test-Datenbank
+6. **Logging** verbessern (strukturiertes Logging)
+7. **Monitoring** Setup (z.B. Sentry, Prometheus)
+8. **API Documentation** (OpenAPI/Swagger)
 
 ---
 
@@ -1265,6 +1625,46 @@ php -l backend/config/messages.local.php
 ---
 
 ## 🔄 Änderungshistorie
+
+### v2.5 (Februar 2026)
+- ✅ Docker Production Deployment
+  - Deployment-Section in CLAUDE.md komplett neu strukturiert
+  - Drei Deployment-Optionen: Docker Backend (✅ Empfohlen), Komplett Manuell, Komplett Docker
+  - docker-compose.prod.yml für Production Overrides
+  - Persistenz über Reboots (restart: unless-stopped + systemd)
+  - Secrets Management (env_file, Docker secrets)
+  - Volume Backups & Recovery
+  - Updates & Rollbacks
+  - Monitoring & Logging
+- ✅ DOCKER.md massiv erweitert
+  - Production-Section mit vollständigem Setup-Guide
+  - Automatische Backups (Cron-Script)
+  - Update-Strategie mit Zero-Downtime
+  - Reverse Proxy Setup (Nginx, Traefik)
+  - Security Checklist erweitert
+  - Testing Production Setup
+- ✅ CI/CD Pipeline Dokumentation
+  - Neue CI_CD.md mit vollständiger GitLab CI/CD Pipeline
+  - Automated Tests & Deployments
+  - Staging & Production Workflows
+  - Rollback-Strategien
+  - SSH-Key Setup für Deployment
+  - Pipeline-Monitoring & Alerts
+- ✅ Disaster Recovery Playbook
+  - Neue DISASTER_RECOVERY.md
+  - 8 Notfall-Szenarien (Complete Outage, DB Corruption, Data Loss, Security Breach, etc.)
+  - Schritt-für-Schritt Recovery-Anleitungen
+  - Prevention Best Practices
+  - Incident Log Templates
+  - Regular Drill Procedures
+- ✅ Improved .env.example files
+  - Backend .env.example: Bessere Gruppierung, Docker-Variablen, Production Checklist
+  - Frontend .env.example: Bessere Kommentare, Docker vs Manual Unterschiede
+  - Security-Hinweise und Beispielwerte
+- ✅ Dokumentation aktualisiert
+  - README.md mit Links zu neuen Dokumenten
+  - Roadmap aktualisiert (v2.5 Features als completed)
+  - CLAUDE.md TODOs aktualisiert
 
 ### v2.4 (Januar 2026)
 - ✅ PHPUnit Test-Suite implementiert
