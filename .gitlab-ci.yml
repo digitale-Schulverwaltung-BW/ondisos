@@ -79,13 +79,18 @@ test_unit:
   dependencies:
     - install_dependencies
   script:
-    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --no-coverage
+    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --coverage-cobertura coverage-cobertura.xml --coverage-text --colors=never
+  coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
   artifacts:
     when: always
     reports:
       junit: backend/phpunit-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage-cobertura.xml
     paths:
       - backend/phpunit-report.xml
+      - backend/coverage-cobertura.xml
     expire_in: 1 week
 
 # Job: Run Integration Tests
