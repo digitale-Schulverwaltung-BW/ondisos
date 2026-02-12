@@ -73,7 +73,6 @@ install_dependencies:
       - backend/vendor/
     expire_in: 1 hour
 
-# Job: Run Unit Tests
 test_unit:
   stage: test
   dependencies:
@@ -81,6 +80,8 @@ test_unit:
   before_script:
     - pecl install pcov
     - docker-php-ext-enable pcov
+    - export PATH="$PATH:/usr/local/bin"  # Composer wieder in PATH
+    - which composer  # Debug: Wo ist composer?
   script:
     - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --coverage-cobertura coverage-cobertura.xml --coverage-text --colors=never
   coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
