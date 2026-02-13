@@ -19,6 +19,8 @@ class ExportServiceTest extends TestCase
     private AnmeldungRepository $mockRepository;
     private StatusService $mockStatusService;
     private ExportService $service;
+    /** @var string|null Saved value of $_ENV['AUTO_MARK_AS_READ'] before each test */
+    private ?string $savedAutoMark;
 
     protected function setUp(): void
     {
@@ -34,6 +36,10 @@ class ExportServiceTest extends TestCase
             $this->mockStatusService
         );
 
+        // Isolate $_ENV and $_SERVER so putenv() controls what Config reads
+        $this->savedAutoMark = $_ENV['AUTO_MARK_AS_READ'] ?? $_SERVER['AUTO_MARK_AS_READ'] ?? null;
+        unset($_ENV['AUTO_MARK_AS_READ'], $_SERVER['AUTO_MARK_AS_READ']);
+
         $this->resetConfigSingleton();
     }
 
@@ -42,6 +48,11 @@ class ExportServiceTest extends TestCase
         parent::tearDown();
         $this->resetConfigSingleton();
         putenv('AUTO_MARK_AS_READ=false');
+        // Restore $_ENV and $_SERVER isolation
+        if ($this->savedAutoMark !== null) {
+            $_ENV['AUTO_MARK_AS_READ']    = $this->savedAutoMark;
+            $_SERVER['AUTO_MARK_AS_READ'] = $this->savedAutoMark;
+        }
     }
 
     private function resetConfigSingleton(): void

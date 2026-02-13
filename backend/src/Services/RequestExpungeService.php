@@ -37,10 +37,21 @@ class RequestExpungeService
         try {
             // Run expunge
             $result = $this->expungeService->autoExpunge();
-            
+
+            // Rotate audit log (same schedule, no extra I/O on quiet systems)
+            $retentionDays = $config->auditLogRetentionDays;
+            $removedLines  = AuditLogger::rotate($retentionDays);
+            if ($removedLines > 0) {
+                error_log(sprintf(
+                    'Audit log rotation: Removed %d entries older than %d days',
+                    $removedLines,
+                    $retentionDays
+                ));
+            }
+
             // Update last run timestamp
             $this->updateLastRun();
-            
+
             // Log if something was deleted
             if ($result['deleted'] > 0) {
                 error_log(sprintf(
@@ -48,9 +59,9 @@ class RequestExpungeService
                     $result['deleted']
                 ));
             }
-            
+
             return $result;
-            
+
         } catch (\Throwable $e) {
             // Don't break the page if expunge fails
             error_log('Request-based expunge failed: ' . $e->getMessage());

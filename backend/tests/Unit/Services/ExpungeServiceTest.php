@@ -15,12 +15,17 @@ class ExpungeServiceTest extends TestCase
 {
     private AnmeldungRepository $mockRepo;
     private ExpungeService $service;
+    /** @var string|null Saved value of $_ENV['AUTO_EXPUNGE_DAYS'] before each test */
+    private ?string $savedExpungeDays;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->mockRepo = $this->createMock(AnmeldungRepository::class);
         $this->service = new ExpungeService($this->mockRepo);
+        // Isolate $_ENV and $_SERVER so putenv() controls what Config reads
+        $this->savedExpungeDays = $_ENV['AUTO_EXPUNGE_DAYS'] ?? $_SERVER['AUTO_EXPUNGE_DAYS'] ?? null;
+        unset($_ENV['AUTO_EXPUNGE_DAYS'], $_SERVER['AUTO_EXPUNGE_DAYS']);
         $this->resetConfigSingleton();
     }
 
@@ -30,6 +35,11 @@ class ExpungeServiceTest extends TestCase
         $this->resetConfigSingleton();
         // Restore env to disabled state (default in test env)
         putenv('AUTO_EXPUNGE_DAYS=0');
+        // Restore $_ENV and $_SERVER isolation
+        if ($this->savedExpungeDays !== null) {
+            $_ENV['AUTO_EXPUNGE_DAYS']    = $this->savedExpungeDays;
+            $_SERVER['AUTO_EXPUNGE_DAYS'] = $this->savedExpungeDays;
+        }
     }
 
     /**

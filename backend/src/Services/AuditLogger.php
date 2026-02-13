@@ -68,6 +68,85 @@ class AuditLogger
     }
 
     // =========================================================================
+    // Log rotation
+    // =========================================================================
+
+    /**
+     * Remove log entries older than $retentionDays.
+     *
+     * Uses an atomic write (temp file + rename) so the log file is never
+     * left in a partial state. Returns the number of lines removed.
+     *
+     * @param int $retentionDays 0 = disabled (no rotation)
+     */
+    public static function rotate(int $retentionDays): int
+    {
+        if ($retentionDays <= 0 || !file_exists(self::LOG_FILE)) {
+            return 0;
+        }
+
+        $cutoff  = (new \DateTimeImmutable())->modify("-{$retentionDays} days");
+        $removed = 0;
+        $tmpFile = self::LOG_FILE . '.tmp';
+
+        $fh = fopen($tmpFile, 'w');
+        if ($fh === false) {
+            return 0; // can't write temp file — skip silently
+        }
+
+        foreach (self::readLines() as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+
+            $keep = true;
+            $data = json_decode($line, true);
+
+            if (is_array($data) && isset($data['ts'])) {
+                try {
+                    $keep = new \DateTimeImmutable($data['ts']) >= $cutoff;
+                } catch (\Throwable) {
+                    // unparseable timestamp → keep to be safe
+                }
+            }
+
+            if ($keep) {
+                fwrite($fh, $line . "\n");
+            } else {
+                $removed++;
+            }
+        }
+
+        fclose($fh);
+
+        if ($removed > 0) {
+            rename($tmpFile, self::LOG_FILE);
+        } else {
+            unlink($tmpFile); // nothing removed — discard temp file
+        }
+
+        return $removed;
+    }
+
+    /**
+     * Yield lines from the log file without loading the whole file into memory.
+     *
+     * @return \Generator<string>
+     */
+    private static function readLines(): \Generator
+    {
+        $fh = @fopen(self::LOG_FILE, 'r');
+        if ($fh === false) {
+            return;
+        }
+        while (($line = fgets($fh)) !== false) {
+            yield $line;
+        }
+        fclose($fh);
+    }
+
+    // =========================================================================
     // Core logging
     // =========================================================================
 

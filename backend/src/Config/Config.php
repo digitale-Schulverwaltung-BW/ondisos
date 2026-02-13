@@ -23,6 +23,7 @@ class Config
         public readonly ?string $logFile,
         public readonly int $autoExpungeDays,
         public readonly bool $autoMarkAsRead,
+        public readonly int $auditLogRetentionDays,
     ) {}
 
     public static function getInstance(): self
@@ -50,6 +51,7 @@ class Config
             logFile: EnvLoader::get('LOG_FILE'),
             autoExpungeDays: (int)EnvLoader::get('AUTO_EXPUNGE_DAYS', 0),
             autoMarkAsRead: filter_var(EnvLoader::get('AUTO_MARK_AS_READ', false), FILTER_VALIDATE_BOOLEAN),
+            auditLogRetentionDays: (int)EnvLoader::get('AUDIT_LOG_RETENTION_DAYS', 90),
         );
     }
 

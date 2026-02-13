@@ -18,6 +18,8 @@ class RequestExpungeServiceTest extends TestCase
     private string $cacheFile;
     /** Saved content of cache file before test (null = didn't exist) */
     private ?string $savedCacheContent = null;
+    /** @var string|null Saved value of $_ENV['AUTO_EXPUNGE_DAYS'] before each test */
+    private ?string $savedExpungeDays;
 
     protected function setUp(): void
     {
@@ -36,6 +38,10 @@ class RequestExpungeServiceTest extends TestCase
             unlink($this->cacheFile);
         }
 
+        // Isolate $_ENV and $_SERVER so putenv() controls what Config reads
+        $this->savedExpungeDays = $_ENV['AUTO_EXPUNGE_DAYS'] ?? $_SERVER['AUTO_EXPUNGE_DAYS'] ?? null;
+        unset($_ENV['AUTO_EXPUNGE_DAYS'], $_SERVER['AUTO_EXPUNGE_DAYS']);
+
         $this->resetConfigSingleton();
     }
 
@@ -52,6 +58,12 @@ class RequestExpungeServiceTest extends TestCase
 
         $this->resetConfigSingleton();
         putenv('AUTO_EXPUNGE_DAYS=0');
+
+        // Restore $_ENV and $_SERVER isolation
+        if ($this->savedExpungeDays !== null) {
+            $_ENV['AUTO_EXPUNGE_DAYS']    = $this->savedExpungeDays;
+            $_SERVER['AUTO_EXPUNGE_DAYS'] = $this->savedExpungeDays;
+        }
     }
 
     private function resetConfigSingleton(): void
