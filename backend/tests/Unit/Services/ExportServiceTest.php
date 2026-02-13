@@ -3,11 +3,13 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Config\Config;
 use App\Services\ExportService;
 use App\Services\StatusService;
 use App\Repositories\AnmeldungRepository;
 use App\Models\Anmeldung;
 use PHPUnit\Framework\TestCase;
+use ReflectionClass;
 
 /**
  * Tests for ExportService - especially SQL injection prevention
@@ -30,6 +32,40 @@ class ExportServiceTest extends TestCase
         $this->service = new ExportService(
             $this->mockRepository,
             $this->mockStatusService
+        );
+
+        $this->resetConfigSingleton();
+    }
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+        $this->resetConfigSingleton();
+        putenv('AUTO_MARK_AS_READ=false');
+    }
+
+    private function resetConfigSingleton(): void
+    {
+        $ref = new ReflectionClass(Config::class);
+        $prop = $ref->getProperty('instance');
+        $prop->setAccessible(true);
+        $prop->setValue(null, null);
+    }
+
+    private function makeAnmeldung(int $id = 1, ?array $data = ['field' => 'value']): Anmeldung
+    {
+        return new Anmeldung(
+            id: $id,
+            formular: 'bs',
+            formularVersion: null,
+            name: 'Max Mustermann',
+            email: 'max@example.com',
+            status: 'neu',
+            data: $data,
+            createdAt: new \DateTimeImmutable(),
+            updatedAt: null,
+            deleted: false,
+            deletedAt: null,
         );
     }
 
@@ -437,6 +473,168 @@ class ExportServiceTest extends TestCase
         $this->assertEquals('bs', $result['metadata']['filter']);
         $this->assertEquals(1, $result['metadata']['totalRows']);
         $this->assertTrue($result['metadata']['singleExport']);
+    }
+
+    // =========================================================================
+    // autoMarkAsRead
+    // =========================================================================
+
+    public function testGetExportDataCallsMarkMultipleAsExportedWhenAutoMarkEnabled(): void
+    {
+        putenv('AUTO_MARK_AS_READ=true');
+
+        $anmeldung = $this->makeAnmeldung(7);
+        $this->mockRepository->method('findForExport')->willReturn([$anmeldung]);
+
+        $this->mockStatusService->expects($this->once())
+            ->method('markMultipleAsExported')
+            ->with([7]);
+
+        $this->service->getExportData();
+    }
+
+    public function testGetExportDataSkipsMarkMultipleAsExportedWhenAutoMarkDisabled(): void
+    {
+        putenv('AUTO_MARK_AS_READ=false');
+
+        $this->mockRepository->method('findForExport')->willReturn([$this->makeAnmeldung(5)]);
+
+        $this->mockStatusService->expects($this->never())
+            ->method('markMultipleAsExported');
+
+        $this->service->getExportData();
+    }
+
+    public function testGetExportDataPassesAllIdsToMarkMultipleAsExported(): void
+    {
+        putenv('AUTO_MARK_AS_READ=true');
+
+        $this->mockRepository->method('findForExport')->willReturn([
+            $this->makeAnmeldung(1),
+            $this->makeAnmeldung(2),
+            $this->makeAnmeldung(3),
+        ]);
+
+        $this->mockStatusService->expects($this->once())
+            ->method('markMultipleAsExported')
+            ->with([1, 2, 3]);
+
+        $this->service->getExportData();
+    }
+
+    // =========================================================================
+    // extractColumns – edge cases
+    // =========================================================================
+
+    public function testGetExportDataSkipsAnmeldungWithNullData(): void
+    {
+        $anmeldungWithNull = $this->makeAnmeldung(1, null);
+        $anmeldungWithData = $this->makeAnmeldung(2, ['field_a' => 'value']);
+
+        $this->mockRepository->method('findForExport')
+            ->willReturn([$anmeldungWithNull, $anmeldungWithData]);
+
+        $result = $this->service->getExportData();
+
+        $this->assertSame(['field_a'], $result['columns']);
+    }
+
+    public function testGetExportDataExcludesFileFieldViaArrayFieldType(): void
+    {
+        // fieldType value is an array like ['type' => 'file', 'maxSize' => 1024]
+        $anmeldung = $this->makeAnmeldung(1, [
+            'name'       => 'Max',
+            'upload'     => 'data:image/png;base64,abc',
+            '_fieldTypes' => ['upload' => ['type' => 'file', 'maxSize' => 1024]],
+        ]);
+
+        $this->mockRepository->method('findForExport')->willReturn([$anmeldung]);
+
+        $result = $this->service->getExportData();
+
+        $this->assertSame(['name'], $result['columns']);
+        $this->assertNotContains('upload', $result['columns']);
+    }
+
+    public function testGetExportDataExcludesLongBase64StringFromColumns(): void
+    {
+        $longBase64 = str_repeat('ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', 20);
+        $anmeldung = $this->makeAnmeldung(1, [
+            'name'   => 'Max',
+            'binary' => $longBase64,
+        ]);
+
+        $this->mockRepository->method('findForExport')->willReturn([$anmeldung]);
+
+        $result = $this->service->getExportData();
+
+        $this->assertSame(['name'], $result['columns']);
+    }
+
+    public function testGetExportDataExcludesSingleFileObjectFromColumns(): void
+    {
+        $anmeldung = $this->makeAnmeldung(1, [
+            'name'   => 'Max',
+            'upload' => ['name' => 'doc.pdf', 'content' => 'base64data'],
+        ]);
+
+        $this->mockRepository->method('findForExport')->willReturn([$anmeldung]);
+
+        $result = $this->service->getExportData();
+
+        $this->assertSame(['name'], $result['columns']);
+    }
+
+    public function testGetExportDataExcludesArrayOfFileObjectsFromColumns(): void
+    {
+        $anmeldung = $this->makeAnmeldung(1, [
+            'name'    => 'Max',
+            'uploads' => [
+                ['name' => 'a.pdf', 'content' => 'data1'],
+                ['name' => 'b.pdf', 'content' => 'data2'],
+            ],
+        ]);
+
+        $this->mockRepository->method('findForExport')->willReturn([$anmeldung]);
+
+        $result = $this->service->getExportData();
+
+        $this->assertSame(['name'], $result['columns']);
+    }
+
+    // =========================================================================
+    // formatCellValue – flattenArray nested arrays
+    // =========================================================================
+
+    public function testFormatCellValueFlattensNestedArrayAsJson(): void
+    {
+        $nested = [
+            'simple'  => 'text',
+            'complex' => ['x' => 1, 'y' => 2],
+        ];
+
+        $result = $this->service->formatCellValue($nested);
+
+        // simple values as string, nested as JSON
+        $this->assertStringContainsString('text', $result);
+        $this->assertStringContainsString('{"x":1,"y":2}', $result);
+    }
+
+    public function testFormatCellValueFlattensEmptyArray(): void
+    {
+        $this->assertSame('', $this->service->formatCellValue([]));
+    }
+
+    // =========================================================================
+    // generateFilename – empty string filter
+    // =========================================================================
+
+    public function testGenerateFilenameWithEmptyStringFilter(): void
+    {
+        $result = $this->service->generateFilename('');
+
+        // Empty string → same as no filter
+        $this->assertMatchesRegularExpression('/^anmeldungen_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.xlsx$/', $result);
     }
 
     /**
