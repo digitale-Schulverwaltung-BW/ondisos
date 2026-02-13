@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\StatusService;
+use App\Services\AuditLogger;
 use InvalidArgumentException;
 
 class BulkActionsController
@@ -54,6 +55,8 @@ class BulkActionsController
             'delete' => $this->statusService->bulkDelete($ids),
             default => throw new InvalidArgumentException('Unknown action')
         };
+
+        AuditLogger::bulkAction($action, array_values($ids));
 
         return [
             'success' => true,

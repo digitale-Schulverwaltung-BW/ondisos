@@ -335,6 +335,8 @@ ondisos/
 ✅ **CSRF Protection** - Token-basiert für Formulare
 ✅ **Rate Limiting** - API-Schutz gegen Abuse (10 req/min)
 ✅ **File Upload Validation** - Type, Size, Extension-Checks
+✅ **Virus Scanning** - ClamAV-Integration, EICAR-getestet, DSGVO-konform (lokal)
+✅ **Audit Trail** - JSON-Lines-Log aller sicherheitsrelevanten Aktionen
 ✅ **PDF Token Security** - HMAC-SHA256, zeitlich begrenzt (30 Min)
 ✅ **Session Security** - Regeneration, Timeout, Secure Cookies
 ✅ **Admin Auth** - Optional, session-basiert mit Brute-Force-Protection
@@ -428,21 +430,17 @@ Für Open Source Projekte ist eine klare Lizenz wichtig. Empfohlen:
 
 ## 📊 Projekt-Status
 
-**Version:** v2.4 (Januar 2026)
+**Version:** v2.6 (Februar 2026)
 **Status:** ✅ Production Ready
 
 ### Changelog
 
 Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für vollständige Release Notes.
 
-**Aktuelles Release (v2.4):**
-- ✅ PHPUnit Test-Suite (Unit Tests für RateLimiter, PdfTokenService, MessageService)
-- ✅ GitLab CI/CD Pipeline (Automated Tests, Coverage, Security)
-- ✅ Optionales Admin-Login-System
-- ✅ Zweispaltiges PDF-Layout
-- ✅ Rate Limiting für API
-- ✅ Excel-Export: File-Upload-Filterung
-- ✅ HTTPS Enforcement
+**Aktuelles Release (v2.6):**
+- ✅ ClamAV Virus Scanning (TCP/INSTREAM, Docker-Service, DSGVO-konform)
+- ✅ Audit Trail (JSON-Lines-Log: Login, Status-Änderungen, Uploads, Bulk-Actions)
+- ✅ Unit Tests für VirusScanService (10 Tests, 376 Tests gesamt)
 
 ---
 
@@ -455,6 +453,11 @@ Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für voll
 ---
 
 ## 🎯 Roadmap
+
+### Completed (v2.6 - Februar 2026)
+- [x] ClamAV Virus Scanning (✅ VirusScanService, Docker-Service, DSGVO-konform)
+- [x] Audit Trail / AuditLogger (✅ JSON-Lines, Login/Status/Upload/Bulk-Events)
+- [x] Unit Tests: VirusScanService (✅ 10 Tests, 376 Tests gesamt)
 
 ### Completed (v2.5 - Februar 2026)
 - [x] Docker Production Deployment (✅ DOCKER.md erweitert)

@@ -111,6 +111,25 @@ services:
       - ondisos-network
 
   # ============================================================================
+  # ClamAV Virus Scanner
+  # ============================================================================
+  # Scans uploaded files for malware before they are stored.
+  # freshclam runs automatically inside the container and updates signatures
+  # every 2 hours — no cronjob or manual updates required.
+  #
+  # First startup downloads virus databases (~300MB) and takes 60-90 seconds.
+  # Enable scanning: Set VIRUS_SCAN_ENABLED=true in backend environment.
+  # ============================================================================
+  clamav:
+    image: clamav/clamav:stable
+    container_name: ondisos-clamav
+    restart: unless-stopped
+    volumes:
+      - clamav-data:/var/lib/clamav  # Persist signatures across restarts
+    networks:
+      - ondisos-network
+
+  # ============================================================================
   # PHPMyAdmin (Optional, for database management)
   # ============================================================================
   # Only for DEV: Start with --profile dev
@@ -142,6 +161,8 @@ volumes:
   backend-cache:
     driver: local
   backend-logs:
+    driver: local
+  clamav-data:
     driver: local
 
 networks:

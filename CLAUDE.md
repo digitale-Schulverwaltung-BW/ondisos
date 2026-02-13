@@ -298,6 +298,8 @@ return [
   - Auto-Mark as Read
 - Dashboard mit Statistiken
 - Auto-Expunge (request-based, alle 6h)
+- Virus Scanning bei Upload (ClamAV TCP/INSTREAM, DSGVO-konform)
+- Audit Trail (JSON-Lines: `backend/logs/audit.log`, Login/Status/Upload/Bulk-Events)
 
 **Architecture:**
 - Clean MVC mit Service Layer
@@ -498,6 +500,8 @@ archiviert
 - ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
 - ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
 - ✅ HTTPS Enforcement (Apache .htaccess + PHP Fallback)
+- ✅ Virus Scanning (ClamAV via TCP/INSTREAM, Docker-Service, DSGVO-konform, EICAR-getestet)
+- ✅ Audit Trail (JSON-Lines-Log: Login, Status-Änderungen, Uploads, Bulk-Actions)
 
 **TODO:**
 - Keine offenen Security-TODOs 🎉
@@ -1381,14 +1385,15 @@ http://intranet.example.com/backend/dashboard.php
 - ⚠️ Email-Service nutzt PHP mail() → ggf. auf SMTP umstellen
 
 ### TODOs
-1. ✅ **PHPUnit Tests** schreiben (Done: RateLimiter, PdfTokenService, MessageService)
+1. ✅ **PHPUnit Tests** schreiben (Done: RateLimiter, PdfTokenService, MessageService, VirusScanService)
 2. ✅ **Docker Setup** für Production (Done: DOCKER.md, docker-compose.prod.yml, CI/CD.md)
 3. ✅ **Disaster Recovery** Playbook (Done: DISASTER_RECOVERY.md)
-4. **Weitere Unit Tests** für Services, Repositories, Validators
-5. **Integration Tests** mit Test-Datenbank
-6. **Logging** verbessern (strukturiertes Logging)
-7. **Monitoring** Setup (z.B. Sentry, Prometheus)
-8. **API Documentation** (OpenAPI/Swagger)
+4. ✅ **Virus Scanning** (Done: ClamAV, VirusScanService, docker-compose.yml)
+5. ✅ **Audit Trail** (Done: AuditLogger, JSON-Lines, backend/logs/audit.log)
+6. **Weitere Unit Tests** für Services, Repositories, Validators
+7. **Integration Tests** mit Test-Datenbank
+8. **Monitoring** Setup (z.B. Sentry, Prometheus)
+9. **API Documentation** (OpenAPI/Swagger)
 
 ---
 
@@ -1618,13 +1623,32 @@ php -l backend/config/messages.local.php
 ## 📞 Support & Kontakt
 
 **Entwickler:** [Name]
-**Stand:** Januar 2026
+**Stand:** Februar 2026
 **PHP Version:** 8.2+
 **Database:** MySQL 8.0+ / MariaDB 10.5+
 
 ---
 
 ## 🔄 Änderungshistorie
+
+### v2.6 (Februar 2026)
+- ✅ ClamAV Virus Scanning
+  - `VirusScanService` (TCP/INSTREAM-Protokoll, kein Zusatz-Binary, keine PHP-Extension)
+  - Docker-Service `clamav/clamav:stable` in `docker-compose.yml`
+  - `freshclam`-Daemon im Container: automatische Signatur-Updates alle 2h, kein Cronjob nötig
+  - Persistentes Volume `clamav-data` (Signaturen bleiben bei Neustart erhalten)
+  - DSGVO-konform: Dateien verlassen niemals die lokale Infrastruktur
+  - Soft-fail (VIRUS_SCAN_STRICT=false) und Strict-Mode (=true) konfigurierbar
+  - EICAR-Testdatei abgelehnt, saubere Dateien durchgelassen ✅
+- ✅ Audit Trail (AuditLogger)
+  - `AuditLogger` (statische Klasse, JSON-Lines, thread-safe via LOCK_EX)
+  - Log-Datei: `backend/logs/audit.log`
+  - Events: `login_success`, `login_failed`, `logout`, `status_changed`, `bulk_archive/delete/restore/hard_delete`, `upload_success`, `virus_found`, `export_run`
+  - IP-Erkennung: `HTTP_X_FORWARDED_FOR` (Reverse-Proxy-kompatibel) / `REMOTE_ADDR`
+  - Integration: `login.php`, `StatusService`, `BulkActionsController`, `upload.php`
+- ✅ Unit Tests: `VirusScanServiceTest` (10 Tests, 376 Tests gesamt, 901 Assertions)
+  - Anonymous-Subclass-Pattern für socket-freie Tests via Reflection
+  - `testFromEnvReadsHostAndPort`: `$_ENV`-Direktzuweisung statt `putenv()`
 
 ### v2.5 (Februar 2026)
 - ✅ Docker Production Deployment

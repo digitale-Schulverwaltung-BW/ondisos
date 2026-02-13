@@ -7,6 +7,7 @@ namespace App\Services;
 
 use App\Repositories\AnmeldungRepository;
 use App\Models\AnmeldungStatus;
+use App\Services\AuditLogger;
 
 class StatusService
 {
@@ -99,7 +100,13 @@ class StatusService
             throw new \InvalidArgumentException("Invalid status: $newStatus");
         }
 
-        return $this->repository->updateStatus($id, $statusEnum->value);
+        $result = $this->repository->updateStatus($id, $statusEnum->value);
+
+        if ($result) {
+            AuditLogger::statusChanged($id, $statusEnum->value);
+        }
+
+        return $result;
     }
 
     /**

@@ -5,6 +5,8 @@ declare(strict_types=1);
 define('SKIP_AUTH_CHECK', true);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
+use App\Services\AuditLogger;
+
 session_start();
 
 // Redirect if already logged in
@@ -46,11 +48,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Regenerate session ID to prevent session fixation
             session_regenerate_id(true);
 
+            AuditLogger::loginSuccess($username);
+
             // Redirect to index
             header('Location: index.php');
             exit;
         } else {
             $error = 'Benutzername oder Passwort falsch.';
+            AuditLogger::loginFailed($username);
             // Add small delay to prevent brute force
             usleep(500000); // 0.5 seconds
         }

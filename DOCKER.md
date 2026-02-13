@@ -105,6 +105,56 @@ docker-compose exec backend composer test:filter AnmeldungValidatorTest
 - Auto-Import von database/schema.sql beim ersten Start
 - Healthcheck für abhängige Services
 
+### ClamAV Virus Scanner
+
+**Container:** `ondisos-clamav`
+**Image:** `clamav/clamav:stable`
+
+**Features:**
+- Scannt hochgeladene Dateien auf Malware bevor sie gespeichert werden
+- `freshclam`-Daemon läuft automatisch im Container und aktualisiert Signaturen alle 2h
+- Signaturen werden im Volume `clamav-data` persistent gespeichert (kein Re-Download bei Neustart)
+- DSGVO-konform: Dateien verlassen die lokale Infrastruktur nie
+
+**Erster Start:**
+
+Beim allerersten Start lädt ClamAV die Virus-Signaturdatenbank (~300 MB) herunter. Das dauert **60–90 Sekunden**.
+
+```bash
+# Warten bis ClamAV bereit ist:
+docker-compose logs -f clamav
+# Warten auf: "ClamAV daemon started"
+```
+
+**Aktivieren:**
+
+Virus-Scanning ist standardmäßig deaktiviert. Aktivieren in der Backend-Umgebung:
+
+```bash
+# In backend/.env
+VIRUS_SCAN_ENABLED=true
+CLAMAV_HOST=clamav       # Docker-Service-Name
+CLAMAV_PORT=3310
+VIRUS_SCAN_STRICT=false  # false = soft fail (Upload erlaubt, wenn ClamAV nicht erreichbar)
+                         # true  = strict (Upload abgelehnt, wenn ClamAV nicht erreichbar)
+```
+
+**EICAR-Test (Standard-Malware-Testdatei, harmlos):**
+
+```bash
+# Test-Datei erstellen
+echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.txt
+
+# Upload via curl (sollte abgelehnt werden)
+curl -X POST http://localhost:8080/upload.php \
+  -F "anmeldung_id=1" \
+  -F "fieldname=test" \
+  -F "file=@/tmp/eicar.txt"
+# Erwartete Antwort: {"success":false,"error":"Datei wurde als schädlich eingestuft..."}
+```
+
+---
+
 ### PHPMyAdmin (Optional)
 
 **Container:** `ondisos-phpmyadmin`
@@ -170,6 +220,12 @@ docker-compose exec backend tail -f /var/www/html/logs/php_errors.log
 
 # Apache Error Log
 docker-compose exec backend tail -f /var/log/apache2/error.log
+
+# Audit Log (Login, Uploads, Status-Änderungen, Bulk-Actions)
+docker-compose exec backend tail -f /var/www/html/logs/audit.log
+
+# ClamAV Log
+docker-compose logs -f clamav
 ```
 
 ### Datenbank-Zugriff
@@ -254,6 +310,7 @@ services:
 | `backend-uploads` | Hochgeladene Dateien | ✅ Persistent |
 | `backend-cache` | App-Cache | ❌ Temporär |
 | `backend-logs` | Logs | ❌ Temporär |
+| `clamav-data` | ClamAV Virus-Signaturen (~300 MB) | ✅ Persistent |
 
 ### Volume-Verwaltung
 
@@ -890,6 +947,8 @@ volumes:
 - [ ] `.env` nicht in Git committet (.gitignore prüfen)
 - [ ] `.env` Permissions: `chmod 600 .env`
 - [ ] Secrets-Verzeichnis: `chmod 700 secrets/`
+- [ ] `VIRUS_SCAN_ENABLED=true` in Production (nach erstem ClamAV-Start, ~90s warten)
+- [ ] Audit-Log prüfbar: `docker-compose exec backend tail -f logs/audit.log`
 
 #### Docker-Security
 

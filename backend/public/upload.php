@@ -7,6 +7,8 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Config\Config;
 use App\Validators\AnmeldungValidator;
+use App\Services\AuditLogger;
+use App\Services\VirusScanService;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -62,6 +64,29 @@ try {
     $mimeType = $validationResult['mime_type'];
     $extension = $validationResult['extension'];
 
+    // Virus scan (ClamAV) — scans the tmp file before it is stored
+    $virusScanEnabled = filter_var($_ENV['VIRUS_SCAN_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+    if ($virusScanEnabled) {
+        $scanner = VirusScanService::fromEnv();
+        $scanResult = $scanner->scanFile($file['tmp_name']);
+
+        if ($scanResult['clean'] === false) {
+            // Virus found — reject upload
+            AuditLogger::virusFound($anmeldungId, $file['name'], $scanResult['virus'] ?? 'unknown');
+            throw new RuntimeException('Datei wurde als schädlich eingestuft und wurde abgelehnt.', 400);
+        }
+
+        if ($scanResult['clean'] === null) {
+            // ClamAV unavailable — check strict mode
+            $strict = filter_var($_ENV['VIRUS_SCAN_STRICT'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+            error_log('VirusScan error: ' . ($scanResult['error'] ?? 'unknown'));
+            if ($strict) {
+                throw new RuntimeException('Virus-Scan nicht verfügbar. Upload abgelehnt.', 503);
+            }
+            // Soft fail: continue upload with warning in log
+        }
+    }
+
     // Upload directory
     $uploadDir = __DIR__ . '/../../uploads';
     if (!is_dir($uploadDir)) {
@@ -98,6 +123,7 @@ try {
         $safeFilename,
         $file['size']
     ));
+    AuditLogger::uploadSuccess($anmeldungId, $safeFilename);
 
     // Return success
     echo json_encode([

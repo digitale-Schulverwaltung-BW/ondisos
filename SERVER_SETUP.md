@@ -137,6 +137,14 @@ RATE_LIMIT_WINDOW=60
 
 # HTTPS
 FORCE_HTTPS=false                # Set true if behind HTTPS proxy
+
+# Virus Scanning (ClamAV) — aktivieren nach erstem Container-Start
+# ClamAV lädt beim ersten Start ~300 MB Signaturen (60-90 Sek.)
+# Prüfen: docker compose logs clamav | grep "daemon started"
+VIRUS_SCAN_ENABLED=false         # Nach erstem ClamAV-Start auf true setzen
+CLAMAV_HOST=clamav               # Docker-Service-Name (nicht ändern)
+CLAMAV_PORT=3310
+VIRUS_SCAN_STRICT=false          # false = soft fail, true = ablehnen wenn ClamAV nicht erreichbar
 ```
 
 **Secure .env:**
@@ -612,6 +620,9 @@ docker compose exec mysql mysql -u root -p"$MYSQL_ROOT_PASSWORD" anmeldung -e "D
 - [ ] Backup script installed and tested
 - [ ] Cron job for backups configured
 - [ ] Container restarts after reboot (test with `sudo reboot`)
+- [ ] ClamAV started and signatures loaded (`docker compose logs clamav | grep "daemon started"`)
+- [ ] `VIRUS_SCAN_ENABLED=true` set in backend `.env` (after ClamAV is ready)
+- [ ] Audit log writable (`ls -la /var/www/ondisos/backend/logs/audit.log` or created on first event)
 
 ### Frontend Checklist
 
