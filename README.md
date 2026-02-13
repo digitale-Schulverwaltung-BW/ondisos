@@ -160,32 +160,42 @@ mysql -u root -p < database/schema.sql
                      ▼
 ┌─────────────────────────────────────────────────────────────┐
 │              Intranet (Nur für Admins/Verwaltung)           │
+│                                                             │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  Backend (PHP 8.2+ MVC)                                │ │
+│  │  Backend (PHP 8.2+ MVC) [🐳 Docker-Container]          │ │
 │  │  • API-Endpoint (submit.php)                           │ │
 │  │  • Admin-Interface (optional Login)                    │ │
 │  │  • PDF-Generator (Token-basiert)                       │ │
 │  │  • Excel-Export                                        │ │
-│  └─────────────────┬──────────────────────────────────────┘ │
-│                    │                                        │
-│  ┌─────────────────▼──────────────────────────────────────┐ │
-│  │  MySQL/MariaDB                                         │ │
-│  │  • Anmeldungen                                         │ │
-│  │  • Soft-Delete Support                                 │ │
-│  └────────────────────────────────────────────────────────┘ │
+│  │  • Audit Trail (logs/audit.log)                        │ │
+│  └──────┬──────────────────────────────────┬──────────────┘ │
+│         │                                  │ TCP :3310      │
+│         │                                  ▼                │
+│  ┌──────▼──────────────────┐  ┌────────────────────────┐   │
+│  │  MySQL/MariaDB           │  │  ClamAV Daemon          │   │
+│  │  [🐳 Docker-Container]   │  │  [🐳 Docker-Container]  │   │
+│  │  • Anmeldungen           │  │  • Virus-Signaturen     │   │
+│  │  • Soft-Delete Support   │  │  • freshclam (auto 2h)  │   │
+│  └─────────────────────────┘  └────────────────────────┘   │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 **Zwei-Server-Architektur:**
-- **Frontend-Server:** Öffentlich zugänglich (Internet)
-- **Backend-Server:** Nur im Intranet erreichbar
+- **Frontend-Server:** Öffentlich zugänglich (Internet) — Apache/Nginx, PHP
+- **Backend-Server:** Nur im Intranet erreichbar — empfohlen als Docker-Stack
 - **Kommunikation:** Frontend → Backend API (submit.php)
+
+**Intranet-Docker-Stack (empfohlen):**
+- **Backend-Container:** PHP 8.2+, MVC, Admin-Interface, Audit-Logging
+- **MySQL-Container:** Persistente Datenbank mit automatischem Schema-Import
+- **ClamAV-Container:** Virus-Scanner mit täglichen Signatur-Updates (freshclam)
 
 **Vorteile:**
 - ✅ Backend nicht direkt aus dem Internet erreichbar
 - ✅ Datenbank komplett geschützt im Intranet
 - ✅ API mit Rate Limiting und CORS-Protection
 - ✅ Admins greifen nur intern auf Daten zu
+- ✅ ClamAV scannt Uploads lokal — keine Schülerdaten an externe APIs
 
 ---
 
