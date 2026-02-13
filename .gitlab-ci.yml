@@ -73,19 +73,34 @@ install_dependencies:
       - backend/vendor/
     expire_in: 1 hour
 
-# Job: Run Unit Tests
 test_unit:
   stage: test
   dependencies:
     - install_dependencies
+  before_script:
+      - cd backend
+      - apt-get update -qq
+      - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+      - docker-php-ext-configure gd --with-freetype --with-jpeg
+      - docker-php-ext-install pdo pdo_mysql gd
+      - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+      - composer --version
+      # Jetzt PCOV installieren
+      - pecl install pcov
+      - docker-php-ext-enable pcov
   script:
-    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --no-coverage
+    - composer test -- --testsuite=Unit --testdox --log-junit phpunit-report.xml --coverage-cobertura coverage-cobertura.xml --coverage-text --colors=never
+  coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
   artifacts:
     when: always
     reports:
       junit: backend/phpunit-report.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: backend/coverage-cobertura.xml
     paths:
       - backend/phpunit-report.xml
+      - backend/coverage-cobertura.xml
     expire_in: 1 week
 
 # Job: Run Integration Tests
