@@ -1,0 +1,23 @@
+services:
+  test:
+    build:
+      context: .
+      dockerfile: docker/test/Dockerfile
+    volumes:
+      - .:/app
+      - vendor-cache:/app/vendor
+    working_dir: /app
+    command: composer test
+
+  coverage:
+    build:
+      context: .
+      dockerfile: docker/test/Dockerfile
+    volumes:
+      - .:/app
+      - vendor-cache:/app/vendor
+    working_dir: /app
+    command: composer test:coverage
+
+volumes:
+  vendor-cache:

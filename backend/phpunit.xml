@@ -42,7 +42,7 @@
 
     <coverage>
         <report>
-            <html outputDirectory="coverage/html"/>
+            <html outputDirectory="coverage"/>
             <text outputFile="coverage/coverage.txt"/>
         </report>
     </coverage>
