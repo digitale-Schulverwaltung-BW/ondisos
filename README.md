@@ -141,7 +141,7 @@ mysql -u root -p < database/schema.sql
 - **Frontend:** http://anmeldung.example.com
 - **Backend:** http://backend.example.com (nur Intranet)
 
-**Detaillierte Anleitung:** Siehe [CLAUDE.md § Deployment](CLAUDE.md#-deployment)
+**Detaillierte Anleitung:** Siehe [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
 
@@ -270,15 +270,19 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
   - Troubleshooting
 
 ### Deployment & Operations
-- **[DOCKER.md](DOCKER.md)** - 🐳 Docker-Deployment (Empfohlen für Production!)
-  - Quick Start
-  - Production Setup
-  - Persistenz über Reboots
-  - Secrets Management
-  - Backups & Recovery
-  - Updates & Rollbacks
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - 🚀 Production Deployment Guide
+  - 3 Deployment-Optionen (Docker Backend ✅, Komplett Manuell, Komplett Docker)
+  - Quick Start für Docker Production
+  - Credentials Management (Root .env, v2.6)
+  - Wartung & Updates
+  - Backup-Strategien
+  - HTTPS Enforcement
+  - Production Checkliste
+- **[DOCKER.md](DOCKER.md)** - 🐳 Docker Deep Dive (Dev/Testing)
+  - Development Environment
+  - Docker Compose Details
+  - Volume Management
   - Monitoring & Logging
-  - Reverse Proxy Setup
 - **[CI_CD.md](CI_CD.md)** - 🚀 Automated Deployment Pipeline
   - GitLab CI/CD Setup
   - Automated Tests & Deployments
