@@ -147,23 +147,37 @@ class BackendApiClient
     }
 
     /**
-     * Health check - test if backend is reachable
+     * Health check - test if backend is reachable.
+     *
+     * Uses a short 3-second timeout so a slow/unreachable backend
+     * does not hold up the form page load indefinitely.
+     *
+     * @return array{status: 'ok'|'error', reason: string}
      */
-    public function healthCheck(): bool
+    public function healthCheck(): array
     {
         $endpoint = $this->baseUrl . '/health.php';
 
         $ch = curl_init($endpoint);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT => 5,
-            CURLOPT_NOBODY => true
+            CURLOPT_TIMEOUT        => 3,
+            CURLOPT_CONNECTTIMEOUT => 3,
+            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
         ]);
 
         curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
-        return $httpCode === 200;
+        if ($curlError || $httpCode === 0) {
+            error_log('Backend health check failed: ' . $curlError);
+            return ['status' => 'error', 'reason' => ''];
+        }
+
+        return $httpCode === 200
+            ? ['status' => 'ok', 'reason' => '']
+            : ['status' => 'error', 'reason' => ''];
     }
 }

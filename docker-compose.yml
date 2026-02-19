@@ -19,25 +19,22 @@ services:
       - backend-cache:/var/www/html/cache
       - backend-logs:/var/www/html/logs
     environment:
-      # Development defaults (override with .env for production!)
+      # Development defaults (credentials from root .env for consistency)
       - APP_ENV=development
       - APP_DEBUG=true
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_NAME=anmeldung
-      - DB_USER=anmeldung
-      - DB_PASS=secret123
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-anmeldung}
+      - DB_USER=${DB_USER:-anmeldung}
+      - DB_PASS=${DB_PASS:-secret123}
       - AUTO_EXPUNGE_DAYS=90
       - AUTO_MARK_AS_READ=true
       - SESSION_LIFETIME=3600
       - SESSION_SECURE=false
       - AUTH_ENABLED=false
-      - PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars
+      - PDF_TOKEN_SECRET=${PDF_TOKEN_SECRET:-dev-secret-key-replace-in-production-min-32-chars}
       - UPLOAD_MAX_SIZE=10485760
       - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png,gif,doc,docx
-    # PRODUCTION: Use env_file instead of environment for secrets
-    # env_file:
-    #   - ./backend/.env
     depends_on:
       mysql:
         condition: service_healthy
@@ -93,14 +90,12 @@ services:
       - mysql-data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     environment:
-      # IMPORTANT: Change these passwords for production!
-      - MYSQL_ROOT_PASSWORD=rootpass123
-      - MYSQL_DATABASE=anmeldung
-      - MYSQL_USER=anmeldung
-      - MYSQL_PASSWORD=secret123
-    # PRODUCTION: Use env_file or secrets instead
-    # env_file:
-    #   - ./backend/.env
+      # Credentials from root .env file (single source of truth)
+      # Maps DB_* variables to MYSQL_* for container initialization
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpass123}
+      - MYSQL_DATABASE=${DB_NAME:-anmeldung}
+      - MYSQL_USER=${DB_USER:-anmeldung}
+      - MYSQL_PASSWORD=${DB_PASS:-secret123}
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$${MYSQL_ROOT_PASSWORD}"]

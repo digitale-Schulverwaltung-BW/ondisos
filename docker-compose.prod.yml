@@ -24,14 +24,18 @@ services:
     ports:
       - "8080:80"  # Or configure reverse proxy
     env_file:
-      - ./backend/.env  # Load secrets from .env
+      - ./backend/.env  # Optional: Backend-specific overrides (rate limits, virus scan, etc.)
+                        # Core credentials (DB_USER, DB_PASS) come from root .env
     environment:
       # Override with production values
       - APP_ENV=production
       - APP_DEBUG=false
-      - SESSION_SECURE=true
+      # Temporarily disabled until reverse proxy with SSL is set up:
+      # - SESSION_SECURE=true
+      # - FORCE_HTTPS=true
+      - SESSION_SECURE=false
+      - FORCE_HTTPS=false
       - AUTH_ENABLED=true
-      - FORCE_HTTPS=true
     deploy:
       resources:
         limits:
@@ -53,10 +57,9 @@ services:
   mysql:
     container_name: ondisos-mysql-prod
     restart: unless-stopped
-    ports:
-      - "127.0.0.1:3306:3306"  # Localhost-only access
-    env_file:
-      - ./backend/.env  # Load DB passwords from .env
+    # No host port exposure needed - backend talks to mysql via internal Docker network.
+    # For admin access use: docker compose exec mysql mysql -u anmeldung -p anmeldung
+    # Credentials loaded from root .env (via docker-compose.yml variable substitution)
     deploy:
       resources:
         limits:

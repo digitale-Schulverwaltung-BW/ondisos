@@ -52,3 +52,6 @@ composer.lock
 # Backup files
 *.bak
 *.backup
+
+# Local planning/notes (not for the repo)
+maintenance-mode.md

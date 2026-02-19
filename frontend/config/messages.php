@@ -186,6 +186,17 @@ return [
     ],
 
     /**
+     * System Availability / Maintenance Messages
+     * Shown when the backend is unreachable at form load time.
+     */
+    'maintenance' => [
+        'unavailable_title'       => 'System nicht verfügbar',
+        'unavailable_heading'     => 'System vorübergehend nicht erreichbar',
+        'unavailable_description' => 'Der Anmeldeserver antwortet derzeit nicht.',
+        'unavailable_hint'        => 'Bitte versuchen Sie es in wenigen Minuten erneut.',
+    ],
+
+    /**
      * API Error Messages
      */
     'api' => [

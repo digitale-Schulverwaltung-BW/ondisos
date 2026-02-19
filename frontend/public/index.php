@@ -7,6 +7,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;
+use Frontend\Services\BackendApiClient;
+use Frontend\Services\MessageService as M;
 use Frontend\Utils\CsrfProtection;
 
 // Get form key from request
@@ -40,6 +42,63 @@ if (empty($formKey) || !FormConfig::exists($formKey)) {
 
 // Load form configuration
 $formConfig = FormConfig::get($formKey);
+
+// Health Check Gate: Backend-Verfügbarkeit prüfen bevor das Formular angezeigt wird.
+// Verhindert, dass Benutzer ein mehrseitiges Formular ausfüllen, nur um am Ende eine
+// Backend-Fehlermeldung zu erhalten.
+$health = (new BackendApiClient())->healthCheck();
+if ($health['status'] !== 'ok') {
+    http_response_code(503);
+    $pageTitle   = M::get('maintenance.unavailable_title');
+    $heading     = M::get('maintenance.unavailable_heading');
+    $description = M::get('maintenance.unavailable_description');
+    $hint        = M::get('maintenance.unavailable_hint');
+    ?>
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title><?= htmlspecialchars($pageTitle) ?></title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+                background: linear-gradient(135deg, #f5a623 0%, #e67e22 100%);
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+            .card {
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                max-width: 520px;
+                width: 100%;
+                padding: 40px;
+                text-align: center;
+            }
+            .icon { font-size: 64px; margin-bottom: 20px; }
+            h1 { color: #333; font-size: 24px; margin-bottom: 14px; }
+            .desc { color: #555; font-size: 16px; margin-bottom: 14px; line-height: 1.6; }
+            .hint { color: #999; font-size: 14px; margin-top: 16px; }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <div class="icon">⚠️</div>
+            <h1><?= htmlspecialchars($heading) ?></h1>
+            <p class="desc"><?= htmlspecialchars($description) ?></p>
+            <p class="hint"><?= htmlspecialchars($hint) ?></p>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
+}
+
 $formPath = FormConfig::getFormPath($formKey);
 $themePath = FormConfig::getThemePath($formKey);
 
