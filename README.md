@@ -93,25 +93,27 @@ git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git
 cd ondisos
 ```
 
-### 2. Backend Setup
+### 2. Docker Setup (Empfohlen)
 
 ```bash
-cd backend
-
-# Composer Dependencies installieren
-composer install
-
-# Environment konfigurieren
+# Root .env konfigurieren (Single Source of Truth)
 cp .env.example .env
 nano .env  # DB-Credentials, Secrets eintragen
 
-# Verzeichnisse erstellen
-mkdir -p cache uploads logs
-chmod 755 cache uploads logs
+# Secrets generieren
+openssl rand -hex 32  # → PDF_TOKEN_SECRET in .env
+
+# Container starten (Backend + MySQL + ClamAV)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Passwort-Hash generieren (optional, wenn AUTH_ENABLED=true)
-php scripts/generate-password-hash.php
+docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
 ```
+
+**WICHTIG:** Neue Credentials-Struktur seit v2.6
+- ✅ `/.env` - Alle Core-Credentials (DB_USER, DB_PASS, Secrets)
+- ✅ `/backend/.env` - Optional, nur für Backend-Overrides
+- ✅ Keine Duplikation mehr zwischen DB_USER und MYSQL_USER!
 
 ### 3. Frontend Setup
 
@@ -295,7 +297,8 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
 ### Configuration Files
 - **[docker-compose.yml](docker-compose.yml)** - Dev/Testing Docker Setup
 - **[docker-compose.prod.yml](docker-compose.prod.yml)** - Production Docker Overrides
-- **[backend/.env.example](backend/.env.example)** - Backend Environment Template
+- **[.env.example](.env.example)** - Root Environment Template (Core Credentials) ⭐ NEW
+- **[backend/.env.example](backend/.env.example)** - Backend-Specific Overrides (Optional)
 - **[frontend/.env.example](frontend/.env.example)** - Frontend Environment Template
 
 ### Code-Übersicht
@@ -389,19 +392,20 @@ Wir freuen uns über Beiträge!
 git clone https://github.com/your-org/ondisos.git
 cd ondisos
 
-# Backend Setup
+# Root .env konfigurieren (Core Credentials)
+cp .env.example .env
+nano .env  # DB-Credentials, Secrets
+
+# Docker Dev Stack starten
+docker compose up -d  # Backend + MySQL + ClamAV + Frontend
+
+# Oder: Manuelles Setup
 cd backend
 composer install
-cp .env.example .env
-# DB-Config eintragen
 
-# Frontend Setup
 cd ../frontend
 cp .env.example .env
 cp config/forms-config-dist.php config/forms-config.php
-
-# Datenbank
-mysql -u root -p < database/schema.sql
 ```
 
 ### Code-Konventionen
@@ -451,6 +455,8 @@ Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für voll
 - ✅ ClamAV Virus Scanning (TCP/INSTREAM, Docker-Service, DSGVO-konform)
 - ✅ Audit Trail (JSON-Lines-Log: Login, Status-Änderungen, Uploads, Bulk-Actions)
 - ✅ Unit Tests für VirusScanService (10 Tests, 376 Tests gesamt)
+- ✅ Simplified Credentials Management (Root .env als Single Source of Truth)
+- ✅ No more DB_USER/MYSQL_USER duplication (automatic mapping)
 
 ---
 

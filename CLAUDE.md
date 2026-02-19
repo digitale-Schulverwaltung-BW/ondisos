@@ -553,94 +553,62 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 **Setup:**
 
 ```bash
-cd backend
-
-# 1. Environment konfigurieren
+# 1. Root .env konfigurieren (Single Source of Truth)
 cp .env.example .env
 nano .env
-# Wichtig: DB_HOST=mysql (Docker-Service-Name)
-# Wichtig: PDF_TOKEN_SECRET generieren (siehe unten)
 
-# 2. PDF Token Secret generieren
-openssl rand -hex 32
-# In .env eintragen: PDF_TOKEN_SECRET=<generated-key>
+# 2. Secrets generieren
+openssl rand -hex 32  # → PDF_TOKEN_SECRET
+# Passwörter ändern: DB_PASS, MYSQL_ROOT_PASSWORD
 
-# 3. docker-compose.yml erstellen (siehe unten)
+# 3. Container starten
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# 4. Container starten
-docker-compose up -d
+# 4. Logs prüfen
+docker compose logs -f backend
 
-# 5. Logs prüfen
-docker-compose logs -f backend
-
-# 6. Testen
+# 5. Testen
 curl http://your-server.com:8080/index.php
 ```
 
-**docker-compose.yml (Production):**
+**Wichtig - Neue Credentials-Struktur:**
 
-```yaml
-version: '3.8'
+Das Projekt verwendet jetzt eine **Root-`.env`** als Single Source of Truth:
+- `/.env` - Core-Credentials (DB_USER, DB_PASS, Secrets) ← **HIER ALLES WICHTIGE**
+- `/backend/.env` - Optional, nur für Backend-spezifische Overrides
 
-services:
-  backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: ondisos-backend
-    restart: unless-stopped  # Startet automatisch nach Reboot
-    ports:
-      - "8080:80"  # Oder anderer Port
-    environment:
-      - APP_ENV=production
-      - APP_DEBUG=false
-      - SESSION_SECURE=true
-      - AUTH_ENABLED=true  # Optional
-    volumes:
-      - ./:/var/www/html
-      - backend-uploads:/var/www/html/uploads
-      - backend-cache:/var/www/html/cache
-      - backend-logs:/var/www/html/logs
-    depends_on:
-      mysql:
-        condition: service_healthy
-    networks:
-      - backend-network
+Dadurch **keine Duplikation** mehr zwischen `DB_USER` und `MYSQL_USER` — beide Werte kommen aus den gleichen Variablen in der Root-`.env`.
 
-  mysql:
-    image: mysql:8.0
-    container_name: ondisos-mysql
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme123}
-      MYSQL_DATABASE: anmeldung
-      MYSQL_USER: anmeldung
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-secret123}
-    volumes:
-      - mysql-data:/var/lib/mysql
-      - ../database/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-    ports:
-      - "3306:3306"  # Optional, für externen Zugriff
-    networks:
-      - backend-network
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+**Docker-Setup (verwende existierende Files):**
 
-volumes:
-  mysql-data:
-    driver: local
-  backend-uploads:
-    driver: local
-  backend-cache:
-  backend-logs:
+Das Projekt kommt mit vorkonfigurierten Compose-Files:
+- `docker-compose.yml` - Basis-Config (Dev + Prod)
+- `docker-compose.prod.yml` - Production-Overrides (Secrets, Resource-Limits, HTTPS)
 
-networks:
-  backend-network:
-    driver: bridge
+**Wichtige Features:**
+- ✅ **Credentials aus Root `.env`** - Keine Duplikation zwischen DB_USER/MYSQL_USER
+- ✅ **Named Volumes** - uploads, cache, logs isoliert von Host-Filesystem
+- ✅ **Kein MySQL Host-Port** - Nur interne Docker-Kommunikation (sicherer)
+- ✅ **Variable Substitution** - `${DB_USER}` → `MYSQL_USER` automatisch gemapped
+- ✅ **Health Checks** - Backend startet erst wenn MySQL ready ist
+- ✅ **Restart Policy** - `unless-stopped` für Auto-Start nach Reboot
+
+**Beispiel Root `.env`:**
+```bash
+# Core Credentials (automatisch von docker-compose geladen)
+DB_HOST=mysql
+DB_NAME=anmeldung
+DB_USER=anmeldung
+DB_PASS=DeinSicheresPasswort123!
+
+MYSQL_ROOT_PASSWORD=RootPasswort456!
+PDF_TOKEN_SECRET=generiert-mit-openssl-rand-hex-32
 ```
+
+docker-compose mapped automatisch:
+- `DB_USER` → `MYSQL_USER` (für MySQL Container Init)
+- `DB_PASS` → `MYSQL_PASSWORD`
+- Keine manuellen Duplikate nötig!
 
 **Persistenz über Reboots:**
 
@@ -680,32 +648,35 @@ sudo systemctl status ondisos-backend
 **Secrets Management:**
 
 ```bash
-# WICHTIG: .env NICHT in Git committen!
+# WICHTIG: Root .env NICHT in Git committen!
 # .gitignore prüfen:
 grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 
-# Empfohlene Secrets (mindestens ändern!):
-# - PDF_TOKEN_SECRET (32+ Zeichen)
+# Credentials in ROOT .env ändern (nicht backend/.env!):
+# - DB_PASS (wird automatisch zu MYSQL_PASSWORD gemapped)
 # - MYSQL_ROOT_PASSWORD
-# - MYSQL_PASSWORD
-# - ADMIN_PASSWORD_HASH (wenn AUTH_ENABLED=true)
+# - PDF_TOKEN_SECRET (32+ Zeichen: openssl rand -hex 32)
+# - API_SECRET_KEY
+
+# Neue Struktur (kein backend/.env nötig für Credentials):
+# /.env                  ← Alle Secrets HIER
+# /backend/.env          ← Optional, nur für Overrides (Rate Limits, etc.)
 ```
 
 **Admin Authentication Setup:**
 
 ```bash
-# 1. In .env aktivieren
-AUTH_ENABLED=true
-ADMIN_USERNAME=admin
+# 1. In docker-compose.prod.yml ist AUTH_ENABLED=true bereits gesetzt
 
 # 2. Passwort-Hash generieren
-docker-compose exec backend php scripts/generate-password-hash.php "dein-passwort"
+docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
 
-# 3. Hash in .env eintragen
+# 3. Hash in backend/.env (oder Root .env) eintragen
+ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH=$2y$10$abc123...
 
 # 4. Container neu starten
-docker-compose restart backend
+docker compose restart backend
 ```
 
 ---
@@ -1649,6 +1620,17 @@ php -l backend/config/messages.local.php
 - ✅ Unit Tests: `VirusScanServiceTest` (10 Tests, 376 Tests gesamt, 901 Assertions)
   - Anonymous-Subclass-Pattern für socket-freie Tests via Reflection
   - `testFromEnvReadsHostAndPort`: `$_ENV`-Direktzuweisung statt `putenv()`
+- ✅ Simplified Credentials Management
+  - Root `.env` als Single Source of Truth (keine Duplikation mehr)
+  - Automatisches Mapping: `DB_USER` → `MYSQL_USER`, `DB_PASS` → `MYSQL_PASSWORD`
+  - Variable Substitution in docker-compose.yml: `${DB_USER:-anmeldung}`
+  - `backend/.env` nur noch für optionale Backend-spezifische Overrides
+  - Reduzierte Fehlerquellen bei Credential-Mismatches
+- ✅ Docker Optimierungen
+  - Entrypoint.sh: Nur noch writable directories chownen (uploads, cache, logs)
+  - Host-Filesystem bleibt bei Non-Root-User (kein chown auf `/var/www/html`)
+  - MySQL: Kein Host-Port-Exposure in Production (nur internes Docker-Netzwerk)
+  - `version:` aus docker-compose.prod.yml entfernt (obsolet, verursachte Warnings)
 
 ### v2.5 (Februar 2026)
 - ✅ Docker Production Deployment
