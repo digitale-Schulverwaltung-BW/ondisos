@@ -53,13 +53,12 @@ fi
 # Create required directories
 echo "📁 Creating required directories..."
 mkdir -p uploads cache logs
-chown -R www-data:www-data uploads cache logs
-chmod -R 755 uploads cache logs
 echo "✅ Directories created!"
 
-# Set permissions
+# Set permissions (only for writable directories, not entire volume)
 echo "🔐 Setting permissions..."
-chown -R www-data:www-data /var/www/html
+chown -R www-data:www-data uploads cache logs
+chmod -R 755 uploads cache logs
 echo "✅ Permissions set!"
 
 echo "✅ Backend setup complete!"
