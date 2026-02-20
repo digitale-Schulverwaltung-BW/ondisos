@@ -176,7 +176,6 @@ try {
                 error_log('PDF token generation failed: ' . $e->getMessage());
             }
         }
-    }
 
     // Return success
     http_response_code(201);
