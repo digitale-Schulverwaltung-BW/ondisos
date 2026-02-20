@@ -168,4 +168,16 @@ class FormConfig
         $config = self::get($formKey);
         return $config['version'] ?? '1.0.0';
     }
+
+    /**
+     * Get PDF configuration for form
+     * Returns null if PDF is not configured for this form
+     *
+     * @return array|null PDF config array or null
+     */
+    public static function getPdfConfig(string $formKey): ?array
+    {
+        $config = self::get($formKey);
+        return $config['pdf'] ?? null;
+    }
 }
