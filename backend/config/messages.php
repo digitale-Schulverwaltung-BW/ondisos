@@ -38,6 +38,7 @@ return [
         'upload_failed' => 'Upload fehlgeschlagen. {{contact}}',
         'unknown_form' => 'Unbekanntes Formular',
         'invalid_json' => 'Ungültige JSON-Daten',
+        'invalid_data' => 'Ungültige Formulardaten',
         'generic_error' => 'Ein unerwarteter Fehler ist aufgetreten. {{contact}}',
         'database_error' => 'Datenbankfehler. {{contact}}',
         'not_found' => 'Eintrag nicht gefunden',
