@@ -30,9 +30,10 @@ class FormConfig
         }
 
         if ($configFile === null) {
-            throw new \RuntimeException(
-                'Configuration file not found. Expected at: ' . $backendConfigFile . ' or ' . $frontendConfigFile
-            );
+            // No config file found - initialize as empty array
+            // This is expected when frontend sends PDF config in payload
+            self::$config = [];
+            return;
         }
 
         self::$config = require $configFile;
