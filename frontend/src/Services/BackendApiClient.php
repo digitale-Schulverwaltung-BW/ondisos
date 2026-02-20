@@ -18,14 +18,16 @@ class BackendApiClient
 
     /**
      * Submit anmeldung to backend
-     * 
+     *
+     * @param array|null $pdfConfig PDF configuration from frontend forms-config (optional)
      * @return array{success: bool, id?: int, error?: string}
      */
     public function submitAnmeldung(
         string $formKey,
         array $data,
         array $metadata,
-        array $files = []
+        array $files = [],
+        ?array $pdfConfig = null
     ): array {
         $endpoint = $this->baseUrl . '/submit.php';
 
@@ -35,6 +37,11 @@ class BackendApiClient
             'data' => $data,
             'metadata' => $metadata
         ];
+
+        // Include PDF config if provided (frontend is single source of truth)
+        if ($pdfConfig !== null) {
+            $payload['pdf_config'] = $pdfConfig;
+        }
 
         // Send request
         $ch = curl_init($endpoint);

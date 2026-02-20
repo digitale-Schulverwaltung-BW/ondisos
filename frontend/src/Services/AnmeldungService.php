@@ -60,11 +60,15 @@ class AnmeldungService
 
         // Submit to backend (if configured)
         if (FormConfig::shouldSaveToDb($formKey)) {
+            // Get PDF config from form config (frontend is single source of truth)
+            $pdfConfig = FormConfig::getPdfConfig($formKey);
+
             $result = $this->apiClient->submitAnmeldung(
                 $formKey,
                 $submissionData['data'],
                 $submissionData['metadata'],
-                $files
+                $files,
+                $pdfConfig  // Send PDF config to backend
             );
 
             if (!$result['success']) {

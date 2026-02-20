@@ -143,11 +143,17 @@ try {
     ];
 
     // Check if PDF is enabled for this form
-    if (FormConfig::exists($formKey)) {
+    // Frontend sends PDF config as part of payload (single source of truth)
+    // Fall back to FormConfig for backwards compatibility with old frontends
+    $pdfConfig = $payload['pdf_config'] ?? null;
+
+    if ($pdfConfig === null && FormConfig::exists($formKey)) {
+        // Backwards compatibility: load from backend FormConfig if not in payload
         $formConfig = FormConfig::get($formKey);
         $pdfConfig = $formConfig['pdf'] ?? null;
+    }
 
-        if ($pdfConfig && ($pdfConfig['enabled'] ?? false)) {
+    if ($pdfConfig && ($pdfConfig['enabled'] ?? false)) {
             try {
                 // Generate PDF token
                 $tokenService = new PdfTokenService();
