@@ -142,7 +142,7 @@ class BackendApiClient
             curl_close($ch);
 
             if ($error || $httpCode !== 200) {
-                error_log("File upload failed: HTTP $httpCode, Error: $error");
+                error_log("File upload failed: HTTP $httpCode, Error: $error, Response: $response");
                 return [
                     'success' => false,
                     'error' => 'Datei-Upload fehlgeschlagen'
