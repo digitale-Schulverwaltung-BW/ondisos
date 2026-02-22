@@ -489,6 +489,10 @@ server {
     ssl_certificate /etc/letsencrypt/live/intranet.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/intranet.example.com/privkey.pem;
 
+    # WICHTIG: Upload-Limit erhöhen (Standard: 1M)
+    # Sollte größer sein als UPLOAD_MAX_SIZE in .env (default: 10M)
+    client_max_body_size 10M;
+
     location / {
         proxy_pass http://localhost:8080;
         proxy_set_header Host $host;
@@ -535,6 +539,174 @@ HSTS zwingt Browser, **immer** HTTPS zu verwenden. Rückgängig machen ist schwi
 
 ---
 
+### File Upload Configuration
+
+Das System erlaubt File-Uploads in Formularen. Damit Uploads funktionieren, müssen **drei Ebenen** konfiguriert werden:
+
+1. **Application Level** (.env): `UPLOAD_MAX_SIZE=10485760` (10MB)
+2. **PHP Level** (php.ini): `upload_max_filesize` & `post_max_size`
+3. **Web Server Level** (nginx/Apache): `client_max_body_size` / `LimitRequestBody`
+
+**Wichtig:** Alle drei Limits müssen aufeinander abgestimmt sein!
+
+#### Nginx Upload-Limits
+
+**Problem:** Nginx blockiert standardmäßig Uploads über 1MB mit `HTTP 413 Request Entity Too Large`.
+
+**Lösung:**
+
+```nginx
+# Globale Einstellung (http-Block in /etc/nginx/nginx.conf)
+http {
+    client_max_body_size 10M;
+    # ...
+}
+
+# Oder pro Server-Block
+server {
+    listen 80;
+    server_name anmeldung.example.com;
+
+    # Upload-Limit erhöhen
+    client_max_body_size 10M;
+
+    # ...
+}
+
+# Oder nur für spezifische Location (API-Endpoints)
+location /api/upload.php {
+    client_max_body_size 10M;
+    # ...
+}
+```
+
+**Nach Änderungen:**
+
+```bash
+# Syntax prüfen
+sudo nginx -t
+
+# Neu laden
+sudo systemctl reload nginx
+```
+
+#### Apache Upload-Limits
+
+Apache hat standardmäßig keine harten Upload-Limits, aber PHP-Limits gelten trotzdem.
+
+**Optional (zusätzliche Sicherheit):**
+
+```apache
+<Directory /var/www/frontend/public>
+    # Max Request Body Size (in Bytes)
+    LimitRequestBody 10485760
+</Directory>
+```
+
+#### PHP Upload-Limits
+
+PHP hat eigene Upload-Limits, die **unabhängig** vom Webserver gelten.
+
+**Limits prüfen:**
+
+```bash
+php -i | grep -E 'upload_max_filesize|post_max_size'
+```
+
+**Konfiguration (php.ini oder .htaccess):**
+
+```ini
+# /etc/php/8.2/fpm/php.ini (oder /etc/php/8.2/apache2/php.ini)
+upload_max_filesize = 10M
+post_max_size = 12M       # Sollte größer sein als upload_max_filesize
+max_file_uploads = 20     # Max Anzahl Files pro Request
+```
+
+**Oder per .htaccess (wenn AllowOverride aktiv):**
+
+```apache
+php_value upload_max_filesize 10M
+php_value post_max_size 12M
+```
+
+**Nach Änderungen:**
+
+```bash
+# PHP-FPM neu laden
+sudo systemctl reload php8.2-fpm
+
+# Oder Apache (wenn mod_php)
+sudo systemctl reload apache2
+```
+
+#### Docker-Umgebungen
+
+Bei Docker-Deployments sind die PHP-Limits bereits im Container konfiguriert (`php.ini`).
+
+**Webserver-Limits anpassen:**
+
+- **Nginx Reverse Proxy:** Siehe "HTTPS Enforcement" → Nginx Config (bereits `client_max_body_size 10M` gesetzt)
+- **Apache Frontend:** Siehe oben (Apache Upload-Limits)
+
+**Custom PHP-Limits im Container:**
+
+```yaml
+# docker-compose.yml
+services:
+  backend:
+    environment:
+      - PHP_UPLOAD_MAX_FILESIZE=20M
+      - PHP_POST_MAX_SIZE=22M
+```
+
+Oder custom `php.ini` einbinden:
+
+```yaml
+services:
+  backend:
+    volumes:
+      - ./custom-php.ini:/usr/local/etc/php/conf.d/uploads.ini
+```
+
+#### Troubleshooting
+
+**Symptom: HTTP 413 "Request Entity Too Large"**
+→ **Ursache:** Nginx `client_max_body_size` zu klein
+→ **Fix:** Siehe "Nginx Upload-Limits" oben
+
+**Symptom: Upload-Form zeigt Fehler, keine HTTP 413**
+→ **Ursache:** PHP `upload_max_filesize` oder `post_max_size` zu klein
+→ **Fix:** Siehe "PHP Upload-Limits" oben
+
+**Symptom: "The uploaded file exceeds the upload_max_filesize directive in php.ini"**
+→ **Ursache:** PHP-Limit erreicht
+→ **Fix:** `upload_max_filesize` in php.ini erhöhen
+
+**Limits verifizieren:**
+
+```bash
+# Nginx Config testen
+sudo nginx -t
+
+# PHP-Limits anzeigen
+php -i | grep -E 'upload_max_filesize|post_max_size|client_max_body_size'
+
+# Curl-Test (10MB Dummy-File)
+dd if=/dev/zero of=test.bin bs=1M count=10
+curl -F "file=@test.bin" https://anmeldung.example.com/api/upload.php
+```
+
+**Empfohlene Werte:**
+
+| Limit | Empfehlung | Begründung |
+|-------|------------|------------|
+| `client_max_body_size` (nginx) | 10M-20M | Formular + mehrere Dateien |
+| `upload_max_filesize` (PHP) | 10M | Einzelne Datei |
+| `post_max_size` (PHP) | 12M | Größer als upload_max_filesize |
+| `UPLOAD_MAX_SIZE` (.env) | 10485760 (10M) | Application-Level Validierung |
+
+---
+
 ### Production Checkliste
 
 #### Alle Deployment-Optionen
@@ -547,6 +719,7 @@ HSTS zwingt Browser, **immer** HTTPS zu verwenden. Rückgängig machen ist schwi
 - [ ] **Security Headers:** HSTS, CSP, X-Frame-Options aktiv
 - [ ] **Firewall:** Unnötige Ports geschlossen (nur 80, 443, ggf. 22)
 - [ ] **Git:** `.env` nicht committed, `.gitignore` geprüft
+- [ ] **Upload-Limits:** Nginx `client_max_body_size` (10M+), PHP `upload_max_filesize` (10M+), `post_max_size` (12M+) konfiguriert
 
 #### Docker-spezifisch (Option 1 & 3)
 
