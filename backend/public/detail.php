@@ -129,14 +129,27 @@ require __DIR__ . '/../inc/header.php';
                                             && is_string($value[0]['content'])
                                             && str_starts_with($value[0]['content'], 'data:');
 
-                                        if ($isBase64Files) {
-                                            // Render base64 images/files
+                                        // File references (name + type, content already saved to disk)
+                                        $isFileRefs = $field['isFile']
+                                            && !empty($value)
+                                            && isset($value[0]['name'])
+                                            && !isset($value[0]['content']);
+
+                                        if ($isFileRefs) {
+                                            foreach ($value as $fileRef) {
+                                                $fname = $fileRef['name'] ?? 'Datei';
+                                                echo '<span class="badge bg-light text-dark border me-1">'
+                                                    . '<i class="bi bi-paperclip"></i> '
+                                                    . htmlspecialchars($fname)
+                                                    . '</span>';
+                                            }
+                                        } elseif ($isBase64Files) {
+                                            // Legacy: base64 still in DB — render inline
                                             foreach ($value as $file) {
                                                 $content = $file['content'] ?? '';
                                                 $name = $file['name'] ?? 'unnamed';
                                                 $type = $file['type'] ?? '';
 
-                                                // Check if it's an image
                                                 if (str_starts_with($content, 'data:image/')) {
                                                     echo '<div class="mb-2">';
                                                     echo '<img src="' . htmlspecialchars($content) . '" alt="' . htmlspecialchars($name) . '" class="img-fluid" style="max-width: 100%; max-height: 400px;">';
@@ -146,7 +159,6 @@ require __DIR__ . '/../inc/header.php';
                                                     echo '</a>';
                                                     echo '</div>';
                                                 } else {
-                                                    // For other file types (PDFs, etc.), show download link
                                                     echo '<div class="mb-2">';
                                                     echo '<a href="' . htmlspecialchars($content) . '" download="' . htmlspecialchars($name) . '" class="btn btn-sm btn-outline-primary">';
                                                     echo '<i class="bi bi-download"></i> ' . htmlspecialchars($name);
