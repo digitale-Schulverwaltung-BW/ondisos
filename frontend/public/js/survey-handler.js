@@ -203,6 +203,14 @@ class SurveyHandler {
 
         // Prepare form data
         const formData = new FormData();
+
+        // Add file uploads FIRST (needs base64 content from question.value)
+        this.addFileUploads(formData, sender);
+
+        // Strip base64 content from file fields AFTER extracting files,
+        // so the stored JSON contains only name/type references, not the full binary
+        this.stripFileContent(data, sender);
+
         formData.append('survey_data', JSON.stringify(data));
         formData.append('csrf_token', this.csrfToken);
         formData.append('meta', JSON.stringify({
@@ -210,9 +218,6 @@ class SurveyHandler {
             version: this.config.version || '1.0.0',
             timestamp: new Date().toISOString()
         }));
-
-        // Add file uploads
-        this.addFileUploads(formData, sender);
 
         // Submit to server
         try {
@@ -345,23 +350,56 @@ class SurveyHandler {
     }
 
     /**
-     * Add file uploads to form data
+     * Add file uploads to form data.
+     * SurveyJS stores files as {name, type, content: "data:...;base64,..."} objects,
+     * not as File objects. We convert each base64 data URL to a Blob for proper upload.
      */
     addFileUploads(formData, sender) {
-        // Find all file questions
-        const fileQuestions = sender.getAllQuestions()
-            .filter(q => q.getType() === 'file');
+        sender.getAllQuestions()
+            .filter(q => q.getType() === 'file')
+            .forEach(question => {
+                const files = question.value;
+                if (!files || !files.length) return;
 
-        fileQuestions.forEach(question => {
-            const files = question.value;
-            
-            if (files && files.length > 0) {
-                files.forEach((file, index) => {
-                    const fieldName = `${question.name}_${index}`;
-                    formData.append(fieldName, file);
+                files.forEach((fileObj, index) => {
+                    if (!fileObj || !fileObj.content) return;
+                    const blob = this.dataUrlToBlob(fileObj.content);
+                    formData.append(`${question.name}_${index}`, blob, fileObj.name);
                 });
-            }
-        });
+            });
+    }
+
+    /**
+     * Convert a base64 data URL to a Blob
+     */
+    dataUrlToBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        const binary = atob(parts[1]);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: mime });
+    }
+
+    /**
+     * Strip base64 content from file fields in survey data.
+     * Replaces each file entry with {name, type} only — the actual file
+     * is sent separately via addFileUploads().
+     */
+    stripFileContent(data, sender) {
+        sender.getAllQuestions()
+            .filter(q => q.getType() === 'file')
+            .forEach(question => {
+                if (Array.isArray(data[question.name])) {
+                    data[question.name] = data[question.name].map(f => ({
+                        name: f.name,
+                        type: f.type
+                    }));
+                }
+            });
     }
 
     /**

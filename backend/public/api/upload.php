@@ -13,7 +13,7 @@ use App\Services\VirusScanService;
 header('Content-Type: application/json; charset=utf-8');
 
 // CORS
-$allowedOrigins = getenv('ALLOWED_ORIGINS') 
+$allowedOrigins = getenv('ALLOWED_ORIGINS')
     ? explode(',', getenv('ALLOWED_ORIGINS'))
     : ['http://localhost'];
 
