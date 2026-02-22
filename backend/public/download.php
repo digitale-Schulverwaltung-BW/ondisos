@@ -11,7 +11,7 @@ use App\Controllers\DownloadController;
 
 // Add rate limiting for file downloads
 $rateLimiter = new RateLimiter(
-    __DIR__ . '/../../cache/ratelimit_downloads',
+    __DIR__ . '/../cache/ratelimit_downloads',
     10, // 10 downloads per minute
     60
 );
