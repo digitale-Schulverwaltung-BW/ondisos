@@ -12,6 +12,7 @@ backend/.env
 inc/config.php
 config.php
 frontend/config/forms-config.php
+backend/config/forms-config.php
 
 # Debug files
 debug-email.html

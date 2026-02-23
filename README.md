@@ -103,6 +103,10 @@ nano .env  # DB-Credentials, Secrets eintragen
 # Secrets generieren
 openssl rand -hex 32  # → PDF_TOKEN_SECRET in .env
 
+# Backend Forms-Konfiguration anlegen (gitignored, server-spezifisch)
+cp backend/config/forms-config.example.php backend/config/forms-config.php
+nano backend/config/forms-config.php  # Formulare und PDF-Einstellungen anpassen
+
 # Container starten (Backend + MySQL + ClamAV)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
@@ -303,6 +307,7 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
 - **[docker-compose.prod.yml](docker-compose.prod.yml)** - Production Docker Overrides
 - **[.env.example](.env.example)** - Root Environment Template (Core Credentials) ⭐ NEW
 - **[backend/.env.example](backend/.env.example)** - Backend-Specific Overrides (Optional)
+- **[backend/config/forms-config.example.php](backend/config/forms-config.example.php)** - Backend Form Configuration Template (PDF, Formulare) — nach `forms-config.php` kopieren
 - **[frontend/.env.example](frontend/.env.example)** - Frontend Environment Template
 
 ### Code-Übersicht
