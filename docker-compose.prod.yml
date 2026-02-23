@@ -43,7 +43,7 @@ services:
           memory: 256M
           cpus: '0.5'
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/index.php"]
+      test: ["CMD", "curl", "-f", "http://localhost/api/health.php"]
       interval: 30s
       timeout: 10s
       retries: 3
