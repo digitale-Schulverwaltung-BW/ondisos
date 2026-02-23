@@ -108,17 +108,17 @@ class AnmeldungRepository
      */
     public function findById(int $id): ?Anmeldung
     {
-        $sql = "SELECT id, formular, formular_version, name, email, status, created_at, data 
-                FROM anmeldungen 
+        $sql = "SELECT id, formular, formular_version, name, email, status, created_at, data, pdf_config
+                FROM anmeldungen
                 WHERE id = ?";
-        
+
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param('i', $id);
         $stmt->execute();
-        
+
         $result = $stmt->get_result();
         $row = $result->fetch_assoc();
-        
+
         return $row ? Anmeldung::fromArray($row) : null;
     }
 
@@ -358,22 +358,25 @@ class AnmeldungRepository
     public function insert(array $data): int
     {
         $sql = "INSERT INTO anmeldungen (
-                    formular, formular_version, name, email, status, data, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, NOW())";
-        
+                    formular, formular_version, name, email, status, data, pdf_config, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
+
+        $pdfConfig = $data['pdf_config'] ?? null;
+
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param(
-            'ssssss',
+            'sssssss',
             $data['formular'],
             $data['formular_version'],
             $data['name'],
             $data['email'],
             $data['status'],
-            $data['data']
+            $data['data'],
+            $pdfConfig
         );
-        
+
         $stmt->execute();
-        
+
         return $stmt->insert_id;
-    }    
+    }
 }

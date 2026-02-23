@@ -25,6 +25,7 @@ readonly class Anmeldung
         public ?DateTimeImmutable $updatedAt,
         public bool $deleted,
         public ?DateTimeImmutable $deletedAt,
+        public ?array $pdfConfig = null,
     ) {}
 
     public static function fromArray(array $row): self
@@ -36,16 +37,19 @@ readonly class Anmeldung
             name: $row['name'] ?? null,
             email: $row['email'] ?? $data['email1'] ?? $data['Email'] ?? $data['E-mail'] ?? $data['E-Mail'] ?? null,
             status: $row['status'] ?? 'neu',
-            data: isset($row['data']) && $row['data'] !== null 
-                ? json_decode($row['data'], true) 
+            data: isset($row['data']) && $row['data'] !== null
+                ? json_decode($row['data'], true)
                 : null,
             createdAt: new DateTimeImmutable($row['created_at']),
-            updatedAt: isset($row['updated_at']) 
-                ? new DateTimeImmutable($row['updated_at']) 
+            updatedAt: isset($row['updated_at'])
+                ? new DateTimeImmutable($row['updated_at'])
                 : null,
             deleted: (bool)($row['deleted'] ?? false),
-            deletedAt: isset($row['deleted_at']) 
-                ? new DateTimeImmutable($row['deleted_at']) 
+            deletedAt: isset($row['deleted_at'])
+                ? new DateTimeImmutable($row['deleted_at'])
+                : null,
+            pdfConfig: isset($row['pdf_config']) && $row['pdf_config'] !== null
+                ? json_decode($row['pdf_config'], true)
                 : null,
         );
     }

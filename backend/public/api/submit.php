@@ -109,6 +109,17 @@ try {
         );
     }
 
+    // Check if PDF is enabled for this form
+    // Frontend sends PDF config as part of payload (single source of truth)
+    // Fall back to FormConfig for backwards compatibility with old frontends
+    $pdfConfig = $payload['pdf_config'] ?? null;
+
+    if ($pdfConfig === null && FormConfig::exists($formKey)) {
+        // Backwards compatibility: load from backend FormConfig if not in payload
+        $formConfig = FormConfig::get($formKey);
+        $pdfConfig = $formConfig['pdf'] ?? null;
+    }
+
     // Prepare for database
     $repository = new AnmeldungRepository();
 
@@ -118,7 +129,9 @@ try {
         'name' => $name,
         'email' => $email,
         'status' => 'neu',
-        'data' => json_encode($data, JSON_UNESCAPED_UNICODE)
+        'data' => json_encode($data, JSON_UNESCAPED_UNICODE),
+        // Persist pdf_config so download.php can load it without a local forms-config.php
+        'pdf_config' => $pdfConfig !== null ? json_encode($pdfConfig, JSON_UNESCAPED_UNICODE) : null,
     ];
 
     // Insert into database
@@ -141,17 +154,6 @@ try {
         'success' => true,
         'id' => $id
     ];
-
-    // Check if PDF is enabled for this form
-    // Frontend sends PDF config as part of payload (single source of truth)
-    // Fall back to FormConfig for backwards compatibility with old frontends
-    $pdfConfig = $payload['pdf_config'] ?? null;
-
-    if ($pdfConfig === null && FormConfig::exists($formKey)) {
-        // Backwards compatibility: load from backend FormConfig if not in payload
-        $formConfig = FormConfig::get($formKey);
-        $pdfConfig = $formConfig['pdf'] ?? null;
-    }
 
     if ($pdfConfig && ($pdfConfig['enabled'] ?? false)) {
             try {

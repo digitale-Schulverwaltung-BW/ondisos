@@ -17,7 +17,6 @@ use App\Services\PdfGeneratorService;
 use App\Services\PdfTokenService;
 use App\Services\PdfTemplateRenderer;
 use App\Repositories\AnmeldungRepository;
-use App\Config\FormConfig;
 use App\Services\MessageService as M;
 
 // Set content type header (will be overridden by mPDF if successful)
@@ -47,18 +46,19 @@ try {
         throw new RuntimeException(M::get('errors.not_found', 'Anmeldung nicht gefunden'), 404);
     }
 
-    // Get PDF config for this form
-    $formKey = $anmeldung->formular;
+    // Load PDF config from DB (stored at submission time by the frontend)
+    $pdfConfig = $anmeldung->pdfConfig;
 
-    if (!FormConfig::exists($formKey)) {
-        throw new RuntimeException(M::get('errors.unknown_form', 'Unbekanntes Formular'), 400);
+    if (empty($pdfConfig) || !($pdfConfig['enabled'] ?? false)) {
+        throw new RuntimeException(M::get('pdf.errors.not_enabled', 'PDF nicht aktiviert für dieses Formular'), 403);
     }
 
-    $formConfig = FormConfig::get($formKey);
-    $pdfConfig = $formConfig['pdf'] ?? null;
-
-    if (!$pdfConfig || !($pdfConfig['enabled'] ?? false)) {
-        throw new RuntimeException(M::get('pdf.errors.not_enabled', 'PDF nicht aktiviert für dieses Formular'), 403);
+    // Inject logo from backend env if none was provided by the frontend config.
+    // Logo files live on the backend server, so the path cannot come from the frontend.
+    // Priority: PDF_LOGO_{FORMKEY} > PDF_LOGO_PATH
+    if (empty($pdfConfig['logo'])) {
+        $logoEnvKey = 'PDF_LOGO_' . strtoupper($anmeldung->formular);
+        $pdfConfig['logo'] = getenv($logoEnvKey) ?: getenv('PDF_LOGO_PATH') ?: null;
     }
 
     // Generate and download PDF
