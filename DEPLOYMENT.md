@@ -51,21 +51,15 @@ nano .env
 openssl rand -hex 32  # → PDF_TOKEN_SECRET
 # Passwörter ändern: DB_PASS, MYSQL_ROOT_PASSWORD
 
-# 3. Forms-Konfiguration anlegen (gitignored, server-spezifisch)
-cp backend/config/forms-config.example.php backend/config/forms-config.php
-nano backend/config/forms-config.php
-
-# 4. Container starten
+# 3. Container starten
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# 5. Logs prüfen
+# 4. Logs prüfen
 docker compose logs -f backend
 
-# 6. Testen
-curl http://your-server.com:8080/api/health.php
+# 5. Testen
+curl http://your-server.com:8080/index.php
 ```
-
-> **Hinweis Multi-Server-Betrieb:** Da Frontend und Backend auf getrennten Servern laufen, pflegt jeder Server seine eigene `forms-config.php`. Die Formularschlüssel (z. B. `bs`, `bk`) müssen auf beiden Seiten übereinstimmen. Das Backend benötigt die Konfiguration vor allem für die PDF-Generierung.
 
 **Wichtig - Neue Credentials-Struktur:**
 
@@ -254,10 +248,6 @@ nano .env
 openssl rand -hex 32
 # Add to .env: PDF_TOKEN_SECRET=<generated-key>
 
-# Forms-Konfiguration anlegen (gitignored, server-spezifisch)
-cp config/forms-config.example.php config/forms-config.php
-nano config/forms-config.php  # Formulare und PDF-Einstellungen anpassen
-
 # Create directories
 mkdir -p cache uploads logs
 chmod 755 cache uploads logs
@@ -370,7 +360,7 @@ docker-compose up -d --build backend
 docker-compose logs -f backend
 
 # 5. Health Check
-curl http://your-server.com:8080/api/health.php
+curl http://your-server.com:8080/index.php
 ```
 
 **Rollback bei Problemen:**
@@ -722,7 +712,6 @@ curl -F "file=@test.bin" https://anmeldung.example.com/api/upload.php
 #### Alle Deployment-Optionen
 
 - [ ] **Secrets:** PDF_TOKEN_SECRET (32+ Zeichen), DB-Passwörter geändert
-- [ ] **Forms-Config:** `backend/config/forms-config.php` erstellt und konfiguriert (aus `forms-config.example.php`)
 - [ ] **Debugging:** `APP_DEBUG=false` in Production
 - [ ] **HTTPS:** SSL-Zertifikat installiert und aktiviert
 - [ ] **Backups:** Automatische DB-Backups konfiguriert (Cron)
