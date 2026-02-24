@@ -204,6 +204,9 @@ mysql -u root -p < database/schema.sql
 ## 💻 Systemvoraussetzungen
 
 ### Backend
+- **Docker**
+
+oder:
 - **PHP:** 8.2 oder höher
 - **Webserver:** Apache/Nginx
 - **Datenbank:** MySQL 8.0+ / MariaDB 10.5+

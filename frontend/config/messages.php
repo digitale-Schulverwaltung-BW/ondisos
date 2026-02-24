@@ -109,9 +109,9 @@ return [
             <strong style="display: block; margin-bottom: 8px; color: #1976d2;">{{title}}</strong>
             <p style="margin-bottom: 10px; line-height: 1.5;">{{description}}<br><em style="color: #666;">{{bookmark_hint}}</em></p>
             <input type="text" value="{{link}}" readonly onclick="this.select()"
-                style="width: 100%; padding: 8px; margin-bottom: 10px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; border-radius: 3px;">
+                style="width: 90%; padding: 8px; margin-bottom: 10px; font-family: monospace; font-size: 12px; border: 1px solid #ccc; border-radius: 3px;">
             <button type="button" onclick="navigator.clipboard.writeText(\'{{link}}\').then(() => alert(\'{{copy_success}}\'))"
-                style="padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 3px; cursor: pointer;">
+                style="margin: auto auto; padding: 8px 16px; background: #2196f3; color: white; border: none; border-radius: 3px; cursor: pointer;">
                 {{copy_button}}
             </button>
         </div>',

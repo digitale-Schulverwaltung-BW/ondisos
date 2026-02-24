@@ -1,0 +1,5 @@
+# Alle Logos werden ignoriert (schulspezifisch, nicht für Repo)
+# Nur das Beispiel-Logo wird getrackt
+*
+!.gitignore
+!logo.png

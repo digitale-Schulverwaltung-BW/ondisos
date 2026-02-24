@@ -340,6 +340,83 @@ docker-compose exec backend composer test
 
 ---
 
+### PDF Logo konfigurieren
+
+Das Backend generiert PDF-Bestätigungen mit einem Schullogo. Die Logo-Datei liegt auf dem **Backend-Server** (nicht im Frontend), da nur das Backend PDFs erzeugt.
+
+#### Ablage
+
+Logos gehören in:
+
+```
+backend/templates/pdf/assets/
+```
+
+Dieser Ordner ist `.gitignored` (alle Dateien außer `Schullogo-example.png`), sodass schulspezifische Logos **nicht** versehentlich ins Repository gelangen.
+
+Eine Beispiel-Datei liegt bereits bereit:
+
+```
+backend/templates/pdf/assets/Schullogo-example.png
+```
+
+#### Pfad in der .env konfigurieren
+
+**Docker (Option 1 & 3):**
+
+Der `backend/`-Ordner wird als `/var/www/html` in den Container gemountet:
+
+```bash
+# Fallback für alle Formulare
+PDF_LOGO_PATH=/var/www/html/templates/pdf/assets/logo.png
+
+# Oder formular-spezifisch (hat Vorrang):
+PDF_LOGO_BS=/var/www/html/templates/pdf/assets/logo-bs.png
+PDF_LOGO_BK=/var/www/html/templates/pdf/assets/logo-bk.png
+```
+
+**Manuell (Option 2):**
+
+```bash
+PDF_LOGO_PATH=/var/www/backend/templates/pdf/assets/logo.png
+```
+
+Pfad anpassen falls der Backend-Code woanders liegt.
+
+#### Logo einrichten (Docker)
+
+```bash
+# 1. Logo in den assets-Ordner kopieren
+cp /pfad/zu/deinem/logo.png backend/templates/pdf/assets/logo.png
+
+# 2. In backend/.env eintragen (kein Container-Rebuild nötig)
+PDF_LOGO_PATH=/var/www/html/templates/pdf/assets/logo.png
+
+# 3. Backend neu starten damit .env neu eingelesen wird
+docker compose restart backend
+```
+
+#### Logo einrichten (Manuell)
+
+```bash
+# 1. Logo kopieren
+cp /pfad/zu/deinem/logo.png backend/templates/pdf/assets/logo.png
+
+# 2. In backend/.env eintragen
+PDF_LOGO_PATH=/var/www/backend/templates/pdf/assets/logo.png
+
+# 3. PHP-Cache leeren (falls OPcache aktiv)
+sudo systemctl reload apache2  # oder php8.2-fpm
+```
+
+#### Hinweise
+
+- Unterstützte Formate: PNG, JPG (PNG mit Transparenz empfohlen)
+- Das Logo wird automatisch auf max. 150px Breite skaliert und als Base64 ins PDF eingebettet
+- Ohne konfiguriertes Logo erscheint kein Logo im PDF (kein Fehler)
+
+---
+
 ### Wartung & Updates
 
 #### Docker-Backend updaten
