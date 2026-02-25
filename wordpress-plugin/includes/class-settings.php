@@ -3,14 +3,14 @@
  * Settings Page
  *
  * Admin settings page for plugin configuration.
- * Location: Settings → Anmeldung Forms
+ * Location: Settings → Ondisos
  *
- * @package Anmeldung_Forms
+ * @package Ondisos
  */
 
 declare(strict_types=1);
 
-namespace Anmeldung_Forms;
+namespace Ondisos;
 
 use Frontend\Config\FormConfig;
 
@@ -27,12 +27,12 @@ class Settings
     /**
      * Settings page slug
      */
-    private const PAGE_SLUG = 'anmeldung-forms-settings';
+    private const PAGE_SLUG = 'ondisos-settings';
 
     /**
      * Option group
      */
-    private const OPTION_GROUP = 'anmeldung_forms';
+    private const OPTION_GROUP = 'ondisos';
 
     /**
      * Constructor - register hooks
@@ -49,8 +49,8 @@ class Settings
     public function add_settings_page(): void
     {
         add_options_page(
-            'Anmeldung Forms Settings',           // Page title
-            'Anmeldung Forms',                    // Menu title
+            'Ondisos Settings',           // Page title
+            'Ondisos',                     // Menu title
             'manage_options',                      // Capability
             self::PAGE_SLUG,                       // Menu slug
             [$this, 'render_settings_page']       // Callback
@@ -65,7 +65,7 @@ class Settings
         // Register settings
         register_setting(
             self::OPTION_GROUP,
-            'anmeldung_backend_url',
+            'ondisos_backend_url',
             [
                 'type' => 'string',
                 'sanitize_callback' => 'esc_url_raw',
@@ -75,7 +75,7 @@ class Settings
 
         register_setting(
             self::OPTION_GROUP,
-            'anmeldung_from_email',
+            'ondisos_from_email',
             [
                 'type' => 'string',
                 'sanitize_callback' => 'sanitize_email',
@@ -85,7 +85,7 @@ class Settings
 
         // Add settings section
         add_settings_section(
-            'anmeldung_main_section',
+            'ondisos_main_section',
             'Haupteinstellungen',
             [$this, 'render_section_description'],
             self::PAGE_SLUG
@@ -93,25 +93,25 @@ class Settings
 
         // Backend URL field
         add_settings_field(
-            'anmeldung_backend_url',
+            'ondisos_backend_url',
             'Backend API URL',
             [$this, 'render_backend_url_field'],
             self::PAGE_SLUG,
-            'anmeldung_main_section'
+            'ondisos_main_section'
         );
 
         // From Email field
         add_settings_field(
-            'anmeldung_from_email',
+            'ondisos_from_email',
             'Von E-Mail-Adresse',
             [$this, 'render_from_email_field'],
             self::PAGE_SLUG,
-            'anmeldung_main_section'
+            'ondisos_main_section'
         );
 
         // Forms list section
         add_settings_section(
-            'anmeldung_forms_section',
+            'ondisos_forms_section',
             'Verfügbare Formulare',
             [$this, 'render_forms_section_description'],
             self::PAGE_SLUG
@@ -139,12 +139,12 @@ class Settings
      */
     public function render_backend_url_field(): void
     {
-        $value = get_option('anmeldung_backend_url', '');
+        $value = get_option('ondisos_backend_url', '');
         $env_value = getenv('BACKEND_API_URL') ?: 'Nicht gesetzt';
 
         ?>
         <input type="url"
-               name="anmeldung_backend_url"
+               name="ondisos_backend_url"
                value="<?php echo esc_attr($value); ?>"
                class="regular-text"
                placeholder="http://intranet.example.com/backend/api">
@@ -160,12 +160,12 @@ class Settings
      */
     public function render_from_email_field(): void
     {
-        $value = get_option('anmeldung_from_email', '');
+        $value = get_option('ondisos_from_email', '');
         $env_value = getenv('FROM_EMAIL') ?: 'Nicht gesetzt';
 
         ?>
         <input type="email"
-               name="anmeldung_from_email"
+               name="ondisos_from_email"
                value="<?php echo esc_attr($value); ?>"
                class="regular-text"
                placeholder="noreply@example.com">
@@ -231,7 +231,7 @@ class Settings
 
             foreach ($form_keys as $form_key) {
                 $config = FormConfig::get($form_key);
-                $shortcode = sprintf('[anmeldung form="%s"]', esc_attr($form_key));
+                $shortcode = sprintf('[ondisos form="%s"]', esc_attr($form_key));
                 $notify_email = $config['notify_email'] ?? 'Nicht gesetzt';
 
                 echo '<tr>';
@@ -258,7 +258,7 @@ class Settings
             <tbody>
                 <tr>
                     <th>Plugin Version</th>
-                    <td><?php echo esc_html(ANMELDUNG_PLUGIN_VERSION); ?></td>
+                    <td><?php echo esc_html(ONDISOS_PLUGIN_VERSION); ?></td>
                 </tr>
                 <tr>
                     <th>PHP Version</th>
@@ -270,15 +270,15 @@ class Settings
                 </tr>
                 <tr>
                     <th>Plugin Directory</th>
-                    <td><code><?php echo esc_html(ANMELDUNG_PLUGIN_DIR); ?></code></td>
+                    <td><code><?php echo esc_html(ONDISOS_PLUGIN_DIR); ?></code></td>
                 </tr>
                 <tr>
                     <th>Frontend Directory</th>
-                    <td><code><?php echo esc_html(ANMELDUNG_FRONTEND_DIR); ?></code></td>
+                    <td><code><?php echo esc_html(ONDISOS_FRONTEND_DIR); ?></code></td>
                 </tr>
                 <tr>
                     <th>Frontend Directory Exists</th>
-                    <td><?php echo is_dir(ANMELDUNG_FRONTEND_DIR) ? '✅ Ja' : '❌ Nein'; ?></td>
+                    <td><?php echo is_dir(ONDISOS_FRONTEND_DIR) ? '✅ Ja' : '❌ Nein'; ?></td>
                 </tr>
                 <tr>
                     <th>Backend API URL (effective)</th>

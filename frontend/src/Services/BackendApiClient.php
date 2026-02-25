@@ -72,9 +72,13 @@ class BackendApiClient
 
         if ($httpCode !== 200 && $httpCode !== 201) {
             error_log("Backend API returned HTTP $httpCode: $response");
+            $backendResult = json_decode($response, true);
+            $errorMessage = (is_array($backendResult) && isset($backendResult['error']))
+                ? $backendResult['error']
+                : 'Backend-Fehler (HTTP ' . $httpCode . ')';
             return [
                 'success' => false,
-                'error' => 'Backend-Fehler (HTTP ' . $httpCode . ')'
+                'error' => $errorMessage
             ];
         }
 

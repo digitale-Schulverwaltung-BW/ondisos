@@ -110,13 +110,14 @@ class PdfTemplateRenderer
             return ['dataUri' => null, 'width' => null, 'height' => null];
         }
 
-        // Resolve path: use as-is if absolute, otherwise relative to backend root
+        // Resolve path: use as-is if absolute, otherwise relative to templates/pdf/assets/
         if (str_starts_with($logoPath, '/')) {
-            // Absolute path - use directly
+            // Absolute path - use directly (e.g. Docker: /var/www/html/templates/pdf/assets/logo.png)
             $fullPath = $logoPath;
         } else {
-            // Relative path - resolve from backend root
-            $fullPath = __DIR__ . '/../../' . $logoPath;
+            // Relative path - resolve from the PDF assets directory
+            // e.g. 'logo.png' → backend/templates/pdf/assets/logo.png
+            $fullPath = __DIR__ . '/../../templates/pdf/assets/' . $logoPath;
         }
 
         if (!file_exists($fullPath)) {

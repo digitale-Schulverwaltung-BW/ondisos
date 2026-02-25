@@ -2,7 +2,7 @@
 #
 # Symlink Setup Script for WordPress Installation
 #
-# This script creates the necessary symlinks for the Anmeldung Forms plugin
+# This script creates the necessary symlinks for the ondisos plugin
 # to work correctly with WordPress.
 #
 # Usage:
@@ -24,7 +24,7 @@ WP_PLUGINS_DIR="/var/www/html/wp-content/plugins"
 
 set -e  # Exit on error
 
-echo "=== Anmeldung Forms - Symlink Setup ==="
+echo "=== ondisos - Symlink Setup ==="
 echo ""
 
 # Verify paths exist
@@ -41,28 +41,28 @@ if [ ! -d "$WP_PLUGINS_DIR" ]; then
 fi
 
 # Create symlink for wordpress-plugin directory
-echo "Creating symlink: anmeldung-forms → wordpress-plugin/"
-if [ -L "$WP_PLUGINS_DIR/anmeldung-forms" ]; then
+echo "Creating symlink: ondisos → wordpress-plugin/"
+if [ -L "$WP_PLUGINS_DIR/ondisos" ]; then
     echo "  Symlink already exists, removing old one..."
-    rm "$WP_PLUGINS_DIR/anmeldung-forms"
+    rm "$WP_PLUGINS_DIR/ondisos"
 fi
-ln -s "$REPO_PATH/wordpress-plugin" "$WP_PLUGINS_DIR/anmeldung-forms"
-echo "  ✓ Created: $WP_PLUGINS_DIR/anmeldung-forms"
+ln -s "$REPO_PATH/wordpress-plugin" "$WP_PLUGINS_DIR/ondisos"
+echo "  ✓ Created: $WP_PLUGINS_DIR/ondisos"
 
 # Create symlink for frontend directory (needed for assets)
-echo "Creating symlink: anmeldung-forms-frontend → frontend/"
-if [ -L "$WP_PLUGINS_DIR/anmeldung-forms-frontend" ]; then
+echo "Creating symlink: ondisos-frontend → frontend/"
+if [ -L "$WP_PLUGINS_DIR/ondisos-frontend" ]; then
     echo "  Symlink already exists, removing old one..."
-    rm "$WP_PLUGINS_DIR/anmeldung-forms-frontend"
+    rm "$WP_PLUGINS_DIR/ondisos-frontend"
 fi
-ln -s "$REPO_PATH/frontend" "$WP_PLUGINS_DIR/anmeldung-forms-frontend"
-echo "  ✓ Created: $WP_PLUGINS_DIR/anmeldung-forms-frontend"
+ln -s "$REPO_PATH/frontend" "$WP_PLUGINS_DIR/ondisos-frontend"
+echo "  ✓ Created: $WP_PLUGINS_DIR/ondisos-frontend"
 
 # Verify symlinks
 echo ""
 echo "=== Verifying symlinks ==="
-ls -la "$WP_PLUGINS_DIR/anmeldung-forms"
-ls -la "$WP_PLUGINS_DIR/anmeldung-forms-frontend"
+ls -la "$WP_PLUGINS_DIR/ondisos"
+ls -la "$WP_PLUGINS_DIR/ondisos-frontend"
 
 # Set permissions
 echo ""
@@ -78,7 +78,7 @@ echo "=== Setup Complete ==="
 echo ""
 echo "Next steps:"
 echo "1. Go to WordPress Admin → Plugins"
-echo "2. Activate 'Anmeldung Forms'"
-echo "3. Configure Settings → Anmeldung Forms"
-echo "4. Use shortcode: [anmeldung form=\"bs\"]"
+echo "2. Activate 'ondisos'"
+echo "3. Configure Settings → ondisos"
+echo "4. Use shortcode: [ondisos form=\"bs\"]"
 echo ""

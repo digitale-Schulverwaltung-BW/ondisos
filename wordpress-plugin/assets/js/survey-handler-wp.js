@@ -126,7 +126,7 @@ class SurveyHandlerWP {
 
         // Prepare form data
         const formData = new FormData();
-        formData.append('action', 'anmeldung_submit');
+        formData.append('action', 'ondisos_submit');
         formData.append('form_key', this.formKey);
         formData.append('nonce', this.nonce);
         formData.append('survey_data', JSON.stringify(data));
@@ -161,10 +161,16 @@ class SurveyHandlerWP {
                 if (result.prefill_link) {
                     this.showPrefillLink(result.prefill_link);
                 }
+
+                // Show PDF download button if provided
+                if (result.pdf_download && result.pdf_download.enabled) {
+                    this.showPdfDownload(result.pdf_download);
+                }
             }
         } catch (error) {
+            // Network-level failure (no connection, timeout, etc.)
             console.error('Submission error:', error);
-            this.showError('Fehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
+            this.showError('Netzwerkfehler beim Senden der Anmeldung. Bitte versuchen Sie es erneut.');
         }
     }
 
@@ -222,11 +228,47 @@ class SurveyHandlerWP {
             credentials: 'same-origin'
         });
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
+        // Always parse JSON — error messages from the server are in the body,
+        // not the HTTP status. If parsing fails, return a generic error object.
+        return await response.json().catch(() => ({
+            success: false,
+            error: `Server-Fehler (HTTP ${response.status})`
+        }));
+    }
 
-        return await response.json();
+    /**
+     * Show PDF download button in completed page.
+     *
+     * Routes the download through the WordPress AJAX proxy
+     * (admin-ajax.php?action=ondisos_pdf_download) so the browser never
+     * needs to reach the backend directly.
+     */
+    showPdfDownload(pdfDownload) {
+        const completed = this.container.querySelector('.sd-completedpage');
+        if (!completed) return;
+
+        // Extract token from the relative URL returned by the backend
+        // e.g. "pdf/download.php?token=abc123"
+        const token = new URL('http://x/' + pdfDownload.url).searchParams.get('token');
+        if (!token) return;
+
+        const downloadUrl = this.ajaxUrl
+            + '?action=ondisos_pdf_download&token=' + encodeURIComponent(token);
+
+        const title = pdfDownload.title || 'Bestätigung herunterladen';
+
+        const div = document.createElement('div');
+        div.style.cssText = 'margin-top: 20px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; text-align: center;';
+        div.innerHTML = `
+            <p style="margin: 0 0 10px">
+                <a href="${this.escapeHtml(downloadUrl)}"
+                   download
+                   style="display:inline-block; padding:10px 20px; background:#4caf50; color:#fff; border-radius:4px; text-decoration:none; font-weight:bold;">
+                    ⬇ ${this.escapeHtml(title)}
+                </a>
+            </p>
+        `;
+        completed.appendChild(div);
     }
 
     /**
@@ -254,27 +296,31 @@ class SurveyHandlerWP {
     }
 
     /**
-     * Show error message
+     * Show error message as a notification at the top of the container.
+     * Uses prepend so it is always visible regardless of survey state.
      */
     showError(message) {
-        const completed = this.container.querySelector('.sd-completedpage');
+        // Remove any previous error notification to avoid duplicates
+        this.container.querySelector('.ondisos-error-notification')?.remove();
 
-        if (completed) {
-            completed.innerHTML = `
-                <div style="color: #dc3545; padding: 20px; background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 4px;">
-                    <h3>Fehler beim Verarbeiten der Daten</h3>
-                    <p>${this.escapeHtml(message)}</p>
-                    <p><small>Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.</small></p>
-                </div>
-            `;
-        } else {
-            // If survey not yet rendered, show in container
-            this.container.innerHTML = `
-                <div class="anmeldung-error">
-                    <p>${this.escapeHtml(message)}</p>
-                </div>
-            `;
-        }
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'ondisos-error-notification';
+        errorDiv.style.cssText = [
+            'color: #721c24',
+            'background: #f8d7da',
+            'border: 1px solid #f5c6cb',
+            'border-radius: 4px',
+            'padding: 16px 20px',
+            'margin-bottom: 16px',
+        ].join(';');
+        errorDiv.innerHTML = `
+            <strong>Fehler beim Verarbeiten der Daten</strong>
+            <p style="margin:8px 0 0">${this.escapeHtml(message)}</p>
+            <p style="margin:4px 0 0"><small>Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.</small></p>
+        `;
+
+        this.container.prepend(errorDiv);
+        errorDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     /**
@@ -313,7 +359,7 @@ class SurveyHandlerWP {
  * Initialize all survey containers when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const containers = document.querySelectorAll('.anmeldung-survey-container');
+    const containers = document.querySelectorAll('.ondisos-survey-container');
 
     containers.forEach(container => {
         const handler = new SurveyHandlerWP(container);

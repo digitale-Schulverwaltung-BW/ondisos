@@ -144,30 +144,42 @@ class AnmeldungService
 
     public function generatePrefillLink(
         string $formKey,
-        array $submittedData
+        array $submittedData,
+        ?string $pageUrl = null
     ): ?string {
         $config = FormConfig::get($formKey);
         $prefillFields = $config['prefill_fields'] ?? [];
-        
+
         if (empty($prefillFields)) {
             return null; // Kein Pre-fill für dieses Formular
         }
-        
+
         // Nur relevante Felder extrahieren
         $prefillData = array_intersect_key(
             $submittedData,
             array_flip($prefillFields)
         );
-        
+
         if (empty($prefillData)) {
             return null;
         }
-        
+
         // Als Base64 encoden (verschlüsseln bringt keine zusätzliche Sicherheit, da beim Abruf der URL
         // die Daten wieder sichtbar werden)
         $encoded = base64_encode(json_encode($prefillData));
 
-        // Build correct URL pointing to index.php (not save.php)
+        if ($pageUrl !== null) {
+            // Use provided page URL as base (e.g. from wp_get_referer() in WordPress context)
+            $parts = parse_url($pageUrl);
+            $base = ($parts['scheme'] ?? 'https') . '://' . ($parts['host'] ?? '');
+            if (!empty($parts['port'])) {
+                $base .= ':' . $parts['port'];
+            }
+            $path = $parts['path'] ?? '/';
+            return $base . $path . "?form={$formKey}&prefill={$encoded}";
+        }
+
+        // Fallback: build from SCRIPT_NAME (standard frontend context)
         $baseUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
         $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
         return $baseUrl . $scriptPath . "/index.php?form={$formKey}&prefill={$encoded}";

@@ -1,0 +1,36 @@
+{
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "html",
+          "name": "question1",
+          "html": "<h1>Demo-Anmeldung</h1>\n<h3>PDF-Bestätigung"
+        },
+        {
+          "type": "text",
+          "name": "Name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "email",
+          "title": "E-Mail",
+          "isRequired": true,
+          "inputType": "email"
+        },
+        {
+          "type": "radiogroup",
+          "name": "question2",
+          "title": "Präferenzen",
+          "choices": [
+            "Hund",
+            "Katze"
+          ]
+        }
+      ]
+    }
+  ],
+  "headerView": "advanced"
+}

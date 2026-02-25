@@ -2,14 +2,14 @@
 /**
  * Shortcode Handler
  *
- * Handles [anmeldung form="bs"] shortcode
+ * Handles [ondisos form="bs"] shortcode
  *
- * @package Anmeldung_Forms
+ * @package Ondisos
  */
 
 declare(strict_types=1);
 
-namespace Anmeldung_Forms;
+namespace Ondisos;
 
 use Frontend\Config\FormConfig;
 
@@ -28,7 +28,7 @@ class Shortcode
      */
     public function __construct()
     {
-        add_shortcode('anmeldung', [$this, 'render']);
+        add_shortcode('ondisos', [$this, 'render']);
     }
 
     /**
@@ -42,12 +42,12 @@ class Shortcode
         // Parse attributes
         $atts = shortcode_atts([
             'form' => '',
-        ], $atts, 'anmeldung');
+        ], $atts, 'ondisos');
 
         // Validate form parameter (mandatory)
         $form_key = sanitize_key($atts['form']);
         if (empty($form_key)) {
-            return $this->render_error('Error: form parameter is required. Usage: [anmeldung form="bs"]');
+            return $this->render_error('Error: form parameter is required. Usage: [ondisos form="bs"]');
         }
 
         // Check if form exists
@@ -67,7 +67,7 @@ class Shortcode
         $version = FormConfig::getVersion($form_key);
 
         // Generate WP nonce for CSRF protection
-        $nonce = wp_create_nonce('anmeldung_submit_' . $form_key);
+        $nonce = wp_create_nonce('ondisos_submit_' . $form_key);
 
         // Get AJAX URL
         $ajax_url = admin_url('admin-ajax.php');
@@ -76,7 +76,7 @@ class Shortcode
         $prefill_data = $this->get_prefill_data();
 
         // Enqueue assets for this form
-        do_action('anmeldung_enqueue_assets', $form_key);
+        do_action('ondisos_enqueue_assets', $form_key);
 
         // Render container
         return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data);
@@ -195,14 +195,14 @@ class Shortcode
         string $ajax_url,
         string $prefill_data
     ): string {
-        $container_id = 'anmeldung-container-' . esc_attr($form_key);
+        $container_id = 'ondisos-container-' . esc_attr($form_key);
         $survey_script_id = $container_id . '-survey-json';
         $theme_script_id = $container_id . '-theme-json';
 
         ob_start();
         ?>
         <div id="<?php echo $container_id; ?>"
-             class="anmeldung-survey-container"
+             class="ondisos-survey-container"
              data-form-key="<?php echo esc_attr($form_key); ?>"
              data-version="<?php echo esc_attr($version); ?>"
              data-survey-json-id="<?php echo esc_attr($survey_script_id); ?>"
@@ -210,7 +210,7 @@ class Shortcode
              data-prefill="<?php echo esc_attr($prefill_data); ?>"
              data-nonce="<?php echo esc_attr($nonce); ?>"
              data-ajax-url="<?php echo esc_url($ajax_url); ?>">
-            <div class="anmeldung-loading">
+            <div class="ondisos-loading">
                 <p>Formular wird geladen...</p>
             </div>
         </div>
@@ -237,7 +237,7 @@ class Shortcode
     private function render_error(string $message): string
     {
         return sprintf(
-            '<div class="anmeldung-error" style="padding: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px;">%s</div>',
+            '<div class="ondisos-error" style="padding: 1rem; background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; border-radius: 4px;">%s</div>',
             esc_html($message)
         );
     }

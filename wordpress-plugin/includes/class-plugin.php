@@ -4,12 +4,12 @@
  *
  * Orchestrates all plugin components and loads frontend environment.
  *
- * @package Anmeldung_Forms
+ * @package Ondisos
  */
 
 declare(strict_types=1);
 
-namespace Anmeldung_Forms;
+namespace Ondisos;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -35,6 +35,11 @@ class Plugin
      * AJAX handler
      */
     private Ajax_Handler $ajax_handler;
+
+    /**
+     * PDF proxy handler
+     */
+    private Pdf_Proxy $pdf_proxy;
 
     /**
      * Assets handler
@@ -77,7 +82,7 @@ class Plugin
     private function load_frontend_config(): void
     {
         // Load .env file if exists
-        $env_file = ANMELDUNG_FRONTEND_DIR . '.env';
+        $env_file = ONDISOS_FRONTEND_DIR . '.env';
         if (file_exists($env_file)) {
             $lines = file($env_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             foreach ($lines as $line) {
@@ -103,13 +108,13 @@ class Plugin
         }
 
         // Override with WordPress options (highest priority)
-        $backend_url = get_option('anmeldung_backend_url');
+        $backend_url = get_option('ondisos_backend_url');
         if (!empty($backend_url)) {
             putenv('BACKEND_API_URL=' . $backend_url);
             $_ENV['BACKEND_API_URL'] = $backend_url;
         }
 
-        $from_email = get_option('anmeldung_from_email');
+        $from_email = get_option('ondisos_from_email');
         if (!empty($from_email)) {
             putenv('FROM_EMAIL=' . $from_email);
             $_ENV['FROM_EMAIL'] = $from_email;
@@ -126,6 +131,9 @@ class Plugin
 
         // Initialize AJAX handler
         $this->ajax_handler = new Ajax_Handler();
+
+        // Initialize PDF proxy handler
+        $this->pdf_proxy = new Pdf_Proxy();
 
         // Initialize assets handler
         $this->assets = new Assets();

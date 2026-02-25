@@ -5,12 +5,12 @@
  * Handles WordPress AJAX endpoints for form submission.
  * Replaces frontend/public/save.php functionality.
  *
- * @package Anmeldung_Forms
+ * @package Ondisos
  */
 
 declare(strict_types=1);
 
-namespace Anmeldung_Forms;
+namespace Ondisos;
 
 use Frontend\Services\AnmeldungService;
 use Frontend\Services\BackendApiClient;
@@ -33,14 +33,14 @@ class Ajax_Handler
     public function __construct()
     {
         // Handle form submission for both logged-in and non-logged-in users
-        add_action('wp_ajax_anmeldung_submit', [$this, 'handle_submit']);
-        add_action('wp_ajax_nopriv_anmeldung_submit', [$this, 'handle_submit']);
+        add_action('wp_ajax_ondisos_submit', [$this, 'handle_submit']);
+        add_action('wp_ajax_nopriv_ondisos_submit', [$this, 'handle_submit']);
     }
 
     /**
      * Handle form submission
      *
-     * AJAX endpoint: admin-ajax.php?action=anmeldung_submit
+     * AJAX endpoint: admin-ajax.php?action=ondisos_submit
      */
     public function handle_submit(): void
     {
@@ -60,7 +60,7 @@ class Ajax_Handler
             // 3. Verify WordPress nonce (replaces CSRF token)
             $nonce = sanitize_text_field($_POST['nonce'] ?? '');
 
-            if (!wp_verify_nonce($nonce, 'anmeldung_submit_' . $form_key)) {
+            if (!wp_verify_nonce($nonce, 'ondisos_submit_' . $form_key)) {
                 throw new \RuntimeException('Sicherheitsvalidierung fehlgeschlagen', 403);
             }
 
@@ -103,12 +103,13 @@ class Ajax_Handler
             if ($result['success']) {
                 $prefill_link = $anmeldung_service->generatePrefillLink(
                     $form_key,
-                    $survey_data
+                    $survey_data,
+                    wp_get_referer() ?: null
                 );
                 $result['prefill_link'] = $prefill_link;
 
                 // Generate new nonce for next submission
-                $result['new_nonce'] = wp_create_nonce('anmeldung_submit_' . $form_key);
+                $result['new_nonce'] = wp_create_nonce('ondisos_submit_' . $form_key);
             }
 
             // 9. Send JSON response
@@ -128,7 +129,7 @@ class Ajax_Handler
 
         } catch (\Throwable $e) {
             // Log unexpected errors
-            error_log('Anmeldung Forms - Unexpected error: ' . $e->getMessage());
+            error_log('ondisos - Unexpected error: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
 
             wp_send_json([

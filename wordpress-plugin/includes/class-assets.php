@@ -3,14 +3,14 @@
  * Assets Handler
  *
  * Handles enqueueing of SurveyJS libraries, fonts, and custom scripts.
- * Only loads assets on pages with [anmeldung] shortcode.
+ * Only loads assets on pages with [ondisos] shortcode.
  *
- * @package Anmeldung_Forms
+ * @package Ondisos
  */
 
 declare(strict_types=1);
 
-namespace Anmeldung_Forms;
+namespace Ondisos;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -33,15 +33,15 @@ class Assets
     public function __construct()
     {
         // Calculate frontend assets URL
-        // Uses the anmeldung-forms-frontend symlink created during installation
+        // Uses the ondisos-frontend symlink created during installation
         // This symlink points to the frontend/ directory in the git repo
-        $this->frontend_assets_url = plugins_url('anmeldung-forms-frontend/public/assets/');
+        $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
 
         // Enqueue assets on frontend
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
 
         // Hook into shortcode rendering to enable assets
-        add_action('anmeldung_enqueue_assets', [$this, 'enable_assets']);
+        add_action('ondisos_enqueue_assets', [$this, 'enable_assets']);
     }
 
     /**
@@ -68,7 +68,7 @@ class Assets
     {
         // Check if current post has shortcode
         global $post;
-        if (!$post || !has_shortcode($post->post_content, 'anmeldung')) {
+        if (!$post || !has_shortcode($post->post_content, 'ondisos')) {
             return;
         }
 
@@ -80,7 +80,7 @@ class Assets
             'surveyjs-core',
             $this->frontend_assets_url . 'survey-core.fontless.min.css',
             [],
-            ANMELDUNG_PLUGIN_VERSION
+            ONDISOS_PLUGIN_VERSION
         );
 
         // Add custom fonts (DSGVO-compliant)
@@ -91,7 +91,7 @@ class Assets
             'surveyjs-core',
             $this->frontend_assets_url . 'survey.core.min.js',
             [],
-            ANMELDUNG_PLUGIN_VERSION,
+            ONDISOS_PLUGIN_VERSION,
             true // Load in footer
         );
 
@@ -100,26 +100,26 @@ class Assets
             'surveyjs-ui',
             $this->frontend_assets_url . 'survey-js-ui.min.js',
             ['surveyjs-core'],
-            ANMELDUNG_PLUGIN_VERSION,
+            ONDISOS_PLUGIN_VERSION,
             true
         );
 
         // Enqueue custom survey handler
         wp_enqueue_script(
-            'anmeldung-survey-handler',
-            ANMELDUNG_PLUGIN_URL . 'assets/js/survey-handler-wp.js',
+            'ondisos-survey-handler',
+            ONDISOS_PLUGIN_URL . 'assets/js/survey-handler-wp.js',
             ['surveyjs-core', 'surveyjs-ui'],
-            ANMELDUNG_PLUGIN_VERSION,
+            ONDISOS_PLUGIN_VERSION,
             true
         );
 
         // Enqueue custom CSS (optional)
-        if (file_exists(ANMELDUNG_PLUGIN_DIR . 'assets/css/anmeldung.css')) {
+        if (file_exists(ONDISOS_PLUGIN_DIR . 'assets/css/ondisos.css')) {
             wp_enqueue_style(
-                'anmeldung-forms',
-                ANMELDUNG_PLUGIN_URL . 'assets/css/anmeldung.css',
+                'ondisos',
+                ONDISOS_PLUGIN_URL . 'assets/css/ondisos.css',
                 ['surveyjs-core'],
-                ANMELDUNG_PLUGIN_VERSION
+                ONDISOS_PLUGIN_VERSION
             );
         }
     }
@@ -154,18 +154,18 @@ class Assets
                 --font-family: 'Open Sans', sans-serif !important;
             }
 
-            .anmeldung-survey-container {
+            .ondisos-survey-container {
                 font-family: var(--font-family);
                 margin: 2rem 0;
             }
 
-            .anmeldung-loading {
+            .ondisos-loading {
                 text-align: center;
                 padding: 2rem;
                 color: #666;
             }
 
-            .anmeldung-error {
+            .ondisos-error {
                 padding: 1rem;
                 background: #f8d7da;
                 color: #721c24;
