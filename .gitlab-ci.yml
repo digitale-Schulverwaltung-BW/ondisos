@@ -44,13 +44,13 @@ variables:
 before_script:
   - cd backend
 
-  # Install system dependencies (including libraries for GD)
+  # Install system dependencies (including libraries for GD and zip)
   - apt-get update -qq
-  - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+  - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
 
   # Configure and install PHP extensions required for project
   - docker-php-ext-configure gd --with-freetype --with-jpeg
-  - docker-php-ext-install pdo pdo_mysql gd
+  - docker-php-ext-install pdo pdo_mysql gd zip
 
   # Install Composer
   - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -80,9 +80,9 @@ test_unit:
   before_script:
       - cd backend
       - apt-get update -qq
-      - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+      - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
       - docker-php-ext-configure gd --with-freetype --with-jpeg
-      - docker-php-ext-install pdo pdo_mysql gd
+      - docker-php-ext-install pdo pdo_mysql gd zip
       - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       - composer --version
       # Jetzt PCOV installieren
@@ -120,13 +120,13 @@ test_integration:
     - cd backend
 
     # Wait for MySQL to be ready
-    - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev libjpeg-dev libfreetype6-dev
+    - apt-get update -qq && apt-get install -y -qq git unzip default-mysql-client libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
     - until mysql -h mysql -u test -ptest --skip-ssl -e "SELECT 1"; do sleep 1; done
 
     # Install Composer and extensions
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install pdo pdo_mysql gd
+    - docker-php-ext-install pdo pdo_mysql gd zip
 
     # Import database schema
     - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
@@ -152,13 +152,13 @@ coverage:
 
     # Install dependencies (including libraries for GD)
     - apt-get update -qq
-    - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev
+    - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
 
     # Install PHP extensions (including Xdebug for coverage)
     - pecl install xdebug
     - docker-php-ext-enable xdebug
     - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install pdo pdo_mysql gd
+    - docker-php-ext-install pdo pdo_mysql gd zip
 
     # Install Composer
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer

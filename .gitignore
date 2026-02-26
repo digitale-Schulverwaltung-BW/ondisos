@@ -47,7 +47,7 @@ frontend/surveys/uploadtest.json
 
 # Composer
 vendor/
-composer.lock
+frontend/composer.lock
 
 # Backup files
 *.bak
