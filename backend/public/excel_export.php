@@ -5,6 +5,12 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
+
+// CSRF check for POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    csrf_validate();
+}
 
 use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;
@@ -20,21 +26,37 @@ $nominatimService = new NominatimService();
 $exportService = new ExportService($repository, $statusService, $nominatimService);
 
 try {
-    // Check for single ID export
+    // Selected-IDs export (POST from bulk form with checkboxes)
+    $selectedIds = null;
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST['ids'])) {
+        $rawIds = $_POST['ids'];
+        if (is_array($rawIds)) {
+            $selectedIds = array_values(array_filter(array_map('intval', $rawIds), fn($id) => $id > 0));
+        }
+    }
+
+    // Check for single ID export (GET only)
     $id = isset($_GET['id']) && $_GET['id'] !== ''
         ? (int)$_GET['id']
         : null;
 
-    // Get filter from request
-    $formularFilter = isset($_GET['form']) && $_GET['form'] !== ''
-        ? trim($_GET['form'])
-        : null;
+    // Get filter from request (GET for normal export, POST for selected export)
+    $formularFilter = null;
+    $rawForm = $_SERVER['REQUEST_METHOD'] === 'POST'
+        ? ($_POST['form'] ?? '')
+        : ($_GET['form'] ?? '');
+    if ($rawForm !== '') {
+        $formularFilter = trim($rawForm);
+    }
 
     // Validate formular filter to prevent SQL injection
     AnmeldungValidator::validateFormularName($formularFilter);
 
-    // Get export data (single record or filtered list)
-    if ($id !== null) {
+    // Get export data: selected IDs → single record → all/filtered
+    if ($selectedIds !== null && count($selectedIds) > 0) {
+        $exportData = $exportService->getExportDataByIds($selectedIds, $formularFilter);
+        $filename = $exportService->generateFilename($formularFilter);
+    } elseif ($id !== null) {
         $exportData = $exportService->getExportDataById($id);
         $filename = $exportService->generateFilename(null, $id);
     } else {

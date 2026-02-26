@@ -165,6 +165,38 @@ class AnmeldungRepository
     }
 
     /**
+     * Find specific anmeldungen by their IDs for export
+     *
+     * @param int[] $ids
+     * @return Anmeldung[]
+     */
+    public function findByIds(array $ids): array
+    {
+        if (empty($ids)) {
+            return [];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $types = str_repeat('i', count($ids));
+
+        $sql = "SELECT id, formular, formular_version, name, email, status, data, created_at
+                FROM anmeldungen
+                WHERE deleted = 0 AND id IN ($placeholders)
+                ORDER BY created_at DESC";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param($types, ...$ids);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $anmeldungen = [];
+        while ($row = $result->fetch_assoc()) {
+            $anmeldungen[] = Anmeldung::fromArray($row);
+        }
+        return $anmeldungen;
+    }
+
+    /**
      * Update status of a single Anmeldung
      */
     public function updateStatus(int $id, string $newStatus): bool

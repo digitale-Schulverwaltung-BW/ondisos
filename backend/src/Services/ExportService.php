@@ -277,6 +277,42 @@ class ExportService
     }
 
     /**
+     * Get export data for a specific set of IDs
+     *
+     * @param int[] $ids
+     * @param string|null $formularFilter Used for metadata (determines column visibility)
+     * @return array{rows: Anmeldung[], columns: string[], metadata: array}
+     */
+    public function getExportDataByIds(array $ids, ?string $formularFilter = null): array
+    {
+        $anmeldungen = $this->repository->findByIds($ids);
+
+        if ($this->nominatimService !== null) {
+            $this->enrichTeilort($anmeldungen);
+        }
+
+        $config = Config::getInstance();
+        if ($config->autoMarkAsRead) {
+            $exportedIds = array_map(fn($a) => $a->id, $anmeldungen);
+            $this->statusService->markMultipleAsExported($exportedIds);
+        }
+
+        $columns = $this->extractColumns($anmeldungen);
+        sort($columns);
+
+        return [
+            'rows' => $anmeldungen,
+            'columns' => $columns,
+            'metadata' => [
+                'exportDate' => new \DateTimeImmutable(),
+                'filter' => $formularFilter,
+                'totalRows' => count($anmeldungen),
+                'selectedExport' => true,
+            ]
+        ];
+    }
+
+    /**
      * Gibt die effektiven Formulardaten für den Export zurück.
      * Wendet Teilort-Enrichments an ohne das readonly Anmeldung-Objekt zu mutieren.
      *

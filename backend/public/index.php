@@ -95,9 +95,9 @@ require __DIR__ . '/../inc/header.php';
                 🔄 Ansicht aktualisieren
             </button>
             <div class="ms-auto">
-                <a href="excel_export.php?<?= http_build_query($_GET) ?>" class="btn btn-sm btn-success">
+                <button type="button" class="btn btn-sm btn-success" onclick="exportExcel()">
                     <?= M::get('ui.buttons.excel_export') ?>
-                </a>
+                </button>
             </div>
         </div>
 
@@ -183,6 +183,35 @@ document.getElementById('selectAll').addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('.row-checkbox');
     checkboxes.forEach(cb => cb.checked = this.checked);
 });
+
+// Excel export: exports selected rows, or all rows if nothing is selected
+function exportExcel() {
+    const checkboxes = document.querySelectorAll('.row-checkbox:checked');
+
+    if (checkboxes.length === 0) {
+        // Nothing selected: fall back to regular GET export (exports all / filtered)
+        window.location.href = 'excel_export.php?<?= http_build_query($_GET) ?>';
+        return;
+    }
+
+    // IDs selected: POST them via the bulk form so CSRF token is included
+    const form = document.getElementById('bulkForm');
+    const prevAction = form.action;
+
+    form.action = 'excel_export.php';
+
+    const marker = document.createElement('input');
+    marker.type = 'hidden';
+    marker.name = 'export_selected';
+    marker.value = '1';
+    form.appendChild(marker);
+
+    form.submit();
+
+    // Cleanup (browser stays on page because response is a file download)
+    form.action = prevAction;
+    form.removeChild(marker);
+}
 
 // Bulk action handler
 function bulkAction(action) {
