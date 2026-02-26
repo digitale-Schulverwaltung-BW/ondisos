@@ -32,10 +32,14 @@ class Assets
      */
     public function __construct()
     {
-        // Calculate frontend assets URL
-        // Uses the ondisos-frontend symlink created during installation
-        // This symlink points to the frontend/ directory in the git repo
-        $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
+        // Calculate frontend assets URL — two supported layouts:
+        //   1. WP-native / Docker: plugins/ondisos-frontend/ symlink exists
+        //   2. Git-clone on server: frontend-assets/ symlink inside plugin dir → ../frontend/public
+        if (file_exists(WP_PLUGIN_DIR . '/ondisos-frontend/')) {
+            $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
+        } else {
+            $this->frontend_assets_url = ONDISOS_PLUGIN_URL . 'frontend-assets/assets/';
+        }
 
         // Enqueue assets on frontend
         add_action('wp_enqueue_scripts', [$this, 'enqueue_assets']);
