@@ -134,8 +134,8 @@ class SpreadsheetBuilder
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->status);
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->createdAt->format('d.m.Y H:i:s'));
 
-            // Dynamic columns from data
-            $data = $anmeldung->data ?? [];
+            // Dynamic columns from data (via ExportService für Teilort-Enrichment)
+            $data = $this->exportService->getEffectiveData($anmeldung);
 
             // Skip fields that are already exported as fixed columns
             $skipFields = ['name', 'Name', 'email', 'email1', 'Email', 'E-mail', 'E-Mail'];

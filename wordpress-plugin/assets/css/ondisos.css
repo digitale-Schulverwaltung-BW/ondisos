@@ -71,6 +71,20 @@ body.admin-bar .ondisos-survey-container {
     max-width: 100%;
 }
 
+/* Fix: WP-Theme-CSS setzt background-color auf input-Elementen, was das
+ * position:absolute gestellte Eingabefeld des SurveyJS-Dropdowns opak macht
+ * und den darunterliegenden sv-string-viewer nach dem Blur verdeckt.
+ * SurveyJS setzt selbst background-color:transparent, aber das Theme gewinnt
+ * durch höhere Spezifität. Wir stellen den transparenten Hintergrund wieder her. */
+.ondisos-survey-container .sd-dropdown__filter-string-input {
+    background-color: transparent !important;
+    background: transparent !important;
+}
+
+input[type="text"] {
+    border: none !important;
+}
+
 /* Print styles */
 @media print {
     .ondisos-survey-container {

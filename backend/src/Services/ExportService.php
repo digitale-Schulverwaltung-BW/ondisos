@@ -13,9 +13,13 @@ use App\Validators\AnmeldungValidator;
 
 class ExportService
 {
+    /** @var array<int, string> Teilort-Werte für den aktuellen Export-Lauf (in-memory, kein DB-Schreiben) */
+    private array $teilortOverrides = [];
+
     public function __construct(
         private AnmeldungRepository $repository,
-        private StatusService $statusService
+        private StatusService $statusService,
+        private ?NominatimService $nominatimService = null
     ) {}
 
     /**
@@ -34,6 +38,11 @@ class ExportService
 
         // Get all non-deleted anmeldungen
         $anmeldungen = $this->repository->findForExport($formularFilter);
+
+        // Teilort autofill: Nominatim-Lookup für Datensätze mit Sentinel-Wert
+        if ($this->nominatimService !== null) {
+            $this->enrichTeilort($anmeldungen);
+        }
 
         // Auto-mark as exported if enabled
         $config = Config::getInstance();
@@ -265,6 +274,51 @@ class ExportService
                 'singleExport' => true
             ]
         ];
+    }
+
+    /**
+     * Gibt die effektiven Formulardaten für den Export zurück.
+     * Wendet Teilort-Enrichments an ohne das readonly Anmeldung-Objekt zu mutieren.
+     *
+     * @return array<string, mixed>
+     */
+    public function getEffectiveData(Anmeldung $anmeldung): array
+    {
+        $data = $anmeldung->data ?? [];
+
+        if (isset($this->teilortOverrides[$anmeldung->id])) {
+            $data['Teilort'] = $this->teilortOverrides[$anmeldung->id];
+        }
+
+        return $data;
+    }
+
+    /**
+     * Ersetzt den Sentinel-Wert 'autofill' im Feld Teilort durch den echten Ortsteil via Nominatim.
+     * Speichert Ergebnisse in $teilortOverrides (kein DB-Schreiben, kein Mutieren des readonly Models).
+     *
+     * @param Anmeldung[] $anmeldungen
+     */
+    private function enrichTeilort(array $anmeldungen): void
+    {
+        foreach ($anmeldungen as $anmeldung) {
+            if (!is_array($anmeldung->data)) {
+                continue;
+            }
+
+            if (($anmeldung->data['Teilort'] ?? null) !== 'autofill') {
+                continue;
+            }
+
+            $suburb = $this->nominatimService->getSuburb(
+                hausnr:  (string)($anmeldung->data['HausNr'] ?? ''),
+                strasse: (string)($anmeldung->data['Strasse'] ?? ''),
+                plz:     (string)($anmeldung->data['PLZ'] ?? ''),
+                ort:     (string)($anmeldung->data['Ort'] ?? ''),
+            );
+
+            $this->teilortOverrides[$anmeldung->id] = $suburb;
+        }
     }
 
     /**

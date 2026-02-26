@@ -3,12 +3,12 @@
 
 declare(strict_types=1);
 
-require_once __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
 
 use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;
+use App\Services\NominatimService;
 use App\Services\SpreadsheetBuilder;
 use App\Services\StatusService;
 use App\Validators\AnmeldungValidator;
@@ -16,7 +16,8 @@ use App\Validators\AnmeldungValidator;
 // Initialize dependencies
 $repository = new AnmeldungRepository();
 $statusService = new StatusService($repository);
-$exportService = new ExportService($repository, $statusService);
+$nominatimService = new NominatimService();
+$exportService = new ExportService($repository, $statusService, $nominatimService);
 
 try {
     // Check for single ID export

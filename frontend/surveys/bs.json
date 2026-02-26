@@ -844,6 +844,12 @@
             },
             {
               "type": "text",
+              "name": "Teilort",
+              "defaultValue": "autofill",
+              "visible": false
+            },
+            {
+              "type": "text",
               "name": "Telefon_1",
               "title": "(Mobil-) Telefon",
               "titleLocation": "left",
