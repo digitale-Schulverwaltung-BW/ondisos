@@ -202,7 +202,7 @@ mysql -u root -p < database/schema.sql
 │         │                                  ▼                │
 │  ┌──────▼──────────────────┐  ┌────────────────────────┐    │
 │  │  MySQL/MariaDB          │  │  ClamAV Daemon         │    │
-│  │  [🐳 Docker-Container]  │   │  [🐳 Docker-Container] │    │
+│  │  [🐳 Docker-Container]  │  │  [🐳 Docker-Container] │    │
 │  │  • Anmeldungen          │  │  • Virus-Signaturen    │    │
 │  │  • Soft-Delete Support  │  │  • freshclam (auto 2h) │    │
 │  └─────────────────────────┘  └────────────────────────┘    │
@@ -537,7 +537,7 @@ Siehe [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie) für voll
 - [ ] Import-Funktion (z.B. aus SchoolSIS)
 - [ ] REST API für Integrationen
 
-Vorschläge? → [Issue erstellen](https://github.com/your-org/ondisos/issues)!
+Vorschläge? → [Issue erstellen](https://github.com/digitale-Schulverwaltung-BW/ondisos/)!
 
 ---
 
@@ -547,6 +547,6 @@ Vorschläge? → [Issue erstellen](https://github.com/your-org/ondisos/issues)!
 
 <p align="center">
   <a href="CLAUDE.md">📖 Dokumentation</a> •
-  <a href="https://github.com/your-org/ondisos">🐙 GitHub</a> •
-  <a href="https://github.com/your-org/ondisos/issues">🐛 Issues</a>
+  <a href="https://github.com/digitale-Schulverwaltung-BW/ondisos/">🐙 GitHub</a> •
+  <a href="https://github.com/digitale-Schulverwaltung-BW/ondisos/issues">🐛 Issues</a>
 </p>
