@@ -2,7 +2,11 @@
 
 ## 📋 Inhaltsverzeichnis
 
-- [Features](#-features)
+- [Aufruf des Formular-Designers](#aufruf-des-formular-designers-von-surveyjs)
+- [Workflow](#workflow)
+  - [Workflow als Video](#workflow-als-video)
+  - [Neues Formular erstellen](#neues-formular-erstellen)
+- [Zusammenhang: forms-config.php ↔ surveys/](#zusammenhang-forms-configphp--surveys)
 
 ## Aufruf des Formular-Designers von SurveyJS
 

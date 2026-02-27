@@ -4,7 +4,7 @@
 
 Eine moderne, Open Source Lösung für digitale (Schul-)anmeldungen mit professionellem Admin-Backend.
 
-Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](ASD.md) möglich.
+Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](ASV.md) möglich.
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
