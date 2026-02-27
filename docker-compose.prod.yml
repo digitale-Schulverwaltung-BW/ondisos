@@ -20,7 +20,7 @@ services:
     container_name: ondisos-backend-prod
     restart: unless-stopped
     ports:
-      - "8080:80"  # Or configure reverse proxy
+      - "9080:80"  # Or configure reverse proxy
     env_file:
       - ./backend/.env  # Optional: Backend-specific overrides (rate limits, virus scan, etc.)
                         # Core credentials (DB_USER, DB_PASS) come from root .env

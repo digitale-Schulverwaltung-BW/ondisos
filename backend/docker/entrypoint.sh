@@ -62,8 +62,8 @@ chmod -R 755 uploads cache logs
 echo "✅ Permissions set!"
 
 echo "✅ Backend setup complete!"
-echo "🌐 Backend available at: http://localhost:8080"
-echo "📊 Admin interface: http://localhost:8080/index.php"
+echo "🌐 Backend available at: http://localhost:9080"
+echo "📊 Admin interface: http://localhost:9080/index.php"
 echo ""
 
 # Execute CMD (apache2-foreground)

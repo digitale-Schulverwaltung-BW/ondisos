@@ -113,20 +113,31 @@ cd ondisos
 ```bash
 # Root .env konfigurieren (Single Source of Truth)
 cp .env.example .env
-nano .env  # DB-Credentials, Secrets eintragen
 
 # Secrets generieren (direkt in .env eintragen)
-sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
-sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
+
+nano .env  # DB-Credentials anpassen, Secrets überprüfen
+
+# Jetzt wäre der perfekte Zeitpunkt, das Backend zu konfigurieren. Siehe unten.
+cd backend
+cp .env.example .env
+# ... .env anpassen
+cd ..
 
 # Container starten (Backend + MySQL + ClamAV)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Passwort-Hash generieren (optional, wenn AUTH_ENABLED=true)
 docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
+
+# Das Frontend-Setup (wie die Anmeldung auf der Schul-Webseite angezeigt wird)
+# ist unten beschrieben.
+
 ```
 
-**WICHTIG:** Neue Credentials-Struktur seit v2.6
+**WICHTIG:** Credentials-Struktur seit v2.6
 - ✅ `/.env` - Alle Core-Credentials (DB_USER, DB_PASS, Secrets)
 - ✅ `/backend/.env` - Optional, nur für Backend-Overrides
 - ✅ Keine Duplikation mehr zwischen DB_USER und MYSQL_USER!
@@ -146,7 +157,7 @@ nano config/forms-config.php
 ```
 
 ### 4. Datenbank erstellen
-(Backend!)
+(Backend, falls kein Docker-Setup!)
 
 ```bash
 mysql -u root -p < database/schema.sql

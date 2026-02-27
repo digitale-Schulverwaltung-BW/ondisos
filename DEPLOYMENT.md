@@ -11,7 +11,7 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 | **MySQL** | 🐳 Docker oder bestehend | 📄 MySQL Server | 🐳 Docker Container |
 | **Empfehlung** | ✅ **Empfohlen** | Einfachstes Setup | Dev/Testing |
 
-#### Warum Option 1 (Docker Backend)?
+#### Warum ist die Option 1 (Docker Backend) empfohlen?
 
 **Vorteile:**
 - ✅ **Vereinfachte Dependencies** - Composer, mPDF, PHP 8.2+, Tests automatisch installiert
@@ -48,8 +48,8 @@ cp .env.example .env
 nano .env
 
 # 2. Secrets generieren (direkt in .env eintragen)
-sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
-sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 # Passwörter ändern: DB_PASS, MYSQL_ROOT_PASSWORD
 
 # 3. Container starten
@@ -59,7 +59,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 docker compose logs -f backend
 
 # 5. Testen
-curl http://your-server.com:8080/index.php
+curl http://localhost:9080/index.php
 ```
 
 **Wichtig - Neue Credentials-Struktur:**
@@ -238,16 +238,17 @@ composer install
 
 # Configure environment
 cp .env.example .env
+
+# Generate PDF token secret and write directly to .env
+sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
+
 nano .env
 # DB_HOST=127.0.0.1 (oder DB-Server)
 # DB_PORT=3306
 # DB_NAME=anmeldung
 # DB_USER=anmeldung
 # DB_PASS=secret
-
-# Generate PDF token secret and write directly to .env
-sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
-sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 
 # Create directories
 mkdir -p cache uploads logs
@@ -334,7 +335,7 @@ docker-compose up -d
 docker-compose exec backend composer test
 
 # Services
-# Backend:  http://localhost:8080
+# Backend:  http://localhost:9080
 # Frontend: http://localhost:8081
 # MySQL:    localhost:3306
 ```
@@ -438,7 +439,7 @@ docker-compose up -d --build backend
 docker-compose logs -f backend
 
 # 5. Health Check
-curl http://your-server.com:8080/index.php
+curl http://your-server.com:9080/index.php
 ```
 
 **Rollback bei Problemen:**
