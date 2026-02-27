@@ -47,8 +47,9 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 cp .env.example .env
 nano .env
 
-# 2. Secrets generieren
-openssl rand -hex 32  # → PDF_TOKEN_SECRET
+# 2. Secrets generieren (direkt in .env eintragen)
+sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 # Passwörter ändern: DB_PASS, MYSQL_ROOT_PASSWORD
 
 # 3. Container starten
@@ -244,9 +245,9 @@ nano .env
 # DB_USER=anmeldung
 # DB_PASS=secret
 
-# Generate PDF token secret
-openssl rand -hex 32
-# Add to .env: PDF_TOKEN_SECRET=<generated-key>
+# Generate PDF token secret and write directly to .env
+sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 
 # Create directories
 mkdir -p cache uploads logs

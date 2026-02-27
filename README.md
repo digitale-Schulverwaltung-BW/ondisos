@@ -15,6 +15,7 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 
 - [Features](#-features)
 - [Screenshots](#-screenshots)
+- [Formulare anpassen/erstellen](#-formulare-erstellenanpassen)
 - [Quick Start](#-quick-start)
 - [Architektur](#-architektur)
 - [Systemvoraussetzungen](#-systemvoraussetzungen)
@@ -28,7 +29,7 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 
 ## ✨ Features
 
-### Frontend (Öffentlich)
+### 👨‍💻 Frontend (Öffentlich)
 - **Interaktive Formulare** mit SurveyJS
 - **Modernes UI** mit Bootstrap 5
 - **Mobile-responsive** Design
@@ -37,7 +38,7 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 - **File-Upload** Support
 - **DSGVO-konform** (lokale Fonts, keine Google-CDN)
 
-### Backend (Admin-Bereich)
+### 👩‍💼 Backend (Admin-Bereich)
 - **Übersichtliche Verwaltung** aller Anmeldungen
 - **Filterung & Suche** mit DataTables
 - **Excel-Export** mit Auto-Formatierung
@@ -48,7 +49,7 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 - **Optionale Authentifizierung** (session-basiert)
 - **Auto-Expunge** (automatisches Löschen archivierter Einträge)
 
-### Technische Features
+### ⚙️ Technische Features
 - **Clean Architecture** (MVC + Service Layer)
 - **Security First** (Prepared Statements, XSS-Protection, Input Validation)
 - **PDF-System** mit Token-Authentifizierung
@@ -83,6 +84,20 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 
 ---
 
+## 📋 Formulare erstellen/anpassen
+
+Die Formulare, welche ondisos verwalten kann, lassen sich (fast) komplett frei entwerfen und anpassen. 
+Die einzigen Einschränkungen sind: jedes Formular **muss** eine E-Mail-Adresse und einen Namen erfassen.
+
+### Formular-Designer
+SurveyJS, die Engine, welche die Frontend-Formulare bereitstellt, beinhaltet einen Drag-and-Drop-Formular-
+Designer. Dieser ist nicht Bestandteil von ondisos, kann aber einfach über die Projektseite unter
+https://surveyjs.io/create-free-survey erreicht werden. 
+
+Eine ausführliche Anleitung findet sich in **[SURVEYJS.md](SURVEYJS.md)**.
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Repository klonen
@@ -100,8 +115,9 @@ cd ondisos
 cp .env.example .env
 nano .env  # DB-Credentials, Secrets eintragen
 
-# Secrets generieren
-openssl rand -hex 32  # → PDF_TOKEN_SECRET in .env
+# Secrets generieren (direkt in .env eintragen)
+sed -i "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
+sed -i "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 
 # Container starten (Backend + MySQL + ClamAV)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
