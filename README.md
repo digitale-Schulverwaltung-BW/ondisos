@@ -2,7 +2,9 @@
 
 > **On**boarding - **Di**gital **S**ouverän und **O**pen **S**ource
 
-Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professionellem Admin-Backend.
+Eine moderne, Open Source Lösung für digitale (Schul-)anmeldungen mit professionellem Admin-Backend.
+
+Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](ASD.md) möglich.
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
@@ -36,12 +38,12 @@ Eine moderne, Open Source Lösung für digitale Schulanmeldungen mit professione
 - **CSRF-Protection** für sichere Übermittlung
 - **PDF-Bestätigung** nach Anmeldung (optional)
 - **File-Upload** Support
-- **DSGVO-konform** (lokale Fonts, keine Google-CDN)
+- **DSGVO-konformer Betrieb** möglich (lokale Fonts, keine Google-CDN, saubere Trennung des Backends auf einen Server, der nicht über das Internet erreichbar ist)
 
 ### 👩‍💼 Backend (Admin-Bereich)
 - **Übersichtliche Verwaltung** aller Anmeldungen
 - **Filterung & Suche** mit DataTables
-- **Excel-Export** mit Auto-Formatierung
+- **Excel-Export** mit Auto-Formatierung. Bei geeigneten Feld-Bezeichnern ist ein direkter Import in [ASV](ASV.md) möglich.
 - **Dashboard** mit Statistiken
 - **Status-System** (neu, exportiert, in Bearbeitung, akzeptiert, abgelehnt, archiviert)
 - **Soft-Delete** mit Papierkorb
