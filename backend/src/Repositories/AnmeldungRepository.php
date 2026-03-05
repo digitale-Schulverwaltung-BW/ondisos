@@ -19,19 +19,29 @@ class AnmeldungRepository
         $this->db = $db ?? Database::getConnection();
     }
 
+    private const ALLOWED_SORT_COLUMNS = ['id', 'name', 'email', 'status', 'created_at'];
+
     /**
      * Get paginated list of Anmeldungen
-     * 
+     *
      * @return array{items: Anmeldung[], total: int}
      */
     public function findPaginated(
         ?string $formularFilter = null,
         ?string $statusFilter = null,
+        ?string $nameSearch = null,
+        ?string $emailSearch = null,
         int $limit = 25,
-        int $offset = 0
+        int $offset = 0,
+        string $sortColumn = 'id',
+        string $sortDirection = 'DESC'
     ): array {
         // Defense-in-depth: validate formular filter at repository level
         AnmeldungValidator::validateFormularName($formularFilter);
+
+        // Whitelist sort column and direction to prevent SQL injection
+        $sortColumn = in_array($sortColumn, self::ALLOWED_SORT_COLUMNS, true) ? $sortColumn : 'id';
+        $sortDirection = strtoupper($sortDirection) === 'ASC' ? 'ASC' : 'DESC';
 
         $params = [];
         $types = '';
@@ -54,6 +64,22 @@ class AnmeldungRepository
             $types .= 's';
         }
 
+        if ($nameSearch !== null && $nameSearch !== '') {
+            $likeName = '%' . $nameSearch . '%';
+            $countSql .= " AND name LIKE ?";
+            $sql .= " AND name LIKE ?";
+            $params[] = $likeName;
+            $types .= 's';
+        }
+
+        if ($emailSearch !== null && $emailSearch !== '') {
+            $likeEmail = '%' . $emailSearch . '%';
+            $countSql .= " AND email LIKE ?";
+            $sql .= " AND email LIKE ?";
+            $params[] = $likeEmail;
+            $types .= 's';
+        }
+
         // Get total count
         $countStmt = $this->db->prepare($countSql);
         if (!empty($params)) {
@@ -62,8 +88,8 @@ class AnmeldungRepository
         $countStmt->execute();
         $total = $countStmt->get_result()->fetch_assoc()['cnt'];
 
-        // Get items
-        $sql .= " ORDER BY created_at DESC LIMIT ? OFFSET ?";
+        // Get items — sort column/direction are whitelisted above, safe to interpolate
+        $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT ? OFFSET ?";
         $params[] = $limit;
         $params[] = $offset;
         $types .= 'ii';

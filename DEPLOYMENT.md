@@ -2,6 +2,27 @@
 
 ### Übersicht
 
+## 📋 Übersicht
+
+Das System besteht aus zwei Servern:
+
+| Server | Komponente | Zweck | Zugriff |
+|--------|-----------|-------|---------|
+| **Backend Server** | Docker Container + MySQL | Admin-Interface, API | Intranet |
+| **Frontend Server** | Apache/Nginx + PHP | Öffentliche Formulare | Internet |
+
+**Hinweis:** Beide Server sollten nicht auf derselben Maschine laufen (Docker isoliert zwar das Backend, die Volumes sind jedoch auf der Host-Maschine einsehbar, bei einem Security-Incident mit root privilege escalation wären die gespeicherten Daten kompromittiert und öffentlich).
+
+### Voraussetzungen
+
+- ✅ **OS:** Ubuntu 22.04 LTS oder Debian 11+ (empfohlen)
+- ✅ **RAM:** Minimum 2 GB (empfohlen 4 GB)
+- ✅ **Disk:** Minimum 20 GB freier Speicher
+- ✅ **Network:** Zugriff auf Frontend-Server (Formular-Submissions)
+- ✅ **Ports:** 9080 (Backend), 3306 (MySQL, nur localhost)
+
+### Setup-Varianten
+
 Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 
 | Komponente | Option 1: Docker Backend | Option 2: Komplett Manuell | Option 3: Komplett Docker |
