@@ -181,7 +181,7 @@ require __DIR__ . '/../inc/header.php';
                     <?php if ($selectedForm === ''): ?>
                     <th><?= M::get('ui.table.form') ?></th>
                     <?php endif; ?>
-                    <th>Version</th>
+                    <th style="white-space: nowrap; min-width: 100px">Version</th>
                     <th>
                         <a href="<?= sortUrl('name', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
                             <?= M::get('ui.table.name') ?><?= sortIndicator('name', $sortColumn, $sortDirection) ?>
@@ -197,7 +197,7 @@ require __DIR__ . '/../inc/header.php';
                             <?= M::get('ui.table.status') ?><?= sortIndicator('status', $sortColumn, $sortDirection) ?>
                         </a>
                     </th>
-                    <th>
+                    <th style="white-space: nowrap min-width: 140px">
                         <a href="<?= sortUrl('created_at', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
                             <?= M::get('ui.table.date') ?><?= sortIndicator('created_at', $sortColumn, $sortDirection) ?>
                         </a>
