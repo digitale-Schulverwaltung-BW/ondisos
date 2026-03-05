@@ -33,8 +33,12 @@ class AnmeldungService
     public function getPaginatedAnmeldungen(
         ?string $formularFilter = null,
         ?string $statusFilter = null,
+        ?string $nameSearch = null,
+        ?string $emailSearch = null,
         int $page = 1,
-        int $perPage = self::DEFAULT_PER_PAGE
+        int $perPage = self::DEFAULT_PER_PAGE,
+        string $sortColumn = 'id',
+        string $sortDirection = 'DESC'
     ): array {
         // Validate and sanitize inputs
         $perPage = $this->validatePerPage($perPage);
@@ -44,6 +48,8 @@ class AnmeldungService
         // Sanitize filters
         $formularFilter = $formularFilter !== '' ? $formularFilter : null;
         $statusFilter = $statusFilter !== '' ? $statusFilter : null;
+        $nameSearch = $nameSearch !== '' ? $nameSearch : null;
+        $emailSearch = $emailSearch !== '' ? $emailSearch : null;
 
         // Validate formular filter to prevent SQL injection
         AnmeldungValidator::validateFormularName($formularFilter);
@@ -52,8 +58,12 @@ class AnmeldungService
         $result = $this->repository->findPaginated(
             formularFilter: $formularFilter,
             statusFilter: $statusFilter,
+            nameSearch: $nameSearch,
+            emailSearch: $emailSearch,
             limit: $perPage,
-            offset: $offset
+            offset: $offset,
+            sortColumn: $sortColumn,
+            sortDirection: $sortDirection
         );
 
         $totalPages = max(1, (int)ceil($result['total'] / $perPage));

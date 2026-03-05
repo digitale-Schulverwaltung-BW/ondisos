@@ -21,6 +21,10 @@ class AnmeldungController
         // Extract and validate request parameters
         $selectedForm = $this->getStringParam('form', '');
         $selectedStatus = $this->getStringParam('status', '');
+        $nameSearch = $this->getStringParam('name', '');
+        $emailSearch = $this->getStringParam('email', '');
+        $sortColumn = $this->getStringParam('sort', 'id');
+        $sortDirection = $this->getStringParam('dir', 'DESC');
         $page = $this->getIntParam('page', 1);
         $perPage = $this->getIntParam('perPage', 25);
 
@@ -28,8 +32,12 @@ class AnmeldungController
         $result = $this->service->getPaginatedAnmeldungen(
             formularFilter: $selectedForm,
             statusFilter: $selectedStatus,
+            nameSearch: $nameSearch,
+            emailSearch: $emailSearch,
             page: $page,
-            perPage: $perPage
+            perPage: $perPage,
+            sortColumn: $sortColumn,
+            sortDirection: $sortDirection
         );
 
         $forms = $this->service->getAvailableForms();
@@ -41,6 +49,10 @@ class AnmeldungController
             'forms' => $forms,
             'selectedForm' => $selectedForm,
             'selectedStatus' => $selectedStatus,
+            'nameSearch' => $nameSearch,
+            'emailSearch' => $emailSearch,
+            'sortColumn' => $sortColumn,
+            'sortDirection' => $sortDirection,
             'allowedPerPage' => $allowedPerPage
         ];
     }

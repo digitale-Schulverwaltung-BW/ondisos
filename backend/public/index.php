@@ -23,6 +23,34 @@ $viewData = $controller->index();
 
 // Extract view data
 extract($viewData);
+
+/**
+ * Build a URL for sorting a column, toggling direction if already active.
+ *
+ * @param string $column     The column to sort by
+ * @param string $currentCol Currently active sort column
+ * @param string $currentDir Currently active sort direction
+ * @param array  $baseParams Base GET params to preserve (form, perPage, filters, ...)
+ */
+function sortUrl(string $column, string $currentCol, string $currentDir, array $baseParams): string
+{
+    $dir = ($currentCol === $column && $currentDir === 'ASC') ? 'DESC' : 'ASC';
+    $params = array_merge($baseParams, ['sort' => $column, 'dir' => $dir, 'page' => 1]);
+    return '?' . http_build_query(array_filter($params, fn($v) => $v !== ''));
+}
+
+/**
+ * Render a sort indicator arrow for a column header.
+ */
+function sortIndicator(string $column, string $currentCol, string $currentDir): string
+{
+    if ($column !== $currentCol) {
+        return '<span class="text-muted ms-1" style="font-size:.7em">&#8597;</span>';
+    }
+    return $currentDir === 'ASC'
+        ? '<span class="ms-1" style="font-size:.75em">&#9650;</span>'
+        : '<span class="ms-1" style="font-size:.75em">&#9660;</span>';
+}
 // Get trash count for badge
 $trashCount = count($repository->findDeleted());
 require __DIR__ . '/../inc/header.php';
@@ -33,6 +61,19 @@ require __DIR__ . '/../inc/header.php';
         <div class="d-flex align-items-center gap-3">
             <h1 class="mb-0"><?= M::get('ui.anmeldungen') ?></h1>
             <form method="get" class="mb-0">
+                <?php if ($sortColumn !== 'id' || $sortDirection !== 'DESC'): ?>
+                    <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+                    <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+                <?php endif; ?>
+                <?php if ($nameSearch !== ''): ?>
+                    <input type="hidden" name="name" value="<?= htmlspecialchars($nameSearch) ?>">
+                <?php endif; ?>
+                <?php if ($emailSearch !== ''): ?>
+                    <input type="hidden" name="email" value="<?= htmlspecialchars($emailSearch) ?>">
+                <?php endif; ?>
+                <?php if ($selectedStatus !== ''): ?>
+                    <input type="hidden" name="status" value="<?= htmlspecialchars($selectedStatus) ?>">
+                <?php endif; ?>
                 <select name="form" id="form" class="form-select" onchange="this.form.submit()">
                     <option value=""><?= M::get('ui.filters.all_forms') ?></option>
                     <?php foreach ($forms as $formKey): ?>
@@ -64,6 +105,19 @@ require __DIR__ . '/../inc/header.php';
     <form method="get" class="d-flex align-items-center gap-2 mb-3">
         <?php if ($selectedForm !== ''): ?>
             <input type="hidden" name="form" value="<?= htmlspecialchars($selectedForm) ?>">
+        <?php endif; ?>
+        <?php if ($sortColumn !== 'id' || $sortDirection !== 'DESC'): ?>
+            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+        <?php endif; ?>
+        <?php if ($nameSearch !== ''): ?>
+            <input type="hidden" name="name" value="<?= htmlspecialchars($nameSearch) ?>">
+        <?php endif; ?>
+        <?php if ($emailSearch !== ''): ?>
+            <input type="hidden" name="email" value="<?= htmlspecialchars($emailSearch) ?>">
+        <?php endif; ?>
+        <?php if ($selectedStatus !== ''): ?>
+            <input type="hidden" name="status" value="<?= htmlspecialchars($selectedStatus) ?>">
         <?php endif; ?>
 
         <label for="perPage" class="form-label mb-0"><?= M::get('ui.entries_per_page') ?></label>
@@ -101,27 +155,120 @@ require __DIR__ . '/../inc/header.php';
             </div>
         </div>
 
+        <?php
+        // Base params preserved across sort/filter links (excludes sort/dir/page — those are set per link)
+        $filterBase = [];
+        if ($selectedForm !== '')  $filterBase['form']    = $selectedForm;
+        if ($pagination['perPage'] !== 25) $filterBase['perPage'] = $pagination['perPage'];
+        if ($nameSearch !== '')    $filterBase['name']    = $nameSearch;
+        if ($emailSearch !== '')   $filterBase['email']   = $emailSearch;
+        if ($selectedStatus !== '') $filterBase['status'] = $selectedStatus;
+        ?>
+
         <!-- Data Table -->
-        <table class="table table-striped table-sm table-hover">
+        <table class="table table-striped table-sm table-hover align-middle">
             <thead>
+                <!-- Sort header row -->
                 <tr>
                     <th style="width: 30px">
                         <input type="checkbox" id="selectAll" class="form-check-input">
                     </th>
-                    <th><?= M::get('ui.table.id') ?></th>
-                    <?php if ($selectedForm === ''): ?><th><?= M::get('ui.table.form') ?></th><?php endif; ?>
+                    <th>
+                        <a href="<?= sortUrl('id', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
+                            <?= M::get('ui.table.id') ?><?= sortIndicator('id', $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                    <?php if ($selectedForm === ''): ?>
+                    <th><?= M::get('ui.table.form') ?></th>
+                    <?php endif; ?>
                     <th>Version</th>
-                    <th><?= M::get('ui.table.name') ?></th>
-                    <th><?= M::get('ui.table.email') ?></th>
-                    <th><?= M::get('ui.table.status') ?></th>
-                    <th><?= M::get('ui.table.date') ?></th>
+                    <th>
+                        <a href="<?= sortUrl('name', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
+                            <?= M::get('ui.table.name') ?><?= sortIndicator('name', $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="<?= sortUrl('email', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
+                            <?= M::get('ui.table.email') ?><?= sortIndicator('email', $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="<?= sortUrl('status', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
+                            <?= M::get('ui.table.status') ?><?= sortIndicator('status', $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="<?= sortUrl('created_at', $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold">
+                            <?= M::get('ui.table.date') ?><?= sortIndicator('created_at', $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                </tr>
+                <!-- Filter row -->
+                <tr class="table-light">
+                    <th></th>
+                    <th></th><!-- ID: no filter -->
+                    <?php if ($selectedForm === ''): ?><th></th><?php endif; ?>
+                    <th></th><!-- Version: no filter -->
+                    <th>
+                        <form method="get" class="mb-0">
+                            <?php foreach ($filterBase as $k => $v): if ($k === 'name') continue; ?>
+                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
+                            <?php endforeach; ?>
+                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+                            <input type="hidden" name="page" value="1">
+                            <input type="text" name="name" value="<?= htmlspecialchars($nameSearch) ?>"
+                                   class="form-control form-control-sm" placeholder="Filter…" style="min-width:100px">
+                        </form>
+                    </th>
+                    <th>
+                        <form method="get" class="mb-0">
+                            <?php foreach ($filterBase as $k => $v): if ($k === 'email') continue; ?>
+                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
+                            <?php endforeach; ?>
+                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+                            <input type="hidden" name="page" value="1">
+                            <input type="text" name="email" value="<?= htmlspecialchars($emailSearch) ?>"
+                                   class="form-control form-control-sm" placeholder="Filter…" style="min-width:120px">
+                        </form>
+                    </th>
+                    <th>
+                        <form method="get" class="mb-0">
+                            <?php foreach ($filterBase as $k => $v): if ($k === 'status') continue; ?>
+                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
+                            <?php endforeach; ?>
+                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+                            <input type="hidden" name="page" value="1">
+                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:110px">
+                                <option value="">Alle</option>
+                                <?php foreach (\App\Models\AnmeldungStatus::cases() as $s): ?>
+                                    <option value="<?= $s->value ?>" <?= $selectedStatus === $s->value ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($s->label()) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </form>
+                    </th>
+                    <th>
+                        <?php
+                        $hasFilters = $nameSearch !== '' || $emailSearch !== '' || $selectedStatus !== '';
+                        if ($hasFilters):
+                            $resetParams = [];
+                            if ($selectedForm !== '') $resetParams['form'] = $selectedForm;
+                            if ($pagination['perPage'] !== 25) $resetParams['perPage'] = $pagination['perPage'];
+                        ?>
+                            <a href="?<?= http_build_query($resetParams) ?>" class="btn btn-outline-secondary btn-sm" title="Filter zurücksetzen">&#10005;</a>
+                        <?php endif; ?>
+                    </th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($anmeldungen as $anmeldung): ?>
                     <tr>
                         <td>
-                            <input type="checkbox" name="ids[]" value="<?= $anmeldung->id ?>" 
+                            <input type="checkbox" name="ids[]" value="<?= $anmeldung->id ?>"
                                    class="form-check-input row-checkbox">
                         </td>
                         <td>
@@ -136,7 +283,7 @@ require __DIR__ . '/../inc/header.php';
                         <td><?= NH::displayHtml($anmeldung->name, 'Unbekannt') ?></td>
                         <td><?= NH::displayHtml($anmeldung->email) ?></td>
                         <td>
-                            <?php 
+                            <?php
                             $statusEnum = \App\Models\AnmeldungStatus::tryFromString($anmeldung->status);
                             $badgeClass = $statusEnum?->badgeClass() ?? 'badge bg-secondary';
                             $statusLabel = $statusEnum?->label() ?? $anmeldung->status;
@@ -158,16 +305,20 @@ require __DIR__ . '/../inc/header.php';
     <nav>
         <ul class="pagination">
             <?php
-            $baseParams = [
-                'perPage' => $pagination['perPage']
-            ];
-            if ($selectedForm !== '') {
-                $baseParams['form'] = $selectedForm;
+            $pageBase = [];
+            if ($selectedForm !== '')    $pageBase['form']    = $selectedForm;
+            if ($pagination['perPage'] !== 25) $pageBase['perPage'] = $pagination['perPage'];
+            if ($nameSearch !== '')      $pageBase['name']    = $nameSearch;
+            if ($emailSearch !== '')     $pageBase['email']   = $emailSearch;
+            if ($selectedStatus !== '')  $pageBase['status']  = $selectedStatus;
+            if ($sortColumn !== 'id' || $sortDirection !== 'DESC') {
+                $pageBase['sort'] = $sortColumn;
+                $pageBase['dir']  = $sortDirection;
             }
 
             for ($i = 1; $i <= $pagination['totalPages']; $i++):
-                $baseParams['page'] = $i;
-                $url = '?' . http_build_query($baseParams);
+                $pageBase['page'] = $i;
+                $url = '?' . http_build_query($pageBase);
             ?>
                 <li class="page-item <?= $i === $pagination['page'] ? 'active' : '' ?>">
                     <a class="page-link" href="<?= $url ?>"><?= $i ?></a>
