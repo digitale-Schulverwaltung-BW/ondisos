@@ -44,6 +44,8 @@ class AnmeldungServiceTest extends TestCase
             ->with(
                 formularFilter: null,
                 statusFilter: null,
+                nameSearch: null,
+                emailSearch: null,
                 limit: 25,   // default
                 offset: 0
             )
@@ -86,6 +88,8 @@ class AnmeldungServiceTest extends TestCase
             ->with(
                 formularFilter: null,
                 statusFilter: null,
+                nameSearch: null,
+                emailSearch: null,
                 limit: 25,
                 offset: 0    // page 1 → offset 0
             )
@@ -104,6 +108,8 @@ class AnmeldungServiceTest extends TestCase
             ->with(
                 formularFilter: null,
                 statusFilter: null,
+                nameSearch: null,
+                emailSearch: null,
                 limit: 10,
                 offset: 20
             )
@@ -123,6 +129,8 @@ class AnmeldungServiceTest extends TestCase
             ->with(
                 formularFilter: null,
                 statusFilter: null,
+                nameSearch: null,
+                emailSearch: null,
                 limit: 25,
                 offset: 0
             )
@@ -138,6 +146,8 @@ class AnmeldungServiceTest extends TestCase
             ->with(
                 formularFilter: 'bs',
                 statusFilter: 'neu',
+                nameSearch: null,
+                emailSearch: null,
                 limit: 25,
                 offset: 0
             )
