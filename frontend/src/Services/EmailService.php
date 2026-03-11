@@ -157,8 +157,8 @@ class EmailService
         // Plain text part
         $message .= "--" . $boundary . "\r\n";
         $message .= "Content-Type: text/plain; charset=UTF-8\r\n";
-        $message .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
-        $message .= $plainBody . "\r\n\r\n";
+        $message .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n";
+        $message .= quoted_printable_encode($plainBody) . "\r\n\r\n";
 
         // HTML part
         $message .= "--" . $boundary . "\r\n";
@@ -222,10 +222,23 @@ class EmailService
     private function formatValue(mixed $value): string
     {
         if (is_array($value)) {
-            // Handle nested arrays recursively
+            // Detect single file-upload object: {name, content, ...}
+            if (isset($value['name']) && isset($value['content'])) {
+                return '[Datei-Upload: ' . $value['name'] . ']';
+            }
+
+            // Detect array of file-upload objects
+            if (!empty($value)) {
+                $first = reset($value);
+                if (is_array($first) && isset($first['content']) && isset($first['name'])) {
+                    $names = array_column($value, 'name');
+                    return '[Datei-Upload: ' . implode(', ', $names) . ']';
+                }
+            }
+
+            // Regular array — format recursively
             $formatted = array_map(function($item) {
                 if (is_array($item)) {
-                    // Nested array - use JSON or recursive format
                     return $this->formatValue($item);
                 }
                 return (string)$item;
@@ -235,6 +248,16 @@ class EmailService
 
         if (is_bool($value)) {
             return $value ? 'Ja' : 'Nein';
+        }
+
+        // Detect inline base64 / data URI that slipped through as a string
+        if (is_string($value)) {
+            if (preg_match('/^data:[^;]+;base64,/', $value)) {
+                return '[Datei-Upload]';
+            }
+            if (strlen($value) > 500 && preg_match('/^[A-Za-z0-9+\/=]+$/', $value)) {
+                return '[Datei-Upload]';
+            }
         }
 
         return (string)$value;
