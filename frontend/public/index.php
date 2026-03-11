@@ -166,6 +166,16 @@ $csrfToken = CsrfProtection::getToken();
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+
+        /* Reset theme/WordPress height overrides on SurveyJS dropdown elements */
+        .sv-dropdown_select-wrapper,
+        .sv-dropdown_select-wrapper select,
+        .sv-dropdown_select-wrapper input {
+            height: auto !important;
+            min-height: unset !important;
+            line-height: normal !important;
+            box-sizing: border-box !important;
+        }
     </style>
 </head>
 <body>
