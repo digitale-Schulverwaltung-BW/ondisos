@@ -11,6 +11,9 @@
 # Uploads
 /uploads/
 
+# School lookup CSV (contains school data, place at backend/data/schulen.csv)
+/data/schulen.csv
+
 # Testing
 .phpunit.cache/
 /coverage/
