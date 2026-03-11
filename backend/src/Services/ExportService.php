@@ -16,10 +16,14 @@ class ExportService
     /** @var array<int, string> Teilort-Werte für den aktuellen Export-Lauf (in-memory, kein DB-Schreiben) */
     private array $teilortOverrides = [];
 
+    /** @var array<int, string> Dienststellenschlüssel für den aktuellen Export-Lauf (in-memory, kein DB-Schreiben) */
+    private array $schoolLookupOverrides = [];
+
     public function __construct(
         private AnmeldungRepository $repository,
         private StatusService $statusService,
-        private ?NominatimService $nominatimService = null
+        private ?NominatimService $nominatimService = null,
+        private ?SchoolLookupService $schoolLookupService = null
     ) {}
 
     /**
@@ -42,6 +46,11 @@ class ExportService
         // Teilort autofill: Nominatim-Lookup für Datensätze mit Sentinel-Wert
         if ($this->nominatimService !== null) {
             $this->enrichTeilort($anmeldungen);
+        }
+
+        // Dienststellenschlüssel-Lookup für AbgebendeSchule
+        if ($this->schoolLookupService !== null) {
+            $this->enrichSchoolLookup($anmeldungen);
         }
 
         // Auto-mark as exported if enabled
@@ -291,6 +300,10 @@ class ExportService
             $this->enrichTeilort($anmeldungen);
         }
 
+        if ($this->schoolLookupService !== null) {
+            $this->enrichSchoolLookup($anmeldungen);
+        }
+
         $config = Config::getInstance();
         if ($config->autoMarkAsRead) {
             $exportedIds = array_map(fn($a) => $a->id, $anmeldungen);
@@ -327,6 +340,51 @@ class ExportService
         }
 
         return $data;
+    }
+
+    /**
+     * Returns true if the school lookup service is active and its CSV is available.
+     * Used by SpreadsheetBuilder to decide whether to render the synthetic column.
+     */
+    public function hasSchoolLookup(): bool
+    {
+        return $this->schoolLookupService !== null
+            && $this->schoolLookupService->isAvailable();
+    }
+
+    /**
+     * Returns the resolved Dienststellenschlüssel for an Anmeldung, or '' if none.
+     */
+    public function getSchoolLookupResult(int $id): string
+    {
+        return $this->schoolLookupOverrides[$id] ?? '';
+    }
+
+    /**
+     * Runs the school lookup for all Anmeldungen that have an 'an_Schule' field.
+     * Stores results in $schoolLookupOverrides (kein DB-Schreiben, kein Model-Mutieren).
+     *
+     * @param Anmeldung[] $anmeldungen
+     */
+    private function enrichSchoolLookup(array $anmeldungen): void
+    {
+        if (!$this->schoolLookupService->isAvailable()) {
+            return;
+        }
+
+        foreach ($anmeldungen as $anmeldung) {
+            if (!is_array($anmeldung->data)) {
+                continue;
+            }
+
+            $query = $anmeldung->data['an_Schule'] ?? null;
+            if (!is_string($query) || trim($query) === '') {
+                continue;
+            }
+
+            $match = $this->schoolLookupService->findBestMatch($query);
+            $this->schoolLookupOverrides[$anmeldung->id] = $match !== null ? $match['schluessel'] : '';
+        }
     }
 
     /**

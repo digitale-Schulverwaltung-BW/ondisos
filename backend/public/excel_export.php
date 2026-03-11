@@ -15,6 +15,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;
 use App\Services\NominatimService;
+use App\Services\SchoolLookupService;
 use App\Services\SpreadsheetBuilder;
 use App\Services\StatusService;
 use App\Validators\AnmeldungValidator;
@@ -23,7 +24,8 @@ use App\Validators\AnmeldungValidator;
 $repository = new AnmeldungRepository();
 $statusService = new StatusService($repository);
 $nominatimService = new NominatimService();
-$exportService = new ExportService($repository, $statusService, $nominatimService);
+$schoolLookupService = new SchoolLookupService();
+$exportService = new ExportService($repository, $statusService, $nominatimService, $schoolLookupService);
 
 try {
     // Selected-IDs export (POST from bulk form with checkboxes)

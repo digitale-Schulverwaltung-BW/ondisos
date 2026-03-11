@@ -25,7 +25,7 @@ class SpreadsheetBuilder
 
     /**
      * Build Excel spreadsheet from anmeldungen data
-     * 
+     *
      * @param Anmeldung[] $anmeldungen
      * @param string[] $columns
      */
@@ -36,17 +36,20 @@ class SpreadsheetBuilder
 
         // Determine if we should include Formular column
         // Hide column if a specific form is filtered (metadata['filter'] is set and not empty)
-        $hasFilter = isset($metadata['filter']) 
-            && $metadata['filter'] !== null 
+        $hasFilter = isset($metadata['filter'])
+            && $metadata['filter'] !== null
             && $metadata['filter'] !== '';
 
         $includeFormular = !$hasFilter; // Show column only when NO filter
 
+        // Build ordered column plan (including synthetic columns)
+        $columnPlan = $this->buildColumnPlan($columns);
+
         // Build header row
-        $this->buildHeader($sheet, $columns, $includeFormular);
+        $this->buildHeader($sheet, $columnPlan, $includeFormular);
 
         // Build data rows
-        $this->buildDataRows($sheet, $anmeldungen, $columns, $includeFormular);
+        $this->buildDataRows($sheet, $anmeldungen, $columnPlan, $includeFormular);
 
         // Apply styling
         $this->applyFormatting($sheet);
@@ -58,9 +61,39 @@ class SpreadsheetBuilder
     }
 
     /**
-     * Build header row
+     * Build an ordered column plan, inserting synthetic columns after their source fields.
+     *
+     * Each entry: ['key' => string, 'synthetic' => bool, 'type' => string|null]
+     *
+     * Currently inserts 'AbgebendeSchule' (Dienststellenschlüssel) directly after 'an_Schule'
+     * when the school lookup service is active.
+     *
+     * @param string[] $columns  Sorted list of data column names from extractColumns()
+     * @return array<array{key: string, synthetic: bool, type: string|null}>
      */
-    private function buildHeader($sheet, array $columns, bool $includeFormular = true): void
+    private function buildColumnPlan(array $columns): array
+    {
+        $plan = [];
+        $includeSchoolLookup = $this->exportService->hasSchoolLookup()
+            && in_array('an_Schule', $columns, true);
+
+        foreach ($columns as $col) {
+            $plan[] = ['key' => $col, 'synthetic' => false, 'type' => null];
+
+            if ($includeSchoolLookup && $col === 'an_Schule') {
+                $plan[] = ['key' => 'AbgebendeSchule', 'synthetic' => true, 'type' => 'school_lookup'];
+            }
+        }
+
+        return $plan;
+    }
+
+    /**
+     * Build header row
+     *
+     * @param array<array{key: string, synthetic: bool, type: string|null}> $columnPlan
+     */
+    private function buildHeader($sheet, array $columnPlan, bool $includeFormular = true): void
     {
         $colNum = 1;
         $rowNum = 1;
@@ -81,17 +114,17 @@ class SpreadsheetBuilder
         // Skip fields that are already exported as fixed columns
         $skipFields = ['name', 'Name', 'email', 'email1', 'Email', 'E-mail', 'E-Mail'];
 
-        foreach ($columns as $col) {
-            if (in_array($col, $skipFields, true)) {
+        foreach ($columnPlan as $entry) {
+            if (!$entry['synthetic'] && in_array($entry['key'], $skipFields, true)) {
                 continue;
             }
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $this->humanizeColumnName($col));
+            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $this->humanizeColumnName($entry['key']));
         }
 
         // Style header row
         $lastCol = $this->colLetter($colNum - 1);
         $headerRange = "A1:{$lastCol}1";
-        
+
         $sheet->getStyle($headerRange)->applyFromArray([
             'font' => [
                 'bold' => true,
@@ -110,11 +143,11 @@ class SpreadsheetBuilder
 
     /**
      * Build data rows
-     * 
+     *
      * @param Anmeldung[] $anmeldungen
-     * @param string[] $columns
+     * @param array<array{key: string, synthetic: bool, type: string|null}> $columnPlan
      */
-    private function buildDataRows($sheet, array $anmeldungen, array $columns, bool $includeFormular = true): void
+    private function buildDataRows($sheet, array $anmeldungen, array $columnPlan, bool $includeFormular = true): void
     {
         $rowNum = 2; // Start after header
 
@@ -123,7 +156,7 @@ class SpreadsheetBuilder
 
             // Fixed columns
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->id);
-            
+
             // Only add Formular column if we're exporting multiple forms
             if ($includeFormular) {
                 $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formular);
@@ -140,14 +173,18 @@ class SpreadsheetBuilder
             // Skip fields that are already exported as fixed columns
             $skipFields = ['name', 'Name', 'email', 'email1', 'Email', 'E-mail', 'E-Mail'];
 
-            foreach ($columns as $key) {
-                // Skip if this field is already in the fixed columns
-                if (in_array($key, $skipFields, true)) {
+            foreach ($columnPlan as $entry) {
+                if (!$entry['synthetic'] && in_array($entry['key'], $skipFields, true)) {
                     continue;
                 }
 
-                $value = $data[$key] ?? null;
-                $formatted = $this->exportService->formatCellValue($value);
+                if ($entry['synthetic'] && $entry['type'] === 'school_lookup') {
+                    $formatted = $this->exportService->getSchoolLookupResult($anmeldung->id);
+                } else {
+                    $value = $data[$entry['key']] ?? null;
+                    $formatted = $this->exportService->formatCellValue($value);
+                }
+
                 $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $formatted);
             }
 
