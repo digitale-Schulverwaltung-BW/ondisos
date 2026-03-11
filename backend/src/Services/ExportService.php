@@ -270,6 +270,15 @@ class ExportService
         }
 
         $anmeldungen = [$anmeldung];
+
+        if ($this->nominatimService !== null) {
+            $this->enrichTeilort($anmeldungen);
+        }
+
+        if ($this->schoolLookupService !== null) {
+            $this->enrichSchoolLookup($anmeldungen);
+        }
+
         $columns = $this->extractColumns($anmeldungen);
         sort($columns);
 
