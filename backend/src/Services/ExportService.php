@@ -397,7 +397,7 @@ class ExportService
     }
 
     /**
-     * Ersetzt den Sentinel-Wert 'autofill' im Feld Teilort durch den echten Ortsteil via Nominatim.
+     * Ersetzt den Sentinel-Wert '_autofill' im Feld Teilort durch den echten Ortsteil via Nominatim.
      * Speichert Ergebnisse in $teilortOverrides (kein DB-Schreiben, kein Mutieren des readonly Models).
      *
      * @param Anmeldung[] $anmeldungen
@@ -409,7 +409,7 @@ class ExportService
                 continue;
             }
 
-            if (($anmeldung->data['Teilort'] ?? null) !== 'autofill') {
+            if (($anmeldung->data['Teilort'] ?? null) !== '_autofill') {
                 continue;
             }
 
