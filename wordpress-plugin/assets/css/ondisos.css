@@ -71,6 +71,14 @@ body.admin-bar .ondisos-survey-container {
     max-width: 100%;
 }
 
+/* Fix: WP-Theme-CSS (z.B. spacious-pro) setzt margin-bottom:30px auf alle
+ * <button>-Elemente. Das bläht den Chevron-Button in SurveyJS-Dropdowns auf:
+ * In Flexbox zählt der margin-bottom zur margin-box (40px height + 30px = 70px),
+ * was den gesamten sv-action-bar auf 70px treibt → sd-input.sd-dropdown auf 78px. */
+.ondisos-survey-container .sd-editor-button-item {
+    margin-bottom: 0 !important;
+}
+
 /* Fix: WP-Theme-CSS (z.B. spacious-pro) setzt auf input[type="text"] u.a.:
  *   padding: 1%          → ~9-10px oben/unten, bläht Dropdown auf ~78px auf
  *   width: 98%           → verkleinert das Eingabefeld
