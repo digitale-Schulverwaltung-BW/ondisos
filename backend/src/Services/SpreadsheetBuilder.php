@@ -182,6 +182,10 @@ class SpreadsheetBuilder
                     $formatted = $this->exportService->getSchoolLookupResult($anmeldung->id);
                 } else {
                     $value = $data[$entry['key']] ?? null;
+                    // Clear unresolved autofill sentinel so the cell stays empty
+                    if (str_contains($entry['key'], '_autofill') && $value === 'autofill') {
+                        $value = null;
+                    }
                     $formatted = $this->exportService->formatCellValue($value);
                 }
 

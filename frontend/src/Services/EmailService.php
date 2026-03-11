@@ -93,6 +93,11 @@ class EmailService
                 continue;
             }
 
+            // Skip autofill fields (e.g., Teilort_autofill) — these are technical placeholders
+            if (str_contains($key, '_autofill')) {
+                continue;
+            }
+
             if ($value === null || $value === '') {
                 continue;
             }

@@ -845,8 +845,8 @@
             {
               "type": "text",
               "name": "Teilort",
-              "defaultValue": "autofill",
-              "visible": false
+              "visible": false,
+              "defaultValue": "_autofill"
             },
             {
               "type": "text",
@@ -1176,7 +1176,7 @@
         },
         {
           "type": "text",
-          "name": "AbgebendeSchule",
+          "name": "an_Schule",
           "title": {
             "de": "an Schule (Name und Ort der Schule):",
             "default": "an Schule"
@@ -1187,6 +1187,19 @@
           "placeholder": {
             "de": "Schule, an der dieser Abschluss erreicht wurde",
             "default": "an welcher Schule wurde der o.g. Abschluss erreicht"
+          }
+        },
+        {
+          "type": "text",
+          "name": "AbgebendeSchule",
+          "visible": false,
+          "title": {
+            "de": "an Schule (Name und Ort der Schule):",
+            "default": "_autofill"
+          },
+          "titleLocation": "hidden",
+          "placeholder": {
+            "de": "Schule, an der dieser Abschluss erreicht wurde"
           }
         },
         {
@@ -1337,7 +1350,6 @@
           "name": "question15",
           "title": "Weitere Unterlagen (optional)",
           "description": "Laden Sie weitere Unterlagen hier hoch, die Sie uns übermitteln wollen. z.B. Gestattung einer anderen Berufsschule.",
-          "isRequired": false,
           "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB."
         }
       ]
