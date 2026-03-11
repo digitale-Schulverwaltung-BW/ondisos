@@ -168,26 +168,20 @@ $csrfToken = CsrfProtection::getToken();
         }
 
         /*
-         * Reset WordPress/theme interference on SurveyJS dropdown elements.
-         *
-         * The wrapper has no height rule itself — its height comes from the select
-         * inside it. WordPress themes often set large padding or line-height on
-         * select/input globally, which inflates the computed height without showing
-         * up as an explicit "height" rule in DevTools.
-         *
-         * SurveyJS expects:
-         *   line-height: calc(1.5 * 16px) = 24px
-         *   padding-top/bottom: calc(1.5 * 8px) = 12px
-         *   → natural height ≈ 48px
+         * Reset theme interference on SurveyJS dropdown filter input.
+         * Some themes set padding:1%, width:98%, margin:0 0 30px on input[type="text"]
+         * which inflates .sd-dropdown__filter-string-input (SurveyJS expects padding:0).
+         * Selector specificity (0,2,0) beats typical theme rules (0,1,1).
          */
-        .sv-dropdown_select-wrapper select,
-        .sv-dropdown_select-wrapper input {
-            height: auto !important;
-            min-height: unset !important;
+        #surveyContainer .sd-dropdown__filter-string-input {
+            padding: 0 !important;
+            width: 100% !important;
+            margin: 0 !important;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
             line-height: calc(1.5 * var(--sjs-font-editorfont-size, var(--sjs-font-size, 16px))) !important;
-            padding-top: calc(1.5 * var(--sjs-base-unit, 8px)) !important;
-            padding-bottom: calc(1.5 * var(--sjs-base-unit, 8px)) !important;
-            box-sizing: border-box !important;
+            box-sizing: content-box !important;
         }
     </style>
 </head>
