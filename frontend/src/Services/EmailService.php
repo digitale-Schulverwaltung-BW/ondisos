@@ -93,8 +93,8 @@ class EmailService
                 continue;
             }
 
-            // Skip autofill fields (e.g., Teilort_autofill) — these are technical placeholders
-            if (str_contains($key, '_autofill')) {
+            // Skip fields with unresolved autofill sentinel
+            if ($value === '_autofill') {
                 continue;
             }
 
