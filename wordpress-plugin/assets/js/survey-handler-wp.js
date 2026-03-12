@@ -175,9 +175,14 @@ class SurveyHandlerWP {
                     this.showPrefillLink(result.prefill_link);
                 }
 
-                // Show PDF download button if provided
-                if (result.pdf_download && result.pdf_download.enabled) {
-                    this.showPdfDownload(result.pdf_download);
+                // Show download buttons (PDF and/or iCal) if available
+                const hasPdf  = result.pdf_download  && result.pdf_download.enabled;
+                const hasIcal = result.ical_download && result.ical_download.enabled;
+                if (hasPdf || hasIcal) {
+                    this.showDownloadButtons(
+                        hasPdf  ? result.pdf_download  : null,
+                        hasIcal ? result.ical_download : null
+                    );
                 }
             }
         } catch (error) {
@@ -279,38 +284,99 @@ class SurveyHandlerWP {
     }
 
     /**
-     * Show PDF download button in completed page.
+     * Show download buttons (PDF and/or iCal) in the completed page.
+     * Buttons are placed side-by-side on wider screens (flex-wrap).
      *
-     * Routes the download through the WordPress AJAX proxy
-     * (admin-ajax.php?action=ondisos_pdf_download) so the browser never
-     * needs to reach the backend directly.
+     * @param {object|null} pdfInfo  - pdf_download object from server, or null
+     * @param {object|null} icalInfo - ical_download object from server, or null
      */
-    showPdfDownload(pdfDownload) {
+    showDownloadButtons(pdfInfo, icalInfo) {
         const completed = this.container.querySelector('.sd-completedpage');
         if (!completed) return;
 
-        // Extract token from the relative URL returned by the backend
-        // e.g. "pdf/download.php?token=abc123"
-        const token = new URL('http://x/' + pdfDownload.url).searchParams.get('token');
-        if (!token) return;
+        const container = document.createElement('div');
+        container.className = 'download-buttons-container';
+        container.style.cssText = 'margin-top: 20px; display: flex; flex-wrap: wrap; gap: 16px;';
+
+        if (pdfInfo) {
+            container.appendChild(this._buildPdfCard(pdfInfo));
+        }
+        if (icalInfo) {
+            container.appendChild(this._buildIcalCard(icalInfo));
+        }
+
+        completed.insertBefore(container, completed.firstChild);
+    }
+
+    /**
+     * Build the PDF download card element.
+     * Routes the download through the WordPress AJAX proxy so the browser
+     * never needs to reach the backend directly.
+     */
+    _buildPdfCard(pdfInfo) {
+        // Extract token from relative URL and route through WP AJAX proxy
+        const token = new URL('http://x/' + pdfInfo.url).searchParams.get('token');
+        if (!token) return document.createTextNode('');
 
         const downloadUrl = this.ajaxUrl
             + '?action=ondisos_pdf_download&token=' + encodeURIComponent(token);
 
-        const title = pdfDownload.title || 'Bestätigung herunterladen';
+        const title = pdfInfo.title || 'Bestätigung herunterladen';
 
-        const div = document.createElement('div');
-        div.style.cssText = 'margin-top: 20px; padding: 15px; background: #e8f5e9; border: 1px solid #c8e6c9; border-radius: 4px; text-align: center;';
-        div.innerHTML = `
-            <p style="margin: 0 0 10px">
-                <a href="${this.escapeHtml(downloadUrl)}"
-                   download
-                   style="display:inline-block; padding:10px 20px; background:#4caf50; color:#fff; border-radius:4px; text-decoration:none; font-weight:bold;">
-                    ⬇ ${this.escapeHtml(title)}
-                </a>
+        const card = document.createElement('div');
+        card.style.cssText = 'flex: 1; min-width: 220px; padding: 20px; background: #f0f8ff; border-radius: 6px; border-left: 4px solid #4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 32px; margin-right: 12px;">📄</span>
+                <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
+            </div>
+            <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
+                Laden Sie Ihre Anmeldebestätigung als PDF herunter.
             </p>
+            <a href="${this.escapeHtml(downloadUrl)}"
+                download
+                style="display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                📥 ${this.escapeHtml(title)}
+            </a>
         `;
-        completed.appendChild(div);
+
+        const link = card.querySelector('a');
+        link.addEventListener('mouseenter', () => { link.style.background = '#45a049'; });
+        link.addEventListener('mouseleave', () => { link.style.background = '#4CAF50'; });
+
+        return card;
+    }
+
+    /**
+     * Build the iCal download card element.
+     * The URL points directly to ical.php (no proxy needed, no secrets involved).
+     */
+    _buildIcalCard(icalInfo) {
+        const title = icalInfo.title || 'Termin herunterladen';
+
+        const icalUrl = icalInfo.url; // absolute admin-ajax.php URL
+
+        const card = document.createElement('div');
+        card.style.cssText = 'flex: 1; min-width: 220px; padding: 20px; background: #f0f4ff; border-radius: 6px; border-left: 4px solid #1976d2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 32px; margin-right: 12px;">📅</span>
+                <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
+            </div>
+            <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
+                Tragen Sie den Termin in Ihren Kalender ein.
+            </p>
+            <a href="${this.escapeHtml(icalUrl)}"
+                style="display: inline-block; padding: 12px 24px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                📥 ${this.escapeHtml(title)}
+            </a>
+        `;
+
+        const link = card.querySelector('a');
+        link.addEventListener('mouseenter', () => { link.style.background = '#1565c0'; });
+        link.addEventListener('mouseleave', () => { link.style.background = '#1976d2'; });
+
+        return card;
     }
 
     /**
