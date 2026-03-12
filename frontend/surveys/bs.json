@@ -850,7 +850,7 @@
             },
             {
               "type": "text",
-              "name": "Telefon_1",
+              "name": "Telefon 1",
               "title": "(Mobil-) Telefon",
               "titleLocation": "left",
               "showNumber": false,
