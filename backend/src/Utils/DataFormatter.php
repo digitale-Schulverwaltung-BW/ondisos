@@ -168,6 +168,12 @@ class DataFormatter
             ARRAY_FILTER_USE_KEY
         );
 
+        // Remove unresolved autofill sentinels (user never entered these)
+        $filtered = array_filter(
+            $filtered,
+            fn($value) => $value !== '_autofill'
+        );
+
         return $filtered;
     }
 
