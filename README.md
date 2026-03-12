@@ -469,12 +469,7 @@ Dieses Projekt nutzt folgende Open Source Libraries:
 
 ## 📄 Lizenz
 
-_[TODO: Lizenz festlegen - z.B. MIT, GPL, etc.]_
-
-Für Open Source Projekte ist eine klare Lizenz wichtig. Empfohlen:
-- **MIT** - Sehr permissive
-- **GPL v3** - Copyleft, Änderungen müssen auch Open Source sein
-- **AGPL v3** - Wie GPL, aber auch für SaaS/Cloud
+Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE). 
 
 ---
 
