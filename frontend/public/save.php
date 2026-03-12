@@ -71,6 +71,16 @@ try {
             $surveyData
         );
         $result['prefill_link'] = $prefillLink;
+
+        // Add iCal download info if configured for this form
+        $icalConfig = FormConfig::get($formKey)['ical'] ?? null;
+        if ($icalConfig && ($icalConfig['enabled'] ?? false)) {
+            $result['ical_download'] = [
+                'enabled' => true,
+                'url'     => 'ical.php?form=' . urlencode($formKey),
+                'title'   => $icalConfig['download_title'] ?? 'Termin in Kalender eintragen',
+            ];
+        }
     }
 
     // 9. Return result

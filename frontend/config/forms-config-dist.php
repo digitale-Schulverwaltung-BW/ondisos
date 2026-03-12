@@ -27,6 +27,18 @@ return [
             'AusbEmail'            // E-Mail Adresse
         ],
 
+        // iCal Download Configuration (optional) - uncomment to enable
+        // 'ical' => [
+        //     'enabled'          => true,
+        //     'download_title'   => 'Termin in Kalender eintragen',
+        //     'event_title'      => 'Einschulung Berufliches Schulzentrum',
+        //     'event_date'       => '2026-09-01',
+        //     'event_time_start' => '08:00',
+        //     'event_time_end'   => '12:00',
+        //     'event_location'   => 'Berufliches Schulzentrum, Musterstraße 1, 12345 Musterstadt',
+        //     'event_description' => 'Einschulungsveranstaltung.',
+        // ],
+
         // PDF Download Configuration (optional)
         'pdf' => [
             'enabled' => true,
@@ -80,6 +92,19 @@ return [
         'theme' => 'survey_theme.json',
         'version' => '2026-01-v2',
         'notify_email' => 'ausbildernachmittag@example.com',
+
+        // iCal Download Configuration (optional)
+        // Allows registrants to add the event to their calendar after submitting.
+        'ical' => [
+            'enabled'          => true,
+            'download_title'   => 'Termin in Kalender eintragen',
+            'event_title'      => 'Ausbildernachmittag Berufliches Schulzentrum',
+            'event_date'       => '2026-04-15',   // YYYY-MM-DD
+            'event_time_start' => '14:00',         // HH:MM (24h)
+            'event_time_end'   => '17:00',
+            'event_location'   => 'Berufliches Schulzentrum, Musterstraße 1, 12345 Musterstadt',
+            'event_description' => 'Ausbildernachmittag für Ausbildungsbetriebe.',
+        ],
     ],
     'prefill_demo' => [
         'db' => false,
