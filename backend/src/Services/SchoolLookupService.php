@@ -122,10 +122,19 @@ class SchoolLookupService
             return;
         }
 
-        // Skip header row
-        fgetcsv($handle, 0, "\t");
+        // Auto-detect delimiter from first line (tab, semicolon, or comma)
+        $firstLine = fgets($handle);
+        if ($firstLine === false) {
+            fclose($handle);
+            return;
+        }
+        $sep = $this->detectSeparator($firstLine);
+        rewind($handle);
 
-        while (($row = fgetcsv($handle, 0, "\t")) !== false) {
+        // Skip header row
+        fgetcsv($handle, 0, $sep);
+
+        while (($row = fgetcsv($handle, 0, $sep)) !== false) {
             if (count($row) < 2) {
                 continue;
             }
@@ -138,6 +147,25 @@ class SchoolLookupService
         }
 
         fclose($handle);
+    }
+
+    /**
+     * Detect the field separator from a sample line.
+     * Counts occurrences of tab, semicolon, and comma and returns the most frequent one.
+     * Falls back to tab if all counts are equal.
+     */
+    private function detectSeparator(string $line): string
+    {
+        $counts = [
+            "\t" => substr_count($line, "\t"),
+            ';'  => substr_count($line, ';'),
+            ','  => substr_count($line, ','),
+        ];
+
+        arsort($counts);
+        $winner = array_key_first($counts);
+
+        return $counts[$winner] > 0 ? $winner : "\t";
     }
 
     /**
