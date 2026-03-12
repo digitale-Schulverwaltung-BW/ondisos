@@ -116,6 +116,14 @@ class SurveyHandlerWP {
     async handleComplete(sender) {
         const data = sender.data;
 
+        // SurveyJS clears invisible question values (clearInvisibleValues defaults to 'onHidden').
+        // Re-inject autofill sentinels from hidden fields so the backend can enrich them.
+        sender.getAllQuestions(false).forEach(question => {
+            if (question.defaultValue === '_autofill' && !(question.name in data)) {
+                data[question.name] = '_autofill';
+            }
+        });
+
         // Remove consent fields
         Object.keys(data)
             .filter(k => k.startsWith('consent_'))
@@ -129,15 +137,20 @@ class SurveyHandlerWP {
         formData.append('action', 'ondisos_submit');
         formData.append('form_key', this.formKey);
         formData.append('nonce', this.nonce);
-        formData.append('survey_data', JSON.stringify(data));
         formData.append('meta', JSON.stringify({
             formular: this.formKey,
             version: this.version,
             timestamp: new Date().toISOString()
         }));
 
-        // Add file uploads
+        // Add file uploads FIRST (needs base64 content from question.value)
         this.addFileUploads(formData, sender);
+
+        // Strip base64 content from file fields AFTER extracting files,
+        // so the stored JSON contains only name/type references, not the full binary
+        this.stripFileContent(data);
+
+        formData.append('survey_data', JSON.stringify(data));
 
         // Submit to server
         try {
@@ -199,22 +212,51 @@ class SurveyHandlerWP {
     }
 
     /**
-     * Add file uploads to form data
+     * Add file uploads to form data.
+     * SurveyJS stores files as {name, type, content: "data:...;base64,..."} objects,
+     * not as File objects. We convert each base64 data URL to a Blob for proper upload.
      */
     addFileUploads(formData, sender) {
-        // Find all file questions
-        const fileQuestions = sender.getAllQuestions()
-            .filter(q => q.getType() === 'file');
+        sender.getAllQuestions()
+            .filter(q => q.getType() === 'file')
+            .forEach(question => {
+                const files = question.value;
+                if (!files || !files.length) return;
 
-        fileQuestions.forEach(question => {
-            const files = question.value;
-
-            if (files && files.length > 0) {
-                files.forEach((file, index) => {
-                    const fieldName = `${question.name}_${index}`;
-                    formData.append(fieldName, file);
+                files.forEach((fileObj, index) => {
+                    if (!fileObj || !fileObj.content) return;
+                    const blob = this.dataUrlToBlob(fileObj.content);
+                    formData.append(`${question.name}_${index}`, blob, fileObj.name);
                 });
-            }
+            });
+    }
+
+    /**
+     * Convert a base64 data URL to a Blob
+     */
+    dataUrlToBlob(dataUrl) {
+        const parts = dataUrl.split(',');
+        const mimeMatch = parts[0].match(/:(.*?);/);
+        const mime = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+        const binary = atob(parts[1]);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        return new Blob([bytes], { type: mime });
+    }
+
+    /**
+     * Strip base64 content from file fields in survey data.
+     * Detects file fields by value shape (array of objects with a 'content' property)
+     * rather than question type, so it works regardless of SurveyJS nesting or version.
+     */
+    stripFileContent(data) {
+        Object.keys(data).forEach(key => {
+            const value = data[key];
+            if (!Array.isArray(value) || !value.length) return;
+            if (!value[0] || typeof value[0] !== 'object' || !('content' in value[0])) return;
+            data[key] = value.map(f => ({ name: f.name, type: f.type }));
         });
     }
 

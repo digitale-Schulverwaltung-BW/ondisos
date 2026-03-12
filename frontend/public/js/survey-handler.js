@@ -217,7 +217,7 @@ class SurveyHandler {
 
         // Strip base64 content from file fields AFTER extracting files,
         // so the stored JSON contains only name/type references, not the full binary
-        this.stripFileContent(data, sender);
+        this.stripFileContent(data);
 
         formData.append('survey_data', JSON.stringify(data));
         formData.append('csrf_token', this.csrfToken);
@@ -396,18 +396,17 @@ class SurveyHandler {
      * Strip base64 content from file fields in survey data.
      * Replaces each file entry with {name, type} only — the actual file
      * is sent separately via addFileUploads().
+     *
+     * Detects file fields by value shape (array of objects with a 'content' property)
+     * rather than question type, so it works regardless of SurveyJS nesting or version.
      */
-    stripFileContent(data, sender) {
-        sender.getAllQuestions()
-            .filter(q => q.getType() === 'file')
-            .forEach(question => {
-                if (Array.isArray(data[question.name])) {
-                    data[question.name] = data[question.name].map(f => ({
-                        name: f.name,
-                        type: f.type
-                    }));
-                }
-            });
+    stripFileContent(data) {
+        Object.keys(data).forEach(key => {
+            const value = data[key];
+            if (!Array.isArray(value) || !value.length) return;
+            if (!value[0] || typeof value[0] !== 'object' || !('content' in value[0])) return;
+            data[key] = value.map(f => ({ name: f.name, type: f.type }));
+        });
     }
 
     /**
