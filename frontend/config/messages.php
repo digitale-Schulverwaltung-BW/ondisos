@@ -71,6 +71,10 @@ return [
         'pdf_download_description' => 'Laden Sie Ihre Anmeldebestätigung als PDF herunter.',
         'pdf_download_expires' => 'Link gültig für {{minutes}} Minuten',
 
+        // iCal Download Box
+        'ical_download_title' => 'Termin herunterladen',
+        'ical_download_description' => 'Tragen Sie den Termin in Ihren Kalender ein.',
+
         // Prefill Link Box
         'prefill_link_title' => '🔗 Weitere Anmeldungen?',
         'prefill_link_description' => 'Nutzen Sie diesen Link, um weitere Azubis mit den gleichen Firmendaten anzumelden',

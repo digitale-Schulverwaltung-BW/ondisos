@@ -42,11 +42,14 @@ class SpreadsheetBuilder
 
         $includeFormular = !$hasFilter; // Show column only when NO filter
 
+        // Detect the actual email field name used in the form data
+        $emailFieldName = $this->detectEmailFieldName($columns);
+
         // Build ordered column plan (including synthetic columns)
         $columnPlan = $this->buildColumnPlan($columns);
 
         // Build header row
-        $this->buildHeader($sheet, $columnPlan, $includeFormular);
+        $this->buildHeader($sheet, $columnPlan, $includeFormular, $emailFieldName);
 
         // Build data rows
         $this->buildDataRows($sheet, $anmeldungen, $columnPlan, $includeFormular);
@@ -93,7 +96,7 @@ class SpreadsheetBuilder
      *
      * @param array<array{key: string, synthetic: bool, type: string|null}> $columnPlan
      */
-    private function buildHeader($sheet, array $columnPlan, bool $includeFormular = true): void
+    private function buildHeader($sheet, array $columnPlan, bool $includeFormular = true, string $emailFieldName = 'email'): void
     {
         $colNum = 1;
         $rowNum = 1;
@@ -106,7 +109,7 @@ class SpreadsheetBuilder
         }
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Version');
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Name');
-        $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'E-Mail');
+        $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $emailFieldName);
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Status');
         $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, 'Erstellt am');
 
@@ -281,6 +284,23 @@ class SpreadsheetBuilder
         }
         
         return $letter;
+    }
+
+    /**
+     * Detect the actual email field name used in the form data columns.
+     * Returns the first matching variant found, falling back to 'email'.
+     *
+     * @param string[] $columns
+     */
+    private function detectEmailFieldName(array $columns): string
+    {
+        $emailVariants = ['email1', 'email', 'Email', 'E-mail', 'E-Mail'];
+        foreach ($emailVariants as $variant) {
+            if (in_array($variant, $columns, true)) {
+                return $variant;
+            }
+        }
+        return 'email';
     }
 
     /**

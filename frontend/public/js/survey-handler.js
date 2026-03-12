@@ -239,9 +239,14 @@ class SurveyHandler {
                     this.showWarnings(result.warnings);
                 }
 
-                // Show PDF download if available
-                if (result.pdf_download && result.pdf_download.enabled) {
-                    this.showPdfDownload(result.pdf_download);
+                // Show download buttons (PDF and/or iCal) if available
+                const hasPdf  = result.pdf_download  && result.pdf_download.enabled;
+                const hasIcal = result.ical_download && result.ical_download.enabled;
+                if (hasPdf || hasIcal) {
+                    this.showDownloadButtons(
+                        hasPdf  ? result.pdf_download  : null,
+                        hasIcal ? result.ical_download : null
+                    );
                 }
 
                 // Show prefill link if provided
@@ -256,54 +261,97 @@ class SurveyHandler {
     }
 
     /**
-     * Show PDF download button in completed page
+     * Show download buttons (PDF and/or iCal) in the completed page.
+     * Buttons are placed side-by-side on wider screens (flex-wrap).
+     *
+     * @param {object|null} pdfInfo  - pdf_download object from server, or null
+     * @param {object|null} icalInfo - ical_download object from server, or null
      */
-    showPdfDownload(pdfInfo) {
+    showDownloadButtons(pdfInfo, icalInfo) {
         const completed = document.querySelector('.sd-completedpage');
+        if (!completed) return;
 
-        if (completed) {
-            const pdfDiv = document.createElement('div');
-            pdfDiv.className = 'pdf-download-box';
-            pdfDiv.style.cssText = 'margin-top: 20px; padding: 20px; background: #f0f8ff; border-radius: 6px; border-left: 4px solid #4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        const container = document.createElement('div');
+        container.className = 'download-buttons-container';
+        container.style.cssText = 'margin-top: 20px; display: flex; flex-wrap: wrap; gap: 16px;';
 
-            const expiresMinutes = Math.floor(pdfInfo.expires_in / 60);
-            const title = pdfInfo.title || this.msg('ui.pdf_download_title', 'Bestätigung herunterladen');
-            const description = this.msg('ui.pdf_download_description', 'Laden Sie Ihre Anmeldebestätigung als PDF herunter.');
-            const expiresText = this.formatMsg('ui.pdf_download_expires',
-                { minutes: expiresMinutes },
-                `Link gültig für ${expiresMinutes} Minuten`
-            );
-
-            pdfDiv.innerHTML = `
-                <div style="display: flex; align-items: center; margin-bottom: 12px;">
-                    <span style="font-size: 32px; margin-right: 12px;">📄</span>
-                    <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
-                </div>
-                <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
-                    ${this.escapeHtml(description)}
-                </p>
-                <a href="${this.escapeHtml(pdfInfo.url)}"
-                    target="_blank"
-                    style="display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; transition: background 0.3s;">
-                    📥 ${this.escapeHtml(title)}
-                </a>
-                <p style="margin-top: 12px; font-size: 12px; color: #999;">
-                    <em>💡 ${this.escapeHtml(expiresText)}</em>
-                </p>
-            `;
-
-            // Add hover effect
-            const downloadLink = pdfDiv.querySelector('a');
-            downloadLink.addEventListener('mouseenter', () => {
-                downloadLink.style.background = '#45a049';
-            });
-            downloadLink.addEventListener('mouseleave', () => {
-                downloadLink.style.background = '#4CAF50';
-            });
-
-            // Insert at the top of completed page (before other elements)
-            completed.insertBefore(pdfDiv, completed.firstChild);
+        if (pdfInfo) {
+            container.appendChild(this._buildPdfCard(pdfInfo));
         }
+        if (icalInfo) {
+            container.appendChild(this._buildIcalCard(icalInfo));
+        }
+
+        completed.insertBefore(container, completed.firstChild);
+    }
+
+    /**
+     * Build the PDF download card element
+     */
+    _buildPdfCard(pdfInfo) {
+        const expiresMinutes = Math.floor(pdfInfo.expires_in / 60);
+        const title       = pdfInfo.title || this.msg('ui.pdf_download_title', 'Bestätigung herunterladen');
+        const description = this.msg('ui.pdf_download_description', 'Laden Sie Ihre Anmeldebestätigung als PDF herunter.');
+        const expiresText = this.formatMsg('ui.pdf_download_expires',
+            { minutes: expiresMinutes },
+            `Link gültig für ${expiresMinutes} Minuten`
+        );
+
+        const card = document.createElement('div');
+        card.style.cssText = 'flex: 1; min-width: 220px; padding: 20px; background: #f0f8ff; border-radius: 6px; border-left: 4px solid #4CAF50; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 32px; margin-right: 12px;">📄</span>
+                <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
+            </div>
+            <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
+                ${this.escapeHtml(description)}
+            </p>
+            <a href="${this.escapeHtml(pdfInfo.url)}"
+                target="_blank"
+                style="display: inline-block; padding: 12px 24px; background: #4CAF50; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                📥 ${this.escapeHtml(title)}
+            </a>
+            <p style="margin-top: 12px; font-size: 12px; color: #999;">
+                <em>💡 ${this.escapeHtml(expiresText)}</em>
+            </p>
+        `;
+
+        const link = card.querySelector('a');
+        link.addEventListener('mouseenter', () => { link.style.background = '#45a049'; });
+        link.addEventListener('mouseleave', () => { link.style.background = '#4CAF50'; });
+
+        return card;
+    }
+
+    /**
+     * Build the iCal download card element
+     */
+    _buildIcalCard(icalInfo) {
+        const title       = icalInfo.title || this.msg('ui.ical_download_title', 'Termin herunterladen');
+        const description = this.msg('ui.ical_download_description', 'Tragen Sie den Termin in Ihren Kalender ein.');
+
+        const card = document.createElement('div');
+        card.style.cssText = 'flex: 1; min-width: 220px; padding: 20px; background: #f0f4ff; border-radius: 6px; border-left: 4px solid #1976d2; box-shadow: 0 2px 4px rgba(0,0,0,0.1);';
+        card.innerHTML = `
+            <div style="display: flex; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 32px; margin-right: 12px;">📅</span>
+                <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
+            </div>
+            <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
+                ${this.escapeHtml(description)}
+            </p>
+            <a href="${this.escapeHtml(icalInfo.url)}"
+                style="display: inline-block; padding: 12px 24px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
+                📥 ${this.escapeHtml(title)}
+            </a>
+        `;
+
+        const link = card.querySelector('a');
+        link.addEventListener('mouseenter', () => { link.style.background = '#1565c0'; });
+        link.addEventListener('mouseleave', () => { link.style.background = '#1976d2'; });
+
+        return card;
     }
 
     /**
