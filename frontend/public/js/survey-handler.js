@@ -195,7 +195,7 @@ class SurveyHandler {
 
         // SurveyJS clears invisible question values (clearInvisibleValues defaults to 'onHidden').
         // Re-inject autofill sentinels from hidden fields so the backend can enrich them.
-        sender.getAllQuestions(true).forEach(question => {
+        sender.getAllQuestions(false).forEach(question => {
             if (question.defaultValue === '_autofill' && !(question.name in data)) {
                 data[question.name] = '_autofill';
             }
