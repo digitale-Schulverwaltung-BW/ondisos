@@ -193,6 +193,14 @@ class SurveyHandler {
     async handleComplete(sender) {
         const data = sender.data;
 
+        // SurveyJS clears invisible question values (clearInvisibleValues defaults to 'onHidden').
+        // Re-inject autofill sentinels from hidden fields so the backend can enrich them.
+        sender.getAllQuestions(true).forEach(question => {
+            if (question.defaultValue === '_autofill' && !(question.name in data)) {
+                data[question.name] = '_autofill';
+            }
+        });
+
         // Remove consent fields
         Object.keys(data)
             .filter(k => k.startsWith('consent_'))

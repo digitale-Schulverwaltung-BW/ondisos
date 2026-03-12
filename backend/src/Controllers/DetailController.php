@@ -65,6 +65,11 @@ class DetailController
                 continue;
             }
 
+            // Skip unresolved autofill sentinels
+            if ($value === '_autofill') {
+                continue;
+            }
+
             $storedType = $fieldTypes[$key] ?? null;
 
             $structured[] = [
