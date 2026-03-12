@@ -706,7 +706,7 @@
             },
             {
               "type": "text",
-              "name": "question1",
+              "name": "Fremdsprachen",
               "title": "Fremdsprachen-Kenntnisse",
               "isRequired": true,
               "placeholder": "Angabe im europäischen Referenzrahmen, z.B. Englisch B2 etc."

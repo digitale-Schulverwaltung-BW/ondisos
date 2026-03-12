@@ -56,9 +56,20 @@ try {
     // Inject logo from backend env if none was provided by the frontend config.
     // Logo files live on the backend server, so the path cannot come from the frontend.
     // Priority: PDF_LOGO_{FORMKEY} > PDF_LOGO_PATH
-    if (empty($pdfConfig['logo'])) {
+    //
+    // Use false (not null) in forms-config to explicitly suppress the logo even when
+    // an env fallback is configured: 'logo' => false
+    $logoConfigured = array_key_exists('logo', $pdfConfig);
+    $logoExplicitlyDisabled = $logoConfigured && $pdfConfig['logo'] === false;
+
+    if (!$logoExplicitlyDisabled && empty($pdfConfig['logo'])) {
         $logoEnvKey = 'PDF_LOGO_' . strtoupper($anmeldung->formular);
         $pdfConfig['logo'] = getenv($logoEnvKey) ?: getenv('PDF_LOGO_PATH') ?: null;
+    }
+
+    // Normalize false → null so downstream code only needs to check for null/empty
+    if ($pdfConfig['logo'] === false) {
+        $pdfConfig['logo'] = null;
     }
 
     // Generate and download PDF

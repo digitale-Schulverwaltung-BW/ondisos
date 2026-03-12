@@ -36,7 +36,7 @@ return [
             'token_lifetime' => 1800,  // 30 minutes in seconds
 
             // Logo (optional) - path relative to backend/templates/pdf/assets or absolute
-            'logo' => null,  // e.g., 'logo.png' or '/path/to/logo.png'
+            'logo' => false,  // e.g., 'logo.png' or '/path/to/logo.png'
 
             // PDF Header
             'header_title' => 'Anmeldebestätigung Berufliches Schulzentrum',
