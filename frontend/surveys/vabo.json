@@ -725,7 +725,7 @@
               "type": "radiogroup",
               "name": "VKL",
               "startWithNewLine": false,
-              "title": "Die Schülerin/der Schüler besucht derzeit eine VLK-Klasse",
+              "title": "Die Schülerin/der Schüler besucht derzeit eine VKL-Klasse",
               "isRequired": true,
               "choices": [
                 "ja",
@@ -1016,7 +1016,7 @@
   ],
   "calculatedValues": [
     {
-      "name": "age",
+      "name": "Alter",
       "expression": "age({Geburtstag})"
     }
   ],
