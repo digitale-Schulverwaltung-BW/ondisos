@@ -49,19 +49,20 @@ EOF
     echo "✅ .env file created!"
 fi
 
-# Run database migration (idempotent — safe to run on every start)
-# Required when MULTI_TENANT_ENABLED=true to create tenants table and tenant_id column.
-if [ "${MULTI_TENANT_ENABLED:-false}" = "true" ]; then
-    echo "🏢 Running multi-tenant migration..."
-    php /var/www/html/migrate.php
-    echo "✅ Migration complete!"
-fi
-
 # Install/update Composer dependencies
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     echo "📦 Installing Composer dependencies..."
     composer install --no-interaction --prefer-dist --optimize-autoloader
     echo "✅ Composer dependencies installed!"
+fi
+
+# Run database migration (idempotent — safe to run on every start)
+# Required when MULTI_TENANT_ENABLED=true to create tenants table and tenant_id column.
+# Must run after composer install so vendor/autoload.php is available.
+if [ "${MULTI_TENANT_ENABLED:-false}" = "true" ]; then
+    echo "🏢 Running multi-tenant migration..."
+    php /var/www/html/migrate.php
+    echo "✅ Migration complete!"
 fi
 
 # Create required directories
