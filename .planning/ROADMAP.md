@@ -1,0 +1,72 @@
+# Roadmap: Ondisos v3.0.0 Multi-Tenant
+
+## Milestones
+
+- ✅ **v2.0–v2.6** - Single-tenant foundation (shipped February 2026)
+- 🚧 **v3.0.0 Multi-Tenant** - Phases 1-3 (in progress)
+
+## Overview
+
+v3.0.0 converts ondisos from a single-tenant system to a multi-tenant capable platform while maintaining zero-overhead backward compatibility for existing deployments. The build order is dictated by hard dependencies: database schema first (nothing else compiles without it), then tenant-aware auth and data isolation (DSGVO-critical, must be verified before any UI exposes data), then form config migration and platform management UI (additive once isolation is proven correct).
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: DB Schema and Foundation** - Migration runner, new tables, TenantContext singleton, backward compatibility
+- [ ] **Phase 2: Auth, Data Isolation, and API Security** - Multi-role auth, all repository methods tenant-scoped, per-tenant HMAC, file isolation, audit trail
+- [ ] **Phase 3: Form Config, Frontend, and Tenant Management UI** - DB-driven form config, frontend tenant parameter, platform admin CRUD, ExpungeService fix
+
+## Phase Details
+
+### Phase 1: DB Schema and Foundation
+**Goal**: The database has tenant infrastructure and every request knows which tenant it belongs to
+**Depends on**: Nothing (first phase)
+**Requirements**: SCHEMA-01, SCHEMA-02, SCHEMA-03, SCHEMA-04, SCHEMA-05
+**Success Criteria** (what must be TRUE):
+  1. Running `migrate.php` on a v2.6 database creates `tenants`, `tenant_admins`, `form_configs` tables and adds `tenant_id` to `anmeldungen` with no data loss
+  2. All existing `anmeldungen` rows are assigned `tenant_id = 1` and the default tenant is seeded with the existing `API_SECRET_KEY`
+  3. A unit test proves `TenantContext::getTenantId()` throws when called before initialization
+  4. The v2.6 admin backend loads and operates normally after migration (single-tenant mode, `MULTI_TENANT_ENABLED=false`)
+  5. Running the migration twice is idempotent — no errors, no duplicate data
+**Plans**: TBD
+
+### Phase 2: Auth, Data Isolation, and API Security
+**Goal**: Tenant data is strictly isolated at every layer and only authorized users can access each tenant's records
+**Depends on**: Phase 1
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, ISOL-01, ISOL-02, ISOL-03, ISOL-04, ISOL-05, MGMT-03
+**Success Criteria** (what must be TRUE):
+  1. A platform admin can log in with `.env` credentials and sees all tenants; a tenant admin logs in via the tenant selector and sees only their own tenant's submissions
+  2. An integration test proves every `AnmeldungRepository` method returns zero results for Tenant B when called in Tenant A's context — including `findById`, `findDeleted`, `getStatistics`, `getAllFormNames`, and bulk methods
+  3. Calling `findById` with a valid ID belonging to another tenant returns `null` (IDOR prevention verified by test)
+  4. File uploads land in `uploads/tenant-{id}/` directories; a tenant admin cannot download a file from another tenant's directory
+  5. Every audit log entry written after Phase 2 ships contains a `tenant_id` field
+  6. Submitting a form with the wrong per-tenant HMAC secret is rejected with HTTP 401; the correct secret is accepted
+**Plans**: TBD
+
+### Phase 3: Form Config, Frontend, and Tenant Management UI
+**Goal**: Platform admins can manage tenants and form configurations without code changes, and tenant frontends authenticate with per-tenant credentials
+**Depends on**: Phase 2
+**Requirements**: MGMT-01, MGMT-02, FORM-01, FORM-02, FORM-03, FORM-04, FORM-05
+**Success Criteria** (what must be TRUE):
+  1. A platform admin can create a tenant, create a tenant admin account for it, and enable/disable the tenant — all via the backend UI without touching config files or the database directly
+  2. Existing forms configured in `forms-config.php` are retrievable from the `form_configs` DB table after running the seed script, and `forms-config.php` is deleted — the system still serves forms correctly
+  3. A frontend passing `?form=bs&tenant=5` receives the correct form configuration for tenant 5 from the backend API
+  4. Auto-expunge only deletes records belonging to the current tenant context — a tenant with `AUTO_EXPUNGE_DAYS=90` does not trigger deletion of records in other tenants
+  5. The complete onboarding flow works end-to-end: platform admin creates tenant, sets API secret, tenant frontend submits a registration, tenant admin sees only that registration in the backend
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in strict sequential order: 1 → 2 → 3
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. DB Schema and Foundation | 0/TBD | Not started | - |
+| 2. Auth, Data Isolation, and API Security | 0/TBD | Not started | - |
+| 3. Form Config, Frontend, and Tenant Management UI | 0/TBD | Not started | - |
