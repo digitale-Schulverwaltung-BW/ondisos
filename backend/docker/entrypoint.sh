@@ -36,11 +36,25 @@ AUTH_ENABLED=${AUTH_ENABLED:-false}
 # PDF Tokens
 PDF_TOKEN_SECRET=${PDF_TOKEN_SECRET:-change-me-min-32-characters}
 
+# API Secret
+API_SECRET_KEY=${API_SECRET_KEY:-dev-api-key-replace-in-production}
+
+# Multi-Tenant Mode
+MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
+
 # File Upload
 UPLOAD_MAX_SIZE=${UPLOAD_MAX_SIZE:-10485760}
 UPLOAD_ALLOWED_TYPES=${UPLOAD_ALLOWED_TYPES:-pdf,jpg,jpeg,png,gif,doc,docx}
 EOF
     echo "✅ .env file created!"
+fi
+
+# Run database migration (idempotent — safe to run on every start)
+# Required when MULTI_TENANT_ENABLED=true to create tenants table and tenant_id column.
+if [ "${MULTI_TENANT_ENABLED:-false}" = "true" ]; then
+    echo "🏢 Running multi-tenant migration..."
+    php /var/www/html/migrate.php
+    echo "✅ Migration complete!"
 fi
 
 # Install/update Composer dependencies

@@ -33,6 +33,7 @@ services:
       - AUTH_ENABLED=false
       - PDF_TOKEN_SECRET=${PDF_TOKEN_SECRET:-dev-secret-key-replace-in-production-min-32-chars}
       - API_SECRET_KEY=${API_SECRET_KEY:-dev-api-key-replace-in-production}
+      - MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
       - UPLOAD_MAX_SIZE=10485760
       - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png,gif,doc,docx
       - VIRUS_SCAN_ENABLED=${VIRUS_SCAN_ENABLED:-false}
