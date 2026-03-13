@@ -19,14 +19,14 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 
 - [x] **AUTH-01**: Platform admin authenticates via `.env` credentials and can manage all tenants
 - [x] **AUTH-02**: Tenant admins authenticate via DB-stored credentials and see only their tenant's data
-- [ ] **AUTH-03**: Login form uses username + password only — tenant admin usernames are globally unique and the system resolves the tenant automatically (no tenant selector needed)
+- [x] **AUTH-03**: Login form uses username + password only — tenant admin usernames are globally unique and the system resolves the tenant automatically (no tenant selector needed)
 - [x] **AUTH-04**: Session stores `is_platform_admin` and `tenant_id` for role-based access
 
 ### Data Isolation
 
 - [x] **ISOL-01**: All `AnmeldungRepository` methods (~15+) filter by `tenant_id`
-- [ ] **ISOL-02**: File uploads stored in tenant-scoped directories (`uploads/tenant-{id}/`)
-- [ ] **ISOL-03**: Audit trail entries include `tenant_id` field
+- [x] **ISOL-02**: File uploads stored in tenant-scoped directories (`uploads/tenant-{id}/`)
+- [x] **ISOL-03**: Audit trail entries include `tenant_id` field
 - [ ] **ISOL-04**: `ExpungeService` scopes auto-expunge to tenant context (not global)
 - [x] **ISOL-05**: `findById` validates tenant ownership (prevents IDOR across tenants)
 
@@ -34,7 +34,7 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 
 - [ ] **MGMT-01**: Platform admin can create, edit, enable/disable tenants via backend UI
 - [ ] **MGMT-02**: Platform admin can create and manage tenant admin accounts via backend UI
-- [ ] **MGMT-03**: Per-tenant `api_secret` generated on tenant creation for HMAC authentication
+- [x] **MGMT-03**: Per-tenant `api_secret` generated on tenant creation for HMAC authentication
 
 ### Form Config & Frontend
 
@@ -85,16 +85,16 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Complete |
 | AUTH-02 | Phase 2 | Complete |
-| AUTH-03 | Phase 2 | Pending |
+| AUTH-03 | Phase 2 | Complete |
 | AUTH-04 | Phase 2 | Complete |
 | ISOL-01 | Phase 2 | Complete |
-| ISOL-02 | Phase 2 | Pending |
-| ISOL-03 | Phase 2 | Pending |
+| ISOL-02 | Phase 2 | Complete |
+| ISOL-03 | Phase 2 | Complete |
 | ISOL-04 | Phase 3 | Pending |
 | ISOL-05 | Phase 2 | Complete |
 | MGMT-01 | Phase 3 | Pending |
 | MGMT-02 | Phase 3 | Pending |
-| MGMT-03 | Phase 2 | Pending |
+| MGMT-03 | Phase 2 | Complete |
 | FORM-01 | Phase 3 | Pending |
 | FORM-02 | Phase 3 | Pending |
 | FORM-03 | Phase 3 | Pending |
