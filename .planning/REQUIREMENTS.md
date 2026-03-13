@@ -19,8 +19,8 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 
 - [ ] **AUTH-01**: Platform admin authenticates via `.env` credentials and can manage all tenants
 - [ ] **AUTH-02**: Tenant admins authenticate via DB-stored credentials and see only their tenant's data
-- [ ] **AUTH-03**: Login form includes tenant selector for tenant admin login
-- [ ] **AUTH-04**: Session stores `is_platform_admin` and `allowed_tenant_ids` for role-based access
+- [ ] **AUTH-03**: Login form uses username + password only — tenant admin usernames are globally unique and the system resolves the tenant automatically (no tenant selector needed)
+- [ ] **AUTH-04**: Session stores `is_platform_admin` and `tenant_id` for role-based access
 
 ### Data Isolation
 
@@ -109,3 +109,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 ---
 *Requirements defined: 2026-03-13*
 *Last updated: 2026-03-13 after roadmap creation*
+*Revised: 2026-03-13 — AUTH-03 description corrected to match CONTEXT.md locked decision (no tenant selector); AUTH-04 session key corrected to tenant_id (not allowed_tenant_ids)*

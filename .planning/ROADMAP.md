@@ -43,9 +43,9 @@ Plans:
 ### Phase 2: Auth, Data Isolation, and API Security
 **Goal**: Tenant data is strictly isolated at every layer and only authorized users can access each tenant's records
 **Depends on**: Phase 1
-**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, ISOL-01, ISOL-02, ISOL-03, ISOL-04, ISOL-05, MGMT-03
+**Requirements**: AUTH-01, AUTH-02, AUTH-03, AUTH-04, ISOL-01, ISOL-02, ISOL-03, ISOL-05, MGMT-03, FORM-04
 **Success Criteria** (what must be TRUE):
-  1. A platform admin can log in with `.env` credentials and sees all tenants; a tenant admin logs in via the tenant selector and sees only their own tenant's submissions
+  1. A platform admin can log in with `.env` credentials and sees all tenants; a tenant admin logs in with username + password (no tenant selector) and sees only their own tenant's submissions
   2. An integration test proves every `AnmeldungRepository` method returns zero results for Tenant B when called in Tenant A's context — including `findById`, `findDeleted`, `getStatistics`, `getAllFormNames`, and bulk methods
   3. Calling `findById` with a valid ID belonging to another tenant returns `null` (IDOR prevention verified by test)
   4. File uploads land in `uploads/tenant-{id}/` directories; a tenant admin cannot download a file from another tenant's directory
@@ -65,7 +65,7 @@ Plans:
 ### Phase 3: Form Config, Frontend, and Tenant Management UI
 **Goal**: Platform admins can manage tenants and form configurations without code changes, and tenant frontends authenticate with per-tenant credentials
 **Depends on**: Phase 2
-**Requirements**: MGMT-01, MGMT-02, FORM-01, FORM-02, FORM-03, FORM-04, FORM-05
+**Requirements**: MGMT-01, MGMT-02, ISOL-04, FORM-01, FORM-02, FORM-03, FORM-05
 **Success Criteria** (what must be TRUE):
   1. A platform admin can create a tenant, create a tenant admin account for it, and enable/disable the tenant — all via the backend UI without touching config files or the database directly
   2. Existing forms configured in `forms-config.php` are retrievable from the `form_configs` DB table after running the seed script, and `forms-config.php` is deleted — the system still serves forms correctly

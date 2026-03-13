@@ -54,13 +54,18 @@ created: 2026-03-13
 
 ## Wave 0 Requirements
 
+Files created by **Plan 02** (Wave 0 test scaffolds):
 - [ ] `tests/Unit/Auth/LoginTest.php` — stubs for AUTH-01, AUTH-02, AUTH-03, AUTH-04
 - [ ] `tests/Integration/Repositories/AnmeldungRepositoryIsolationTest.php` — stubs for ISOL-01, ISOL-05 (DSGVO-critical)
-- [ ] `tests/Unit/Config/TenantContextAllTenantsTest.php` — covers `isAllTenants()` and write-guard behavior
 - [ ] `tests/Unit/Services/HmacValidationTest.php` — stubs for MGMT-03 / FORM-04
 - [ ] `tests/Unit/Services/AuditLoggerTenantIdTest.php` — extends ISOL-03 (tenant_id in log entries)
 - [ ] `tests/Unit/Upload/UploadPathIsolationTest.php` — stubs for ISOL-02
 - [ ] Integration test DB setup: `backend/.env.test` with `DB_NAME=anmeldung_test`
+
+File created by **Plan 01** Task 1 (TDD, not Wave 0 scaffold):
+- [ ] `tests/Unit/Config/TenantContextAllTenantsTest.php` — covers `isAllTenants()` and write-guard behavior
+  - Note: This file is in Plan 01's `files_modified`, not Plan 02's. It is a TDD test created alongside
+    the production code it tests (TenantContext). It is NOT a Wave 0 scaffold created before implementation.
 
 *Note: `tests/Integration/` directory exists but is empty — all integration tests are new.*
 
