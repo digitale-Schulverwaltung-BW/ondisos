@@ -6,6 +6,8 @@ define('SKIP_AUTH_CHECK', true);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use App\Services\AuditLogger;
+use App\Services\LoginService;
+use App\Config\Database;
 
 session_start();
 
@@ -33,20 +35,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
         $error = 'Ungültiger Sicherheitstoken. Bitte versuchen Sie es erneut.';
     } else {
-        // Get credentials from env
-        $adminUsername = $_ENV['ADMIN_USERNAME'] ?? '';
-        $adminPasswordHash = $_ENV['ADMIN_PASSWORD_HASH'] ?? '';
+        $loginService = new LoginService();
+        $loggedIn = false;
+        $isPlatformAdmin = false;
+        $tenantId = null;
 
-        if (empty($adminUsername) || empty($adminPasswordHash)) {
-            $error = 'Admin-Zugangsdaten nicht konfiguriert. Bitte .env prüfen.';
-        } elseif ($username === $adminUsername && password_verify($password, $adminPasswordHash)) {
-            // Login successful
+        // --- Path 1: Platform admin via .env credentials ---
+        $multiTenantEnabled = filter_var(
+            $_ENV['MULTI_TENANT_ENABLED'] ?? 'false',
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        $platformLoginEnabled = !$multiTenantEnabled
+            || !empty($_ENV['ADMIN_USERNAME']);
+
+        if ($platformLoginEnabled && $loginService->attemptPlatformAdminLogin($username, $password)) {
+            $loggedIn = true;
+            $isPlatformAdmin = true;
+        }
+
+        // --- Path 2: Tenant admin via DB ---
+        if (!$loggedIn) {
+            try {
+                $db = Database::getConnection();
+                $tenantRow = $loginService->attemptTenantAdminLogin($username, $password, $db);
+                if ($tenantRow !== null) {
+                    $loggedIn = true;
+                    $isPlatformAdmin = false;
+                    $tenantId = (int)$tenantRow['tenant_id'];
+                }
+            } catch (\Throwable $e) {
+                // DB not available or misconfigured — fall through to error
+                error_log('LoginService::attemptTenantAdminLogin failed: ' . $e->getMessage());
+            }
+        }
+
+        if ($loggedIn) {
+            // Regenerate session ID to prevent session fixation
+            session_regenerate_id(true);
+
+            // Core session keys (existing)
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['admin_username'] = $username;
             $_SESSION['login_time'] = time();
 
-            // Regenerate session ID to prevent session fixation
-            session_regenerate_id(true);
+            // Phase 2: multi-tenant session keys
+            $_SESSION['is_platform_admin'] = $isPlatformAdmin;
+            if (!$isPlatformAdmin && $tenantId !== null) {
+                $_SESSION['tenant_id'] = $tenantId;
+            }
 
             AuditLogger::loginSuccess($username);
 
@@ -56,8 +93,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Benutzername oder Passwort falsch.';
             AuditLogger::loginFailed($username);
-            // Add small delay to prevent brute force
-            usleep(500000); // 0.5 seconds
+            // Brute-force protection: 0.5s delay on failed login
+            usleep(500000);
         }
     }
 }
@@ -166,7 +203,7 @@ $csrfToken = $_SESSION['csrf_token'];
                 </form>
             </div>
             <div class="card-footer text-center text-muted">
-                <small>Anmeldungssystem v2.2</small>
+                <small>Anmeldungssystem v3.0</small>
             </div>
         </div>
     </div>
