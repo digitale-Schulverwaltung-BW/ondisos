@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-auth-data-isolation-and-api-security-02-03-PLAN.md
-last_updated: "2026-03-13T10:19:18.544Z"
+stopped_at: Completed 02-auth-data-isolation-and-api-security-02-04-PLAN.md
+last_updated: "2026-03-13T10:30:14.838Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 10
-  completed_plans: 6
+  completed_plans: 7
   percent: 0
 ---
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-auth-data-isolation-and-api-security P01 | 3 | 2 tasks | 5 files |
 | Phase 02-auth-data-isolation-and-api-security P02 | 5 | 1 tasks | 6 files |
 | Phase 02-auth-data-isolation-and-api-security P03 | 2 | 2 tasks | 5 files |
+| Phase 02-auth-data-isolation-and-api-security P04 | 7 | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,8 @@ Recent decisions affecting current work:
 - [Phase 02-auth-data-isolation-and-api-security]: Platform admin path tried first; DB tenant admin path is fallback — .env admin takes precedence per CONTEXT.md
 - [Phase 02-auth-data-isolation-and-api-security]: bootstrap.php session_start() uses CLI guard (php_sapi_name !== cli) — PHPUnit tests never hit session_start()
 - [Phase 02-auth-data-isolation-and-api-security]: auth.php: MULTI_TENANT_ENABLED=true overrides AUTH_ENABLED=false — multi-tenant always requires login
+- [Phase 02-auth-data-isolation-and-api-security]: Two-query IDOR approach for findById(): existence check globally then fetch with tenant filter; cross-tenant hit logs idorAttempt, normal 404 is silent
+- [Phase 02-auth-data-isolation-and-api-security]: WRITE methods always call getTenantId() without isAllTenants() guard — throws in all-tenants mode (fail-fast prevents silent cross-tenant writes)
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:19:18.542Z
-Stopped at: Completed 02-auth-data-isolation-and-api-security-02-03-PLAN.md
+Last session: 2026-03-13T10:30:14.836Z
+Stopped at: Completed 02-auth-data-isolation-and-api-security-02-04-PLAN.md
 Resume file: None
