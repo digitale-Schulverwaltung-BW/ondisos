@@ -67,6 +67,20 @@ class AuditLogger
         self::log('export', ['formular' => $formular ?: 'all', 'count' => $count]);
     }
 
+    /**
+     * Log an IDOR attempt: a record was requested that exists but belongs to a different tenant.
+     *
+     * @param int $requestedId  The ID that was requested
+     * @param int $currentTenantId  The tenant ID that is currently active
+     */
+    public static function idorAttempt(int $requestedId, int $currentTenantId): void
+    {
+        self::log('idor_attempt', [
+            'requested_id'      => $requestedId,
+            'current_tenant_id' => $currentTenantId,
+        ]);
+    }
+
     // =========================================================================
     // Log rotation
     // =========================================================================
