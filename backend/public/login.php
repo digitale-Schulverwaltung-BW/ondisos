@@ -9,7 +9,12 @@ use App\Services\AuditLogger;
 use App\Services\LoginService;
 use App\Config\Database;
 
-session_start();
+// Session was started in bootstrap.php (with PHP_SESSION_NONE guard).
+// Guard here handles the edge case where bootstrap did not start it (e.g. when
+// session_start() was already called before bootstrap, or CLI context).
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Redirect if already logged in
 if (!empty($_SESSION['admin_logged_in'])) {

@@ -40,16 +40,51 @@ if (file_exists($envFile)) {
     App\Config\EnvLoader::load($envFile);
 }
 
+// Start session early so TenantContext can read session vars below.
+// Guard: CLI (PHPUnit) has no sessions; also skip if already active.
+if (php_sapi_name() !== 'cli' && session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 // Initialize TenantContext — must run before auto-expunge block
-// Phase 2 will replace the else branch with session/API-key resolution
 $multiTenantEnabled = filter_var(
     App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'),
     FILTER_VALIDATE_BOOLEAN
 );
 if (!$multiTenantEnabled) {
+    // Single-tenant mode: always tenant 1
     App\Config\TenantContext::initialize(1);
+} else {
+    $isApiRequest = defined('API_REQUEST') && API_REQUEST === true;
+
+    if ($isApiRequest) {
+        // API request: resolve tenant from ?tenant=<slug> query/post param
+        $slug = $_GET['tenant'] ?? $_POST['tenant'] ?? '';
+        if ($slug !== '') {
+            $tenantRepo = new App\Repositories\TenantRepository();
+            $tenant = $tenantRepo->findBySlug($slug);
+            if ($tenant !== null && (bool)$tenant['active']) {
+                App\Config\TenantContext::initialize((int)$tenant['id']);
+            }
+        }
+        // If slug missing/invalid/inactive: TenantContext stays uninitialized → endpoint returns 401
+    } else {
+        // Browser request: resolve from session set by login.php
+        if (!empty($_SESSION['is_platform_admin'])) {
+            // Platform admin: may be switched into a single tenant or viewing all
+            $switchedTenantId = $_SESSION['switched_tenant_id'] ?? null;
+            if ($switchedTenantId !== null) {
+                App\Config\TenantContext::initialize((int)$switchedTenantId);
+            } else {
+                App\Config\TenantContext::initAllTenants();
+            }
+        } elseif (!empty($_SESSION['tenant_id'])) {
+            // Tenant admin: scoped to their own tenant
+            App\Config\TenantContext::initialize((int)$_SESSION['tenant_id']);
+        }
+        // Else: TenantContext uninitialized — auth.php will redirect to login
+    }
 }
-// Phase 2: else { resolve tenant from session or API key }
 
 // Set error handler
 set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
