@@ -40,6 +40,17 @@ if (file_exists($envFile)) {
     App\Config\EnvLoader::load($envFile);
 }
 
+// Initialize TenantContext — must run before auto-expunge block
+// Phase 2 will replace the else branch with session/API-key resolution
+$multiTenantEnabled = filter_var(
+    App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'),
+    FILTER_VALIDATE_BOOLEAN
+);
+if (!$multiTenantEnabled) {
+    App\Config\TenantContext::initialize(1);
+}
+// Phase 2: else { resolve tenant from session or API key }
+
 // Set error handler
 set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
     error_log("Error [$errno]: $errstr in $errfile on line $errline");
