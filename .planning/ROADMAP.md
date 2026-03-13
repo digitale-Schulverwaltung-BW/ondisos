@@ -51,7 +51,16 @@ Plans:
   4. File uploads land in `uploads/tenant-{id}/` directories; a tenant admin cannot download a file from another tenant's directory
   5. Every audit log entry written after Phase 2 ships contains a `tenant_id` field
   6. Submitting a form with the wrong per-tenant HMAC secret is rejected with HTTP 401; the correct secret is accepted
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — TenantContext isAllTenants() + TenantRepository + migrate.php slug/origin columns
+- [ ] 02-02-PLAN.md — Wave 0 test scaffolds (failing stubs for all Phase 2 requirements)
+- [ ] 02-03-PLAN.md — Dual-path login + bootstrap TenantContext resolution + auth.php multi-tenant extension
+- [ ] 02-04-PLAN.md — AnmeldungRepository tenant_id isolation (all 15 methods) + integration tests (DSGVO proof)
+- [ ] 02-05-PLAN.md — File upload path isolation + AuditLogger tenant_id injection
+- [ ] 02-06-PLAN.md — HMAC validation in submit.php and upload.php + per-tenant CORS
+- [ ] 02-07-PLAN.md — Tenant switcher UI in navbar + human verification checkpoint
 
 ### Phase 3: Form Config, Frontend, and Tenant Management UI
 **Goal**: Platform admins can manage tenants and form configurations without code changes, and tenant frontends authenticate with per-tenant credentials
@@ -73,5 +82,5 @@ Phases execute in strict sequential order: 1 → 2 → 3
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. DB Schema and Foundation | 3/3 | Complete   | 2026-03-13 |
-| 2. Auth, Data Isolation, and API Security | 0/TBD | Not started | - |
+| 2. Auth, Data Isolation, and API Security | 0/7 | Not started | - |
 | 3. Form Config, Frontend, and Tenant Management UI | 0/TBD | Not started | - |
