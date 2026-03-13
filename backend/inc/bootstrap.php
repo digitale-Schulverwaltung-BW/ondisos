@@ -86,6 +86,27 @@ if (!$multiTenantEnabled) {
     }
 }
 
+// Tenant switcher — platform admin only, runs on every admin page (all include bootstrap.php)
+// Must run AFTER the TenantContext initialization block above so it can override the context.
+if (($multiTenantEnabled ?? false) && !empty($_SESSION['is_platform_admin'])) {
+    if (isset($_GET['switch_tenant'])) {
+        $switchVal = (int)$_GET['switch_tenant'];
+        if ($switchVal === 0) {
+            // Switch to "All tenants" view
+            unset($_SESSION['switched_tenant_id']);
+            App\Config\TenantContext::initAllTenants();
+        } else {
+            // Switch to specific tenant
+            $_SESSION['switched_tenant_id'] = $switchVal;
+            App\Config\TenantContext::initialize($switchVal);
+        }
+        // PRG: redirect to current page without switch_tenant in query string
+        $cleanUrl = strtok($_SERVER['REQUEST_URI'], '?');
+        header('Location: ' . $cleanUrl);
+        exit;
+    }
+}
+
 // Set error handler
 set_error_handler(function (int $errno, string $errstr, string $errfile, int $errline) {
     error_log("Error [$errno]: $errstr in $errfile on line $errline");

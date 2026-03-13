@@ -64,4 +64,27 @@ class TenantRepository
 
         return $row ?: null;
     }
+
+    /**
+     * Return all active tenants ordered by name.
+     *
+     * Used by the platform-admin tenant switcher dropdown in header.php to
+     * populate the list of tenants the admin can switch into.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findAll(): array
+    {
+        $sql = 'SELECT id, name, slug FROM tenants WHERE active = 1 ORDER BY name ASC';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $rows[] = $row;
+        }
+
+        return $rows;
+    }
 }
