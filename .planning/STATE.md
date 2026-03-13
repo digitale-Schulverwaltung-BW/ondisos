@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-01-PLAN.md (TenantContext singleton)
-last_updated: "2026-03-13T08:28:01.667Z"
+stopped_at: Completed 01-02-PLAN.md (migrate.php v2.6 → v3.0 schema migration)
+last_updated: "2026-03-13T08:31:30.395Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -47,6 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 
 *Updated after each plan completion*
 | Phase 01-db-schema-and-foundation P01 | 3 | 2 tasks | 2 files |
+| Phase 01-db-schema-and-foundation P02 | 1min | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,8 @@ Recent decisions affecting current work:
 - Tests alongside each feature (TDD or test-with approach)
 - Phase 2 must not begin until integration tests prove repository isolation — DSGVO-critical
 - [Phase 01-db-schema-and-foundation]: TenantContext throws RuntimeException on uninitialized access — strict-fail design prevents silent cross-tenant data leakage
+- [Phase 01-db-schema-and-foundation]: migration reads DB_NAME from EnvLoader::require() instead of DATABASE() SQL function for privilege safety
+- [Phase 01-db-schema-and-foundation]: Single outer try/catch wraps entire migration body — failing step halts run cleanly with exit(1)
 
 ### Pending Todos
 
@@ -74,6 +77,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T08:28:01.665Z
-Stopped at: Completed 01-01-PLAN.md (TenantContext singleton)
+Last session: 2026-03-13T08:31:30.393Z
+Stopped at: Completed 01-02-PLAN.md (migrate.php v2.6 → v3.0 schema migration)
 Resume file: None

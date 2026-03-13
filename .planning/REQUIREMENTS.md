@@ -9,9 +9,9 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 
 ### Schema & Foundation
 
-- [ ] **SCHEMA-01**: Database migration creates `tenants`, `tenant_admins`, `form_configs` tables
-- [ ] **SCHEMA-02**: Existing `anmeldungen` table gains `tenant_id` column with default value 1
-- [ ] **SCHEMA-03**: Default tenant (id=1) is seeded automatically, inheriting existing `API_SECRET_KEY`
+- [x] **SCHEMA-01**: Database migration creates `tenants`, `tenant_admins`, `form_configs` tables
+- [x] **SCHEMA-02**: Existing `anmeldungen` table gains `tenant_id` column with default value 1
+- [x] **SCHEMA-03**: Default tenant (id=1) is seeded automatically, inheriting existing `API_SECRET_KEY`
 - [x] **SCHEMA-04**: `TenantContext` request-scoped singleton resolves tenant from session or API request
 - [ ] **SCHEMA-05**: Single-tenant mode (`MULTI_TENANT_ENABLED=false`) operates transparently with tenant_id=1
 
@@ -78,9 +78,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHEMA-01 | Phase 1 | Pending |
-| SCHEMA-02 | Phase 1 | Pending |
-| SCHEMA-03 | Phase 1 | Pending |
+| SCHEMA-01 | Phase 1 | Complete |
+| SCHEMA-02 | Phase 1 | Complete |
+| SCHEMA-03 | Phase 1 | Complete |
 | SCHEMA-04 | Phase 1 | Complete |
 | SCHEMA-05 | Phase 1 | Pending |
 | AUTH-01 | Phase 2 | Pending |
