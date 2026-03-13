@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-auth-data-isolation-and-api-security-02-06-PLAN.md
-last_updated: "2026-03-13T10:46:11.983Z"
+stopped_at: Completed 02-auth-data-isolation-and-api-security-02-07-PLAN.md — awaiting human-verify checkpoint
+last_updated: "2026-03-13T10:49:59.253Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 10
-  completed_plans: 9
+  completed_plans: 10
   percent: 0
 ---
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-auth-data-isolation-and-api-security P04 | 7 | 2 tasks | 3 files |
 | Phase 02-auth-data-isolation-and-api-security P05 | 4 | 2 tasks | 5 files |
 | Phase 02-auth-data-isolation-and-api-security P06 | 7 | 2 tasks | 4 files |
+| Phase 02-auth-data-isolation-and-api-security P07 | 15 | 1 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -87,6 +88,8 @@ Recent decisions affecting current work:
 - [Phase 02-auth-data-isolation-and-api-security]: HMAC for upload.php signs over canonical string anmeldung_id:fieldname:filename (not raw multipart body)
 - [Phase 02-auth-data-isolation-and-api-security]: Per-tenant CORS uses tenant.origin column; falls back to global ALLOWED_ORIGINS when NULL for backward compatibility
 - [Phase 02-auth-data-isolation-and-api-security]: All auth failure paths return generic 401 JSON — prevents tenant/secret enumeration via response differences
+- [Phase 02-auth-data-isolation-and-api-security]: Tenant switcher handler placed in bootstrap.php (not individual page files) — single location, works from any admin page uniformly
+- [Phase 02-auth-data-isolation-and-api-security]: findAll() queries only id/name/slug — intentionally excludes api_secret from dropdown response
 
 ### Pending Todos
 
@@ -100,6 +103,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:46:11.980Z
-Stopped at: Completed 02-auth-data-isolation-and-api-security-02-06-PLAN.md
+Last session: 2026-03-13T10:49:54.174Z
+Stopped at: Completed 02-auth-data-isolation-and-api-security-02-07-PLAN.md — awaiting human-verify checkpoint
 Resume file: None
