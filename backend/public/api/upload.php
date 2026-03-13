@@ -6,6 +6,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Config\Config;
+use App\Config\TenantContext;
 use App\Validators\AnmeldungValidator;
 use App\Services\AuditLogger;
 use App\Services\VirusScanService;
@@ -87,8 +88,9 @@ try {
         }
     }
 
-    // Upload directory
-    $uploadDir = __DIR__ . '/../../uploads';
+    // Upload directory — scoped to the current tenant
+    $tenantId  = TenantContext::getTenantId();
+    $uploadDir = realpath(__DIR__ . '/../../uploads') . '/tenant-' . $tenantId;
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
