@@ -6,32 +6,74 @@ declare(strict_types=1);
 // Skip auth check - this API is called from frontend and doesn't use session auth
 define('SKIP_AUTH_CHECK', true);
 
+// Mark as API request so bootstrap.php resolves tenant from ?tenant=<slug>
+define('API_REQUEST', true);
+
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Repositories\AnmeldungRepository;
+use App\Repositories\TenantRepository;
 use App\Validators\AnmeldungValidator;
 use App\Services\MessageService as M;
+use App\Services\HmacValidator;
 use App\Services\PdfTokenService;
 use App\Services\RateLimiter;
 use App\Config\FormConfig;
+use App\Config\TenantContext;
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Allow CORS from frontend (configure as needed)
-$allowedOrigins = getenv('ALLOWED_ORIGINS') 
-    ? explode(',', getenv('ALLOWED_ORIGINS'))
-    : ['http://localhost'];
+// Per-tenant HMAC + CORS validation
+// Must run before processing so that unauthorized requests never reach business logic.
+try {
+    $tenantId = TenantContext::getTenantId();
+} catch (\RuntimeException $e) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins, true)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Access-Control-Allow-Methods: POST, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type');
+$tenant = (new TenantRepository())->findById($tenantId);
+if ($tenant === null || !(bool)$tenant['active']) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+// Per-tenant CORS (replaces the old global ALLOWED_ORIGINS block)
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (!empty($tenant['origin'])) {
+    // Tenant has an explicit origin configured — only allow that origin
+    if ($requestOrigin === $tenant['origin']) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Access-Control-Allow-Methods: POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+    }
+} else {
+    // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
+    $allowedOrigins = getenv('ALLOWED_ORIGINS')
+        ? explode(',', getenv('ALLOWED_ORIGINS'))
+        : ['http://localhost'];
+    if (in_array($requestOrigin, $allowedOrigins, true)) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Access-Control-Allow-Methods: POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+    }
 }
 
 // Handle preflight
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(204);
+    exit;
+}
+
+// HMAC validation — sign over raw request body
+$body        = file_get_contents('php://input');
+$providedSig = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+$hmacValidator = new HmacValidator($tenant['api_secret']);
+if (!$hmacValidator->validate($body, $providedSig)) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
     exit;
 }
 
@@ -69,9 +111,8 @@ try {
         throw new RuntimeException(M::get('api.errors.invalid_method', 'Invalid request method'), 405);
     }
 
-    // Get JSON payload
-    $input = file_get_contents('php://input');
-    $payload = json_decode($input, true, 512, JSON_THROW_ON_ERROR);
+    // Get JSON payload (body was already read above for HMAC; re-use it)
+    $payload = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
     if (!is_array($payload)) {
         throw new RuntimeException(M::get('errors.invalid_json'), 400);

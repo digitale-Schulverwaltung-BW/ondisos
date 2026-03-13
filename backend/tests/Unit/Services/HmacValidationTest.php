@@ -3,28 +3,80 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Services;
 
+use App\Services\HmacValidator;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Wave 0 stubs for MGMT-03 — HMAC request validation.
+ * Unit tests for HmacValidator — MGMT-03 / FORM-04.
  *
- * These tests define the contract for the HmacValidator service.
- * They FAIL now and turn GREEN when Plan 05 implements HMAC validation.
+ * Covers:
+ *  - Correct HMAC signature accepted
+ *  - Wrong secret produces rejection
+ *  - Empty/missing signature produces rejection
+ *  - Upload canonical string validation (anmeldung_id:fieldname:filename)
  */
 class HmacValidationTest extends TestCase
 {
     public function testCorrectHmacSignatureIsAccepted(): void
     {
-        $this->fail('Not implemented');
+        $secret = 'test-secret-key';
+        $body   = '{"form_key":"bs","data":{"name":"Test"}}';
+        $sig    = hash_hmac('sha256', $body, $secret);
+
+        $validator = new HmacValidator($secret);
+
+        $this->assertTrue($validator->validate($body, $sig));
     }
 
     public function testWrongSecretProducesRejection(): void
     {
-        $this->fail('Not implemented');
+        $body      = '{"form_key":"bs","data":{"name":"Test"}}';
+        $goodSig   = hash_hmac('sha256', $body, 'correct-secret');
+
+        $validator = new HmacValidator('wrong-secret');
+
+        $this->assertFalse($validator->validate($body, $goodSig));
     }
 
     public function testMissingSignatureHeaderProducesRejection(): void
     {
-        $this->fail('Not implemented');
+        $body      = '{"form_key":"bs","data":{"name":"Test"}}';
+        $validator = new HmacValidator('any-secret');
+
+        $this->assertFalse($validator->validate($body, ''));
+    }
+
+    public function testUploadCanonicalStringValidation(): void
+    {
+        $secret    = 'upload-secret';
+        $canonical = '42:photo:test.jpg';
+        $sig       = hash_hmac('sha256', $canonical, $secret);
+
+        $validator = new HmacValidator($secret);
+
+        $this->assertTrue(
+            $validator->validateUploadSignature('42', 'photo', 'test.jpg', $sig)
+        );
+    }
+
+    public function testUploadWrongSecretProducesRejection(): void
+    {
+        $canonical = '42:photo:test.jpg';
+        $sig       = hash_hmac('sha256', $canonical, 'correct-secret');
+
+        $validator = new HmacValidator('wrong-secret');
+
+        $this->assertFalse(
+            $validator->validateUploadSignature('42', 'photo', 'test.jpg', $sig)
+        );
+    }
+
+    public function testUploadMissingSignatureProducesRejection(): void
+    {
+        $validator = new HmacValidator('any-secret');
+
+        $this->assertFalse(
+            $validator->validateUploadSignature('42', 'photo', 'test.jpg', '')
+        );
     }
 }
