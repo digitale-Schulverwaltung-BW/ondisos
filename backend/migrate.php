@@ -88,9 +88,131 @@ try {
     }
     $stmt->close();
 
+    // $dbName is needed for INFORMATION_SCHEMA queries throughout the migration
+    $dbName = EnvLoader::require('DB_NAME');
+
+    // Step 4b: Add slug and origin columns to tenants (Phase 2)
+    echo "Step 4b: Add slug column to tenants... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'slug'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE tenants ADD COLUMN slug VARCHAR(100) NULL");
+        echo "ADDED\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
+    // Populate slug from name for rows that have no slug yet
+    echo "Step 4b: Populate missing slugs... ";
+    $db->query("UPDATE tenants SET slug = LOWER(REPLACE(name, ' ', '-')) WHERE slug IS NULL OR slug = ''");
+    $affectedRows = $db->affected_rows;
+    echo ($affectedRows > 0 ? "OK ({$affectedRows} rows)" : "SKIPPED (none needed)") . "\n";
+
+    // Guard: verify no NULLs remain before making the column NOT NULL
+    $stmt = $db->prepare("SELECT COUNT(*) as cnt FROM tenants WHERE slug IS NULL");
+    $stmt->execute();
+    $nullCount = (int)($stmt->get_result()->fetch_assoc()['cnt'] ?? 0);
+    $stmt->close();
+
+    if ($nullCount === 0) {
+        echo "Step 4b: Make slug NOT NULL... ";
+        $stmt = $db->prepare(
+            "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'slug' AND IS_NULLABLE = 'NO'"
+        );
+        $stmt->bind_param('s', $dbName);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ((int)$row['cnt'] === 0) {
+            $db->query("ALTER TABLE tenants MODIFY COLUMN slug VARCHAR(100) NOT NULL");
+            echo "OK\n";
+        } else {
+            echo "SKIPPED (already NOT NULL)\n";
+        }
+    } else {
+        echo "Step 4b: WARNING — {$nullCount} tenant(s) have NULL slug after UPDATE. Skipping NOT NULL constraint.\n";
+    }
+
+    // Add UNIQUE constraint on slug (idempotent)
+    echo "Step 4b: Add UNIQUE constraint on slug... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS
+         WHERE CONSTRAINT_SCHEMA = ? AND TABLE_NAME = 'tenants' AND CONSTRAINT_NAME = 'uq_tenants_slug'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE tenants ADD CONSTRAINT uq_tenants_slug UNIQUE (slug)");
+        echo "OK\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
+    echo "Step 4c: Add origin column to tenants... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'origin'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE tenants ADD COLUMN origin VARCHAR(255) NULL");
+        echo "OK\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
+    // Step 4d: Move existing flat uploads to uploads/tenant-1/ (Phase 2 file isolation)
+    echo "Step 4d: Move existing uploads to uploads/tenant-1/... ";
+    $uploadsDir  = __DIR__ . '/uploads';
+    $tenant1Dir  = $uploadsDir . '/tenant-1';
+
+    if (is_dir($uploadsDir)) {
+        if (!is_dir($tenant1Dir)) {
+            mkdir($tenant1Dir, 0755, true);
+        }
+
+        $moved   = 0;
+        $skipped = 0;
+        foreach (new DirectoryIterator($uploadsDir) as $item) {
+            // Only move direct-child files — skip subdirectories and dot entries
+            if (!$item->isFile()) {
+                continue;
+            }
+            $src  = $item->getPathname();
+            $dest = $tenant1Dir . '/' . $item->getFilename();
+
+            if (file_exists($dest)) {
+                // Idempotent: already moved in a previous run — skip
+                $skipped++;
+                continue;
+            }
+
+            if (rename($src, $dest)) {
+                $moved++;
+                echo "\n  Moved: " . $item->getFilename();
+            } else {
+                echo "\n  WARNING: Could not move " . $item->getFilename();
+            }
+        }
+        echo "\nFile migration: {$moved} moved, {$skipped} already in place.\n";
+    } else {
+        echo "SKIPPED (uploads/ directory does not exist)\n";
+    }
+
     // Step 5: Add tenant_id column to anmeldungen
     echo "Step 5: Add tenant_id column to anmeldungen... ";
-    $dbName = EnvLoader::require('DB_NAME');
     $stmt = $db->prepare(
         "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'anmeldungen' AND COLUMN_NAME = 'tenant_id'"
