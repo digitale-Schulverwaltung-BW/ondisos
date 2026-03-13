@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-13T09:25:09.300Z"
+stopped_at: Completed 02-auth-data-isolation-and-api-security-02-01-PLAN.md
+last_updated: "2026-03-13T10:09:31.900Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 10
+  completed_plans: 4
   percent: 0
 ---
 
@@ -49,6 +49,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-db-schema-and-foundation P01 | 3 | 2 tasks | 2 files |
 | Phase 01-db-schema-and-foundation P02 | 1min | 1 tasks | 1 files |
 | Phase 01-db-schema-and-foundation P03 | 5 | 1 tasks | 1 files |
+| Phase 02-auth-data-isolation-and-api-security P01 | 3 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Phase 01-db-schema-and-foundation]: migration reads DB_NAME from EnvLoader::require() instead of DATABASE() SQL function for privilege safety
 - [Phase 01-db-schema-and-foundation]: Single outer try/catch wraps entire migration body — failing step halts run cleanly with exit(1)
 - [Phase 01-db-schema-and-foundation]: TenantContext block placed after EnvLoader::load() and before SKIP_AUTO_EXPUNGE — fixes ExpungeService ordering issue
+- [Phase 02-auth-data-isolation-and-api-security]: TenantContext.getTenantId() throws in all-tenants mode — callers must check isAllTenants() before calling (fail-fast design, prevents silent cross-tenant data leakage)
+- [Phase 02-auth-data-isolation-and-api-security]: TenantRepository constructor accepts optional ?mysqli — enables unit testing without live DB (consistent with AnmeldungRepository pattern)
 
 ### Pending Todos
 
@@ -79,6 +82,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T09:25:09.289Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-auth-data-isolation-and-api-security/02-CONTEXT.md
+Last session: 2026-03-13T10:09:31.899Z
+Stopped at: Completed 02-auth-data-isolation-and-api-security-02-01-PLAN.md
+Resume file: None
