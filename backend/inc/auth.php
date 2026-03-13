@@ -15,8 +15,8 @@ if (defined('SKIP_AUTH_CHECK') && SKIP_AUTH_CHECK === true) {
 
 // MULTI_TENANT_ENABLED=true forces auth on, regardless of AUTH_ENABLED setting.
 // When multi-tenant is active, every browser request must have a valid session.
-$multiTenantEnabled = filter_var($_ENV['MULTI_TENANT_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
-$authEnabled = filter_var($_ENV['AUTH_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+$multiTenantEnabled = filter_var(\App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
+$authEnabled = filter_var(\App\Config\EnvLoader::get('AUTH_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
 
 if (!$authEnabled && !$multiTenantEnabled) {
     // Auth fully disabled — allow access

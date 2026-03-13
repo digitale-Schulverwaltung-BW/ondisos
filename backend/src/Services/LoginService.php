@@ -35,8 +35,8 @@ class LoginService
      */
     public function attemptPlatformAdminLogin(string $username, string $password): bool
     {
-        $adminUsername = $_ENV['ADMIN_USERNAME'] ?? '';
-        $adminPasswordHash = $_ENV['ADMIN_PASSWORD_HASH'] ?? '';
+        $adminUsername = \App\Config\EnvLoader::get('ADMIN_USERNAME', '');
+        $adminPasswordHash = \App\Config\EnvLoader::get('ADMIN_PASSWORD_HASH', '');
 
         if ($adminUsername === '' || $adminPasswordHash === '') {
             return false;

@@ -42,6 +42,10 @@ API_SECRET_KEY=${API_SECRET_KEY:-dev-api-key-replace-in-production}
 # Multi-Tenant Mode
 MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
 
+# Platform Admin (required for multi-tenant mode)
+ADMIN_USERNAME=${ADMIN_USERNAME:-}
+ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
+
 # File Upload
 UPLOAD_MAX_SIZE=${UPLOAD_MAX_SIZE:-10485760}
 UPLOAD_ALLOWED_TYPES=${UPLOAD_ALLOWED_TYPES:-pdf,jpg,jpeg,png,gif,doc,docx}
