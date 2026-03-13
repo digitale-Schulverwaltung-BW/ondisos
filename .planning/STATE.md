@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 01-02-PLAN.md (migrate.php v2.6 → v3.0 schema migration)
-last_updated: "2026-03-13T08:31:30.395Z"
+stopped_at: Completed 01-03-PLAN.md (TenantContext wired into bootstrap.php)
+last_updated: "2026-03-13T08:35:09.022Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -48,6 +48,7 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 | Phase 01-db-schema-and-foundation P01 | 3 | 2 tasks | 2 files |
 | Phase 01-db-schema-and-foundation P02 | 1min | 1 tasks | 1 files |
+| Phase 01-db-schema-and-foundation P03 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -64,6 +65,7 @@ Recent decisions affecting current work:
 - [Phase 01-db-schema-and-foundation]: TenantContext throws RuntimeException on uninitialized access — strict-fail design prevents silent cross-tenant data leakage
 - [Phase 01-db-schema-and-foundation]: migration reads DB_NAME from EnvLoader::require() instead of DATABASE() SQL function for privilege safety
 - [Phase 01-db-schema-and-foundation]: Single outer try/catch wraps entire migration body — failing step halts run cleanly with exit(1)
+- [Phase 01-db-schema-and-foundation]: TenantContext block placed after EnvLoader::load() and before SKIP_AUTO_EXPUNGE — fixes ExpungeService ordering issue
 
 ### Pending Todos
 
@@ -77,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T08:31:30.393Z
-Stopped at: Completed 01-02-PLAN.md (migrate.php v2.6 → v3.0 schema migration)
+Last session: 2026-03-13T08:35:09.019Z
+Stopped at: Completed 01-03-PLAN.md (TenantContext wired into bootstrap.php)
 Resume file: None

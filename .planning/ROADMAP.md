@@ -17,7 +17,7 @@ v3.0.0 converts ondisos from a single-tenant system to a multi-tenant capable pl
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: DB Schema and Foundation** - Migration runner, new tables, TenantContext singleton, backward compatibility
+- [x] **Phase 1: DB Schema and Foundation** - Migration runner, new tables, TenantContext singleton, backward compatibility (completed 2026-03-13)
 - [ ] **Phase 2: Auth, Data Isolation, and API Security** - Multi-role auth, all repository methods tenant-scoped, per-tenant HMAC, file isolation, audit trail
 - [ ] **Phase 3: Form Config, Frontend, and Tenant Management UI** - DB-driven form config, frontend tenant parameter, platform admin CRUD, ExpungeService fix
 
@@ -72,6 +72,6 @@ Phases execute in strict sequential order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. DB Schema and Foundation | 2/3 | In Progress|  |
+| 1. DB Schema and Foundation | 3/3 | Complete   | 2026-03-13 |
 | 2. Auth, Data Isolation, and API Security | 0/TBD | Not started | - |
 | 3. Form Config, Frontend, and Tenant Management UI | 0/TBD | Not started | - |

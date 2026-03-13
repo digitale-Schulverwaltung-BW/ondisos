@@ -13,7 +13,7 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 - [x] **SCHEMA-02**: Existing `anmeldungen` table gains `tenant_id` column with default value 1
 - [x] **SCHEMA-03**: Default tenant (id=1) is seeded automatically, inheriting existing `API_SECRET_KEY`
 - [x] **SCHEMA-04**: `TenantContext` request-scoped singleton resolves tenant from session or API request
-- [ ] **SCHEMA-05**: Single-tenant mode (`MULTI_TENANT_ENABLED=false`) operates transparently with tenant_id=1
+- [x] **SCHEMA-05**: Single-tenant mode (`MULTI_TENANT_ENABLED=false`) operates transparently with tenant_id=1
 
 ### Authentication & Authorization
 
@@ -82,7 +82,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SCHEMA-02 | Phase 1 | Complete |
 | SCHEMA-03 | Phase 1 | Complete |
 | SCHEMA-04 | Phase 1 | Complete |
-| SCHEMA-05 | Phase 1 | Pending |
+| SCHEMA-05 | Phase 1 | Complete |
 | AUTH-01 | Phase 2 | Pending |
 | AUTH-02 | Phase 2 | Pending |
 | AUTH-03 | Phase 2 | Pending |
