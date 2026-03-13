@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-auth-data-isolation-and-api-security-02-02-PLAN.md
-last_updated: "2026-03-13T10:13:32.732Z"
+stopped_at: Completed 02-auth-data-isolation-and-api-security-02-03-PLAN.md
+last_updated: "2026-03-13T10:19:18.544Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 10
-  completed_plans: 5
+  completed_plans: 6
   percent: 0
 ---
 
@@ -51,6 +51,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-db-schema-and-foundation P03 | 5 | 1 tasks | 1 files |
 | Phase 02-auth-data-isolation-and-api-security P01 | 3 | 2 tasks | 5 files |
 | Phase 02-auth-data-isolation-and-api-security P02 | 5 | 1 tasks | 6 files |
+| Phase 02-auth-data-isolation-and-api-security P03 | 2 | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,10 @@ Recent decisions affecting current work:
 - [Phase 02-auth-data-isolation-and-api-security]: TenantRepository constructor accepts optional ?mysqli — enables unit testing without live DB (consistent with AnmeldungRepository pattern)
 - [Phase 02-auth-data-isolation-and-api-security]: Integration tests use markTestIncomplete instead of fail() — Unit suite runs cleanly without a live DB
 - [Phase 02-auth-data-isolation-and-api-security]: Wave 0 stubs committed before any implementation — Nyquist compliance for DSGVO-critical repository isolation
+- [Phase 02-auth-data-isolation-and-api-security]: LoginService extracts credential checks from login.php — enables unit testing without HTTP context
+- [Phase 02-auth-data-isolation-and-api-security]: Platform admin path tried first; DB tenant admin path is fallback — .env admin takes precedence per CONTEXT.md
+- [Phase 02-auth-data-isolation-and-api-security]: bootstrap.php session_start() uses CLI guard (php_sapi_name !== cli) — PHPUnit tests never hit session_start()
+- [Phase 02-auth-data-isolation-and-api-security]: auth.php: MULTI_TENANT_ENABLED=true overrides AUTH_ENABLED=false — multi-tenant always requires login
 
 ### Pending Todos
 
@@ -85,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:13:32.729Z
-Stopped at: Completed 02-auth-data-isolation-and-api-security-02-02-PLAN.md
+Last session: 2026-03-13T10:19:18.542Z
+Stopped at: Completed 02-auth-data-isolation-and-api-security-02-03-PLAN.md
 Resume file: None
