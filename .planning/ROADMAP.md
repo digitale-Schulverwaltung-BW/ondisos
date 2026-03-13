@@ -33,7 +33,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A unit test proves `TenantContext::getTenantId()` throws when called before initialization
   4. The v2.6 admin backend loads and operates normally after migration (single-tenant mode, `MULTI_TENANT_ENABLED=false`)
   5. Running the migration twice is idempotent — no errors, no duplicate data
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — TenantContext singleton class + PHPUnit unit tests (TDD)
+- [ ] 01-02-PLAN.md — migrate.php CLI migration script (tables, tenant_id column, seed)
+- [ ] 01-03-PLAN.md — bootstrap.php integration (TenantContext initialization in single-tenant mode)
 
 ### Phase 2: Auth, Data Isolation, and API Security
 **Goal**: Tenant data is strictly isolated at every layer and only authorized users can access each tenant's records
@@ -67,6 +72,6 @@ Phases execute in strict sequential order: 1 → 2 → 3
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. DB Schema and Foundation | 0/TBD | Not started | - |
+| 1. DB Schema and Foundation | 0/3 | Not started | - |
 | 2. Auth, Data Isolation, and API Security | 0/TBD | Not started | - |
 | 3. Form Config, Frontend, and Tenant Management UI | 0/TBD | Not started | - |
