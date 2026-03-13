@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 02-auth-data-isolation-and-api-security-02-05-PLAN.md
-last_updated: "2026-03-13T10:36:12.765Z"
+stopped_at: Completed 02-auth-data-isolation-and-api-security-02-06-PLAN.md
+last_updated: "2026-03-13T10:46:11.983Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 1
   total_plans: 10
-  completed_plans: 8
+  completed_plans: 9
   percent: 0
 ---
 
@@ -54,6 +54,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-auth-data-isolation-and-api-security P03 | 2 | 2 tasks | 5 files |
 | Phase 02-auth-data-isolation-and-api-security P04 | 7 | 2 tasks | 3 files |
 | Phase 02-auth-data-isolation-and-api-security P05 | 4 | 2 tasks | 5 files |
+| Phase 02-auth-data-isolation-and-api-security P06 | 7 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -83,6 +84,9 @@ Recent decisions affecting current work:
 - [Phase 02-auth-data-isolation-and-api-security]: WRITE methods always call getTenantId() without isAllTenants() guard — throws in all-tenants mode (fail-fast prevents silent cross-tenant writes)
 - [Phase 02-auth-data-isolation-and-api-security]: DownloadController exposes getAllowedUploadDir() and isWithinAllowedDir() as public methods for unit testability without HTTP context
 - [Phase 02-auth-data-isolation-and-api-security]: AuditLogger wraps TenantContext in try/catch so pre-auth events (login) never throw; logs tenant_id=null for uninitialized and all-tenants contexts
+- [Phase 02-auth-data-isolation-and-api-security]: HMAC for upload.php signs over canonical string anmeldung_id:fieldname:filename (not raw multipart body)
+- [Phase 02-auth-data-isolation-and-api-security]: Per-tenant CORS uses tenant.origin column; falls back to global ALLOWED_ORIGINS when NULL for backward compatibility
+- [Phase 02-auth-data-isolation-and-api-security]: All auth failure paths return generic 401 JSON — prevents tenant/secret enumeration via response differences
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T10:36:12.763Z
-Stopped at: Completed 02-auth-data-isolation-and-api-security-02-05-PLAN.md
+Last session: 2026-03-13T10:46:11.980Z
+Stopped at: Completed 02-auth-data-isolation-and-api-security-02-06-PLAN.md
 Resume file: None
