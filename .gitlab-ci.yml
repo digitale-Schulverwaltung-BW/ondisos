@@ -126,7 +126,7 @@ test_integration:
     # Install Composer and extensions
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install pdo pdo_mysql gd zip
+    - docker-php-ext-install pdo pdo_mysql mysqli gd zip
 
     # Import database schema
     - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
