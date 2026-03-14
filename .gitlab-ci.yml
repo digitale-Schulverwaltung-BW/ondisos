@@ -128,6 +128,11 @@ test_integration:
     - docker-php-ext-configure gd --with-freetype --with-jpeg
     - docker-php-ext-install pdo pdo_mysql mysqli gd zip
 
+    # Point .env.test at the CI MySQL service (not 127.0.0.1)
+    - sed -i 's/^DB_HOST=.*/DB_HOST=mysql/' .env.test
+    - sed -i 's/^DB_USER=.*/DB_USER=test/' .env.test
+    - sed -i 's/^DB_PASS=.*/DB_PASS=test/' .env.test
+
     # Import database schema
     - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
   script:
