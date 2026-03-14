@@ -82,7 +82,7 @@ test_unit:
       - apt-get update -qq
       - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
       - docker-php-ext-configure gd --with-freetype --with-jpeg
-      - docker-php-ext-install pdo pdo_mysql gd zip
+      - docker-php-ext-install pdo pdo_mysql mysqli gd zip
       - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       - composer --version
       # Jetzt PCOV installieren

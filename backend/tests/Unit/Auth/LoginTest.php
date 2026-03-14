@@ -111,7 +111,7 @@ class LoginTest extends TestCase
                 $this->boundParam = $vars[0] ?? null;
                 return true;
             }
-            public function execute(): bool { return true; }
+            public function execute(?array $params = null): bool { return true; }
             public function get_result(): \mysqli_result { return $this->result; }
             public function close(): bool { return true; }
         };
@@ -170,7 +170,7 @@ class LoginTest extends TestCase
                 $this->result = $result;
             }
             public function bind_param(string $types, mixed &...$vars): bool { return true; }
-            public function execute(): bool { return true; }
+            public function execute(?array $params = null): bool { return true; }
             public function get_result(): \mysqli_result { return $this->result; }
             public function close(): bool { return true; }
         };
@@ -196,6 +196,7 @@ class LoginTest extends TestCase
     public function testTenantAdminLoginReturnsNullWhenNoRowFound(): void
     {
         $mockResult = new class extends \mysqli_result {
+            public function __construct() {}
             public function fetch_assoc(): ?array { return null; }
         };
 
@@ -206,7 +207,7 @@ class LoginTest extends TestCase
                 $this->result = $result;
             }
             public function bind_param(string $types, mixed &...$vars): bool { return true; }
-            public function execute(): bool { return true; }
+            public function execute(?array $params = null): bool { return true; }
             public function get_result(): \mysqli_result { return $this->result; }
             public function close(): bool { return true; }
         };
