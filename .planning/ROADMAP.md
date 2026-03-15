@@ -72,7 +72,16 @@ Plans:
   3. A frontend passing `?form=bs&tenant=5` receives the correct form configuration for tenant 5 from the backend API
   4. Auto-expunge only deletes records belonging to the current tenant context — a tenant with `AUTO_EXPUNGE_DAYS=90` does not trigger deletion of records in other tenants
   5. The complete onboarding flow works end-to-end: platform admin creates tenant, sets API secret, tenant frontend submits a registration, tenant admin sees only that registration in the backend
-**Plans**: TBD
+**Plans**: 7 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Wave 0: all test stubs (RED) + TenantAdminRepository skeleton
+- [ ] 03-02-PLAN.md — TenantRepository write methods + TenantAdminRepository full impl + migrate.php active column
+- [ ] 03-03-PLAN.md — ISOL-04: ExpungeServiceTenantScopingTest (GREEN against existing code)
+- [ ] 03-04-PLAN.md — tenants.php UI (list, create, edit, admin management) + header nav link
+- [ ] 03-05-PLAN.md — backend FormConfig DB-backed rewrite + form-config.php API endpoint
+- [ ] 03-06-PLAN.md — frontend: BackendApiClient.fetchFormConfig() + index.php tenant wiring + FormConfig array-injection
+- [ ] 03-07-PLAN.md — seed-forms.php migration script + human verification checkpoint
 
 ## Progress
 
@@ -83,4 +92,4 @@ Phases execute in strict sequential order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. DB Schema and Foundation | 3/3 | Complete   | 2026-03-13 |
 | 2. Auth, Data Isolation, and API Security | 6/7 | In Progress|  |
-| 3. Form Config, Frontend, and Tenant Management UI | 0/TBD | Not started | - |
+| 3. Form Config, Frontend, and Tenant Management UI | 0/7 | Not started | - |
