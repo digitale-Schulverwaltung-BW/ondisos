@@ -27,7 +27,7 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 - [x] **ISOL-01**: All `AnmeldungRepository` methods (~15+) filter by `tenant_id`
 - [x] **ISOL-02**: File uploads stored in tenant-scoped directories (`uploads/tenant-{id}/`)
 - [x] **ISOL-03**: Audit trail entries include `tenant_id` field
-- [ ] **ISOL-04**: `ExpungeService` scopes auto-expunge to tenant context (not global)
+- [x] **ISOL-04**: `ExpungeService` scopes auto-expunge to tenant context (not global)
 - [x] **ISOL-05**: `findById` validates tenant ownership (prevents IDOR across tenants)
 
 ### Tenant Management
@@ -90,7 +90,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ISOL-01 | Phase 2 | Complete |
 | ISOL-02 | Phase 2 | Complete |
 | ISOL-03 | Phase 2 | Complete |
-| ISOL-04 | Phase 3 | Pending |
+| ISOL-04 | Phase 3 | Complete |
 | ISOL-05 | Phase 2 | Complete |
 | MGMT-01 | Phase 3 | Pending |
 | MGMT-02 | Phase 3 | Pending |
