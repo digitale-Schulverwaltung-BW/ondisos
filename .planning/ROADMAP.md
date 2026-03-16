@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: DB Schema and Foundation** - Migration runner, new tables, TenantContext singleton, backward compatibility (completed 2026-03-13)
 - [ ] **Phase 2: Auth, Data Isolation, and API Security** - Multi-role auth, all repository methods tenant-scoped, per-tenant HMAC, file isolation, audit trail
-- [ ] **Phase 3: Form Config, Frontend, and Tenant Management UI** - DB-driven form config, frontend tenant parameter, platform admin CRUD, ExpungeService fix
+- [x] **Phase 3: Form Config, Frontend, and Tenant Management UI** - DB-driven form config, frontend tenant parameter, platform admin CRUD, ExpungeService fix (completed 2026-03-16)
 
 ## Phase Details
 
@@ -92,4 +92,4 @@ Phases execute in strict sequential order: 1 → 2 → 3
 |-------|----------------|--------|-----------|
 | 1. DB Schema and Foundation | 3/3 | Complete   | 2026-03-13 |
 | 2. Auth, Data Isolation, and API Security | 6/7 | In Progress|  |
-| 3. Form Config, Frontend, and Tenant Management UI | 6/7 | In Progress|  |
+| 3. Form Config, Frontend, and Tenant Management UI | 7/7 | Complete   | 2026-03-16 |
