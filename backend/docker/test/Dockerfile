@@ -16,7 +16,8 @@ RUN docker-php-ext-install \
     mbstring \
     gd \
     zip \
-    bcmath
+    bcmath \
+    mysqli
 
 # Xdebug for code coverage
 RUN pecl install xdebug \
