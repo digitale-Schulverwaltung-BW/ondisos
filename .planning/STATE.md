@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-02-PLAN.md — TenantRepository write methods + TenantAdminRepository CRUD
-last_updated: "2026-03-16T07:04:48.894Z"
+stopped_at: Completed 03-04-PLAN.md — Tenant management UI (tenants.php + header.php Tenants nav link)
+last_updated: "2026-03-16T07:09:56.213Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 17
-  completed_plans: 13
+  completed_plans: 14
   percent: 0
 ---
 
@@ -59,6 +59,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-form-config-frontend-and-tenant-management-ui P03 | 5 | 1 tasks | 1 files |
 | Phase 03-form-config-frontend-and-tenant-management-ui P01 | 20 | 2 tasks | 7 files |
 | Phase 03-form-config-frontend-and-tenant-management-ui P02 | 25 | 2 tasks | 6 files |
+| Phase 03-form-config-frontend-and-tenant-management-ui P04 | 7 | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -100,6 +101,9 @@ Recent decisions affecting current work:
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: Protected getLastInsertId() in TenantRepository and TenantAdminRepository enables unit testing without live DB — mysqli::insert_id is a virtual read-only C-level property that throws on disconnected mock connections
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: TenantRepository.update() whitelist is [name, origin, active] only — api_secret excluded by design, secret rotation uses updateApiSecret() as a separate auditable method
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: Global username uniqueness enforced in TenantAdminRepository.create() — SELECT COUNT across ALL tenant_admins prevents credential ambiguity when logging in without explicit tenant context
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: tenants.php combined single-file with list/create/edit via $id routing — matches existing PHP admin page convention
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: Flash session cleared at render time — guarantees revealed API secrets and passwords shown at most once
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: regenerate_secret handler explicitly calls updateApiSecret() (not update()) — enforces update() whitelist that excludes api_secret by design
 
 ### Pending Todos
 
@@ -113,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T07:04:48.890Z
-Stopped at: Completed 03-02-PLAN.md — TenantRepository write methods + TenantAdminRepository CRUD
+Last session: 2026-03-16T07:09:56.199Z
+Stopped at: Completed 03-04-PLAN.md — Tenant management UI (tenants.php + header.php Tenants nav link)
 Resume file: None
