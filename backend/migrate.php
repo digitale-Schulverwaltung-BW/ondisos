@@ -252,6 +252,23 @@ try {
         }
     }
 
+    // Step 4e: Add active column to tenant_admins (Phase 3)
+    echo "Step 4e: Add active column to tenant_admins... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenant_admins' AND COLUMN_NAME = 'active'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE tenant_admins ADD COLUMN active TINYINT(1) NOT NULL DEFAULT 1");
+        echo "OK\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
     // Step 7: Add foreign key anmeldungen → tenants
     echo "Step 7: Add foreign key fk_anmeldung_tenant... ";
     $constraintName = 'fk_anmeldung_tenant';

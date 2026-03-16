@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tenant_admins (
     username          VARCHAR(100) NOT NULL,
     password_hash     VARCHAR(255) NOT NULL,
     is_platform_admin TINYINT(1)   DEFAULT 0,
+    active            TINYINT(1)   NOT NULL DEFAULT 1,
     created_at        DATETIME     DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY uq_tenant_username (tenant_id, username),
     FOREIGN KEY fk_tenant_admin_tenant (tenant_id)
