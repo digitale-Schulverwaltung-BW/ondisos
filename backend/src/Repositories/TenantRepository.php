@@ -87,4 +87,52 @@ class TenantRepository
 
         return $rows;
     }
+
+    // =========================================================================
+    // Write method stubs — Wave 0 placeholders (implemented in Plan 02)
+    // =========================================================================
+
+    /**
+     * Create a new tenant row.
+     *
+     * @param array{name: string, slug: string, origin: string|null, api_secret: string} $data
+     * @return int  The newly inserted ID
+     * @throws \InvalidArgumentException  when slug already exists
+     */
+    public function create(array $data): int
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    /**
+     * Update whitelisted fields (name, origin, active) for a tenant.
+     * api_secret is intentionally excluded — use updateApiSecret() instead.
+     *
+     * @param array<string,mixed> $data  Fields to update (whitelist enforced)
+     */
+    public function update(int $id, array $data): void
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    /**
+     * Rotate the API secret for a tenant (dedicated method, separate from update()).
+     * Using a dedicated method prevents the secret from appearing in general-purpose
+     * update payloads and makes the operation auditable.
+     */
+    public function updateApiSecret(int $id, string $newSecret): void
+    {
+        throw new \RuntimeException('Not implemented');
+    }
+
+    /**
+     * Return ALL tenants (active and inactive) for the platform admin UI.
+     * Unlike findAll(), this is not filtered by active=1.
+     *
+     * @return array<int,array<string,mixed>>
+     */
+    public function findAllForAdmin(): array
+    {
+        throw new \RuntimeException('Not implemented');
+    }
 }
