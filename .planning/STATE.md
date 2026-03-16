@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-03-PLAN.md
-last_updated: "2026-03-16T06:54:51.623Z"
+stopped_at: Completed 03-form-config-frontend-and-tenant-management-ui-03-01-PLAN.md
+last_updated: "2026-03-16T06:56:49.653Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 17
-  completed_plans: 11
+  completed_plans: 12
   percent: 0
 ---
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-auth-data-isolation-and-api-security P06 | 7 | 2 tasks | 4 files |
 | Phase 02-auth-data-isolation-and-api-security P07 | 15 | 1 tasks | 4 files |
 | Phase 03-form-config-frontend-and-tenant-management-ui P03 | 5 | 1 tasks | 1 files |
+| Phase 03-form-config-frontend-and-tenant-management-ui P01 | 20 | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,8 @@ Recent decisions affecting current work:
 - [Phase 02-auth-data-isolation-and-api-security]: findAll() queries only id/name/slug — intentionally excludes api_secret from dropdown response
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: TenantContext.initialize(int) confirmed as the correct API in tests — plan interfaces showed outdated init(array) signature
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: No autoExpunge() cache file or force bypass needed — tests call autoExpunge() directly without time-gating
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: TenantRepository write stubs added to prevent PHP fatal errors in TenantRepositoryWriteTest which has real assertions (not markTestIncomplete)
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: Separate updateApiSecret() from update() in TenantRepository — prevents api_secret leaking through general-purpose update payloads, makes rotation auditable
 
 ### Pending Todos
 
@@ -106,6 +109,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T06:54:51.620Z
-Stopped at: Completed 03-03-PLAN.md
+Last session: 2026-03-16T06:56:49.650Z
+Stopped at: Completed 03-form-config-frontend-and-tenant-management-ui-03-01-PLAN.md
 Resume file: None
