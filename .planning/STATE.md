@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v3.0
 milestone_name: milestone
 status: planning
-stopped_at: Completed 03-05-PLAN.md — FormConfig DB rewrite + form-config.php API endpoint
-last_updated: "2026-03-16T07:16:20.645Z"
+stopped_at: "Checkpoint 03-07 Task 2: human-verify — awaiting sign-off on Phase 3 onboarding flow"
+last_updated: "2026-03-16T07:19:26.796Z"
 last_activity: 2026-03-13 — Roadmap created for v3.0.0 multi-tenant milestone
 progress:
   total_phases: 3
   completed_phases: 2
   total_plans: 17
-  completed_plans: 15
+  completed_plans: 16
   percent: 0
 ---
 
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-form-config-frontend-and-tenant-management-ui P02 | 25 | 2 tasks | 6 files |
 | Phase 03-form-config-frontend-and-tenant-management-ui P04 | 7 | 3 tasks | 2 files |
 | Phase 03-form-config-frontend-and-tenant-management-ui P05 | 8 | 2 tasks | 4 files |
+| Phase 03-form-config-frontend-and-tenant-management-ui P07 | 5 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -108,6 +109,7 @@ Recent decisions affecting current work:
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: setConnectionForTesting(?mysqli) pattern for static class dependency injection — avoids constructor refactor for all-static FormConfig
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: mysqli extension added to test Dockerfile — required for anonymous subclass mocks, resolves pre-existing errors in TenantRepositoryWriteTest and TenantAdminRepositoryTest
 - [Phase 03-form-config-frontend-and-tenant-management-ui]: No HMAC on form-config.php — called server-side by BackendApiClient (PHP-to-PHP over intranet), tenant slug resolution is sufficient authorization
+- [Phase 03-form-config-frontend-and-tenant-management-ui]: seed-forms.php: INSERT IGNORE for idempotency, checks both config paths, prints deletion reminder without auto-deleting files
 
 ### Pending Todos
 
@@ -121,6 +123,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-16T07:16:20.642Z
-Stopped at: Completed 03-05-PLAN.md — FormConfig DB rewrite + form-config.php API endpoint
+Last session: 2026-03-16T07:19:26.793Z
+Stopped at: Checkpoint 03-07 Task 2: human-verify — awaiting sign-off on Phase 3 onboarding flow
 Resume file: None

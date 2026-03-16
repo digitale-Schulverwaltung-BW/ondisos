@@ -39,7 +39,7 @@ Requirements for multi-tenant capability. Each maps to roadmap phases.
 ### Form Config & Frontend
 
 - [x] **FORM-01**: Form configurations stored in `form_configs` DB table per tenant
-- [ ] **FORM-02**: Seed scripts migrate existing `forms-config.php` entries to DB for default tenant
+- [x] **FORM-02**: Seed scripts migrate existing `forms-config.php` entries to DB for default tenant
 - [x] **FORM-03**: Frontend passes `tenant` parameter in API calls (`?form=bs&tenant=5`)
 - [x] **FORM-04**: Backend API validates per-tenant HMAC signature on `submit.php` and `upload.php`
 - [ ] **FORM-05**: Frontend fetches form config from backend API instead of local file
@@ -96,7 +96,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MGMT-02 | Phase 3 | Complete |
 | MGMT-03 | Phase 2 | Complete |
 | FORM-01 | Phase 3 | Complete |
-| FORM-02 | Phase 3 | Pending |
+| FORM-02 | Phase 3 | Complete |
 | FORM-03 | Phase 3 | Complete |
 | FORM-04 | Phase 2 | Complete |
 | FORM-05 | Phase 3 | Pending |

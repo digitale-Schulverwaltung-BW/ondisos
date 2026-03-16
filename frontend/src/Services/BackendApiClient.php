@@ -158,6 +158,48 @@ class BackendApiClient
     }
 
     /**
+     * Fetch form configuration from backend API.
+     *
+     * Calls GET {baseUrl}/form-config.php?form={formKey}&tenant={tenantSlug}.
+     * Returns the config array on success (HTTP 200, success=true),
+     * or null on any failure (non-200, curl error, success=false).
+     *
+     * @param string $formKey    Form identifier (e.g. 'bs')
+     * @param string $tenantSlug Tenant slug (e.g. 'default')
+     * @return array|null Config array or null on failure
+     */
+    public function fetchFormConfig(string $formKey, string $tenantSlug): ?array
+    {
+        $url = $this->baseUrl . '/form-config.php?form=' . urlencode($formKey)
+             . '&tenant=' . urlencode($tenantSlug);
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+        ]);
+
+        $response  = curl_exec($ch);
+        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        if ($curlError) {
+            error_log('fetchFormConfig curl error: ' . $curlError);
+            return null;
+        }
+
+        if ($httpCode !== 200) {
+            return null;
+        }
+
+        $result = json_decode((string) $response, true);
+        return (($result['success'] ?? false) === true) ? ($result['config'] ?? null) : null;
+    }
+
+    /**
      * Health check - test if backend is reachable.
      *
      * Uses a short 3-second timeout so a slow/unreachable backend
