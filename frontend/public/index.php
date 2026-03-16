@@ -14,8 +14,8 @@ use Frontend\Utils\CsrfProtection;
 // Get form key from request
 $formKey = $_REQUEST['form'] ?? '';
 
-// Validate form exists
-if (empty($formKey) || !FormConfig::exists($formKey)) {
+// Basic validation: form key must not be empty
+if (empty($formKey)) {
     http_response_code(404);
     ?>
     <!DOCTYPE html>
@@ -40,14 +40,17 @@ if (empty($formKey) || !FormConfig::exists($formKey)) {
     exit;
 }
 
-// Load form configuration
-$formConfig = FormConfig::get($formKey);
+// Read tenant slug — TENANT_SLUG in .env, defaults to 'default' for single-tenant deployments
+$tenantSlug = getenv('TENANT_SLUG') ?: 'default';
 
-// Health Check Gate: Backend-Verfügbarkeit prüfen bevor das Formular angezeigt wird.
-// Verhindert, dass Benutzer ein mehrseitiges Formular ausfüllen, nur um am Ende eine
-// Backend-Fehlermeldung zu erhalten.
-$health = (new BackendApiClient())->healthCheck();
-if ($health['status'] !== 'ok') {
+// Fetch form configuration from backend API.
+// This replaces the previous local forms-config.php file lookup.
+// If the backend is unreachable or the form does not exist for this tenant,
+// fetchFormConfig() returns null and we render a 503 maintenance page.
+$client     = new BackendApiClient();
+$configData = $client->fetchFormConfig($formKey, $tenantSlug);
+
+if ($configData === null) {
     http_response_code(503);
     $pageTitle   = M::get('maintenance.unavailable_title');
     $heading     = M::get('maintenance.unavailable_heading');
@@ -88,7 +91,7 @@ if ($health['status'] !== 'ok') {
     </head>
     <body>
         <div class="card">
-            <div class="icon">⚠️</div>
+            <div class="icon">&#9888;&#65039;</div>
             <h1><?= htmlspecialchars($heading) ?></h1>
             <p class="desc"><?= htmlspecialchars($description) ?></p>
             <p class="hint"><?= htmlspecialchars($hint) ?></p>
@@ -98,6 +101,11 @@ if ($health['status'] !== 'ok') {
     <?php
     exit;
 }
+
+// Inject the API-fetched config into FormConfig.
+// All subsequent calls (getFormPath, getThemePath, etc.) use this injected config.
+FormConfig::load($configData);
+$formConfig = FormConfig::get($formKey);
 
 $formPath = FormConfig::getFormPath($formKey);
 $themePath = FormConfig::getThemePath($formKey);
@@ -196,6 +204,7 @@ $csrfToken = CsrfProtection::getToken();
         console.log('Theme JSON:', <?= $themeJson ?>);
         window.surveyConfig = {
             formKey: <?= json_encode($formKey) ?>,
+            tenantSlug: <?= json_encode($tenantSlug) ?>,
             version: '2026-01-v3',
             containerId: 'surveyContainer',
             surveyJson: <?= $surveyJson ?>,
