@@ -63,6 +63,12 @@
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">Dashboard</a>
                 </li>
+                <?php if (!empty($_SESSION['is_platform_admin'])): ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= (basename($_SERVER['PHP_SELF'] ?? '') === 'tenants.php') ? ' active' : '' ?>"
+                       href="tenants.php">Tenants</a>
+                </li>
+                <?php endif; ?>
             </ul>
 
             <div class="d-flex align-items-center gap-2">
