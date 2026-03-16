@@ -11,71 +11,100 @@ use PHPUnit\Framework\TestCase;
  * Unit tests for TenantRepository write methods:
  * create(), update(), updateApiSecret(), findAllForAdmin().
  *
- * Uses the anonymous mysqli subclass mock pattern (consistent with
- * TenantRepositorySlugTest and VirusScanServiceTest).
+ * Mock strategy: anonymous mysqli subclass pattern (consistent with
+ * TenantRepositorySlugTest). Because mysqli::$insert_id is a virtual
+ * read-only property at C level, TenantRepository exposes a protected
+ * getLastInsertId() helper so tests can override it via a subclass.
+ *
+ * The mock mysqli captures the call sequence and supplies configurable
+ * fetch_assoc results for uniqueness-check SELECT COUNT queries.
  */
 class TenantRepositoryWriteTest extends TestCase
 {
     // =========================================================================
-    // Mock helpers
+    // Inner test subclass — overrides getLastInsertId() to avoid real DB access
     // =========================================================================
 
     /**
-     * Build a mock mysqli that records prepared queries and returns configurable
-     * results. Supports:
-     *   - scalar count query result (for uniqueness checks)
-     *   - INSERT with configurable insert_id
-     *   - multiple sequential queries (read vs. write)
-     *
-     * @param list<array<string,mixed>|int|null> $prepareResults  per-prepare-call return value
-     * @param int $insertId  returned by $db->insert_id after INSERT
+     * Extend TenantRepository so tests can inject a fixed insert ID
+     * without triggering the "already closed" error on mock mysqli.
      */
-    private function makeMockedRepo(
+    private function makeTestableRepo(
         array $prepareResults = [],
         int $insertId = 0,
         array $multiRows = []
     ): TenantRepository {
-        $mockMysqli = new class($prepareResults, $insertId, $multiRows) extends \mysqli {
-            /** @var list<array<string,mixed>|int|null> */
+        $mockMysqli = $this->buildMockMysqli($prepareResults, $multiRows);
+
+        // Anonymous subclass of TenantRepository that overrides getLastInsertId()
+        return new class($mockMysqli, $insertId) extends TenantRepository {
+            private int $fakeInsertId;
+
+            public function __construct(\mysqli $db, int $insertId)
+            {
+                parent::__construct($db);
+                $this->fakeInsertId = $insertId;
+            }
+
+            protected function getLastInsertId(): int
+            {
+                return $this->fakeInsertId;
+            }
+        };
+    }
+
+    // =========================================================================
+    // Mock mysqli factory
+    // =========================================================================
+
+    /**
+     * Build a mock mysqli that returns prepare() results in sequence.
+     *
+     * @param list<int|array<string,mixed>|null> $prepareResults  one value per prepare() call:
+     *   - int → single-row ['cnt' => N] (for COUNT queries)
+     *   - array → single assoc row
+     *   - null → no rows / write-only (UPDATE/INSERT with no result read)
+     * @param array<int,array<string,mixed>> $multiRows  for findAllForAdmin (multi-row SELECT)
+     */
+    private function buildMockMysqli(array $prepareResults, array $multiRows): \mysqli
+    {
+        return new class($prepareResults, $multiRows) extends \mysqli {
+            /** @var list<int|array<string,mixed>|null> */
             private array $results;
             private int $callIndex = 0;
-            public string|int $insert_id = 0;
             /** @var array<int,array<string,mixed>> */
             private array $multiRows;
 
             /**
-             * @param list<array<string,mixed>|int|null> $results
+             * @param list<int|array<string,mixed>|null> $results
              * @param array<int,array<string,mixed>> $multiRows
              */
-            public function __construct(array $results, int $insertId, array $multiRows)
+            public function __construct(array $results, array $multiRows)
             {
+                // Skip parent mysqli constructor — no real DB connection needed
                 $this->results   = $results;
-                $this->insert_id = $insertId; // string|int, set after INSERT
                 $this->multiRows = $multiRows;
             }
 
             public function prepare(string $query): \mysqli_stmt|false
             {
-                $result     = $this->results[$this->callIndex] ?? null;
-                $multiRows  = $this->multiRows;
-                $db         = $this;
+                $result    = $this->results[$this->callIndex] ?? null;
+                $multiRows = $this->multiRows;
                 $this->callIndex++;
 
-                return new class($result, $multiRows, $db) extends \mysqli_stmt {
+                return new class($result, $multiRows) extends \mysqli_stmt {
                     private mixed $result;
                     /** @var array<int,array<string,mixed>> */
                     private array $multiRows;
-                    /** @var \mysqli */
-                    private \mysqli $db;
 
                     /**
                      * @param array<int,array<string,mixed>> $multiRows
                      */
-                    public function __construct(mixed $result, array $multiRows, \mysqli $db)
+                    public function __construct(mixed $result, array $multiRows)
                     {
+                        // Skip parent constructor — no real stmt needed
                         $this->result    = $result;
                         $this->multiRows = $multiRows;
-                        $this->db        = $db;
                     }
 
                     public function bind_param(string $types, mixed &...$vars): bool
@@ -105,13 +134,14 @@ class TenantRepositoryWriteTest extends TestCase
                              */
                             public function __construct(mixed $result, array $multiRows)
                             {
+                                // Skip parent constructor
                                 $this->result    = $result;
                                 $this->multiRows = $multiRows;
                             }
 
                             public function fetch_assoc(): array|null|false
                             {
-                                // Multi-row result (findAllForAdmin)
+                                // Multi-row path (findAllForAdmin, findAll)
                                 if (!empty($this->multiRows)) {
                                     if ($this->rowIndex >= count($this->multiRows)) {
                                         return null;
@@ -119,7 +149,7 @@ class TenantRepositoryWriteTest extends TestCase
                                     return $this->multiRows[$this->rowIndex++];
                                 }
 
-                                // Single scalar row (count check)
+                                // Scalar COUNT result
                                 if (is_int($this->result)) {
                                     if ($this->fetched) {
                                         return null;
@@ -128,7 +158,7 @@ class TenantRepositoryWriteTest extends TestCase
                                     return ['cnt' => $this->result];
                                 }
 
-                                // Single assoc row or null
+                                // Assoc row or null
                                 if ($this->fetched || $this->result === null) {
                                     return null;
                                 }
@@ -140,8 +170,6 @@ class TenantRepositoryWriteTest extends TestCase
                 };
             }
         };
-
-        return new TenantRepository($mockMysqli);
     }
 
     // =========================================================================
@@ -150,9 +178,10 @@ class TenantRepositoryWriteTest extends TestCase
 
     public function testCreateInsertsAndReturnsId(): void
     {
-        // First prepare call: slug uniqueness check returns count 0
-        // Second prepare call: INSERT
-        $repo = $this->makeMockedRepo(
+        // Prepare calls:
+        //   1st = slug uniqueness check → count 0 (slug available)
+        //   2nd = INSERT → null result (write-only)
+        $repo = $this->makeTestableRepo(
             prepareResults: [0, null],
             insertId: 42
         );
@@ -169,8 +198,8 @@ class TenantRepositoryWriteTest extends TestCase
 
     public function testCreateThrowsOnDuplicateSlug(): void
     {
-        // Uniqueness check returns count 1 = slug taken
-        $repo = $this->makeMockedRepo(prepareResults: [1]);
+        // Uniqueness check returns count 1 = slug already taken
+        $repo = $this->makeTestableRepo(prepareResults: [1]);
 
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Slug already exists');
@@ -183,27 +212,43 @@ class TenantRepositoryWriteTest extends TestCase
         ]);
     }
 
+    public function testCreateWithNullOrigin(): void
+    {
+        $repo = $this->makeTestableRepo(
+            prepareResults: [0, null],
+            insertId: 7
+        );
+
+        $id = $repo->create([
+            'name'       => 'School Without Origin',
+            'slug'       => 'no-origin',
+            'origin'     => null,
+            'api_secret' => 'xyz',
+        ]);
+
+        $this->assertSame(7, $id);
+    }
+
     // =========================================================================
     // update()
     // =========================================================================
 
     public function testUpdateWithNameAndActive(): void
     {
-        // update() only builds SET and executes UPDATE; mock just needs one prepare call
-        $repo = $this->makeMockedRepo(prepareResults: [null]);
+        // One prepare call for UPDATE
+        $repo = $this->makeTestableRepo(prepareResults: [null]);
 
-        // Should not throw
+        // Should complete without exception
         $repo->update(1, ['name' => 'Updated Name', 'active' => 0]);
 
         $this->assertTrue(true); // reached without exception
     }
 
-    public function testUpdateWithEmptyDataReturnsEarly(): void
+    public function testUpdateWithEmptyDataAfterFilteringReturnsEarlyWithoutDbCall(): void
     {
-        // api_secret is not in whitelist, so after filtering $data is empty
-        $repo = $this->makeMockedRepo(prepareResults: []);
+        // api_secret is not in whitelist → filtered out → $data is empty → no prepare() call
+        $repo = $this->makeTestableRepo(prepareResults: []); // 0 prepare calls expected
 
-        // Should not throw and should not call prepare() (no db interaction)
         $repo->update(1, ['api_secret' => 'should-be-filtered']);
 
         $this->assertTrue(true);
@@ -211,20 +256,19 @@ class TenantRepositoryWriteTest extends TestCase
 
     public function testUpdateWithAllWhitelistedFields(): void
     {
-        $repo = $this->makeMockedRepo(prepareResults: [null]);
+        $repo = $this->makeTestableRepo(prepareResults: [null]);
 
         $repo->update(1, ['name' => 'A', 'origin' => 'https://a.com', 'active' => 1]);
 
         $this->assertTrue(true);
     }
 
-    public function testUpdateApiSecretIsExcludedFromUpdateWhitelist(): void
+    public function testUpdateApiSecretIsExcludedFromWhitelist(): void
     {
-        // Passing api_secret through update() should result in empty filtered data
-        // so no DB call is made (prepareResults empty = no mock calls expected)
-        $repo = $this->makeMockedRepo(prepareResults: []);
+        // Passing only api_secret through update() results in empty filtered data
+        // meaning no DB call — prepareResults is empty (no mock calls expected)
+        $repo = $this->makeTestableRepo(prepareResults: []);
 
-        // Must NOT throw, must NOT call prepare (api_secret excluded from whitelist)
         $repo->update(1, ['api_secret' => 'rotated-secret']);
 
         $this->assertTrue(true);
@@ -236,9 +280,9 @@ class TenantRepositoryWriteTest extends TestCase
 
     public function testUpdateApiSecretExecutesUpdate(): void
     {
-        $repo = $this->makeMockedRepo(prepareResults: [null]);
+        $repo = $this->makeTestableRepo(prepareResults: [null]);
 
-        // Should not throw
+        // Should complete without exception
         $repo->updateApiSecret(1, 'new-secret-hex');
 
         $this->assertTrue(true);
@@ -255,7 +299,7 @@ class TenantRepositoryWriteTest extends TestCase
             ['id' => 2, 'name' => 'Beta',  'slug' => 'beta',  'origin' => 'https://beta.example', 'active' => 0],
         ];
 
-        $repo = $this->makeMockedRepo(multiRows: $tenants);
+        $repo = $this->makeTestableRepo(multiRows: $tenants);
 
         $result = $repo->findAllForAdmin();
 
@@ -266,7 +310,7 @@ class TenantRepositoryWriteTest extends TestCase
 
     public function testFindAllForAdminReturnsEmptyArrayWhenNoTenants(): void
     {
-        $repo = $this->makeMockedRepo(multiRows: []);
+        $repo = $this->makeTestableRepo(multiRows: []);
 
         $result = $repo->findAllForAdmin();
 
@@ -280,7 +324,7 @@ class TenantRepositoryWriteTest extends TestCase
             ['id' => 3, 'name' => 'Inactive School', 'slug' => 'inactive', 'origin' => null, 'active' => 0],
         ];
 
-        $repo = $this->makeMockedRepo(multiRows: $tenants);
+        $repo = $this->makeTestableRepo(multiRows: $tenants);
 
         $result = $repo->findAllForAdmin();
 
