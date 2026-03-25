@@ -912,7 +912,7 @@
             {
               "type": "html",
               "name": "question4",
-              "html": "<h4>weiterer Sorgeberechtigte(r)  (Vater/Mutter)</h4>"
+              "html": "<h4>weiterer Ansprechpartner (z.B. Sorgeberechtigte/r, Vormund, Elternteil)</h4>"
             },
             {
               "type": "dropdown",

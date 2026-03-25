@@ -68,7 +68,7 @@
         {
           "type": "dropdown",
           "name": "_Ausbildungsberuf",
-          "title": "_Ausbildungsberuf",
+          "title": "Ausbildungsberuf",
           "isRequired": true,
           "choices": [
             {

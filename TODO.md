@@ -5,6 +5,15 @@
 **Aktueller Stand:** 18.90% (214/1132 lines)
 **Ziel:** >80% Coverage
 
+### v3.0.0
+
+Known gaps to validate in a real deployment:
+
+Tenant switching navigation (URL clean redirect, "Alle Tenants" reset)
+Frontend → backend form submission with HMAC + wrong HMAC rejection
+Run /gsd:verify-work when you have a running multi-tenant environment to close those gaps.
+
+
 ### ✅ Abgeschlossen
 
 - [x] **ExportService** - 88.46% (92/104 lines) 🎉
