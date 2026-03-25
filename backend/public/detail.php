@@ -138,10 +138,15 @@ require __DIR__ . '/../inc/header.php';
                                         if ($isFileRefs) {
                                             foreach ($value as $fileRef) {
                                                 $fname = $fileRef['name'] ?? 'Datei';
-                                                echo '<span class="badge bg-light text-dark border me-1">'
+                                                $downloadName = $anmeldung->id . '_' . $fname;
+                                                $downloadUrl = 'download.php?file=' . urlencode($downloadName) . '&mode=view';
+                                                echo '<a href="' . htmlspecialchars($downloadUrl) . '" target="_blank" rel="noopener noreferrer" class="text-decoration-none me-1">'
+                                                    . '<span class="badge bg-light text-dark border">'
                                                     . '<i class="bi bi-paperclip"></i> '
                                                     . htmlspecialchars($fname)
-                                                    . '</span>';
+                                                    . ' <i class="bi bi-download"></i>'
+                                                    . '</span>'
+                                                    . '</a>';
                                             }
                                         } elseif ($isBase64Files) {
                                             // Legacy: base64 still in DB — render inline
