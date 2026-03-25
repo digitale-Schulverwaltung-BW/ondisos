@@ -99,7 +99,7 @@ class EmailService
             }
 
             if ($value === null || $value === '') {
-                continue;
+                $value=" "; // send all fields by mail, empty ones, too
             }
 
             $label = $this->humanizeFieldName($key);
