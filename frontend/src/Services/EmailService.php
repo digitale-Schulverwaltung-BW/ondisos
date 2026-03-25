@@ -32,7 +32,8 @@ class EmailService
     public function sendNotification(
         string $to,
         string $formKey,
-        array $formData
+        array $formData,
+        ?string $introTemplate = null
     ): bool {
         // Support comma-separated email addresses
         $recipients = array_map('trim', explode(',', $to));
@@ -44,7 +45,7 @@ class EmailService
             }
         }
 
-        $parts = $this->buildEmail($formKey, $formData);
+        $parts = $this->buildEmail($formKey, $formData, $introTemplate);
 
         return $this->sendMultipartEmail(
             to: implode(', ', $recipients), // PHP mail() accepts comma-separated addresses
@@ -58,18 +59,23 @@ class EmailService
     /**
      * Build email content
      */
-    private function buildEmail(string $formKey, array $formData): array
+    private function buildEmail(string $formKey, array $formData, ?string $introTemplate = null): array
     {
         $subject = "Neue Anmeldung: " . $formKey;
-        
+
         if (!empty($formData['name']) || !empty($formData['Name'])) {
             $name = $formData['name'] ?? $formData['Name'];
             $subject .= " von " . $this->sanitizeHeaderValue($name);
         }
 
+        // Resolve intro text: use template with field placeholders, or fall back to MAIL_HEAD
+        $introText = $introTemplate !== null
+            ? $this->resolveFieldPlaceholders($introTemplate, $formData)
+            : $this->mailHead;
+
         // Plain text version
         $plain = "Es wurde eine neue Anmeldung übermittelt:\n\n";
-        $plain .= $this->mailHead . "\n\n";
+        $plain .= $introText . "\n\n";
         $plain .= "Formular: $formKey\n\n";
 
         // HTML version
@@ -82,7 +88,7 @@ class EmailService
         $html .= "tr:nth-child(even) { background-color: #f2f2f2; }";
         $html .= "</style></head><body>";
         $html .= "<h2>Neue Anmeldung: " . htmlspecialchars($formKey) . "</h2>";
-        $html .= "<p>" . nl2br(htmlspecialchars($this->mailHead)) . "</p>";
+        $html .= "<p>" . nl2br(htmlspecialchars($introText)) . "</p>";
         $html .= "<table>";
         $html .= "<thead><tr><th>Feld</th><th>Wert</th></tr></thead>";
         $html .= "<tbody>";
@@ -210,6 +216,22 @@ class EmailService
         }
 
         return $value;
+    }
+
+    /**
+     * Replace {FieldName} placeholders with values from form data.
+     * Unresolved placeholders are removed silently.
+     */
+    private function resolveFieldPlaceholders(string $template, array $formData): string
+    {
+        return preg_replace_callback('/\{(\w+)\}/', function (array $matches) use ($formData): string {
+            $key = $matches[1];
+            $value = $formData[$key] ?? null;
+            if ($value === null || $value === '_autofill') {
+                return '';
+            }
+            return $this->formatValue($value);
+        }, $template);
     }
 
     /**

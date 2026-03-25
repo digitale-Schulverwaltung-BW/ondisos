@@ -97,10 +97,14 @@ class AnmeldungService
 
         if ($notificationEmail && $this->emailService) {
             try {
+                $emailConfig = FormConfig::get($formKey)['email'] ?? [];
+                $introTemplate = $emailConfig['intro_template'] ?? null;
+
                 $emailSent = $this->emailService->sendNotification(
                     $notificationEmail,
                     $formKey,
-                    $surveyData
+                    $surveyData,
+                    $introTemplate
                 );
 
                 if (!$emailSent) {
