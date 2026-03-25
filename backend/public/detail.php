@@ -9,6 +9,7 @@ require_once __DIR__ . '/../inc/auth.php';
 use App\Controllers\DetailController;
 use App\Repositories\AnmeldungRepository;
 use App\Utils\NullableHelpers as NH;
+use App\Utils\FilenameSanitizer;
 use App\Services\MessageService as M;
 
 // Initialize dependencies
@@ -138,16 +139,7 @@ require __DIR__ . '/../inc/header.php';
                                         if ($isFileRefs) {
                                             foreach ($value as $fileRef) {
                                                 $fname = $fileRef['name'] ?? 'Datei';
-                                                // Sanitize filename same as upload.php to match on-disk name
-                                                $safeName = pathinfo($fname, PATHINFO_FILENAME);
-                                                $safeExt = pathinfo($fname, PATHINFO_EXTENSION);
-                                                $safeName = strtr($safeName, [
-                                                    'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
-                                                    'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue',
-                                                ]);
-                                                $safeName = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $safeName);
-                                                $safeName = trim(preg_replace('/_+/', '_', $safeName), '_') ?: 'upload';
-                                                $downloadName = $anmeldung->id . '_' . $safeName . '.' . $safeExt;
+                                                $downloadName = FilenameSanitizer::diskName($anmeldung->id, $fname);
                                                 $downloadUrl = 'download.php?file=' . urlencode($downloadName) . '&mode=view';
                                                 echo '<a href="' . htmlspecialchars($downloadUrl) . '" target="_blank" rel="noopener noreferrer" class="text-decoration-none me-1">'
                                                     . '<span class="badge bg-light text-dark border">'
