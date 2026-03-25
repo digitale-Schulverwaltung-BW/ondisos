@@ -77,7 +77,7 @@ class EmailService
         $html .= "<style>";
         $html .= "body { font-family: Arial, sans-serif; }";
         $html .= "table { border-collapse: collapse; width: 100%; }";
-        $html .= "th, td { padding: 12px; text-align: left; border: 1px solid #ddd; }";
+        $html .= "th, td { padding: 3px 12px; text-align: left; border: 1px solid #ddd; }";
         $html .= "th { background-color: #4472C4; color: white; font-weight: bold; }";
         $html .= "tr:nth-child(even) { background-color: #f2f2f2; }";
         $html .= "</style></head><body>";
