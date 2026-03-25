@@ -138,7 +138,16 @@ require __DIR__ . '/../inc/header.php';
                                         if ($isFileRefs) {
                                             foreach ($value as $fileRef) {
                                                 $fname = $fileRef['name'] ?? 'Datei';
-                                                $downloadName = $anmeldung->id . '_' . $fname;
+                                                // Sanitize filename same as upload.php to match on-disk name
+                                                $safeName = pathinfo($fname, PATHINFO_FILENAME);
+                                                $safeExt = pathinfo($fname, PATHINFO_EXTENSION);
+                                                $safeName = strtr($safeName, [
+                                                    'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
+                                                    'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue',
+                                                ]);
+                                                $safeName = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $safeName);
+                                                $safeName = trim(preg_replace('/_+/', '_', $safeName), '_') ?: 'upload';
+                                                $downloadName = $anmeldung->id . '_' . $safeName . '.' . $safeExt;
                                                 $downloadUrl = 'download.php?file=' . urlencode($downloadName) . '&mode=view';
                                                 echo '<a href="' . htmlspecialchars($downloadUrl) . '" target="_blank" rel="noopener noreferrer" class="text-decoration-none me-1">'
                                                     . '<span class="badge bg-light text-dark border">'
