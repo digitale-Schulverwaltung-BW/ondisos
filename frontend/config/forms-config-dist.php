@@ -27,6 +27,15 @@ return [
             'AusbEmail'            // E-Mail Adresse
         ],
 
+        // Email intro template (optional)
+        // Placeholders {FieldName} are replaced with actual form field values.
+        // Field names must match the survey definition exactly (case-sensitive).
+        // Unresolved placeholders are removed silently.
+        // Falls back to MAIL_HEAD from .env if not set.
+        // 'email' => [
+        //     'intro_template' => "{Vorname} {Nachname}\nwurde für {_Ausbildungsberuf} angemeldet.\n\nAusbilder: {Ausbilder}, Tel. {AusbTel}",
+        // ],
+
         // iCal Download Configuration (optional) - uncomment to enable
         // 'ical' => [
         //     'enabled'          => true,
