@@ -93,14 +93,24 @@ try {
         mkdir($uploadDir, 0755, true);
     }
 
-    // Generate safe filename: {anmeldung_id}_{original_name}
+    // Generate safe filename: {anmeldung_id}_{sanitized_name}.{validated_ext}
     // 1. Use basename() to strip any path components
     $originalName = basename($file['name']);
 
-    // 2. Validate filename contains only safe characters (no dots in middle to prevent double extensions)
+    // 2. Sanitize filename: transliterate unicode, strip unsafe characters
     $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
-    if (!preg_match('/^[a-zA-Z0-9_-]+$/', $nameWithoutExt)) {
-        throw new RuntimeException('Invalid filename. Only letters, numbers, underscore and hyphen allowed.', 400);
+    // Replace German umlauts and common unicode chars with ASCII equivalents
+    $nameWithoutExt = strtr($nameWithoutExt, [
+        'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
+        'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue',
+    ]);
+    // Replace spaces and remaining non-safe chars with underscore
+    $nameWithoutExt = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $nameWithoutExt);
+    // Collapse multiple underscores and trim
+    $nameWithoutExt = trim(preg_replace('/_+/', '_', $nameWithoutExt), '_');
+    // Fallback if nothing remains
+    if ($nameWithoutExt === '') {
+        $nameWithoutExt = 'upload';
     }
 
     // 3. Force the validated extension (prevents double extension attacks like evil.php.jpg)
