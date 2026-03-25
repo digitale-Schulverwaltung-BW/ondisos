@@ -36,6 +36,7 @@ class NominatimService
     public function getSuburb(string $hausnr, string $strasse, string $plz, string $ort): string
     {
         if (!$this->enabled) {
+            error_log('Nominatim: disabled (NOMINATIM_CONTACT not set in .env)');
             return '';
         }
 
@@ -65,15 +66,28 @@ class NominatimService
         ]);
 
         $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
         curl_close($ch);
 
         $suburb = '';
 
-        if ($response !== false) {
+        if ($response === false) {
+            error_log("Nominatim: curl error for [{$plz} {$ort}, {$strasse} {$hausnr}]: {$curlError}");
+        } elseif ($httpCode !== 200) {
+            error_log("Nominatim: HTTP {$httpCode} for [{$plz} {$ort}, {$strasse} {$hausnr}]");
+        } else {
             $data = json_decode($response, true);
-            $suburb = (string)($data[0]['address']['suburb']
-                ?? $data[0]['address']['quarter']
-                ?? '');
+            if (empty($data)) {
+                error_log("Nominatim: no results for [{$plz} {$ort}, {$strasse} {$hausnr}]");
+            } else {
+                $suburb = (string)($data[0]['address']['suburb']
+                    ?? $data[0]['address']['quarter']
+                    ?? '');
+                if ($suburb === '') {
+                    error_log("Nominatim: result has no suburb/quarter for [{$plz} {$ort}, {$strasse} {$hausnr}]");
+                }
+            }
         }
 
         $this->cache[$cacheKey] = $suburb;
