@@ -9,6 +9,7 @@ use App\Config\Config;
 use App\Validators\AnmeldungValidator;
 use App\Services\AuditLogger;
 use App\Services\VirusScanService;
+use App\Utils\FilenameSanitizer;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -94,26 +95,10 @@ try {
     }
 
     // Generate safe filename: {anmeldung_id}_{sanitized_name}.{validated_ext}
-    // 1. Use basename() to strip any path components
     $originalName = basename($file['name']);
+    $nameWithoutExt = FilenameSanitizer::sanitizeStem(pathinfo($originalName, PATHINFO_FILENAME));
 
-    // 2. Sanitize filename: transliterate unicode, strip unsafe characters
-    $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
-    // Replace German umlauts and common unicode chars with ASCII equivalents
-    $nameWithoutExt = strtr($nameWithoutExt, [
-        'ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss',
-        'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue',
-    ]);
-    // Replace spaces and remaining non-safe chars with underscore
-    $nameWithoutExt = preg_replace('/[^a-zA-Z0-9_-]+/', '_', $nameWithoutExt);
-    // Collapse multiple underscores and trim
-    $nameWithoutExt = trim(preg_replace('/_+/', '_', $nameWithoutExt), '_');
-    // Fallback if nothing remains
-    if ($nameWithoutExt === '') {
-        $nameWithoutExt = 'upload';
-    }
-
-    // 3. Force the validated extension (prevents double extension attacks like evil.php.jpg)
+    // Force the validated extension (prevents double extension attacks like evil.php.jpg)
     $safeFilename = $anmeldungId . '_' . $nameWithoutExt . '.' . $extension;
     $targetPath = $uploadDir . '/' . $safeFilename;
 
