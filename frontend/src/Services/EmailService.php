@@ -104,8 +104,8 @@ class EmailService
                 continue;
             }
 
-            if ($value === null || $value === '') {
-                $value=" "; // send all fields by mail, empty ones, too
+            if ($value === null || $value === '' || $value === false || $value === []) {
+                $value = ' '; // send all fields by mail, empty ones, too
             }
 
             $label = $this->humanizeFieldName($key);
