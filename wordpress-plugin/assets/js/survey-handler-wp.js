@@ -116,11 +116,17 @@ class SurveyHandlerWP {
     async handleComplete(sender) {
         const data = sender.data;
 
-        // SurveyJS clears invisible question values (clearInvisibleValues defaults to 'onHidden').
-        // Re-inject autofill sentinels from hidden fields so the backend can enrich them.
+        // SurveyJS only includes answered questions in data.
+        // Ensure ALL questions are present so the email table and DB have every field.
         sender.getAllQuestions(false).forEach(question => {
-            if (question.defaultValue === '_autofill' && !(question.name in data)) {
+            if (question.name in data) return;
+
+            // Re-inject autofill sentinels from hidden fields so the backend can enrich them
+            if (question.defaultValue === '_autofill') {
                 data[question.name] = '_autofill';
+            } else {
+                // Include unanswered visible fields as empty string
+                data[question.name] = '';
             }
         });
 
