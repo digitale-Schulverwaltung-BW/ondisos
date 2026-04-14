@@ -28,6 +28,11 @@ class Assets
     private string $frontend_assets_url;
 
     /**
+     * Frontend public/js/ URL (for shared handler base)
+     */
+    private string $frontend_js_url;
+
+    /**
      * Constructor - register hooks
      */
     public function __construct()
@@ -37,8 +42,10 @@ class Assets
         //   2. Git-clone on server: frontend-assets/ symlink inside plugin dir → ../frontend/public
         if (file_exists(WP_PLUGIN_DIR . '/ondisos-frontend/')) {
             $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
+            $this->frontend_js_url     = plugins_url('ondisos-frontend/public/js/');
         } else {
             $this->frontend_assets_url = ONDISOS_PLUGIN_URL . 'frontend-assets/assets/';
+            $this->frontend_js_url     = ONDISOS_PLUGIN_URL . 'frontend-assets/js/';
         }
 
         // Enqueue assets on frontend
@@ -108,11 +115,20 @@ class Assets
             true
         );
 
-        // Enqueue custom survey handler
+        // Enqueue shared base class (lives in frontend/public/js/, accessible via symlink)
+        wp_enqueue_script(
+            'ondisos-survey-handler-base',
+            $this->frontend_js_url . 'survey-handler-base.js',
+            ['surveyjs-core', 'surveyjs-ui'],
+            ONDISOS_PLUGIN_VERSION,
+            true
+        );
+
+        // Enqueue WordPress-specific survey handler
         wp_enqueue_script(
             'ondisos-survey-handler',
             ONDISOS_PLUGIN_URL . 'assets/js/survey-handler-wp.js',
-            ['surveyjs-core', 'surveyjs-ui'],
+            ['surveyjs-core', 'surveyjs-ui', 'ondisos-survey-handler-base'],
             ONDISOS_PLUGIN_VERSION,
             true
         );
