@@ -196,6 +196,15 @@ class SurveyHandler {
         // SurveyJS only includes answered questions in data.
         // Ensure ALL questions are present so the email table and DB have every field.
         sender.getAllQuestions(false).forEach(question => {
+            const type = question.getType();
+
+            // html questions are presentational (no value); file questions are uploaded
+            // separately via addFileUploads() — exclude both from survey_data
+            if (type === 'html' || type === 'file') {
+                delete data[question.name]; // remove if SurveyJS placed it there
+                return;
+            }
+
             if (question.name in data) return;
 
             // Re-inject autofill sentinels from hidden fields so the backend can enrich them
