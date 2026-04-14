@@ -188,7 +188,8 @@ $csrfToken = CsrfProtection::getToken();
 <body>
     <div id="surveyContainer"></div>
 
-    <!-- Survey Handler -->
+    <!-- Survey Handler (base class must load first) -->
+    <script src="js/survey-handler-base.js"></script>
     <script src="js/survey-handler.js"></script>
     
     <script>
