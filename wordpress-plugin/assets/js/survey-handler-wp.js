@@ -166,7 +166,7 @@ class SurveyHandlerWP extends SurveyHandlerBase {
         // so the stored JSON contains only name/type references, not the full binary
         this.stripFileContent(data);
 
-        formData.append('survey_data', JSON.stringify(data));
+        formData.append('survey_data', JSON.stringify(this._sortDataByQuestionOrder(data, sender)));
 
         // Submit to server
         try {
