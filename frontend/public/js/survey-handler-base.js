@@ -202,6 +202,37 @@ class SurveyHandlerBase {
     // -------------------------------------------------------------------------
 
     /**
+     * Return a copy of data with keys in survey definition order.
+     *
+     * Without this, prefill fields (set via survey.data = prefillData before render)
+     * end up first in the object due to JS insertion-order semantics, causing them
+     * to appear at the top of notification emails regardless of form layout.
+     * Metadata keys (e.g. _fieldTypes) are appended after the question keys.
+     *
+     * @param {object} data   - The assembled survey_data object
+     * @param {object} sender - The SurveyJS model (provides getAllQuestions)
+     */
+    _sortDataByQuestionOrder(data, sender) {
+        const ordered = {};
+
+        sender.getAllQuestions(false).forEach(question => {
+            const name = question.name;
+            if (name in data) {
+                ordered[name] = data[name];
+            }
+        });
+
+        // Append any remaining keys not covered by questions (e.g. _fieldTypes)
+        Object.keys(data).forEach(key => {
+            if (!(key in ordered)) {
+                ordered[key] = data[key];
+            }
+        });
+
+        return ordered;
+    }
+
+    /**
      * Escape HTML to prevent XSS
      */
     escapeHtml(text) {

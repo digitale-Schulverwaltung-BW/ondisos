@@ -235,7 +235,7 @@ class SurveyHandler extends SurveyHandlerBase {
         // so the stored JSON contains only name/type references, not the full binary
         this.stripFileContent(data);
 
-        formData.append('survey_data', JSON.stringify(data));
+        formData.append('survey_data', JSON.stringify(this._sortDataByQuestionOrder(data, sender)));
         formData.append('csrf_token', this.csrfToken);
         formData.append('meta', JSON.stringify({
             formular: this.config.formKey,
