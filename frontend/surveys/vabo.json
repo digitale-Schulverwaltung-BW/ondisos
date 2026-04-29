@@ -1000,6 +1000,15 @@
       "title": "Absenden",
       "elements": [
         {
+          "type": "file",
+          "name": "2P Ergebnis",
+          "visibleIf": "{VKL} = 'ja'",
+          "title": "Ergebnis 2P",
+          "isRequired": true,
+          "requiredIf": "{VKL} = 'ja'",
+          "filePlaceholder": "Bitte hier das Ergebnis der 2P-Analyse hochladen"
+        },
+        {
           "type": "comment",
           "name": "Anmerkungen",
           "title": "Anmerkungen",

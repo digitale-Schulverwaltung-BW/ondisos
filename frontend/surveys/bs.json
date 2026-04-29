@@ -147,6 +147,11 @@
           "setValueExpression": "iif({_Ausbildungsberuf} = 'y_E0BT_I', 'IB', iif({_Ausbildungsberuf} = 'y_E0FI', iif({Fachrichtung} empty, '1', {Fachrichtung}), '1'))"
         },
         {
+          "type": "text",
+          "name": "Anmeldung_am",
+          "visible": false
+        },
+        {
           "type": "panel",
           "name": "panel3",
           "elements": [

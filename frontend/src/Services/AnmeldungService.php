@@ -36,6 +36,11 @@ class AnmeldungService
         // Clean consent fields (don't save them)
         $surveyData = $this->cleanConsentFields($surveyData);
 
+        // Inject submission date if not already set (server-side, tamper-safe)
+        if (empty($surveyData['Anmeldung_am'])) {
+            $surveyData['Anmeldung_am'] = date('d.m.Y');
+        }
+
         // Extract metadata
         $name = $surveyData['Name'] ?? $surveyData['name'] ?? null;
         $email = $surveyData['email1'] ?? $surveyData['Email'] ?? $surveyData['email'] ?? null;
