@@ -194,6 +194,12 @@ class SurveyHandlerWP extends SurveyHandlerBase {
                 // Show download buttons (PDF and/or iCal) if available
                 const hasPdf  = result.pdf_download  && result.pdf_download.enabled;
                 const hasIcal = result.ical_download && result.ical_download.enabled;
+
+                // Auto-download PDF if marked as required
+                if (hasPdf && result.pdf_download.required) {
+                    this._triggerAutoDownload(result.pdf_download);
+                }
+
                 if (hasPdf || hasIcal) {
                     this.showDownloadButtons(
                         hasPdf  ? result.pdf_download  : null,
@@ -227,17 +233,48 @@ class SurveyHandlerWP extends SurveyHandlerBase {
     }
 
     /**
+     * Build the WordPress AJAX proxy URL for a PDF download.
+     * Extracts the token from the backend-relative URL and routes it through admin-ajax.php.
+     */
+    _pdfDownloadUrl(pdfInfo) {
+        const token = new URL('http://x/' + pdfInfo.url).searchParams.get('token');
+        if (!token) return null;
+        return this.ajaxUrl + '?action=ondisos_pdf_download&token=' + encodeURIComponent(token);
+    }
+
+    /**
+     * Programmatically trigger a PDF download using fetch + Blob URL.
+     * Uses fetch so it works regardless of user-gesture context (we're behind an await).
+     * The download button is still shown as a fallback if this fails.
+     */
+    async _triggerAutoDownload(pdfInfo) {
+        const downloadUrl = this._pdfDownloadUrl(pdfInfo);
+        if (!downloadUrl) return;
+        try {
+            const response = await fetch(downloadUrl, { credentials: 'same-origin' });
+            if (!response.ok) return;
+            const blob = await response.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = 'anmeldebestaetigung.pdf';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+        } catch (e) {
+            console.warn('Auto-download failed, button still available:', e);
+        }
+    }
+
+    /**
      * Build the PDF download card element.
      * Routes the download through the WordPress AJAX proxy so the browser
      * never needs to reach the backend directly.
      */
     _buildPdfCard(pdfInfo) {
-        // Extract token from relative URL and route through WP AJAX proxy
-        const token = new URL('http://x/' + pdfInfo.url).searchParams.get('token');
-        if (!token) return document.createTextNode('');
-
-        const downloadUrl = this.ajaxUrl
-            + '?action=ondisos_pdf_download&token=' + encodeURIComponent(token);
+        const downloadUrl = this._pdfDownloadUrl(pdfInfo);
+        if (!downloadUrl) return document.createTextNode('');
 
         const title = pdfInfo.title || 'Bestätigung herunterladen';
 

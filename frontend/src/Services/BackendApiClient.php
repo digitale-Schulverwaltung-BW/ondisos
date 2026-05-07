@@ -118,7 +118,14 @@ class BackendApiClient
 
         foreach ($files as $fieldName => $file) {
             if ($file['error'] !== UPLOAD_ERR_OK) {
-                continue;
+                $errorMsg = match ($file['error']) {
+                    UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => 'Datei zu groß (Limit überschritten)',
+                    UPLOAD_ERR_PARTIAL => 'Datei nur teilweise übertragen',
+                    UPLOAD_ERR_NO_FILE => 'Keine Datei empfangen',
+                    default => 'Upload-Fehler (Code ' . $file['error'] . ')',
+                };
+                error_log("File upload skipped for anmeldung #$anmeldungId, field $fieldName: $errorMsg");
+                return ['success' => false, 'error' => $errorMsg];
             }
 
             $postData = [
