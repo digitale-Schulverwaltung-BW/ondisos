@@ -1395,6 +1395,7 @@
           "title": "Erste Seite Ausbildungsvertrag",
           "description": "Bitte laden Sie hier die erste Seite Ihres Ausbildungsvertrags hoch.",
           "isRequired": true,
+          "maxSize": 5242880,
           "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB."
         },
         {
