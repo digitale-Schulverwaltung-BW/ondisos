@@ -279,6 +279,12 @@ require __DIR__ . '/../inc/header.php';
             <?= M::get('ui.buttons.excel_export') ?>
         </a>
 
+        <a href="pdf/admin_download.php?id=<?= $anmeldung->id ?>"
+           class="btn btn-secondary"
+           title="PDF-Bestätigung herunterladen">
+            <i class="bi bi-file-earmark-pdf"></i> PDF Bestätigung
+        </a>
+
         <?php if (!$anmeldung->deleted): ?>
             <div style="margin-top: auto; margin-bottom:auto;">
                 Status ändern:
