@@ -286,7 +286,9 @@ class SurveyHandlerWP extends SurveyHandlerBase {
                 <strong style="font-size: 18px; color: #2c3e50;">${this.escapeHtml(title)}</strong>
             </div>
             <p style="margin-bottom: 15px; line-height: 1.6; color: #555;">
-                Laden Sie Ihre Anmeldebestätigung als PDF herunter.
+                ${pdfInfo.required
+                    ? 'Falls der automatische Download nicht funktioniert hat, können Sie Ihre Anmeldebestätigung hier erneut herunterladen.'
+                    : 'Laden Sie Ihre Anmeldebestätigung als PDF herunter.'}
             </p>
             <a href="${this.escapeHtml(downloadUrl)}"
                 download
