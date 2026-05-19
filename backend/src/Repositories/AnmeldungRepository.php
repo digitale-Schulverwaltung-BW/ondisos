@@ -411,6 +411,28 @@ class AnmeldungRepository
         return $stmt->execute() && $stmt->affected_rows > 0;
     }
     /**
+     * Find the IDs of the previous and next non-deleted entries within the same formular
+     *
+     * @return array{prev: int|null, next: int|null}
+     */
+    public function findAdjacentIds(int $id, string $formular): array
+    {
+        $sql = "SELECT
+                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id < ? ORDER BY id DESC LIMIT 1) AS prev_id,
+                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id > ? ORDER BY id ASC  LIMIT 1) AS next_id";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->bind_param('sisi', $formular, $id, $formular, $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        return [
+            'prev' => $row['prev_id'] !== null ? (int)$row['prev_id'] : null,
+            'next' => $row['next_id'] !== null ? (int)$row['next_id'] : null,
+        ];
+    }
+
+    /**
      * Insert new anmeldung
      */
     public function insert(array $data): int

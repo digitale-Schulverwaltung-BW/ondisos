@@ -731,6 +731,22 @@
                 "ja",
                 "nein"
               ]
+            },
+            {
+              "type": "text",
+              "name": "an_Schule",
+              "visibleIf": "{VKL} = 'ja'",
+              "title": {
+                "de": "an Schule (Name und Ort der Schule):",
+                "default": "an Schule"
+              },
+              "titleLocation": "left",
+              "description": "(Name und Ort der Schule)",
+              "isRequired": true,
+              "placeholder": {
+                "de": "Schule, an der dieser Abschluss erreicht wurde",
+                "default": "an welcher Schule wird die VKL-Klasse besucht"
+              }
             }
           ]
         },
