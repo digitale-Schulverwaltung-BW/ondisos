@@ -38,10 +38,15 @@ class DetailController
         // Find uploaded files
         $uploadedFiles = $this->findUploadedFiles($anmeldung);
 
+        // Navigation: prev/next within the same formular
+        $adjacent = $this->repository->findAdjacentIds($id, $anmeldung->formular);
+
         return [
             'anmeldung' => $anmeldung,
             'structuredData' => $structuredData,
-            'uploadedFiles' => $uploadedFiles
+            'uploadedFiles' => $uploadedFiles,
+            'prevId' => $adjacent['prev'],
+            'nextId' => $adjacent['next'],
         ];
     }
 
