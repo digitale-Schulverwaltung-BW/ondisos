@@ -46,23 +46,15 @@ require __DIR__ . '/../inc/header.php';
         <h1><?= M::get('ui.detail.title') ?> #<?= $anmeldung->id ?></h1>
         <div class="d-flex gap-2">
             <?php if ($prevId !== null): ?>
-                <a href="detail.php?id=<?= $prevId ?>" class="btn btn-outline-secondary" title="Vorherige Anmeldung">
-                    <i class="bi bi-chevron-left"></i>
-                </a>
+                <a href="detail.php?id=<?= $prevId ?>" class="btn btn-outline-secondary" title="Vorherige Anmeldung">&#8249;</a>
             <?php else: ?>
-                <button class="btn btn-outline-secondary" disabled title="Keine vorherige Anmeldung">
-                    <i class="bi bi-chevron-left"></i>
-                </button>
+                <button class="btn btn-outline-secondary" disabled title="Keine vorherige Anmeldung">&#8249;</button>
             <?php endif; ?>
 
             <?php if ($nextId !== null): ?>
-                <a href="detail.php?id=<?= $nextId ?>" class="btn btn-outline-secondary" title="Nächste Anmeldung">
-                    <i class="bi bi-chevron-right"></i>
-                </a>
+                <a href="detail.php?id=<?= $nextId ?>" class="btn btn-outline-secondary" title="Nächste Anmeldung">&#8250;</a>
             <?php else: ?>
-                <button class="btn btn-outline-secondary" disabled title="Keine nächste Anmeldung">
-                    <i class="bi bi-chevron-right"></i>
-                </button>
+                <button class="btn btn-outline-secondary" disabled title="Keine nächste Anmeldung">&#8250;</button>
             <?php endif; ?>
 
             <a href="index.php?form=<?= urlencode($anmeldung->formular) ?>"
