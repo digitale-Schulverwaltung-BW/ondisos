@@ -22,6 +22,7 @@ class DetailControllerTest extends TestCase
         parent::setUp();
 
         $this->mockRepository = $this->createMock(AnmeldungRepository::class);
+        $this->mockRepository->method('findAdjacentIds')->willReturn(['prev' => null, 'next' => null]);
         $this->controller = new DetailController($this->mockRepository);
     }
 
