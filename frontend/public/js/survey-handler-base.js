@@ -13,6 +13,8 @@
  * - showError() — DOM approach differs
  */
 
+Survey.Serializer.addProperty("question", { name: "placeholderExpression", type: "expression" });
+
 class SurveyHandlerBase {
     /**
      * @param {Document|Element} root - Scope for DOM lookups.
@@ -230,6 +232,23 @@ class SurveyHandlerBase {
         });
 
         return ordered;
+    }
+
+    /**
+     * Wire up placeholderExpression evaluation for all questions in a survey.
+     * Called once after Survey.Model is created; handles initial render and value changes.
+     */
+    _setupDynamicPlaceholders(survey) {
+        const update = () => {
+            survey.getAllQuestions().forEach(q => {
+                if (q["placeholderExpression"]) {
+                    const val = survey.runExpression(q["placeholderExpression"]);
+                    if (val != null) q.placeholder = String(val);
+                }
+            });
+        };
+        survey.onAfterRenderSurvey.add(update);
+        survey.onValueChanged.add(update);
     }
 
     /**

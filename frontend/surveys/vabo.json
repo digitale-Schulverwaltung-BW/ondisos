@@ -699,7 +699,7 @@
                 },
                 {
                   "value": "SOF",
-                  "text": "sonstige Sprache"
+                  "text": "sonstige Sprache (bitte unter \"Anmerkungen\" auf der letzten Seite erläutern)"
                 }
               ],
               "placeholder": "auswählen..."
@@ -1029,9 +1029,10 @@
           "name": "Anmerkungen",
           "title": "Anmerkungen",
           "description": "Mitteilungen, zum Beispiel weiterer deutsch sprechender Ansprechpartner",
-          "placeholder": "Hier können Sie uns noch ergänzende Mitteilungen übermitteln, wenn Sie dies wünschen."
+          "requiredIf": "{Muttersprache} = 'SOF'",
+  	      "placeholderExpression": "iif({Muttersprache} == 'SOF', 'Bitte hier die Muttersprache angeben', 'Hier können Sie uns noch ergänzende Mitteilungen übermitteln, wenn Sie dies wünschen.')"
         },
-        {
+    {
           "type": "html",
           "name": "question18",
           "html": "Mit dem Absenden <b>bestätige</b> ich die <b>Richtigkeit und Vollständigkeit</b> der gemachten Angaben.<br /><br />\n\nBei Fragen oder Problemen kontaktieren Sie bitte das Sekretariat der Heinrich-Hertz-Schule umgehend <b>mitzuteilen</b> (E-Mail: sekretariat@hhs.karlsruhe.de oder telefonisch unter 0721-133-4847).\n<br /><br />\nNach dem Absenden können Sie auf der nächsten Seite eine<b> PDF-Bestätigung über die Anmeldung</b> herunterladen."

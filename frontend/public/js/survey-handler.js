@@ -31,6 +31,7 @@ class SurveyHandler extends SurveyHandlerBase {
         
         // Create survey model
         this.survey = new Survey.Model(surveyJson);
+        this._setupDynamicPlaceholders(this.survey);
 
         // Apply prefill data
         if (prefillData) {
