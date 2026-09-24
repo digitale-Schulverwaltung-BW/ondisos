@@ -16,6 +16,10 @@ return [
 
         // Fields to prefill in the form when using a prefill link
         // Note: Field names must match exactly with the form definition (bs.json)
+        // This list only governs the auto-generated ?prefill=<base64> links (see
+        // AnmeldungService::generatePrefillLink). It is NOT required for hand-crafted
+        // links: any field can be prefilled by adding it as a plain query parameter,
+        // e.g. index.php?form=bs&Klasse=5a - no encoding needed.
         'prefill_fields' => [
             'Ausbildungsbetrieb',  // Company name - useful for registering multiple apprentices from the same company
             'Ausbilder',           // Ausbilder name

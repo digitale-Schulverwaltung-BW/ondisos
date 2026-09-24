@@ -127,20 +127,34 @@ class SurveyHandler extends SurveyHandlerBase {
     }
 
     /**
-     * Retrieve and decode prefill data from URL parameter
+     * Retrieve prefill data from URL parameters.
+     * Supports two formats:
+     * - Base64-encoded JSON via ?prefill=... (used by auto-generated links)
+     * - Plain field=value query params, e.g. ?form=bs&Klasse=5a (for hand-crafted links;
+     *   field names must match the form definition exactly, same as prefill_fields)
      * Returns null if no valid data is found
      */
     getPrefillData(urlParams) {
         const prefillParam = urlParams.get('prefill');
-        if (!prefillParam) return null;
-        
-        try {
-            const decoded = atob(prefillParam);
-            return JSON.parse(decoded);
-        } catch (e) {
-            console.error('Invalid prefill data:', e);
-            return null;
+        if (prefillParam) {
+            try {
+                const decoded = atob(prefillParam);
+                return JSON.parse(decoded);
+            } catch (e) {
+                console.error('Invalid prefill data:', e);
+                return null;
+            }
         }
+
+        const reservedParams = ['form', 'prefill'];
+        const plainData = {};
+        for (const [key, value] of urlParams.entries()) {
+            if (!reservedParams.includes(key)) {
+                plainData[key] = value;
+            }
+        }
+
+        return Object.keys(plainData).length > 0 ? plainData : null;
     }
 
     /**
