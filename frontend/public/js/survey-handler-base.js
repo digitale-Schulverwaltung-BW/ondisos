@@ -13,6 +13,8 @@
  * - showError() — DOM approach differs
  */
 
+Survey.Serializer.addProperty("question", { name: "placeholderExpression", type: "expression" });
+
 class SurveyHandlerBase {
     /**
      * @param {Document|Element} root - Scope for DOM lookups.
@@ -197,6 +199,25 @@ class SurveyHandlerBase {
         }
     }
 
+    /**
+     * Extract prefill data from plain (non-base64) query params, restricted to a set of
+     * known field names. This lets links be hand-crafted as ?Klasse=5a without encoding,
+     * while ignoring unrelated params (tracking params like utm_source or fbclid on WP pages,
+     * `form`/`prefill` on the standalone frontend, etc.) that happen to be on the URL.
+     *
+     * @param {URLSearchParams} urlParams
+     * @param {Set<string>} validNames - Question names from the survey definition
+     */
+    _extractPlainPrefillParams(urlParams, validNames) {
+        const plainData = {};
+        for (const [key, value] of urlParams.entries()) {
+            if (validNames.has(key)) {
+                plainData[key] = value;
+            }
+        }
+        return Object.keys(plainData).length > 0 ? plainData : null;
+    }
+
     // -------------------------------------------------------------------------
     // Utility
     // -------------------------------------------------------------------------
@@ -230,6 +251,23 @@ class SurveyHandlerBase {
         });
 
         return ordered;
+    }
+
+    /**
+     * Wire up placeholderExpression evaluation for all questions in a survey.
+     * Called once after Survey.Model is created; handles initial render and value changes.
+     */
+    _setupDynamicPlaceholders(survey) {
+        const update = () => {
+            survey.getAllQuestions().forEach(q => {
+                if (q["placeholderExpression"]) {
+                    const val = survey.runExpression(q["placeholderExpression"]);
+                    if (val != null) q.placeholder = String(val);
+                }
+            });
+        };
+        survey.onAfterRenderSurvey.add(update);
+        survey.onValueChanged.add(update);
     }
 
     /**

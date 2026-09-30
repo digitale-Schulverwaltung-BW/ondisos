@@ -22,17 +22,16 @@ class SurveyHandler extends SurveyHandlerBase {
         // Fetch CSRF token
         await this.fetchCsrfToken();
 
-        // Check for prefill parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const prefillData = this.getPrefillData(urlParams);
-
         // Load survey JSON
         const surveyJson = await this.loadSurveyJson();
-        
+
         // Create survey model
         this.survey = new Survey.Model(surveyJson);
+        this._setupDynamicPlaceholders(this.survey);
 
-        // Apply prefill data
+        // Apply prefill data (from ?prefill=<base64> or plain field=value query params)
+        const urlParams = new URLSearchParams(window.location.search);
+        const prefillData = this.getPrefillData(urlParams);
         if (prefillData) {
             this.survey.data = prefillData;
             this.survey.mode = 'edit'; // Allow editing
@@ -126,20 +125,28 @@ class SurveyHandler extends SurveyHandlerBase {
     }
 
     /**
-     * Retrieve and decode prefill data from URL parameter
+     * Retrieve prefill data from URL parameters.
+     * Supports two formats:
+     * - Base64-encoded JSON via ?prefill=... (used by auto-generated links)
+     * - Plain field=value query params, e.g. ?form=bs&Klasse=5a (for hand-crafted links;
+     *   field names must match the form definition exactly, same as prefill_fields).
+     *   Restricted to actual question names so unrelated params are ignored.
      * Returns null if no valid data is found
      */
     getPrefillData(urlParams) {
         const prefillParam = urlParams.get('prefill');
-        if (!prefillParam) return null;
-        
-        try {
-            const decoded = atob(prefillParam);
-            return JSON.parse(decoded);
-        } catch (e) {
-            console.error('Invalid prefill data:', e);
-            return null;
+        if (prefillParam) {
+            try {
+                const decoded = atob(prefillParam);
+                return JSON.parse(decoded);
+            } catch (e) {
+                console.error('Invalid prefill data:', e);
+                return null;
+            }
         }
+
+        const validNames = new Set(this.survey.getAllQuestions(false).map(q => q.name));
+        return this._extractPlainPrefillParams(urlParams, validNames);
     }
 
     /**

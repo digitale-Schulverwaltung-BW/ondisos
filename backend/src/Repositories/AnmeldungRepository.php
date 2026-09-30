@@ -561,12 +561,26 @@ class AnmeldungRepository
      */
     public function findAdjacentIds(int $id, string $formular): array
     {
+        // Tenant isolation: skip filter only in all-tenants (platform admin) mode
+        $tenantSql = '';
+        $tenantParams = [];
+        $tenantTypes = '';
+        if (!TenantContext::isAllTenants()) {
+            $tenantSql = ' AND tenant_id = ?';
+            $tenantParams = [TenantContext::getTenantId()];
+            $tenantTypes = 'i';
+        }
+
         $sql = "SELECT
-                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id < ? ORDER BY id DESC LIMIT 1) AS prev_id,
-                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id > ? ORDER BY id ASC  LIMIT 1) AS next_id";
+                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id < ?$tenantSql ORDER BY id DESC LIMIT 1) AS prev_id,
+                    (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id > ?$tenantSql ORDER BY id ASC  LIMIT 1) AS next_id";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param('sisi', $formular, $id, $formular, $id);
+        $stmt->bind_param(
+            'si' . $tenantTypes . 'si' . $tenantTypes,
+            $formular, $id, ...$tenantParams,
+            $formular, $id, ...$tenantParams
+        );
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
 

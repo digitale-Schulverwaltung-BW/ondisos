@@ -48,11 +48,12 @@ class SurveyHandlerWP extends SurveyHandlerBase {
             this.themeJson = JSON.parse(themeScript.textContent);
             this.prefillData = this.container.dataset.prefill || '';
 
-            // Get prefill data if present
-            const prefillData = this.getPrefillData();
-
             // Create survey model
             this.survey = new Survey.Model(this.surveyJson);
+            this._setupDynamicPlaceholders(this.survey);
+
+            // Get prefill data if present (needs this.survey for field-name filtering)
+            const prefillData = this.getPrefillData();
 
             // Apply prefill data
             if (prefillData) {
@@ -83,7 +84,13 @@ class SurveyHandlerWP extends SurveyHandlerBase {
     }
 
     /**
-     * Get prefill data from data attribute or URL parameter
+     * Get prefill data from data attribute or URL parameter.
+     * Supports three sources, in priority order:
+     * 1. data-prefill attribute (base64, set server-side by the shortcode from ?prefill=...)
+     * 2. ?prefill=<base64> URL parameter (in case the attribute wasn't set)
+     * 3. Plain field=value query params, e.g. ?Klasse=5a (for hand-crafted links).
+     *    Restricted to actual question names so unrelated params on the WP page
+     *    (tracking params like utm_source or fbclid, other shortcodes, etc.) are ignored.
      */
     getPrefillData() {
         // Try data attribute first (from shortcode)
@@ -96,8 +103,9 @@ class SurveyHandlerWP extends SurveyHandlerBase {
             }
         }
 
-        // Try URL parameter
         const urlParams = new URLSearchParams(window.location.search);
+
+        // Try URL parameter
         const prefillParam = urlParams.get('prefill');
         if (prefillParam) {
             try {
@@ -108,7 +116,9 @@ class SurveyHandlerWP extends SurveyHandlerBase {
             }
         }
 
-        return null;
+        // Try plain query params, restricted to this survey's question names
+        const validNames = new Set(this.survey.getAllQuestions(false).map(q => q.name));
+        return this._extractPlainPrefillParams(urlParams, validNames);
     }
 
     /**
