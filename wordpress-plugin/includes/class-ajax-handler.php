@@ -57,7 +57,7 @@ class Ajax_Handler
             // 2. Get and validate form key
             $form_key = sanitize_key($_POST['form_key'] ?? '');
 
-            if (empty($form_key) || !FormConfig::exists($form_key)) {
+            if (!Form_Config_Loader::ensure($form_key)) {
                 throw new \RuntimeException('Unbekanntes Formular', 400);
             }
 
@@ -164,7 +164,7 @@ class Ajax_Handler
     {
         $form_key = sanitize_key($_GET['form'] ?? '');
 
-        if (empty($form_key) || !FormConfig::exists($form_key)) {
+        if (!Form_Config_Loader::ensure($form_key)) {
             status_header(404);
             exit('Formular nicht gefunden.');
         }

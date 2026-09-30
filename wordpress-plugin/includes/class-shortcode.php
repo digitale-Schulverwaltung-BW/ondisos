@@ -51,8 +51,8 @@ class Shortcode
         }
 
         // Check if form exists
-        if (!FormConfig::exists($form_key)) {
-            return $this->render_error('Error: Unknown form "' . esc_html($form_key) . '"');
+        if (!Form_Config_Loader::ensure($form_key)) {
+            return $this->render_error('Error: Unknown form "' . esc_html($form_key) . '" (or backend unavailable)');
         }
 
         // Load survey and theme JSON

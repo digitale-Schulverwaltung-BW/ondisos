@@ -19,6 +19,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
  */
 delete_option('ondisos_backend_url');
 delete_option('ondisos_from_email');
+delete_option('ondisos_tenant_slug');
 
 /**
  * Clean up transients (if any)
