@@ -93,6 +93,7 @@ cd backend
 composer test:filter UploadSecurityTest        # FilenameSanitizer: Bereinigung, Traversal, Sonderzeichen
 composer test:filter MimeTypeValidationTest    # Typ-Erkennung per Inhalt
 composer test:filter UploadPathIsolationTest   # Tenant-Verzeichnisse, Zuordnungsprüfung (Source-Guard)
+composer test:filter UploadCleanupServiceTest  # Dateien beim endgültigen Löschen entfernen (exakter Präfix, nur eigener Tenant)
 ```
 
 Der Endpoint `upload.php` selbst ist ein Script ohne Unit-Tests; Signatur, Zuordnung, Ablehnung getarnter Dateien und
@@ -137,8 +138,9 @@ Downloads laufen über `download.php` und erfordern eine angemeldete Admin-Sitzu
 
 ## Bekannte Einschränkungen
 
-- **Löschen:** Beim endgültigen Löschen einer Anmeldung (Hard-Delete, Auto-Expunge) werden die Upload-Dateien derzeit **nicht**
-  mitgelöscht (siehe [src/UPLOADS.md](src/UPLOADS.md)).
+- **Löschen:** Beim endgültigen Löschen einer Anmeldung (Hard-Delete, Auto-Expunge, manuelles Expunge) entfernt
+  `UploadCleanupService` die Dateien `uploads/tenant-<id>/{anmeldung_id}_*`. Das Soft-Delete (Papierkorb) lässt sie bestehen,
+  und Dateien, die schon vor dieser Funktion verwaist sind, werden nicht erfasst (siehe [src/UPLOADS.md](src/UPLOADS.md)).
 - **Upload- und Download-Typen weichen ab:** Upload erlaubt zusätzlich WebP und SVG, `DownloadController` liefert aber nur
   `pdf, jpg, jpeg, png, gif, doc, docx, xls, xlsx, txt` aus — WebP/SVG-Uploads lassen sich im Backend nicht herunterladen.
 

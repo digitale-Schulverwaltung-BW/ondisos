@@ -6,8 +6,8 @@ Das Backend verfügt über eine PHPUnit 10.5 Test-Suite. Tests laufen via Docker
 
 | Metrik | Wert |
 |---|---|
-| Tests | 501 (Unit) |
-| Assertions | 1117 |
+| Tests | 513 (Unit) |
+| Assertions | 1144 |
 | Line Coverage | **nicht neu gemessen** (`make coverage`); frühere Messung: ~56 % |
 
 Die Tests brauchen die PHP-Extension `mysqli` (Klassen wie `AnmeldungRepository` erben von bzw. nutzen `mysqli`); das
@@ -33,7 +33,7 @@ tests/
     │                   RequestExpungeServiceTest · StatusServiceTest · MessageServiceTest
     │                   PdfTokenServiceTest · RateLimiterTest · VirusScanServiceTest · SchoolLookupServiceTest
     │                   AuditLoggerTest (+TenantId)
-    │                   HmacValidationTest · SecretPolicyTest
+    │                   HmacValidationTest · SecretPolicyTest · UploadCleanupServiceTest
     │                   BackendApiClientTest · BackendApiClientSigningTest · FormConfigLoaderTest
     ├── Upload/         UploadSecurityTest (FilenameSanitizer) · MimeTypeValidationTest · UploadPathIsolationTest
     ├── Utils/          DataFormatterTest

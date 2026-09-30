@@ -91,7 +91,7 @@ projekt/
     │   ├── Services/      AnmeldungService · StatusService · ExportService · SpreadsheetBuilder
     │   │                  ExpungeService · RequestExpungeService
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
-    │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger
+    │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger · UploadCleanupService
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
@@ -1206,6 +1206,7 @@ php -l backend/config/messages.local.php
 **Sonstiges**
 - ✅ Admin-PDF-Download und Prev/Next-Navigation in der Detailansicht
 - ✅ Dateinamen-Sanitizing (`FilenameSanitizer`), Download-Links für Uploads in E-Mails
+- ✅ Endgültiges Löschen (Hard-Delete, Auto-/manuelles Expunge) entfernt auch die Upload-Dateien (`UploadCleanupService`)
 - ✅ Docker: Migration bei jedem Start, `docker compose` (Compose-Plugin), Makefile
 
 **Upgrade von 2.x:** siehe [MIGRATION-3.0.md](MIGRATION-3.0.md).
