@@ -13,6 +13,7 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Config\Config;
 use App\Config\TenantContext;
+use App\Repositories\AnmeldungRepository;
 use App\Repositories\TenantRepository;
 use App\Services\HmacValidator;
 use App\Validators\AnmeldungValidator;
@@ -87,6 +88,13 @@ try {
     // Validate fieldname (already read above for HMAC; re-use)
     if (empty($fieldname)) {
         throw new RuntimeException('Missing fieldname', 400);
+    }
+
+    // The entry must exist and belong to the authenticated tenant. The HMAC only proves
+    // the caller holds this tenant's secret, not that anmeldung_id is theirs. findById()
+    // is tenant-scoped and logs an IDOR attempt for foreign ids.
+    if ((new AnmeldungRepository())->findById($anmeldungId) === null) {
+        throw new RuntimeException('Anmeldung nicht gefunden', 404);
     }
 
     // Check if file was uploaded

@@ -95,4 +95,23 @@ class UploadPathIsolationTest extends TestCase
             @rmdir($tmpBase);
         }
     }
+
+    /**
+     * upload.php must verify that the target Anmeldung belongs to the authenticated
+     * tenant before storing anything (a valid HMAC only proves possession of the
+     * tenant secret). The endpoint is a script, so guard the ordering on source level;
+     * the behaviour itself is covered by the live check documented in the commit.
+     */
+    public function testUploadEndpointChecksAnmeldungOwnershipBeforeStoringFile(): void
+    {
+        $src = file_get_contents(__DIR__ . '/../../../public/api/upload.php');
+
+        $ownership = strpos($src, '(new AnmeldungRepository())->findById($anmeldungId)');
+        $move      = strpos($src, 'move_uploaded_file');
+
+        $this->assertNotFalse($ownership, 'upload.php must look up the Anmeldung tenant-scoped');
+        $this->assertNotFalse($move);
+        $this->assertLessThan($move, $ownership, 'ownership check must precede move_uploaded_file()');
+        $this->assertStringContainsString("'Anmeldung nicht gefunden', 404", $src);
+    }
 }
