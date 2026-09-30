@@ -212,6 +212,25 @@ class AnmeldungRepository
     }
 
     /**
+     * Read only the tenant_id of an Anmeldung — deliberately NOT tenant-scoped.
+     *
+     * For callers that are authorized by something other than a tenant session,
+     * i.e. the PDF download endpoint: its HMAC token (PDF_TOKEN_SECRET) proves the
+     * backend issued access to this id, but carries no tenant. The caller must
+     * initialize TenantContext with the result and then load the row through the
+     * normal scoped findById(). Never expose this to unauthenticated input.
+     */
+    public function findTenantIdById(int $id): ?int
+    {
+        $stmt = $this->db->prepare("SELECT tenant_id FROM anmeldungen WHERE id = ?");
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        return ($row && $row['tenant_id'] !== null) ? (int)$row['tenant_id'] : null;
+    }
+
+    /**
      * Find all anmeldungen for export (non-deleted)
      *
      * @return Anmeldung[]
