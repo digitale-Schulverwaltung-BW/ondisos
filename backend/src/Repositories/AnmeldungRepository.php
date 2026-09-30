@@ -576,11 +576,8 @@ class AnmeldungRepository
                     (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id > ?$tenantSql ORDER BY id ASC  LIMIT 1) AS next_id";
 
         $stmt = $this->db->prepare($sql);
-        $stmt->bind_param(
-            'si' . $tenantTypes . 'si' . $tenantTypes,
-            $formular, $id, ...$tenantParams,
-            $formular, $id, ...$tenantParams
-        );
+        $params = [$formular, $id, ...$tenantParams, $formular, $id, ...$tenantParams];
+        $stmt->bind_param('si' . $tenantTypes . 'si' . $tenantTypes, ...$params);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
 
