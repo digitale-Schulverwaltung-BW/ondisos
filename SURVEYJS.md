@@ -6,7 +6,7 @@
 - [Workflow](#workflow)
   - [Workflow als Video](#workflow-als-video)
   - [Neues Formular erstellen](#neues-formular-erstellen)
-- [Zusammenhang: forms-config.php ↔ surveys/](#zusammenhang-forms-configphp--surveys)
+- [Zusammenhang: Formular-Konfiguration ↔ surveys/](#zusammenhang-formular-konfiguration--surveys)
 
 ## Aufruf des Formular-Designers von SurveyJS
 
@@ -57,7 +57,7 @@ das bestehende Formular überschreiben.
              │                                │
              ▼                                ▼
     frontend/surveys/               ① frontend/surveys/neu.json anlegen
-    *.json überschreiben            ② forms-config.php: Eintrag ergänzen
+    *.json überschreiben            ② Formular-Konfiguration anlegen (Backend)
                                     ③ Shortcode einbetten:
                                        [ondisos form="neu"]
 ```
@@ -66,13 +66,13 @@ das bestehende Formular überschreiben.
 ![ondisos-editor-workflow-3](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/02b75dfede029d8dc511ed466734d678/ondisos-editor-workflow-3.mp4){width=1280 height=720}
 
 ### Neues Formular erstellen
-Wenn ein neues Formular mit neuem Einbettungs-Code (in Wordpress: Shortcode ```[ondisos form="neu"]```) erstellt werden soll, muss dies noch in [frontend/config/forms-config.php](frontend/config/forms-config.php) definiert werden.
+Wenn ein neues Formular mit neuem Einbettungs-Code (in Wordpress: Shortcode ```[ondisos form="neu"]```) erstellt werden soll, muss dies noch als Formular-Konfiguration im Backend angelegt werden: Sie liegt in der Datenbank (Tabelle `form_configs`). Die Vorlage [frontend/config/forms-config-dist.php](frontend/config/forms-config-dist.php) zeigt alle Optionen; einspielen mit `php backend/seed-forms.php` (nur Tenant 1; fügt neue Formulare hinzu, überschreibt vorhandene nie) oder per SQL — siehe [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern). Die `.json`-Datei selbst (`frontend/surveys/neu.json`) liegt weiterhin im Frontend.
 
 ---
 
-## Zusammenhang: forms-config.php ↔ surveys/
+## Zusammenhang: Formular-Konfiguration ↔ surveys/
 
-Der Schlüssel in `forms-config.php` bestimmt den URL-Parameter (`?form=<key>`) und den
+Der Schlüssel der Formular-Konfiguration (`form_key`) bestimmt den URL-Parameter (`?form=<key>`) und den
 WordPress-Shortcode (`[ondisos form="<key>"]`). Jeder Eintrag verweist auf eine
 JSON-Datei in `frontend/surveys/`.
 
@@ -92,14 +92,14 @@ PDF-Bestätigung aktiviert werden, da diese TLS-verschlüsselt (über https) an 
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐
-│           Zusammenhang: forms-config.php ↔ surveys/                │
+│        Zusammenhang: Formular-Konfiguration ↔ surveys/             │
 └────────────────────────────────────────────────────────────────────┘
 
   URL ?form=<key>  /  Shortcode [ondisos form="<key>"]
                           │
                           ▼
-  forms-config.php                           frontend/surveys/
-  ════════════════                           ══════════════════
+  Formular-Konfiguration (DB)                frontend/surveys/
+  ═══════════════════════════                ══════════════════
 
   Schlüssel          Config-Optionen         Formular-Datei
   ─────────────────────────────────         ───────────────
@@ -121,7 +121,7 @@ PDF-Bestätigung aktiviert werden, da diese TLS-verschlüsselt (über https) an 
 
   ─────────────────────────────────────────────────────────────────
   Die Formulare zq und bk sind Beispiele und nur teilweise definiert
-  (zq nur als json, ohne Eintrag in der forms-config.php, daher nicht
-  abrufbar; bk nur in der forms-config.php ohne json-Datei)
+  (zq nur als json, ohne Formular-Konfiguration, daher nicht abrufbar;
+  bk nur als Konfiguration ohne json-Datei)
   ─────────────────────────────────────────────────────────────────
 ```

@@ -35,7 +35,7 @@ liegt in der Datenbank statt in `forms-config.php`.
 | Bereich | 2.x | 3.0 | Aufwand |
 |---|---|---|---|
 | **Datenbank** | Eine Tabelle `anmeldungen` | Neue Tabellen `tenants`, `tenant_admins`, `form_configs`; Spalte `anmeldungen.tenant_id` | `migrate.php` (automatisch im Docker-Backend) |
-| **Formular-Konfiguration** | `frontend/config/forms-config.php` | Tabelle `form_configs`; das Frontend holt sie per API (`/api/form-config.php`) | `seed-forms.php` einmalig |
+| **Formular-Konfiguration** | `frontend/config/forms-config.php` | Tabelle `form_configs`; das Frontend holt sie per API (`/api/form-config.php`) | `seed-forms.php` |
 | **Frontend → Backend** | Unsignierte Requests | Jeder Request trägt `?tenant=<slug>` und `X-Signature` (HMAC-SHA256) | Zwei neue Variablen in der Frontend-`.env` |
 | **API-Secret** | `API_SECRET_KEY` war praktisch unbenutzt | Wird das Secret von Tenant 1; bekannte Standardwerte werden abgelehnt | Echtes Secret erzeugen |
 | **Uploads** | `uploads/<datei>` | `uploads/tenant-<id>/<datei>` | automatisch durch `migrate.php` |
@@ -206,7 +206,8 @@ docker compose exec backend php seed-forms.php
 ```
 
 Ausgabe: `Seeded: bs`, `Seeded: bk`, … Das Skript schreibt für **Tenant 1** und verwendet
-`INSERT IGNORE` — bereits vorhandene Einträge werden **nicht** überschrieben (siehe Abschnitt 6).
+`INSERT IGNORE`: neue Formular-Keys werden hinzugefügt, bereits vorhandene Einträge **nie** überschrieben
+(Änderungen an bestehenden: Abschnitt 6).
 
 Kontrolle:
 
@@ -300,7 +301,7 @@ WHERE tenant_id = 1 AND form_key = 'bs';
 ```
 
 Das Frontend holt die Konfiguration bei jedem Aufruf neu — Änderungen wirken sofort. Ein erneutes
-`seed-forms.php` überschreibt vorhandene Einträge **nicht**.
+`seed-forms.php` fügt **neue** Formulare hinzu, überschreibt vorhandene Einträge aber **nicht**.
 
 Die Survey-Definitionen (`frontend/surveys/*.json`) liegen weiterhin im Frontend-Verzeichnis.
 

@@ -22,7 +22,7 @@ cp .env.example .env
 # die Migration migrate.php läuft bei jedem Start des Backend-Containers)
 docker compose --profile dev up -d
 
-# Formular-Konfiguration einspielen (einmalig): ohne sie gibt es keine Formulare
+# Formular-Konfiguration einspielen (ohne sie gibt es keine Formulare; überschreibt nichts Vorhandenes)
 cp frontend/config/forms-config-dist.php backend/config/forms-config.php   # ggf. anpassen
 docker compose exec backend php seed-forms.php
 

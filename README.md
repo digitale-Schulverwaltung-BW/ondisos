@@ -132,7 +132,7 @@ nano .env  # DB-Passwörter anpassen, Secrets überprüfen
 # Container starten (Backend + MySQL + ClamAV) — die Datenbank-Migration läuft automatisch
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# Formular-Konfiguration einspielen (einmalig)
+# Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
 cp frontend/config/forms-config-dist.php backend/config/forms-config.php
 nano backend/config/forms-config.php
 docker compose exec backend php seed-forms.php
@@ -465,7 +465,7 @@ nano .env  # DB-Credentials, Secrets
 # Docker Dev Stack starten (Migration läuft automatisch)
 docker compose --profile dev up -d  # Backend + MySQL + Frontend (+ phpMyAdmin)
 
-# Formular-Konfiguration einspielen (einmalig)
+# Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
 cp frontend/config/forms-config-dist.php backend/config/forms-config.php
 docker compose exec backend php seed-forms.php
 
