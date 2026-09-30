@@ -157,7 +157,7 @@ test:coverage:
     - mysql:8.0
   before_script:
     - apt-get update && apt-get install -y git unzip libzip-dev zip
-    - pecl install xdebug-3.5.0 && docker-php-ext-enable xdebug
+    - for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done && docker-php-ext-enable xdebug
     - docker-php-ext-install pdo pdo_mysql zip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:

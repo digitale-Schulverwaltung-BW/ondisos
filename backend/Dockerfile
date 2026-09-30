@@ -29,9 +29,10 @@ RUN docker-php-ext-install \
     opcache
 
 # Install Xdebug (for code coverage)
-# Pinned: an unpinned `pecl install xdebug` fails on PHP 8.2 with
-# "No releases available" once a release requiring a newer PHP becomes the latest.
-RUN pecl install xdebug-3.5.0 \
+# Pinned: an unpinned `pecl install xdebug` fails on PHP 8.2 with "No releases available".
+# pecl.php.net is also intermittently unreliable (repeated installs get refused), hence the
+# retry; docker-php-ext-enable fails the build if the extension is still missing afterwards.
+RUN for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done \
     && docker-php-ext-enable xdebug
 
 # Configure Xdebug for coverage only (not debugging)

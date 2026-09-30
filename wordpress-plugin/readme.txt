@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 2.0.0
+Stable tag: 2.1.0
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -32,42 +32,39 @@ von Bayern und BW.
 
 Fügen Sie den Shortcode in eine Seite oder einen Beitrag ein:
 
-`[anmeldung form="bs"]`
+`[ondisos form="bs"]`
 
-Der Parameter `form` ist verpflichtend und muss einem konfigurierten Formular entsprechen.
+Der Parameter `form` ist verpflichtend und muss einem Formular entsprechen, das im Backend für den konfigurierten Tenant angelegt ist.
 
 **Verfügbare Formulare:**
 
-Die verfügbaren Formulare werden in der `frontend/config/forms-config.php` konfiguriert.
+Die Formular-Konfiguration liegt im Ondisos-Backend (pro Tenant) und wird vom Plugin von dort abgerufen.
 
 **Einstellungen:**
 
-Unter Einstellungen → Anmeldung Forms können Sie:
+Unter Einstellungen → Ondisos können Sie:
 
 * Backend API URL konfigurieren
+* Tenant-Slug und Tenant-API-Secret (schreibgeschützt) eintragen
 * Absender-E-Mail-Adresse festlegen
-* Liste aller verfügbaren Formulare mit Shortcodes ansehen
 
 == Installation ==
 
-**Wichtig:** Dieses Plugin ist für die Verwendung mit Symlinks konzipiert.
+**Wichtig:** Das Plugin benötigt neben sich den Frontend-Code des Ondisos-Repositories und ein Ondisos-Backend ab Version 3.0.
 
-1. Klonen Sie das Repository:
-   `git clone https://github.com/yourusername/anmeldung-forms.git /path/to/repo/ondisos/`
-
-2. Erstellen Sie einen Symlink im WordPress Plugins-Verzeichnis:
+1. Repository klonen: `git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git /opt/ondisos`
+2. Symlink im WordPress Plugins-Verzeichnis anlegen:
    `cd /var/www/wordpress/wp-content/plugins/`
-   `ln -s /path/to/repo/ondisos/wordpress-plugin anmeldung-forms`
-
-3. Aktivieren Sie das Plugin in WordPress unter Plugins → Installierte Plugins
-
-4. Konfigurieren Sie die Einstellungen unter Einstellungen → Anmeldung Forms
+   `ln -s /opt/ondisos/wordpress-plugin ondisos`
+   (Docker/getrennte Verzeichnisse: zusätzlich `ondisos-frontend` → `/opt/ondisos/frontend`, siehe INSTALL.md)
+3. Plugin aktivieren unter Plugins → Installierte Plugins
+4. Einstellungen → Ondisos: Backend API URL, Tenant-Slug und Tenant-API-Secret eintragen
 
 **Voraussetzungen:**
 
-* PHP 8.1 oder höher
-* WordPress 5.8 oder höher
+* PHP 8.1 oder höher, WordPress 5.8 oder höher
 * Webserver muss Symlinks unterstützen (Apache: `Options +FollowSymLinks`)
+* Ondisos-Backend 3.0+, vom WordPress-Server aus erreichbar
 
 == Frequently Asked Questions ==
 
@@ -81,37 +78,31 @@ Das Plugin ist als Symlink konzipiert, damit Updates via `git pull` automatisch 
 
 = Wo werden die Formulardaten gespeichert? =
 
-Die Formulardaten werden nicht in der WordPress-Datenbank gespeichert, sondern über eine Backend API an ein separates System übertragen.
+Die Formulardaten werden nicht in der WordPress-Datenbank gespeichert, sondern signiert (HMAC mit dem Tenant-Secret) über eine Backend API an ein separates System übertragen.
 Dieses Backend-System sollte nicht vom Internet aus erreichbar sein.
 
 = Kann ich mehrere Formulare auf einer Seite verwenden? =
 
-Ja, Sie können mehrere `[anmeldung]` Shortcodes mit unterschiedlichen `form` Parametern auf einer Seite verwenden.
+Ja, Sie können mehrere `[ondisos]` Shortcodes mit unterschiedlichen `form` Parametern auf einer Seite verwenden.
 
 = Wie funktioniert die Prefill-Funktionalität? =
 
 Nach erfolgreicher Submission wird ein Link generiert, der vorausgefüllte Formulardaten enthält. Dies ermöglicht schnelle Mehrfach-Anmeldungen mit ähnlichen Daten.
-Diese Funktionalität wird in der forms-config.php im Verzeichnis frontend/config aktiviert. Das Beispiel-Formular
-"bs" kann hier herangezogen werden; die Felder, die als Prefill bereitgestellt werden, können im Array
-"prefill_fields" definiert werden.
+Welche Felder im Link enthalten sind, steht in der Formular-Konfiguration im Backend (`prefill_fields`; Vorlage: frontend/config/forms-config-dist.php).
+Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B. `?Klasse=5a`.
 
 == Changelog ==
 
-= 2.0.0 =
-* Initial WordPress plugin release
-* SurveyJS integration
-* Symlink-based architecture
-* Backend API client
-* CSRF protection via WordPress nonces
-* File upload support
-* Prefill functionality
-* Settings page
-* Multiple forms support
+= 2.1.0 =
+* Formular-Konfiguration wird vom Backend geladen (pro Tenant)
+* Anfragen ans Backend werden mit dem Tenant-Secret signiert
+* Neue Einstellungen: Tenant-Slug, Tenant-API-Secret
+* Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
 
-= 2.0.0 =
-Initial release. Keine Upgrade-Schritte erforderlich.
+= 2.1.0 =
+Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe MIGRATION-3.0.md).
 
 == Developer Notes ==
 
@@ -119,42 +110,45 @@ Initial release. Keine Upgrade-Schritte erforderlich.
 
 Das Plugin verwendet eine Clean MVC-Architektur mit Service Layer:
 
-* `Anmeldung_Forms\*` - WordPress Plugin Namespace
+* `Ondisos\*` - WordPress Plugin Namespace
 * `Frontend\*` - Shared Frontend Services (wiederverwendet)
 
 **Hooks:**
 
-* `anmeldung_enqueue_assets` - Wird beim Rendern des Shortcodes aufgerufen
+* `ondisos_enqueue_assets` - Wird beim Rendern des Shortcodes aufgerufen
 
 **AJAX Endpoints:**
 
-* `wp_ajax_anmeldung_submit` - Form submission (logged in)
-* `wp_ajax_nopriv_anmeldung_submit` - Form submission (public)
+* `wp_ajax_ondisos_submit` / `wp_ajax_nopriv_ondisos_submit` - Form submission
+* `wp_ajax_ondisos_pdf_download` / `wp_ajax_nopriv_ondisos_pdf_download` - PDF-Proxy
+* `wp_ajax_ondisos_ical` / `wp_ajax_nopriv_ondisos_ical` - iCal-Download
 
 **File Structure:**
 
 ```
 wordpress-plugin/
-├── anmeldung-forms.php     # Main plugin file
+├── ondisos.php             # Main plugin file
 ├── includes/
 │   ├── class-plugin.php
 │   ├── class-autoloader.php
 │   ├── class-shortcode.php
+│   ├── class-form-config-loader.php
 │   ├── class-ajax-handler.php
+│   ├── class-pdf-proxy.php
 │   ├── class-assets.php
 │   └── class-settings.php
 └── assets/
     ├── js/
     │   └── survey-handler-wp.js
     └── css/
-        └── anmeldung.css
+        └── ondisos.css
 ```
 
 **Git Updates:**
 
 ```bash
-cd /path/to/repo/ondisos/
-git pull origin main
+cd /opt/ondisos/
+git pull
 # Changes sind sofort in WordPress verfügbar
 ```
 

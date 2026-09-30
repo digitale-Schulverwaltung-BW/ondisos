@@ -160,7 +160,7 @@ coverage:
     - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
 
     # Install PHP extensions (including Xdebug for coverage)
-    - pecl install xdebug-3.5.0
+    - for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done   # pinned + retried (pecl.php.net is flaky)
     - docker-php-ext-enable xdebug
     - docker-php-ext-configure gd --with-freetype --with-jpeg
     - docker-php-ext-install pdo pdo_mysql gd zip

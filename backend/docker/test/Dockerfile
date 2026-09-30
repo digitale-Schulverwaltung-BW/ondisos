@@ -20,7 +20,8 @@ RUN docker-php-ext-install \
     mysqli
 
 # Xdebug for code coverage
-RUN pecl install xdebug \
+# (pinned + retried: unpinned pecl install fails on PHP 8.2, and pecl.php.net is intermittently unreliable)
+RUN for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done \
     && docker-php-ext-enable xdebug \
     && echo "xdebug.mode=coverage" > /usr/local/etc/php/conf.d/xdebug.ini
 
