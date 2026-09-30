@@ -63,6 +63,10 @@ services:
       - ./frontend:/var/www/html
     environment:
       - BACKEND_API_URL=http://backend/api
+      # Tenant this frontend belongs to + its API secret (signs requests to the backend).
+      # After migrate.php, tenant 1 ("default") uses API_SECRET_KEY as its secret.
+      - TENANT_SLUG=${TENANT_SLUG:-default}
+      - TENANT_API_SECRET=${TENANT_API_SECRET:-${API_SECRET_KEY:-dev-api-key-replace-in-production}}
       - FROM_EMAIL=noreply@example.com
       - MAIL_HEAD=Eine neue Anmeldung ist eingegangen
       - ALLOWED_ORIGINS=http://localhost:8081

@@ -61,13 +61,13 @@ if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
 fi
 
 # Run database migration (idempotent — safe to run on every start)
-# Required when MULTI_TENANT_ENABLED=true to create tenants table and tenant_id column.
+# The v3 schema (tenants, form_configs, anmeldungen.tenant_id) is required in BOTH
+# single- and multi-tenant mode: all repositories read and write tenant_id. Upgrades
+# from v2.x therefore must migrate regardless of MULTI_TENANT_ENABLED.
 # Must run after composer install so vendor/autoload.php is available.
-if [ "${MULTI_TENANT_ENABLED:-false}" = "true" ]; then
-    echo "🏢 Running multi-tenant migration..."
-    php /var/www/html/migrate.php
-    echo "✅ Migration complete!"
-fi
+echo "🏢 Running database migration..."
+php /var/www/html/migrate.php
+echo "✅ Migration complete!"
 
 # Create required directories
 echo "📁 Creating required directories..."
