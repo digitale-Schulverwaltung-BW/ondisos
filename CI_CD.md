@@ -157,7 +157,7 @@ test:coverage:
     - mysql:8.0
   before_script:
     - apt-get update && apt-get install -y git unzip libzip-dev zip
-    - pecl install xdebug && docker-php-ext-enable xdebug
+    - for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done && docker-php-ext-enable xdebug
     - docker-php-ext-install pdo pdo_mysql zip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
@@ -221,14 +221,14 @@ deploy:staging:
         cd $STAGING_PATH/backend
 
         # Pull latest images
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
 
         # Restart containers
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
 
         # Health check
         sleep 10
-        curl -f http://localhost:8080/index.php || exit 1
+        curl -f http://localhost:9080/index.php || exit 1
 
         echo "Staging deployment successful!"
       EOF
@@ -269,14 +269,14 @@ deploy:production:
         cd $PRODUCTION_PATH/backend
 
         # Pull latest images
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml pull
 
         # Rolling update (zero-downtime)
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
 
         # Health check
         sleep 15
-        curl -f http://localhost:8080/index.php || exit 1
+        curl -f http://localhost:9080/index.php || exit 1
 
         # Cleanup old images
         docker image prune -f
@@ -314,12 +314,12 @@ rollback:production:
         git checkout $COMMIT_HASH
 
         # Rebuild and restart
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml build backend
-        docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml build backend
+        docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --no-deps backend
 
         # Health check
         sleep 10
-        curl -f http://localhost:8080/index.php || exit 1
+        curl -f http://localhost:9080/index.php || exit 1
 
         echo "Rollback successful!"
       EOF
@@ -454,7 +454,7 @@ git push origin main
 
 # 4. Health Check
 curl https://intranet.example.com
-docker-compose logs -f backend
+docker compose logs -f backend
 ```
 
 ### Rollback
@@ -467,7 +467,7 @@ ssh user@intranet.example.com
 cd /var/www/ondisos/backend
 git log --oneline -10
 git checkout <previous-commit>
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build backend
 ```
 
 ---
@@ -587,7 +587,7 @@ docker login registry.gitlab.com -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
 ```yaml
 # Mehr Zeit geben
 - sleep 30  # statt sleep 10
-- curl -f http://localhost:8080/index.php || exit 1
+- curl -f http://localhost:9080/index.php || exit 1
 ```
 
 ---
@@ -608,8 +608,8 @@ feature/* (feature branches)
 
 ```bash
 # Git Tags für Releases
-git tag -a v2.5.0 -m "Release 2.5.0"
-git push origin v2.5.0
+git tag -a v3.0.0 -m "Release 3.0.0"
+git push origin v3.0.0
 
 # In .gitlab-ci.yml:
 # only:
@@ -645,11 +645,11 @@ deploy:production:
 
 ```bash
 # Zwei identische Environments
-# Aktiv: backend-blue (Port 8080)
+# Aktiv: backend-blue (Port 9080)
 # Standby: backend-green (Port 8081)
 
 # Deploy to green
-docker-compose up -d backend-green
+docker compose up -d backend-green
 
 # Test green
 curl http://localhost:8081/index.php
@@ -666,7 +666,7 @@ curl http://localhost:8081/index.php
 
 **Bei Problemen:**
 1. GitLab Pipeline Logs prüfen
-2. Server Logs prüfen: `docker-compose logs -f backend`
+2. Server Logs prüfen: `docker compose logs -f backend`
 3. Health Checks manuell ausführen
 4. Rollback erwägen
 

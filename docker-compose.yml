@@ -9,7 +9,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: ondisos-backend
     restart: unless-stopped  # Auto-start after reboot (remove for dev if desired)
     ports:
       - "9080:80"  # Change to something else if 9080 is in use
@@ -33,6 +32,10 @@ services:
       - SESSION_SECURE=false
       - AUTH_ENABLED=false
       - PDF_TOKEN_SECRET=${PDF_TOKEN_SECRET:-dev-secret-key-replace-in-production-min-32-chars}
+      - API_SECRET_KEY=${API_SECRET_KEY:-dev-api-key-replace-in-production}
+      - MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}
       - UPLOAD_MAX_SIZE=10485760
       - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png,gif,doc,docx
       - VIRUS_SCAN_ENABLED=${VIRUS_SCAN_ENABLED:-false}
@@ -53,7 +56,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: ondisos-frontend
     restart: unless-stopped  # Auto-start after reboot
     ports:
       - "8081:80"
@@ -61,6 +63,10 @@ services:
       - ./frontend:/var/www/html
     environment:
       - BACKEND_API_URL=http://backend/api
+      # Tenant this frontend belongs to + its API secret (signs requests to the backend).
+      # After migrate.php, tenant 1 ("default") uses API_SECRET_KEY as its secret.
+      - TENANT_SLUG=${TENANT_SLUG:-default}
+      - TENANT_API_SECRET=${TENANT_API_SECRET:-${API_SECRET_KEY:-dev-api-key-replace-in-production}}
       - FROM_EMAIL=noreply@example.com
       - MAIL_HEAD=Eine neue Anmeldung ist eingegangen
       - ALLOWED_ORIGINS=http://localhost:8081
@@ -80,7 +86,6 @@ services:
   # ============================================================================
   mysql:
     image: mysql:8.0
-    container_name: ondisos-mysql
     restart: unless-stopped  # Auto-start after reboot
     ports:
       # DEV: Expose on all interfaces
@@ -121,7 +126,6 @@ services:
   # ============================================================================
   clamav:
     image: clamav/clamav:stable
-    container_name: ondisos-clamav
     restart: unless-stopped
     volumes:
       - clamav-data:/var/lib/clamav  # Persist signatures across restarts
@@ -138,7 +142,6 @@ services:
   # ============================================================================
   phpmyadmin:
     image: phpmyadmin:latest
-    container_name: ondisos-phpmyadmin
     restart: "no"  # Do not auto-start (dev only)
     ports:
       - "8082:80"

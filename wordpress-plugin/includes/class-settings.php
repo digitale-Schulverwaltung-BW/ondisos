@@ -83,6 +83,26 @@ class Settings
             ]
         );
 
+        register_setting(
+            self::OPTION_GROUP,
+            'ondisos_tenant_slug',
+            [
+                'type' => 'string',
+                'sanitize_callback' => 'sanitize_title',
+                'default' => ''
+            ]
+        );
+
+        register_setting(
+            self::OPTION_GROUP,
+            'ondisos_tenant_api_secret',
+            [
+                'type' => 'string',
+                'sanitize_callback' => [$this, 'sanitize_api_secret'],
+                'default' => ''
+            ]
+        );
+
         // Add settings section
         add_settings_section(
             'ondisos_main_section',
@@ -96,6 +116,24 @@ class Settings
             'ondisos_backend_url',
             'Backend API URL',
             [$this, 'render_backend_url_field'],
+            self::PAGE_SLUG,
+            'ondisos_main_section'
+        );
+
+        // Tenant slug field
+        add_settings_field(
+            'ondisos_tenant_slug',
+            'Tenant-Slug',
+            [$this, 'render_tenant_slug_field'],
+            self::PAGE_SLUG,
+            'ondisos_main_section'
+        );
+
+        // Tenant API secret field
+        add_settings_field(
+            'ondisos_tenant_api_secret',
+            'Tenant-API-Secret',
+            [$this, 'render_api_secret_field'],
             self::PAGE_SLUG,
             'ondisos_main_section'
         );
@@ -151,6 +189,64 @@ class Settings
         <p class="description">
             Backend API URL für Formular-Submissions.<br>
             <strong>Aktueller Wert aus .env:</strong> <code><?php echo esc_html($env_value); ?></code>
+        </p>
+        <?php
+    }
+
+    /**
+     * Render Tenant slug field
+     */
+    public function render_tenant_slug_field(): void
+    {
+        $value = get_option('ondisos_tenant_slug', '');
+        $env_value = getenv('TENANT_SLUG') ?: 'Nicht gesetzt';
+
+        ?>
+        <input type="text"
+               name="ondisos_tenant_slug"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               placeholder="default">
+        <p class="description">
+            Kennung der Schule (Tenant), deren Formular-Konfiguration vom Backend geladen wird. Leer = <code>default</code>.<br>
+            <strong>Aktueller Wert aus .env:</strong> <code><?php echo esc_html($env_value); ?></code><br>
+            <strong>Verwendet:</strong> <code><?php echo esc_html(Form_Config_Loader::tenant_slug()); ?></code>
+        </p>
+        <?php
+    }
+
+    /**
+     * Keep the stored secret when the field is submitted empty.
+     *
+     * The secret is never rendered back into the form, so an empty submit
+     * means "unchanged", not "delete".
+     */
+    public function sanitize_api_secret($value): string
+    {
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : (string) get_option('ondisos_tenant_api_secret', '');
+    }
+
+    /**
+     * Render Tenant API secret field (write-only)
+     */
+    public function render_api_secret_field(): void
+    {
+        $is_set = (string) get_option('ondisos_tenant_api_secret', '') !== ''
+            || (string) (getenv('TENANT_API_SECRET') ?: '') !== '';
+
+        ?>
+        <input type="password"
+               name="ondisos_tenant_api_secret"
+               value=""
+               class="regular-text"
+               autocomplete="new-password"
+               placeholder="<?php echo $is_set ? '(gesetzt — leer lassen, um beizubehalten)' : ''; ?>">
+        <p class="description">
+            API-Secret des Tenants zum Signieren der Backend-Anfragen (aus der Tenant-Verwaltung im Backend).
+            Wird nie im Browser ausgegeben. Alternativ <code>TENANT_API_SECRET</code> in der .env.<br>
+            <strong>Status:</strong> <?php echo $is_set ? 'gesetzt' : '<em>nicht gesetzt — Formulare können nicht abgesendet werden</em>'; ?>
         </p>
         <?php
     }
@@ -217,35 +313,11 @@ class Settings
      */
     private function render_forms_list(): void
     {
-        try {
-            $form_keys = FormConfig::getAllFormKeys();
-
-            if (empty($form_keys)) {
-                echo '<p>Keine Formulare konfiguriert.</p>';
-                return;
-            }
-
-            echo '<table class="widefat striped">';
-            echo '<thead><tr><th>Form Key</th><th>Shortcode</th><th>Benachrichtigung</th></tr></thead>';
-            echo '<tbody>';
-
-            foreach ($form_keys as $form_key) {
-                $config = FormConfig::get($form_key);
-                $shortcode = sprintf('[ondisos form="%s"]', esc_attr($form_key));
-                $notify_email = $config['notify_email'] ?? 'Nicht gesetzt';
-
-                echo '<tr>';
-                echo '<td><code>' . esc_html($form_key) . '</code></td>';
-                echo '<td><input type="text" value="' . esc_attr($shortcode) . '" readonly onclick="this.select()" style="width: 100%;"></td>';
-                echo '<td>' . esc_html($notify_email) . '</td>';
-                echo '</tr>';
-            }
-
-            echo '</tbody></table>';
-
-        } catch (\Exception $e) {
-            echo '<div class="notice notice-error"><p>Fehler beim Laden der Formulare: ' . esc_html($e->getMessage()) . '</p></div>';
-        }
+        // Form configuration is managed per tenant in the backend; there is no
+        // list endpoint, so forms are referenced by key: [ondisos form="<key>"].
+        echo '<p>Die Formulare werden pro Tenant im Backend verwaltet. '
+            . 'Binden Sie ein Formular mit dem Shortcode <code>[ondisos form="FORMULARKEY"]</code> in eine Seite ein '
+            . '(aktueller Tenant: <code>' . esc_html(Form_Config_Loader::tenant_slug()) . '</code>).</p>';
     }
 
     /**

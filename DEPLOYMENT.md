@@ -4,6 +4,11 @@
 
 ## 📋 Übersicht
 
+> **Von 2.x kommend?** Lies zuerst **[MIGRATION-3.0.md](MIGRATION-3.0.md)** — das Upgrade betrifft
+> Datenbank, Frontend-Konfiguration und die Frontend↔Backend-Kommunikation.
+> **Mehrere Schulen auf einem Backend?** → **[MULTI-TENANT.md](MULTI-TENANT.md)**.
+> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)**.
+
 Das System besteht aus zwei Servern:
 
 | Server | Komponente | Zweck | Zugriff |
@@ -36,7 +41,7 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 
 **Vorteile:**
 - ✅ **Vereinfachte Dependencies** - Composer, mPDF, PHP 8.2+, Tests automatisch installiert
-- ✅ **Einfache Updates** - `git pull && docker-compose up -d --build`
+- ✅ **Einfache Updates** - `git pull && docker compose up -d --build`
 - ✅ **Konsistente Umgebung** - Dev = Prod, keine "works on my machine"
 - ✅ **Automatische Backups** - Volume-basierte Backups für DB und Uploads
 - ✅ **Frontend flexibel** - Läuft auf bestehendem Webserver (kann mit Wordpress koexistieren)
@@ -58,8 +63,7 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 #### 1. Backend als Docker Container
 
 **Voraussetzungen:**
-- Docker Engine 20.10+ oder Docker Desktop
-- docker-compose 2.0+
+- Docker Engine 20.10+ oder Docker Desktop (inkl. Compose Plugin)
 
 **Setup:**
 
@@ -73,23 +77,36 @@ sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .e
 sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 # Passwörter ändern: DB_PASS, MYSQL_ROOT_PASSWORD
 
-# 3. Container starten
+# 3. Container starten (führt bei jedem Start die Datenbank-Migration aus)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# 4. Logs prüfen
+# 4. Logs prüfen (Migration: "Migration complete")
 docker compose logs -f backend
 
-# 5. Testen
-curl http://localhost:9080/index.php
+# 5. Formular-Konfiguration einspielen (siehe unten)
+cp frontend/config/forms-config-dist.php backend/config/forms-config.php
+nano backend/config/forms-config.php        # Formulare/Empfänger anpassen
+docker compose exec backend php seed-forms.php
+
+# 6. Testen
+curl http://localhost:9080/api/health.php
+curl "http://localhost:9080/api/form-config.php?form=bs&tenant=default"
 ```
 
-**Wichtig - Neue Credentials-Struktur:**
+**Formular-Konfiguration:** Die Konfiguration der Formulare (`bs`, `bk`, …) liegt in der Datenbank
+(Tabelle `form_configs`), nicht mehr in einer Datei. `seed-forms.php` übernimmt eine
+`forms-config.php` für Tenant 1: neue Formulare werden hinzugefügt, vorhandene nie überschrieben. Das Frontend holt die Konfiguration bei jedem Aufruf über
+`/api/form-config.php`. Spätere Änderungen erfolgen per SQL (Admin-Oberfläche: geplant für 3.1) —
+siehe [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern). Nach dem Seed
+können die `forms-config.php`-Dateien gelöscht werden.
 
-Das Projekt verwendet jetzt eine **Root-`.env`** als Single Source of Truth:
+**Wichtig - Credentials-Struktur:**
+
+Das Projekt verwendet eine **Root-`.env`** als Single Source of Truth:
 - `/.env` - Core-Credentials (DB_USER, DB_PASS, Secrets) ← **HIER ALLES WICHTIGE**
 - `/backend/.env` - Optional, nur für Backend-spezifische Overrides
 
-Dadurch **keine Duplikation** mehr zwischen `DB_USER` und `MYSQL_USER` — beide Werte kommen aus den gleichen Variablen in der Root-`.env`.
+Dadurch **keine Duplikation** zwischen `DB_USER` und `MYSQL_USER` — beide Werte kommen aus den gleichen Variablen in der Root-`.env`.
 
 **Docker-Setup (verwende existierende Files):**
 
@@ -107,7 +124,7 @@ Das Projekt kommt mit vorkonfigurierten Compose-Files:
 
 **Beispiel Root `.env`:**
 ```bash
-# Core Credentials (automatisch von docker-compose geladen)
+# Core Credentials (automatisch von Docker Compose geladen)
 DB_HOST=mysql
 DB_NAME=anmeldung
 DB_USER=anmeldung
@@ -115,9 +132,10 @@ DB_PASS=DeinSicheresPasswort123!
 
 MYSQL_ROOT_PASSWORD=RootPasswort456!
 PDF_TOKEN_SECRET=generiert-mit-openssl-rand-hex-32
+API_SECRET_KEY=generiert-mit-openssl-rand-hex-32   # Secret von Tenant 1; Frontend signiert damit
 ```
 
-docker-compose mapped automatisch:
+Docker Compose mapped automatisch:
 - `DB_USER` → `MYSQL_USER` (für MySQL Container Init)
 - `DB_PASS` → `MYSQL_PASSWORD`
 - Keine manuellen Duplikate nötig!
@@ -140,8 +158,8 @@ After=docker.service
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/path/to/ondisos/backend
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
 TimeoutStartSec=0
 
 [Install]
@@ -168,12 +186,20 @@ grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 # - DB_PASS (wird automatisch zu MYSQL_PASSWORD gemapped)
 # - MYSQL_ROOT_PASSWORD
 # - PDF_TOKEN_SECRET (32+ Zeichen: openssl rand -hex 32)
-# - API_SECRET_KEY
+# - API_SECRET_KEY   (openssl rand -hex 32) — siehe unten
 
-# Neue Struktur (kein backend/.env nötig für Credentials):
+# Struktur (kein backend/.env nötig für Credentials):
 # /.env                  ← Alle Secrets HIER
 # /backend/.env          ← Optional, nur für Overrides (Rate Limits, etc.)
 ```
+
+**API-Secret (`API_SECRET_KEY`):** Wird beim Migrieren das Secret von Tenant 1 ("Default"). Das
+Frontend signiert alle Anfragen an das Backend mit diesem Secret (`TENANT_API_SECRET` in der
+Frontend-`.env`) — beide Werte müssen übereinstimmen. Bekannte Platzhalter und Standardwerte
+(`CHANGE_ME_IN_PRODUCTION`, `dev-api-key-replace-in-production`) authentifizieren **nichts**:
+In Production (`APP_ENV=production`) bricht die Migration ab, wenn `API_SECRET_KEY` so ein Wert ist,
+und das Backend weist Anfragen mit einem solchen Tenant-Secret mit `401` ab (Log: `tenant api_secret
+is a known placeholder/default`). Weitere Tenants und ihre Secrets: [MULTI-TENANT.md](MULTI-TENANT.md).
 
 **Admin Authentication Setup:**
 
@@ -183,9 +209,10 @@ grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 # 2. Passwort-Hash generieren
 docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
 
-# 3. Hash in backend/.env (oder Root .env) eintragen
+# 3. Hash in backend/.env (oder Root .env) eintragen — in EINFACHE Anführungszeichen,
+#    sonst interpretiert Docker Compose das `$` in der Root-.env als Variable
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH=$2y$10$abc123...
+ADMIN_PASSWORD_HASH='$2y$10$abc123...'
 
 # 4. Container neu starten
 docker compose restart backend
@@ -204,17 +231,23 @@ cd frontend
 
 # 1. Environment konfigurieren
 cp .env.example .env
+chmod 600 .env          # enthält das Tenant-Secret
 nano .env
-# BACKEND_API_URL=http://your-backend-server.com:8080/api
+# BACKEND_API_URL=http://your-backend-server.com:9080/api
+# TENANT_SLUG=default                       # Slug des Tenants (Tenant 1 = default)
+# TENANT_API_SECRET=<API_SECRET_KEY des Backends>   # signiert alle Anfragen ans Backend
 
-# 2. Forms-Config kopieren
-cp config/forms-config-dist.php config/forms-config.php
-nano config/forms-config.php
-
-# 3. Verzeichnisse anlegen (falls nötig)
+# 2. Verzeichnisse anlegen (falls nötig)
 mkdir -p cache
 chmod 755 cache
 ```
+
+Eine `forms-config.php` ist im Frontend **nicht mehr nötig**: Die Formular-Konfiguration kommt aus
+dem Backend (siehe oben). Die Survey-Definitionen liegen weiter in `frontend/surveys/`.
+
+**Prüfen:** `https://anmeldung.example.com/index.php?form=bs` lädt das Formular. Erscheint die
+Wartungsseite (503), ist das Backend nicht erreichbar oder die Formular-Konfiguration fehlt
+(Tenant-Slug/`seed-forms.php` prüfen).
 
 **Apache VirtualHost:**
 
@@ -255,16 +288,17 @@ Für Umgebungen ohne Docker oder bei Präferenz für klassisches Setup.
 cd backend
 
 # Install Composer dependencies
-composer install
+composer install --no-dev --optimize-autoloader
 
 # Configure environment
 cp .env.example .env
 
-# Generate PDF token secret and write directly to .env
-sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
-sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
+# Secrets anhängen (backend/.env.example enthält sie nur als Kommentar)
+echo "PDF_TOKEN_SECRET=$(openssl rand -hex 32)" >> .env
+echo "API_SECRET_KEY=$(openssl rand -hex 32)"   >> .env
 
 nano .env
+# APP_ENV=production
 # DB_HOST=127.0.0.1 (oder DB-Server)
 # DB_PORT=3306
 # DB_NAME=anmeldung
@@ -276,6 +310,8 @@ mkdir -p cache uploads logs
 chmod 755 cache uploads logs
 ```
 
+Schema, Migration und Formular-Konfiguration folgen in Schritt 3 (Database).
+
 #### 2. Frontend Manuell
 
 ```bash
@@ -283,19 +319,33 @@ cd frontend
 
 # Configure environment
 cp .env.example .env
+chmod 600 .env
 nano .env
 # BACKEND_API_URL=http://intranet.example.com/backend/api
-
-# Configure forms
-cp config/forms-config-dist.php config/forms-config.php
-nano config/forms-config.php
+# TENANT_SLUG=default
+# TENANT_API_SECRET=<API_SECRET_KEY aus backend/.env>
 ```
+
+Die Formular-Konfiguration kommt aus dem Backend (Schritt 3); im Frontend ist keine
+`forms-config.php` mehr nötig.
 
 #### 3. Database
 
 ```bash
+# 1. Schema einspielen (Neuinstallation)
 mysql -u root -p < database/schema.sql
+
+# 2. Migration ausführen — Pflicht auch bei Neuinstallation: sie ersetzt den Platzhalter-Secret
+#    von Tenant 1 durch API_SECRET_KEY (ohne diesen Schritt lehnt das Backend alle Anfragen ab)
+cd backend && php migrate.php
+
+# 3. Formular-Konfiguration einspielen
+cp ../frontend/config/forms-config-dist.php ../frontend/config/forms-config.php
+nano ../frontend/config/forms-config.php      # anpassen
+php seed-forms.php                            # liest ../frontend/config/forms-config.php
 ```
+
+`migrate.php` ist idempotent und kann bei jedem Update erneut ausgeführt werden.
 
 #### 4. Apache Configuration
 
@@ -334,8 +384,8 @@ ADMIN_USERNAME=admin
 cd backend
 php scripts/generate-password-hash.php "dein-sicheres-passwort"
 
-# Hash in .env eintragen
-ADMIN_PASSWORD_HASH=$2y$10$abc123...
+# Hash in .env eintragen (in einfachen Anführungszeichen)
+ADMIN_PASSWORD_HASH='$2y$10$abc123...'
 ```
 
 ---
@@ -350,10 +400,10 @@ Siehe **[DOCKER.md](DOCKER.md)** für vollständige Dokumentation.
 
 ```bash
 # Container starten
-docker-compose up -d
+docker compose up -d
 
 # Tests ausführen
-docker-compose exec backend composer test
+docker compose exec backend composer test
 
 # Services
 # Backend:  http://localhost:9080
@@ -451,16 +501,16 @@ cd backend
 git pull origin main
 
 # 2. Container neu bauen
-docker-compose build
+docker compose build
 
 # 3. Container neu starten (Zero-Downtime mit --no-deps möglich)
-docker-compose up -d --build backend
+docker compose up -d --build backend
 
-# 4. Logs prüfen
-docker-compose logs -f backend
+# 4. Logs prüfen (die Migration läuft beim Containerstart automatisch mit)
+docker compose logs -f backend
 
 # 5. Health Check
-curl http://your-server.com:9080/index.php
+curl http://your-server.com:9080/api/health.php
 ```
 
 **Rollback bei Problemen:**
@@ -468,7 +518,7 @@ curl http://your-server.com:9080/index.php
 ```bash
 # Zu vorheriger Git-Version
 git checkout <previous-commit>
-docker-compose up -d --build backend
+docker compose up -d --build backend
 ```
 
 #### Manuelles Frontend/Backend updaten
@@ -482,27 +532,38 @@ git pull origin main
 # 2. Dependencies aktualisieren (nur Backend)
 composer install  # Backend only
 
-# 3. Cache löschen
+# 3. Datenbank-Migration (nur Backend; idempotent)
+php migrate.php       # Backend only
+
+# 4. Cache löschen
 rm -rf cache/*
 
-# 4. Apache neu laden (optional)
+# 5. Apache neu laden (optional)
 sudo systemctl reload apache2
 ```
 
+Beim Update von 2.x auf 3.0 gilt stattdessen die Anleitung in [MIGRATION-3.0.md](MIGRATION-3.0.md).
+
 #### Backups
+
+Der MySQL-Dump enthält auch Tenants, Tenant-Admins (Passwort-Hashes) und die Formular-Konfiguration (`form_configs`). Uploads liegen unter `uploads/tenant-<id>/` — das Volume bzw. `backend/uploads` als Ganzes sichern. Die `.env`-Dateien (Secrets!) gehören in ein **separates, verschlüsseltes** Backup.
 
 **Docker-Volumes sichern:**
 
 ```bash
+# Credentials aus Root-.env laden
+source /path/to/ondisos/.env
+
 # MySQL Backup (empfohlen: täglich via Cron)
-docker-compose exec mysql mysqldump -u anmeldung -p anmeldung > backup-$(date +%Y%m%d).sql
+docker compose exec mysql mysqldump -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > backup-$(date +%Y%m%d).sql
 
 # Uploads-Volume sichern
 docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
   alpine tar czf /backup/uploads-backup-$(date +%Y%m%d).tar.gz -C /data .
 
 # Restore MySQL
-docker-compose exec -T mysql mysql -u anmeldung -p anmeldung < backup-20260205.sql
+source /path/to/ondisos/.env
+docker compose exec -T mysql mysql -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < backup-20260205.sql
 
 # Restore Uploads
 docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
@@ -512,14 +573,18 @@ docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
 **Manuelle Backups:**
 
 ```bash
+# Credentials aus .env laden
+source backend/.env
+
 # Database
-mysqldump -u anmeldung -p anmeldung > backup-$(date +%Y%m%d).sql
+mysqldump -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > backup-$(date +%Y%m%d).sql
 
 # Uploads
 tar czf uploads-backup-$(date +%Y%m%d).tar.gz backend/uploads
 
 # Restore
-mysql -u anmeldung -p anmeldung < backup-20260205.sql
+source backend/.env
+mysql -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" < backup-20260205.sql
 tar xzf uploads-backup-20260205.tar.gz
 ```
 
@@ -530,10 +595,14 @@ tar xzf uploads-backup-20260205.tar.gz
 #!/bin/bash
 BACKUP_DIR="/var/backups/ondisos"
 DATE=$(date +%Y%m%d)
+ONDISOS_DIR="/path/to/ondisos"   # ← anpassen
+
+# Credentials aus Root-.env laden
+source "$ONDISOS_DIR/.env"
 
 # DB Backup
-docker-compose -f /path/to/backend/docker-compose.yml exec -T mysql \
-  mysqldump -u anmeldung -psecret123 anmeldung > "$BACKUP_DIR/db-$DATE.sql"
+docker compose -f "$ONDISOS_DIR/docker-compose.yml" -f "$ONDISOS_DIR/docker-compose.prod.yml" \
+  exec -T mysql mysqldump -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" > "$BACKUP_DIR/db-$DATE.sql"
 
 # Alte Backups löschen (älter als 30 Tage)
 find "$BACKUP_DIR" -name "db-*.sql" -mtime +30 -delete
@@ -594,7 +663,7 @@ server {
     client_max_body_size 10M;
 
     location / {
-        proxy_pass http://localhost:8080;
+        proxy_pass http://localhost:9080;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -812,10 +881,15 @@ curl -F "file=@test.bin" https://anmeldung.example.com/api/upload.php
 #### Alle Deployment-Optionen
 
 - [ ] **Secrets:** PDF_TOKEN_SECRET (32+ Zeichen), DB-Passwörter geändert
+- [ ] **API-Secret:** `API_SECRET_KEY` mit `openssl rand -hex 32` erzeugt (kein Standardwert — sonst Abbruch/`401`)
+- [ ] **Frontend-Secret:** `TENANT_API_SECRET` (und `TENANT_SLUG`) im Frontend bzw. WordPress-Plugin gesetzt und identisch zum Tenant-Secret im Backend
+- [ ] **Migration:** `migrate.php` gelaufen (Docker: automatisch) und Formular-Konfiguration eingespielt (`seed-forms.php`, `form_configs` gefüllt)
+- [ ] **APP_ENV:** `production` (aktiviert die Ablehnung bekannter Standard-Secrets)
 - [ ] **Debugging:** `APP_DEBUG=false` in Production
 - [ ] **HTTPS:** SSL-Zertifikat installiert und aktiviert
 - [ ] **Backups:** Automatische DB-Backups konfiguriert (Cron)
-- [ ] **Admin Auth:** `AUTH_ENABLED=true` und starkes Passwort (optional)
+- [ ] **Admin Auth:** `AUTH_ENABLED=true` und starkes Passwort (optional; bei `MULTI_TENANT_ENABLED=true` immer aktiv)
+- [ ] **Env-Dateien:** `frontend/.env` und `backend/.env` mit `chmod 600`, nicht im Repository
 - [ ] **Security Headers:** HSTS, CSP, X-Frame-Options aktiv
 - [ ] **Firewall:** Unnötige Ports geschlossen (nur 80, 443, ggf. 22)
 - [ ] **Git:** `.env` nicht committed, `.gitignore` geprüft
@@ -853,13 +927,21 @@ curl -I http://anmeldung.example.com
 # Sollte: 301 Moved Permanently -> https://
 
 # Docker Health Check
-docker-compose ps
+docker compose ps
 # Sollte: State: Up (healthy)
 
 # Backend API testen
-curl http://your-backend:8080/api/submit.php
-# Sollte: JSON Response (auch wenn Fehler wg. fehlender Daten)
+curl http://your-backend:9080/api/health.php
+# Sollte: JSON mit Status ok
+
+curl -i -X POST "http://your-backend:9080/api/submit.php?tenant=default" -d '{}'
+# Sollte: 401 {"error":"Unauthorized"} — unsignierte Anfragen werden abgewiesen
+
+curl "http://your-backend:9080/api/form-config.php?form=bs&tenant=default"
+# Sollte: {"success":true,"config":{...}}
 ```
+
+Anschließend eine Testanmeldung im Browser absenden (Eintrag im Backend, PDF-Download, Upload).
 
 ---
 

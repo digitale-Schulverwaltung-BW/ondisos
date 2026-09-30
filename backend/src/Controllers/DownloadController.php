@@ -5,12 +5,42 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Config\TenantContext;
 use InvalidArgumentException;
 
 class DownloadController
 {
-    private const UPLOAD_DIR = __DIR__ . '/../../uploads';
+    private const UPLOADS_BASE = __DIR__ . '/../../uploads';
     private const ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'doc', 'docx', 'xls', 'xlsx', 'txt'];
+
+    /**
+     * Returns the tenant-scoped upload directory path.
+     *
+     * Public visibility is required so unit tests can call it directly
+     * without an HTTP context.
+     */
+    public function getAllowedUploadDir(): string
+    {
+        $tenantId = TenantContext::getTenantId();
+        return realpath(self::UPLOADS_BASE) . '/tenant-' . $tenantId;
+    }
+
+    /**
+     * Returns true when $realPath is inside $allowedDir (inclusive).
+     *
+     * Public visibility is required so unit tests can exercise the path
+     * validation logic without needing a real file on disk.
+     *
+     * @param string|false $realPath  The resolved real path of the requested file.
+     * @param string       $allowedDir The tenant-scoped upload directory (already realpath-resolved).
+     */
+    public function isWithinAllowedDir(string|false $realPath, string $allowedDir): bool
+    {
+        if ($realPath === false) {
+            return false;
+        }
+        return str_starts_with($realPath, $allowedDir . '/') || $realPath === $allowedDir;
+    }
 
     /**
      * Handle file download request
@@ -24,7 +54,7 @@ class DownloadController
         // Validate filename
         $this->validateFileName($fileName);
 
-        // Build safe file path
+        // Build safe file path within tenant directory
         $filePath = $this->getFilePath($fileName);
 
         // Check if file exists
@@ -32,18 +62,19 @@ class DownloadController
             throw new InvalidArgumentException('Datei nicht gefunden');
         }
 
-        // Check file is within upload directory (prevent directory traversal)
-        $realPath = realpath($filePath);
-        $uploadDir = realpath(self::UPLOAD_DIR);
+        // Check file is within tenant upload directory (prevent directory traversal
+        // and cross-tenant access)
+        $allowedDir = $this->getAllowedUploadDir();
+        $realPath   = realpath($filePath);
 
-        if ($realPath === false || $uploadDir === false || !str_starts_with($realPath, $uploadDir)) {
-            throw new InvalidArgumentException('Ungültiger Dateipfad');
+        if (!$this->isWithinAllowedDir($realPath, $allowedDir)) {
+            throw new InvalidArgumentException('Access denied: file is outside tenant upload directory.');
         }
 
         // Get file info
-        $fileSize = filesize($filePath);
+        $fileSize  = filesize($filePath);
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        $mimeType = $this->getMimeType($extension);
+        $mimeType  = $this->getMimeType($extension);
 
         // Send headers
         header('Content-Type: ' . $mimeType);
@@ -64,7 +95,7 @@ class DownloadController
 
     /**
      * Validate filename
-     * 
+     *
      * @throws InvalidArgumentException
      */
     private function validateFileName(string $fileName): void
@@ -86,11 +117,11 @@ class DownloadController
     }
 
     /**
-     * Get safe file path
+     * Get safe file path within the tenant upload directory.
      */
     private function getFilePath(string $fileName): string
     {
-        return self::UPLOAD_DIR . '/' . basename($fileName);
+        return $this->getAllowedUploadDir() . '/' . basename($fileName);
     }
 
     /**
@@ -99,15 +130,15 @@ class DownloadController
     private function getMimeType(string $extension): string
     {
         return match($extension) {
-            'pdf' => 'application/pdf',
+            'pdf'  => 'application/pdf',
             'jpg', 'jpeg' => 'image/jpeg',
-            'png' => 'image/png',
-            'gif' => 'image/gif',
-            'doc' => 'application/msword',
+            'png'  => 'image/png',
+            'gif'  => 'image/gif',
+            'doc'  => 'application/msword',
             'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            'xls' => 'application/vnd.ms-excel',
+            'xls'  => 'application/vnd.ms-excel',
             'xlsx' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'txt' => 'text/plain',
+            'txt'  => 'text/plain',
             default => 'application/octet-stream'
         };
     }
@@ -119,10 +150,10 @@ class DownloadController
     {
         // Remove non-ASCII characters
         $fileName = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $fileName);
-        
+
         // Remove any remaining problematic characters
         $fileName = preg_replace('/[^a-zA-Z0-9._-]/', '_', $fileName);
-        
+
         return $fileName;
     }
 }

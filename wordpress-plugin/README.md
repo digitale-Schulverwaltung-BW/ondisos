@@ -1,293 +1,144 @@
-# Anmeldung Forms - WordPress Plugin
+# ondisos — WordPress-Plugin
 
-WordPress integration wrapper for the Anmeldung Forms system using **symlink architecture** for seamless git-based updates.
-
-## Quick Start
-
-```bash
-# 1. Create TWO symlinks in WordPress plugins directory
-cd /var/www/html/wp-content/plugins/
-ln -s /path/to/ondisos/wordpress-plugin anmeldung-forms
-ln -s /path/to/ondisos/frontend anmeldung-forms-frontend
-
-# 2. Activate plugin in WordPress Admin
-# 3. Configure settings (Settings → Anmeldung Forms)
-# 4. Use shortcode in pages: [anmeldung form="bs"]
-```
-
-## Features
-
-- ✅ **SurveyJS Integration** - Full SurveyJS form builder support
-- ✅ **Symlink Architecture** - Update via `git pull` without file copying
-- ✅ **Multiple Forms** - Support for multiple forms via shortcode parameter
-- ✅ **DSGVO Compliant** - Local fonts, no external CDN requests
-- ✅ **CSRF Protection** - WordPress nonce-based security
-- ✅ **File Uploads** - Integrated file upload handling
-- ✅ **Prefill Support** - Pre-populate forms for repeat submissions
-- ✅ **Backend Integration** - Seamless API communication with backend
-- ✅ **Type-Safe PHP** - PHP 8.1+ with strict types
-- ✅ **Clean Architecture** - MVC pattern with service layer
-
-## Requirements
-
-- WordPress 5.8+
-- PHP 8.1+
-- Apache/Nginx with symlink support
-- Git repository access
-
-## Installation
-
-See **[INSTALL.md](INSTALL.md)** for detailed installation instructions.
-
-## Usage
-
-### Basic Shortcode
+Bindet die Ondisos-Anmeldeformulare (SurveyJS) per Shortcode in WordPress-Seiten ein. Die Daten werden serverseitig
+und signiert an das Ondisos-Backend übertragen — WordPress speichert keine Anmeldedaten.
 
 ```
-[anmeldung form="bs"]
+[ondisos form="bs"]
 ```
 
-### With Prefill (via URL)
+**Version 2.1.0** · benötigt Ondisos-Backend **3.0+** · WordPress 5.8+ · PHP 8.1+
+
+## Schnellstart
+
+1. Plugin und Frontend-Code bereitstellen (Symlink, Volume oder Git-Clone) — [INSTALL.md](INSTALL.md)
+2. Plugin aktivieren
+3. *Einstellungen → Ondisos*: **Backend API URL**, **Tenant-Slug**, **Tenant-API-Secret** eintragen
+4. Shortcode `[ondisos form="<formular-key>"]` in eine Seite einfügen
+
+## Funktionen
+
+- ✅ SurveyJS-Formulare, mehrere Formulare pro Installation (auch mehrere Shortcodes pro Seite)
+- ✅ Formular-Konfiguration kommt aus dem Backend (pro Tenant, `form-config.php`) — kein Kopieren von Config-Dateien
+- ✅ Signierte Backend-Anfragen (HMAC-SHA256 mit dem Tenant-Secret), CSRF-Schutz über WordPress-Nonces
+- ✅ Datei-Upload (Virenscan im Backend), PDF-Bestätigung (Download über einen Proxy im Plugin), iCal-Download
+- ✅ Prefill per `?prefill=<base64>` (Link aus der Bestätigung) und per einfachen Query-Parametern (`?Klasse=5a`)
+- ✅ DSGVO-konform: lokale Fonts/Bibliotheken, keine externen CDNs
+- ✅ Updates per `git pull`, keine Dateien zu kopieren
+
+## Verwendung
 
 ```
-https://yoursite.com/page/?prefill=base64_encoded_json
+[ondisos form="bs"]
 ```
 
-The form parameter is **mandatory**. Available forms are configured in `frontend/config/forms-config.php`.
+`form` ist **Pflicht** und muss ein Formular-Key sein, der im Backend für den konfigurierten Tenant existiert.
+Ein Attribut für den Tenant gibt es nicht: Der Tenant gehört zur **Installation** (Einstellungen bzw. `.env`), nicht zur Seite.
 
-## Directory Structure
+Prefill:
+
+```
+https://example.org/anmeldung/?prefill=<base64-JSON>      # Link, den das System nach einer Anmeldung erzeugt
+https://example.org/anmeldung/?Vorname=Erika&Klasse=5a    # einfache Parameter; nur bekannte Feldnamen werden übernommen
+```
+
+## Verzeichnisstruktur
 
 ```
 wordpress-plugin/
-├── anmeldung-forms.php          # Main plugin file
-├── readme.txt                    # WordPress.org format readme
-├── uninstall.php                 # Cleanup script
-├── INSTALL.md                    # Installation guide
-├── README.md                     # This file
-├── includes/                     # PHP classes
-│   ├── class-plugin.php         # Core orchestrator
-│   ├── class-autoloader.php     # PSR-4 autoloader
-│   ├── class-shortcode.php      # [anmeldung] handler
-│   ├── class-ajax-handler.php   # AJAX endpoints
-│   ├── class-assets.php         # Asset enqueuing
-│   └── class-settings.php       # Settings page
-└── assets/                       # Frontend assets
-    ├── js/
-    │   └── survey-handler-wp.js # WordPress-adapted JS handler
-    └── css/
-        └── anmeldung.css        # Custom styles
+├── ondisos.php                  # Plugin-Bootstrap (Header, Konstanten, Layout-Erkennung)
+├── uninstall.php                # räumt die Optionen auf
+├── readme.txt                   # WordPress-Format
+├── INSTALL.md · README.md
+├── SYMLINK-SETUP.sh             # Hilfsskript für die Symlink-Installation
+├── frontend-assets -> ../frontend/public   # Symlink auf die Frontend-Assets (Layout A)
+├── includes/
+│   ├── class-plugin.php         # Orchestrierung, lädt .env und WordPress-Optionen in die Umgebung
+│   ├── class-autoloader.php     # PSR-4 für Ondisos\* und Frontend\*
+│   ├── class-shortcode.php      # [ondisos form="…"]
+│   ├── class-form-config-loader.php  # lädt die Formular-Config vom Backend (Tenant-Slug)
+│   ├── class-ajax-handler.php   # Submit (ondisos_submit), iCal (ondisos_ical)
+│   ├── class-pdf-proxy.php      # PDF-Download (ondisos_pdf_download)
+│   ├── class-assets.php         # Scripts/Styles
+│   └── class-settings.php       # Einstellungsseite
+└── assets/
+    ├── js/survey-handler-wp.js  # WordPress-Variante des JS-Handlers (erbt SurveyHandlerBase)
+    └── css/ondisos.css
 ```
 
-## Architecture
+## Architektur
 
-### Namespace Strategy
+**Zwei Namespaces** über den eigenen Autoloader:
 
-The plugin supports **two namespaces** via custom autoloader:
+1. `Ondisos\*` — die Plugin-Klassen (`wordpress-plugin/includes/`)
+2. `Frontend\*` — die gemeinsam genutzten Frontend-Klassen (`frontend/src/`), **unverändert** wiederverwendet:
+   `AnmeldungService`, `BackendApiClient` (signiert die Requests), `EmailService`, `FormConfig`/`FormConfigLoader`
 
-1. **`Anmeldung_Forms\*`** - WordPress plugin classes (wordpress-plugin/includes/)
-2. **`Frontend\*`** - Shared frontend services (frontend/src/) - **Reused without modification!**
+**Unterschiede zum Standalone-Frontend**
 
-This allows the plugin to leverage existing frontend code without duplication.
+| | Standalone | WordPress |
+|---|---|---|
+| CSRF | Session-Token | WP-Nonce |
+| Submit | `save.php` | `admin-ajax.php?action=ondisos_submit` |
+| PDF-Download | `pdf/download.php` (Proxy) | `admin-ajax.php?action=ondisos_pdf_download` |
+| Konfiguration | `frontend/.env` | WP-Einstellungen, sonst `.env` |
+| JS | `survey-handler.js` | `survey-handler-wp.js` (beide erben `survey-handler-base.js`) |
 
-### Key Differences from Standalone Frontend
-
-| Feature | Standalone | WordPress |
-|---------|-----------|-----------|
-| CSRF | Session tokens | WP nonces |
-| Submit URL | save.php | admin-ajax.php |
-| Config | Global object | Data attributes |
-| Initialization | Single form | Multiple forms |
-
-### Data Flow
+**Datenfluss**
 
 ```
-User fills form
-    ↓
-JavaScript collects data
-    ↓
-POST to admin-ajax.php (action: anmeldung_submit)
-    ↓
-Ajax_Handler validates nonce
-    ↓
-AnmeldungService processes (REUSED from frontend/)
-    ↓
-BackendApiClient submits to backend API
-    ↓
-EmailService sends notification
-    ↓
-Success response with prefill link
+Seite mit Shortcode
+   ↓ Form_Config_Loader::ensure('bs') → GET {Backend}/form-config.php?form=bs&tenant={slug}
+Survey wird gerendert (Definition aus frontend/surveys/)
+   ↓ Nutzer sendet ab
+POST admin-ajax.php?action=ondisos_submit   (Nonce geprüft)
+   ↓ AnmeldungService → BackendApiClient
+POST {Backend}/submit.php?tenant={slug}     Header X-Signature (HMAC mit Tenant-Secret)
+   ↓ Uploads: {Backend}/upload.php?tenant={slug}, je Datei signiert
+Antwort mit PDF-Link / Prefill-Link an den Browser
 ```
 
-## Configuration
+## Konfiguration
 
-### WordPress Settings
+*Einstellungen → Ondisos*: Backend API URL, Tenant-Slug, Tenant-API-Secret (write-only), Von E-Mail.
 
-Settings → Anmeldung Forms:
+**Priorität:** 1. WordPress-Optionen · 2. `.env` im Frontend-Verzeichnis · 3. Standardwerte (Slug `default`).
+Details und Sicherheitshinweise (`.env` im Web-Verzeichnis sperren!): [INSTALL.md](INSTALL.md).
 
-- **Backend API URL** - Overrides .env value
-- **From Email** - Overrides .env value
-- **Available Forms** - Lists all configured forms with shortcodes
+## Hooks und AJAX-Endpoints
 
-### Configuration Priority
+- Action `ondisos_enqueue_assets` — wird beim Rendern des Shortcodes ausgelöst und lädt Scripts/Styles
+- `wp_ajax[_nopriv]_ondisos_submit` — Formular absenden
+- `wp_ajax[_nopriv]_ondisos_pdf_download` — PDF-Proxy (`token`-Parameter)
+- `wp_ajax[_nopriv]_ondisos_ical` — iCal-Download (`form`-Parameter, nur wenn für das Formular aktiviert)
 
-1. **WordPress Options** (highest) - from Settings page
-2. **.env file** - from frontend/.env
-3. **Hardcoded defaults** (lowest)
+## Sicherheit
 
-## Development
+- CSRF über WordPress-Nonces (an das Formular gebunden), Nonce-Prüfung bei jedem Submit
+- Ausgaben werden mit `esc_html()`/`esc_attr()`/`esc_url()` escaped; Eingaben sanitisiert
+- Signierte Backend-Anfragen (HMAC-SHA256, Tenant-Secret serverseitig); Upload-Validierung und Virenscan im Backend
+- Keine eigenen Datenbankabfragen; das Secret liegt in `wp_options` (Zugriff auf die WordPress-Datenbank schützen)
 
-### Making Changes
+## Test-Checkliste
 
-```bash
-# Navigate to repository
-cd /path/to/ondisos/
+Siehe [INSTALL.md § Testen](INSTALL.md#testen).
 
-# Make changes to wordpress-plugin/ or frontend/
-vim wordpress-plugin/includes/class-shortcode.php
+## Fehlersuche
 
-# Commit and push
-git add .
-git commit -m "Update feature"
-git push origin main
+- **„Unknown form … (or backend unavailable)"** — Backend-URL/Tenant-Slug prüfen; `curl "<Backend-URL>/form-config.php?form=<key>&tenant=<slug>"` vom WordPress-Server aus
+- **„Unauthorized" beim Absenden** — Tenant-API-Secret fehlt oder passt nicht zum Backend
+- **Assets 404** — Layout A: `frontend-assets`-Symlink und `FollowSymLinks`; Layout B: `plugins/ondisos-frontend/public/assets/`
 
-# On production server
-cd /path/to/ondisos/
-git pull origin main
-# Changes are immediately live in WordPress!
-```
+Vollständige Liste: [INSTALL.md § Fehlersuche](INSTALL.md#fehlersuche).
 
-### Adding New Features
+## Entwicklung
 
-1. Create class in `includes/class-your-feature.php`
-2. Namespace: `Anmeldung_Forms\Your_Feature`
-3. Initialize in `class-plugin.php`
-4. Autoloader will handle loading
+Änderungen in `wordpress-plugin/` oder `frontend/` sind bei Symlink-/Volume-Betrieb sofort in WordPress wirksam. Die
+Plugin-Version (`ondisos.php`, Konstante `ONDISOS_PLUGIN_VERSION`) bei Änderungen an JS/CSS erhöhen — sie ist Teil der
+Asset-URLs und umgeht Browser-Caches.
 
-### Debugging
+Die PHP-Klassen des Frontends werden im Backend-Projekt getestet (`backend/tests`, siehe [../backend/UNITTESTS.md](../backend/UNITTESTS.md)).
 
-Enable WordPress debugging in `wp-config.php`:
+## Lizenz
 
-```php
-define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', true);
-define('WP_DEBUG_DISPLAY', false);
-```
-
-Check logs:
-
-```bash
-tail -f /var/www/html/wp-content/debug.log
-```
-
-## WordPress Hooks & Filters
-
-### Actions
-
-- `anmeldung_enqueue_assets` - Fired when shortcode is rendered, used to enqueue scripts
-
-### AJAX Endpoints
-
-- `wp_ajax_anmeldung_submit` - Handle form submission (logged in users)
-- `wp_ajax_nopriv_anmeldung_submit` - Handle form submission (public users)
-
-## Security
-
-- ✅ CSRF via WordPress nonces (user-bound, time-limited)
-- ✅ XSS prevention via `esc_html()`, `esc_attr()`, `esc_url()`
-- ✅ SQL injection N/A (no WordPress DB queries)
-- ✅ File upload validation in backend
-- ✅ Nonce verification on all AJAX requests
-- ✅ Sanitization of all user inputs
-
-## Testing Checklist
-
-After installation:
-
-- [ ] Plugin activates without errors
-- [ ] Settings page loads
-- [ ] Forms are listed with shortcodes
-- [ ] Shortcode renders form on page
-- [ ] Assets load correctly (check browser console)
-- [ ] Fonts display (no external requests)
-- [ ] Form submission works
-- [ ] Backend receives data
-- [ ] Email notifications sent
-- [ ] Prefill link works
-- [ ] Multiple forms on same page work
-- [ ] Error messages display correctly
-
-## Troubleshooting
-
-### Common Issues
-
-**Plugin not visible in WordPress:**
-- Verify symlink exists and points to correct directory
-- Check main plugin file has WordPress header comment
-- Ensure web server follows symlinks
-
-**Assets not loading (404):**
-- Verify frontend directory exists and is readable
-- Check permissions (755 for dirs, 644 for files)
-- Test asset URL directly in browser
-
-**Form not rendering:**
-- Check browser console for JavaScript errors
-- Verify form exists in forms-config.php
-- Check survey JSON files are valid
-
-**Submission fails:**
-- Check browser Network tab for AJAX response
-- Verify backend API URL in settings
-- Check WordPress debug.log for errors
-- Test backend API directly with curl
-
-See **[INSTALL.md](INSTALL.md)** for detailed troubleshooting.
-
-## Updates
-
-To update the plugin:
-
-```bash
-cd /path/to/ondisos/
-git pull origin main
-```
-
-No WordPress restart needed! Changes are immediately available.
-
-Optional: Clear WordPress cache if using caching plugin.
-
-## Uninstalling
-
-1. Deactivate plugin in WordPress
-2. Delete plugin (runs uninstall.php)
-3. Remove symlink: `rm /var/www/html/wp-content/plugins/anmeldung-forms`
-
-## Contributing
-
-1. Fork repository
-2. Create feature branch
-3. Make changes
-4. Test in WordPress
-5. Submit pull request
-
-## License
-
-GPL v2 or later
-
-## Support
-
-- **Issues:** https://github.com/yourusername/ondisos/issues
-- **Documentation:** See CLAUDE.md in repository root
-- **Installation Guide:** See INSTALL.md in this directory
-
-## Credits
-
-- **SurveyJS:** https://surveyjs.io/
-- **WordPress:** https://wordpress.org/
-- **Open Sans Font:** https://fonts.google.com/specimen/Open+Sans
-
----
-
-**Version:** 2.0.0
-**Author:** Your Name
-**Last Updated:** January 2026
+MIT — siehe [../LICENSE](../LICENSE)

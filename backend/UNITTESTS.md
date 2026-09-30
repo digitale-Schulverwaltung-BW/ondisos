@@ -4,29 +4,14 @@
 
 Das Backend verfügt über eine PHPUnit 10.5 Test-Suite. Tests laufen via Docker ohne lokale PHP-Installation.
 
-**Stand: Februar 2026**
-
 | Metrik | Wert |
 |---|---|
-| Gesamt-Tests | 366 |
-| Assertions | 877 |
-| Line Coverage | **55.82%** (662 / 1186) |
+| Tests | 513 (Unit) |
+| Assertions | 1144 |
+| Line Coverage | **nicht neu gemessen** (`make coverage`); frühere Messung: ~56 % |
 
----
-
-## Coverage nach Bereich
-
-| Bereich | Lines abgedeckt | % |
-|---|---|---|
-| Utils | 63 / 63 | **100%** ✅ |
-| Validators | 83 / 86 | **97%** ✅ |
-| Models | 57 / 75 | **76%** 🟡 |
-| Services | ~372 / 621 | **~60%** 🟡 |
-| Controllers | 94 / 191 | **49%** 🟡 |
-| Repositories | 0 / 150 | **0%** 🔴 |
-
-Klassen mit 100%: `AnmeldungService`, `ExpungeService`, `StatusService`, `MessageService`, `PdfTokenService`, `DataFormatter`, `Anmeldung`
-`DetailController`: **99%** (94/95 Lines)
+Die Tests brauchen die PHP-Extension `mysqli` (Klassen wie `AnmeldungRepository` erben von bzw. nutzen `mysqli`); das
+Test-Image (`docker/test/Dockerfile`) bringt sie mit.
 
 ---
 
@@ -35,47 +20,38 @@ Klassen mit 100%: `AnmeldungService`, `ExpungeService`, `StatusService`, `Messag
 ```
 tests/
 ├── bootstrap.php
+├── Integration/
+│   └── Repositories/AnmeldungRepositoryIsolationTest.php   # braucht eine Test-Datenbank
 └── Unit/
-    ├── Models/
-    │   └── AnmeldungTest.php          # Anmeldung, CompleteAnmeldung
-    ├── Services/
-    │   ├── AnmeldungServiceTest.php      # AnmeldungService (Pagination, Filter, Validierung)
-    │   ├── ExportServiceTest.php         # ExportService (autoMarkAsRead, extractColumns, formatCellValue)
-    │   ├── ExpungeServiceTest.php        # ExpungeService (autoExpunge, previewExpunge, manualExpunge)
-    │   ├── MessageServiceTest.php        # MessageService (dot-notation, placeholders)
-    │   ├── PdfTokenServiceTest.php       # PdfTokenService (HMAC, Tokens)
-    │   ├── RateLimiterTest.php           # RateLimiter (file-based, sliding window)
-    │   ├── RequestExpungeServiceTest.php # RequestExpungeService (throttling, cache, forceRun)
-    │   └── StatusServiceTest.php         # StatusService (markAsExported, archive, delete, updateStatus)
-    ├── Upload/
-    │   ├── MimeTypeValidationTest.php
-    │   └── UploadSecurityTest.php
-    ├── Utils/
-    │   └── DataFormatterTest.php      # DataFormatter (format, filter, sort)
-    ├── Validators/
-    │   ├── AnmeldungValidatorTest.php # Datei-Upload-Validierung, validateFormularName
-    │   └── AnmeldungFormValidatorTest.php  # validate() Instance-Methode
-    └── Controllers/
-        └── DetailControllerTest.php
+    ├── Auth/           LoginServiceTest
+    ├── Config/         FormConfigDbTest · TenantContextTest · TenantContextAllTenantsTest
+    ├── Controllers/    DetailControllerTest
+    ├── Models/         AnmeldungTest
+    ├── Repositories/   AnmeldungRepositoryAdjacentIdsTest · AnmeldungRepositoryTenantLookupTest
+    │                   TenantRepositorySlugTest · TenantRepositoryWriteTest · TenantAdminRepositoryTest
+    ├── Services/       AnmeldungServiceTest · ExportServiceTest · ExpungeServiceTest (+TenantScoping)
+    │                   RequestExpungeServiceTest · StatusServiceTest · MessageServiceTest
+    │                   PdfTokenServiceTest · RateLimiterTest · VirusScanServiceTest · SchoolLookupServiceTest
+    │                   AuditLoggerTest (+TenantId)
+    │                   HmacValidationTest · SecretPolicyTest · UploadCleanupServiceTest
+    │                   BackendApiClientTest · BackendApiClientSigningTest · FormConfigLoaderTest
+    ├── Upload/         UploadSecurityTest (FilenameSanitizer) · MimeTypeValidationTest · UploadPathIsolationTest
+    ├── Utils/          DataFormatterTest
+    └── Validators/     AnmeldungValidatorTest · AnmeldungFormValidatorTest
 ```
 
-### Abgedeckte Klassen
+### Schwerpunkte (3.0)
 
-| Klasse | Datei | Coverage (ca.) |
-|---|---|---|
-| `DataFormatter` | `Utils/DataFormatterTest.php` | ~100% |
-| `AnmeldungValidator` | `Validators/AnmeldungValidatorTest.php` + `AnmeldungFormValidatorTest.php` | ~97% |
-| `Anmeldung` | `Models/AnmeldungTest.php` | ~80% |
-| `CompleteAnmeldung` | `Models/AnmeldungTest.php` | ~70% |
-| `AnmeldungService` | `Services/AnmeldungServiceTest.php` | **100%** |
-| `ExportService` | `Services/ExportServiceTest.php` | **96%** |
-| `ExpungeService` | `Services/ExpungeServiceTest.php` | **100%** |
-| `RequestExpungeService` | `Services/RequestExpungeServiceTest.php` | **96%** |
-| `MessageService` | `Services/MessageServiceTest.php` | ~100% |
-| `PdfTokenService` | `Services/PdfTokenServiceTest.php` | ~100% |
-| `RateLimiter` | `Services/RateLimiterTest.php` | ~100% |
-| `StatusService` | `Services/StatusServiceTest.php` | ~100% |
-| `DetailController` | `Controllers/DetailControllerTest.php` | **99%** |
+| Bereich | Was abgesichert ist |
+|---|---|
+| Tenant-Isolierung | `TenantContext`, tenant-gefilterte Repository-Abfragen (`findAdjacentIds`, `findTenantIdById`), Upload-Pfade, Expunge pro Tenant |
+| API-Sicherheit | `HmacValidator` (Body-/Upload-Signatur), `SecretPolicy` (Platzhalter, Dev-Default in Production), Round-Trip Client-Signatur ↔ Validator |
+| Frontend-Konfiguration | `FormConfigLoader` (laden, mergen, einmalig abfragen), `BackendApiClient::fetchFormConfig` |
+| Uploads | `FilenameSanitizer` (Bereinigung, Traversal, Sonderzeichen), Typ-Erkennung per Inhalt |
+
+**Mock-Strategie für `mysqli`:** Anonymous Subclasses von `mysqli`/`mysqli_stmt`/`mysqli_result`, die SQL, Typen-String und gebundene
+Werte mitschreiben (siehe `AnmeldungRepositoryAdjacentIdsTest`) — so lässt sich prüfen, dass die `tenant_id` korrekt in der Abfrage steckt,
+ohne Datenbank.
 
 ### Nicht (oder kaum) abgedeckt
 
@@ -88,6 +64,8 @@ tests/
 | `AnmeldungController` | `$_GET` Kopplung |
 | `BulkActionsController` | `$_SERVER`/`$_POST` Kopplung |
 | `DownloadController` | `exit` + `readfile()` nicht testbar |
+| Endpoint-Skripte (`public/api/*.php`, `pdf/download.php`) | Scripts mit `exit`/Superglobals; bisher nur live geprüft |
+| JavaScript (`survey-handler-*.js`), WordPress-Plugin | kein JS-/WP-Test-Setup |
 
 ---
 
@@ -173,17 +151,9 @@ class MeinServiceTest extends TestCase
 
 | Ziel | Status |
 |---|---|
-| RateLimiter 100% | ✅ |
-| PdfTokenService 100% | ✅ |
-| MessageService 100% | ✅ |
-| DataFormatter 100% | ✅ |
-| Validators >90% | ✅ |
-| Models >60% | ✅ |
-| StatusService >80% | ✅ (100%) |
-| ExpungeService >80% | ✅ (~85%) |
-| AnmeldungService 100% | ✅ |
-| ExportService >90% | ✅ (96%) |
-| RequestExpungeService >90% | ✅ (96%) |
-| Gesamt >50% | ✅ (**52.36%**) |
-| AnmeldungRepository (Integration) | Langfristig |
-| Gesamt >80% | Langfristig |
+| Tenant-Isolierung, HMAC, SecretPolicy, FormConfigLoader | ✅ |
+| RateLimiter, PdfTokenService, MessageService, DataFormatter | ✅ |
+| Validators, StatusService, ExpungeService, AnmeldungService, ExportService | ✅ |
+| Endpoint-Skripte testbar machen (Logik aus den Scripts in Services ziehen) | offen |
+| AnmeldungRepository (Integration, Test-Datenbank) | Langfristig |
+| Coverage neu messen und Ziel >80 % | Langfristig |

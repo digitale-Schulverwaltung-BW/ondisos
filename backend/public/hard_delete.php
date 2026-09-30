@@ -8,6 +8,7 @@ require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Repositories\AnmeldungRepository;
+use App\Services\UploadCleanupService;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: trash.php');
@@ -29,6 +30,7 @@ try {
     $success = $repository->hardDelete($id);
     
     if ($success) {
+        (new UploadCleanupService())->deleteForAnmeldung($id);
         error_log("Hard delete: Entry #$id permanently deleted");
         header('Location: trash.php?hard_deleted=1&id=' . $id);
     } else {

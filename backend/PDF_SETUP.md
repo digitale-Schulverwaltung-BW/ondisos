@@ -48,7 +48,12 @@ PDF_TOKEN_SECRET=<your-generated-secret-key>
 
 ### 3. Configure Forms
 
-Edit `frontend/config/forms-config.php` (or create from `forms-config-dist.php`):
+The form configuration (including the `pdf` block) is stored in the database (table `form_configs`, one
+row per tenant and form; the frontend fetches it from the backend). To create it, copy
+`frontend/config/forms-config-dist.php` to `forms-config.php` (frontend) or `backend/config/forms-config.php`
+(Docker), edit it and run `php seed-forms.php` (tenant 1 only; adds new forms, never overwrites existing rows).
+Later changes are made in `form_configs.config_json` (SQL) — see [../MIGRATION-3.0.md § 6](../MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
+The entry looks like this (shown as PHP; it is stored as JSON):
 
 ```php
 'bs' => [
@@ -385,7 +390,7 @@ backend/
 
 frontend/
 ├── config/
-│   └── forms-config.php (PDF configuration)
+│   └── forms-config-dist.php (template; the active config lives in the DB table form_configs)
 ├── src/
 │   ├── Services/
 │   │   └── AnmeldungService.php (passes pdf_download)
@@ -429,13 +434,20 @@ frontend/
 
 ---
 
+## Note: PDF settings are captured per submission
+
+The PDF configuration is stored with each registration (`anmeldungen.pdf_config`, sent by the frontend at
+submission time). `pdf/download.php` renders the PDF from that stored copy. Changing `pdf` settings in
+`form_configs` therefore affects **new** registrations only; existing ones keep the settings they were submitted with.
+The backend-side logo fallback (`PDF_LOGO_<FORM>` / `PDF_LOGO_PATH`) is applied at download time.
+
 ## Troubleshooting Checklist
 
 Before asking for help, check:
 
 - [ ] Composer install completed successfully
 - [ ] PDF_TOKEN_SECRET is set in .env (min 32 chars)
-- [ ] Form has `pdf.enabled = true` in forms-config.php
+- [ ] Form has `pdf.enabled = true` in `form_configs.config_json` (and the submission was made after enabling it — see below)
 - [ ] PHP version >= 8.1
 - [ ] Memory limit >= 128M (256M recommended)
 - [ ] File permissions are correct (uploads, cache, logs)

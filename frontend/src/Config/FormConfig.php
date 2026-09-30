@@ -10,50 +10,45 @@ class FormConfig
     private static ?array $config = null;
 
     /**
-     * Load configuration
+     * Load configuration from an injected array.
+     *
+     * Called by index.php after fetching config from the backend API.
+     * Replaces the previous file-based load(); all other methods are unchanged.
+     *
+     * @param array $config Full form-config array, e.g. ['bs' => [...], 'bk' => [...]]
      */
-    public static function load(): void
+    public static function load(array $config): void
     {
-        if (self::$config !== null) {
-            return;
-        }
-
-        $configFile = __DIR__ . '/../../config/forms-config.php';
-        
-        if (!file_exists($configFile)) {
-            throw new \RuntimeException('Configuration file not found: ' . $configFile);
-        }
-
-        self::$config = require $configFile;
+        self::$config = $config;
     }
 
     /**
-     * Get configuration for a specific form
+     * Get configuration for a specific form.
+     * Requires load() to have been called first.
      */
     public static function get(string $formKey): ?array
     {
-        self::load();
         return self::$config[$formKey] ?? null;
     }
 
     /**
-     * Check if form exists
+     * Check if form exists.
+     * Requires load() to have been called first.
      */
     public static function exists(string $formKey): bool
     {
-        self::load();
         return isset(self::$config[$formKey]);
     }
 
     /**
-     * Get all form keys
-     * 
+     * Get all form keys.
+     * Requires load() to have been called first.
+     *
      * @return string[]
      */
     public static function getAllFormKeys(): array
     {
-        self::load();
-        return array_keys(self::$config);
+        return array_keys(self::$config ?? []);
     }
 
     /**

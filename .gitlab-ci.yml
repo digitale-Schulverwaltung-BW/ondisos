@@ -82,7 +82,7 @@ test_unit:
       - apt-get update -qq
       - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
       - docker-php-ext-configure gd --with-freetype --with-jpeg
-      - docker-php-ext-install pdo pdo_mysql gd zip
+      - docker-php-ext-install pdo pdo_mysql mysqli gd zip
       - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
       - composer --version
       # Jetzt PCOV installieren
@@ -126,7 +126,12 @@ test_integration:
     # Install Composer and extensions
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install pdo pdo_mysql gd zip
+    - docker-php-ext-install pdo pdo_mysql mysqli gd zip
+
+    # Point .env.test at the CI MySQL service (not 127.0.0.1)
+    - sed -i 's/^DB_HOST=.*/DB_HOST=mysql/' .env.test
+    - sed -i 's/^DB_USER=.*/DB_USER=test/' .env.test
+    - sed -i 's/^DB_PASS=.*/DB_PASS=test/' .env.test
 
     # Import database schema
     - mysql -h mysql -u test -ptest --skip-ssl anmeldung_test < ../database/schema.sql
@@ -155,7 +160,7 @@ coverage:
     - apt-get install -y -qq git unzip libpng-dev libjpeg-dev libfreetype6-dev libzip-dev
 
     # Install PHP extensions (including Xdebug for coverage)
-    - pecl install xdebug
+    - for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done   # pinned + retried (pecl.php.net is flaky)
     - docker-php-ext-enable xdebug
     - docker-php-ext-configure gd --with-freetype --with-jpeg
     - docker-php-ext-install pdo pdo_mysql gd zip

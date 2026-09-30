@@ -2,8 +2,31 @@
 
 ## Test Coverage Roadmap
 
-**Aktueller Stand:** 18.90% (214/1132 lines)
+**Aktueller Stand:** die Line-Coverage wurde nicht neu gemessen (`composer test:coverage`); die Zahlen in diesem Dokument stammen aus einer früheren Messung. Die Suite umfasst inzwischen ~500 Unit-Tests.
 **Ziel:** >80% Coverage
+
+### v3.0.0 — Stand der Abnahme
+
+In einer Demo-Umgebung (WordPress + Standalone-Frontend + Backend, Multi-Tenant-Modus) verifiziert:
+
+- [x] Frontend → Backend Submit mit HMAC; falsches Secret, unbekannter Slug und fehlender Slug → 401
+- [x] Upload mit HMAC; getarnte Datei abgelehnt; Upload auf fremden/unbekannten Eintrag → 404 + `idor_attempt`
+- [x] PDF-Download im Multi-Tenant-Modus (Token-Endpoint setzt den Tenant-Kontext)
+- [x] Formular-Konfiguration vom Backend (Standalone `index/save/ical`, WordPress-Shortcode)
+- [x] Migration `migrate.php` inkl. Ersatz des Platzhalter-Secrets; Abbruch in Production bei Standard-Secret
+
+Im Browser gegen die Demo geprüft (Platform-Admin und Tenant-Admin):
+
+- [x] Tenant-Switcher: Wechsel auf einen Tenant, Default und „Alle Tenants"; der Redirect bereinigt die URL, die Kopfzeile zeigt den Kontext, Liste und Zähler passen (Tenant B: 1, Default: 8, alle: 9)
+- [x] Tenant-Verwaltung (`tenants.php`): Tenant anlegen (Slug aus dem Namen, API-Schlüssel nur einmal sichtbar), Tenant-Admin anlegen (Passwort nur einmal sichtbar), Schlüssel erneuern (alter sofort ungültig, neuer gültig), Tenant deaktivieren (API 401, Admin-Login abgelehnt)
+- [x] Zugriffsgrenzen: fremder Eintrag → 404 + `idor_attempt`; Tenant-Admin sieht nur den eigenen Tenant (Liste, Dashboard, Papierkorb, Excel-Export), `tenants.php` → 403, `switch_tenant` wirkungslos
+
+Noch offen (nur manuell prüfbar):
+
+- [ ] Backend-Oberfläche: Bootstrap/DataTables lokal ausliefern statt von `cdn.jsdelivr.net` (Datenschutz, Intranet ohne Internet, Versions-Pinning/SRI)
+- [ ] Upload im Browser-Formular (Datei auswählen; der Server-Teil ist verifiziert)
+- [ ] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests
+
 
 ### ✅ Abgeschlossen
 
@@ -470,7 +493,7 @@ session_destroy();  // ❌ Keine Session-Regeneration
 
 ---
 
-**Letzte Aktualisierung:** 2026-02-04
+**Letzte Aktualisierung:** zum Stand von 3.0 (Abnahme-Abschnitt oben); die Coverage-Zahlen unten sind älter.
 **Nächste Schritte:**
 1. ✅ ~~AnmeldungValidator Tests erweitern (4 Methoden fehlen)~~ - ERLEDIGT
 2. ✅ ~~RateLimiter + PdfTokenService auf 100% bringen~~ - ERLEDIGT (100% bzw. 96.92%)

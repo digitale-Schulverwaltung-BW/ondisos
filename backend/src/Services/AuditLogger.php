@@ -12,7 +12,10 @@ namespace App\Services;
  * Tracks security-relevant events for GDPR compliance.
  *
  * Format (one JSON object per line):
- *   {"ts":"2026-02-13T10:30:00+01:00","event":"login_success","user":"admin","ip":"192.168.1.1","details":{}}
+ *   {"ts":"2026-02-13T10:30:00+01:00","event":"login_success","user":"admin","ip":"192.168.1.1","tenant_id":1,"details":{}}
+ *
+ * tenant_id is auto-injected from TenantContext when available.
+ * Pre-auth events (before TenantContext::initialize()) receive tenant_id=null.
  */
 class AuditLogger
 {
@@ -62,9 +65,33 @@ class AuditLogger
         self::log('virus_found', ['anmeldung_id' => $anmeldungId, 'file' => $filename, 'virus' => $virusName]);
     }
 
+    public static function uploadsDeleted(int $anmeldungId, int $count): void
+    {
+        self::log('uploads_deleted', ['anmeldung_id' => $anmeldungId, 'count' => $count]);
+    }
+
+    public static function uploadCleanupFailed(int $anmeldungId, string $filename, string $reason): void
+    {
+        self::log('upload_cleanup_failed', ['anmeldung_id' => $anmeldungId, 'file' => $filename, 'reason' => $reason]);
+    }
+
     public static function exportRun(string $formular, int $count): void
     {
         self::log('export', ['formular' => $formular ?: 'all', 'count' => $count]);
+    }
+
+    /**
+     * Log an IDOR attempt: a record was requested that exists but belongs to a different tenant.
+     *
+     * @param int $requestedId  The ID that was requested
+     * @param int $currentTenantId  The tenant ID that is currently active
+     */
+    public static function idorAttempt(int $requestedId, int $currentTenantId): void
+    {
+        self::log('idor_attempt', [
+            'requested_id'      => $requestedId,
+            'current_tenant_id' => $currentTenantId,
+        ]);
     }
 
     // =========================================================================
@@ -157,12 +184,26 @@ class AuditLogger
             mkdir($logDir, 0755, true);
         }
 
+        // Resolve tenant_id from TenantContext.
+        // - Initialized context   → inject integer tenant_id
+        // - All-tenants mode      → inject null (no single tenant applies)
+        // - Uninitialized context → inject null (pre-auth events such as login)
+        $tenantId = null;
+        try {
+            if (!\App\Config\TenantContext::isAllTenants()) {
+                $tenantId = \App\Config\TenantContext::getTenantId();
+            }
+        } catch (\RuntimeException $e) {
+            // TenantContext not initialized — log without tenant_id (pre-auth event)
+        }
+
         $entry = json_encode([
-            'ts'      => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
-            'event'   => $event,
-            'user'    => self::getUser(),
-            'ip'      => self::getIp(),
-            'details' => $details,
+            'ts'        => (new \DateTimeImmutable())->format(\DateTimeInterface::ATOM),
+            'event'     => $event,
+            'user'      => self::getUser(),
+            'ip'        => self::getIp(),
+            'tenant_id' => $tenantId,
+            'details'   => $details,
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         if ($entry === false) {

@@ -51,7 +51,7 @@
 
 ```bash
 # 1. Check: Sind Container am laufen?
-docker-compose ps
+docker compose ps
 
 # 2. Check: System-Resources
 df -h  # Disk Space
@@ -59,8 +59,8 @@ free -h  # Memory
 top  # CPU Load
 
 # 3. Check: Logs für Fehler
-docker-compose logs --tail=100 backend
-docker-compose logs --tail=100 mysql
+docker compose logs --tail=100 backend
+docker compose logs --tail=100 mysql
 ```
 
 ### Recovery Steps
@@ -71,32 +71,32 @@ docker-compose logs --tail=100 mysql
 cd /var/www/ondisos/backend
 
 # Restart all containers
-docker-compose restart
+docker compose restart
 
 # Wait 30 seconds
 sleep 30
 
 # Check status
-docker-compose ps
+docker compose ps
 
 # Test backend
-curl -I http://localhost:8080/index.php
+curl -I http://localhost:9080/index.php
 ```
 
 #### Step 2: Falls Step 1 nicht hilft - Kompletter Neustart
 
 ```bash
 # Stop all containers
-docker-compose down
+docker compose down
 
 # Check for orphaned containers
 docker ps -a
 
 # Start fresh
-docker-compose up -d
+docker compose up -d
 
 # Monitor logs
-docker-compose logs -f
+docker compose logs -f
 ```
 
 #### Step 3: Falls immer noch down - System Check
@@ -109,7 +109,7 @@ sudo systemctl status docker
 sudo systemctl restart docker
 
 # Start containers
-docker-compose up -d
+docker compose up -d
 ```
 
 #### Step 4: Database Recovery (falls DB korrupt)
@@ -120,10 +120,10 @@ Siehe [Scenario 2: Database Corruption](#2-database-corruption)
 
 ```bash
 # 1. Backend erreichbar
-curl http://localhost:8080/index.php | grep -i "anmeldungen"
+curl http://localhost:9080/index.php | grep -i "anmeldungen"
 
 # 2. Database connection
-docker-compose exec backend php -r "new PDO('mysql:host=mysql;dbname=anmeldung', 'anmeldung', 'secret123');"
+docker compose exec backend php -r "new PDO('mysql:host=mysql;dbname=anmeldung', 'anmeldung', 'secret123');"
 
 # 3. Frontend erreichbar
 curl http://anmeldung.example.com | grep -i "formular"
@@ -155,13 +155,13 @@ curl http://anmeldung.example.com | grep -i "formular"
 
 ```bash
 # 1. Check MySQL status
-docker-compose ps mysql
+docker compose ps mysql
 
 # 2. Check MySQL logs
-docker-compose logs --tail=200 mysql | grep -i error
+docker compose logs --tail=200 mysql | grep -i error
 
 # 3. Try MySQL repair
-docker-compose exec mysql mysqlcheck -u root -p --auto-repair --all-databases
+docker compose exec mysql mysqlcheck -u root -p --auto-repair --all-databases
 ```
 
 ### Recovery Steps
@@ -170,41 +170,41 @@ docker-compose exec mysql mysqlcheck -u root -p --auto-repair --all-databases
 
 ```bash
 # 1. Stop backend (prevent writes)
-docker-compose stop backend
+docker compose stop backend
 
 # 2. Repair database
-docker-compose exec mysql mysqlcheck -u root -p --auto-repair anmeldung
+docker compose exec mysql mysqlcheck -u root -p --auto-repair anmeldung
 
 # 3. Restart MySQL
-docker-compose restart mysql
+docker compose restart mysql
 
 # 4. Verify
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
 # 5. Start backend
-docker-compose start backend
+docker compose start backend
 ```
 
 #### Option B: Restore from Backup
 
 ```bash
 # 1. Stop all containers
-docker-compose down
+docker compose down
 
 # 2. Find latest backup
 ls -lht /var/backups/ondisos/mysql-*.sql | head -5
 
 # 3. Restore from backup
-docker-compose up -d mysql
+docker compose up -d mysql
 sleep 10
 
-docker-compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-20260205_020000.sql
+docker compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-20260205_020000.sql
 
 # 4. Verify data
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
 # 5. Start backend
-docker-compose up -d backend
+docker compose up -d backend
 ```
 
 #### Option C: Emergency - MySQL Volume Reset (⚠️ DATA LOSS!)
@@ -217,32 +217,32 @@ docker run --rm -v backend_mysql-data:/data -v $(pwd):/backup \
   alpine tar czf /backup/mysql-emergency-$(date +%Y%m%d_%H%M%S).tar.gz -C /data .
 
 # 2. Stop and remove containers
-docker-compose down
+docker compose down
 
 # 3. Remove MySQL volume
 docker volume rm backend_mysql-data
 
 # 4. Start fresh (will reinit from schema.sql)
-docker-compose up -d
+docker compose up -d
 
 # 5. Import latest backup if available
-docker-compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-latest.sql
+docker compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-latest.sql
 ```
 
 ### Verification
 
 ```bash
 # 1. Database accessible
-docker-compose exec mysql mysql -u root -p -e "SHOW DATABASES;"
+docker compose exec mysql mysql -u root -p -e "SHOW DATABASES;"
 
 # 2. Tables intact
-docker-compose exec mysql mysql -u root -p -e "SHOW TABLES FROM anmeldung;"
+docker compose exec mysql mysql -u root -p -e "SHOW TABLES FROM anmeldung;"
 
 # 3. Data count
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
 # 4. Backend connection
-curl http://localhost:8080/index.php | grep -i "anmeldungen"
+curl http://localhost:9080/index.php | grep -i "anmeldungen"
 ```
 
 ### Prevention
@@ -260,7 +260,7 @@ curl http://localhost:8080/index.php | grep -i "anmeldungen"
 **Severity:** P1 - High
 
 ### Symptoms
-- ❌ `docker-compose ps` zeigt "Restarting" oder "Exited"
+- ❌ `docker compose ps` zeigt "Restarting" oder "Exited"
 - ❌ Container crasht nach Start sofort
 - ❌ Logs zeigen Fatal Errors
 
@@ -268,11 +268,11 @@ curl http://localhost:8080/index.php | grep -i "anmeldungen"
 
 ```bash
 # 1. Check container status
-docker-compose ps
+docker compose ps
 
 # 2. Check logs for crash reason
-docker-compose logs --tail=200 backend
-docker-compose logs --tail=200 mysql
+docker compose logs --tail=200 backend
+docker compose logs --tail=200 mysql
 
 # 3. Check system resources
 df -h
@@ -288,10 +288,10 @@ free -h
 ```bash
 # Symptom: "Permission denied" in logs
 # Fix: Correct permissions
-docker-compose exec backend chown -R www-data:www-data /var/www/html/uploads
-docker-compose exec backend chown -R www-data:www-data /var/www/html/cache
-docker-compose exec backend chmod -R 755 /var/www/html/uploads
-docker-compose exec backend chmod -R 755 /var/www/html/cache
+docker compose exec backend chown -R www-data:www-data /var/www/html/uploads
+docker compose exec backend chown -R www-data:www-data /var/www/html/cache
+docker compose exec backend chmod -R 755 /var/www/html/uploads
+docker compose exec backend chmod -R 755 /var/www/html/cache
 ```
 
 **2. Missing .env File**
@@ -302,7 +302,7 @@ docker-compose exec backend chmod -R 755 /var/www/html/cache
 cd /var/www/ondisos/backend
 cp .env.example .env
 nano .env  # Edit values
-docker-compose restart backend
+docker compose restart backend
 ```
 
 **3. Port Already in Use**
@@ -310,11 +310,11 @@ docker-compose restart backend
 ```bash
 # Symptom: "bind: address already in use"
 # Fix: Find process using port
-sudo lsof -i :8080
+sudo lsof -i :9080
 
 # Kill process or change port in docker-compose.yml
-nano docker-compose.yml  # Change "8080:80" to "8081:80"
-docker-compose up -d
+nano docker-compose.yml  # Change "9080:80" to "9081:80"
+docker compose up -d
 ```
 
 **4. Out of Memory**
@@ -329,7 +329,7 @@ nano docker-compose.yml
 #       limits:
 #         memory: 1G
 
-docker-compose up -d
+docker compose up -d
 ```
 
 **5. Database Connection Failed**
@@ -337,19 +337,19 @@ docker-compose up -d
 ```bash
 # Symptom: "Connection refused" to MySQL
 # Fix: Wait for MySQL to be healthy
-docker-compose up -d mysql
+docker compose up -d mysql
 sleep 30  # Wait for MySQL init
-docker-compose up -d backend
+docker compose up -d backend
 ```
 
 ### Verification
 
 ```bash
 # All containers should be "Up (healthy)"
-docker-compose ps
+docker compose ps
 
 # No crash loops in logs
-docker-compose logs --tail=50 backend | grep -i error
+docker compose logs --tail=50 backend | grep -i error
 
 # Health checks passing
 docker inspect --format='{{.State.Health.Status}}' ondisos-backend
@@ -378,13 +378,13 @@ docker inspect --format='{{.State.Health.Status}}' ondisos-backend
 
 ```bash
 # 1. STOP SYSTEM IMMEDIATELY!
-docker-compose stop
+docker compose stop
 
 # 2. DO NOT START UNTIL INVESTIGATION COMPLETE!
 
 # 3. Check if data really lost
-docker-compose start mysql
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose start mysql
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
 # 4. Check backups availability
 ls -lh /var/backups/ondisos/
@@ -396,7 +396,7 @@ ls -lh /var/backups/ondisos/
 
 ```bash
 # Check database
-docker-compose exec mysql mysql -u root -p anmeldung << 'EOF'
+docker compose exec mysql mysql -u root -p anmeldung << 'EOF'
 SELECT COUNT(*) as total FROM anmeldungen;
 SELECT MAX(created_at) as latest_entry FROM anmeldungen;
 SELECT COUNT(*) as deleted FROM anmeldungen WHERE deleted = 1;
@@ -415,17 +415,20 @@ docker run --rm -v backend_backend-uploads:/data alpine ls -lh /data
 ls -lht /var/backups/ondisos/mysql-*.sql
 
 # 2. Stop backend
-docker-compose stop backend
+docker compose stop backend
 
 # 3. Restore database
-docker-compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-20260205_020000.sql
+docker compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-20260205_020000.sql
 
 # 4. Verify restored data
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
-# 5. Start backend
-docker-compose start backend
+# 5. Start backend (migrate.php läuft beim Start — auch ein Dump aus der Zeit vor 3.0 wird damit
+#    auf das aktuelle Schema gebracht; bei manueller Installation: php backend/migrate.php)
+docker compose start backend
 ```
+
+Der Dump enthält auch Tenants (inkl. `api_secret`), Tenant-Admins und die Formular-Konfiguration (`form_configs`). **Nicht** enthalten sind die `.env`-Dateien: Secrets (`API_SECRET_KEY`, `PDF_TOKEN_SECRET`, `TENANT_API_SECRET` im Frontend) separat und verschlüsselt sichern. Weicht `tenants.api_secret` nach dem Restore vom Frontend-Secret ab, antwortet das Backend mit `401` — Secrets angleichen.
 
 **Uploads Restore:**
 
@@ -438,15 +441,17 @@ docker run --rm -v backend_backend-uploads:/data -v /var/backups/ondisos:/backup
   alpine tar xzf /backup/uploads-20260205_020000.tar.gz -C /data
 
 # 3. Fix permissions
-docker-compose exec backend chown -R www-data:www-data /var/www/html/uploads
+docker compose exec backend chown -R www-data:www-data /var/www/html/uploads
 ```
+
+Die Uploads liegen pro Tenant unter `uploads/tenant-<id>/`; das Volume immer als Ganzes sichern und zurückspielen. Dateien aus einem Backup vor 3.0 liegen flach in `uploads/` — `migrate.php` (Step 4d) verschiebt sie nach `tenant-1/`.
 
 #### Step 3: Investigation
 
 ```bash
 # Check who/what deleted data
 # - git log for code changes
-# - docker-compose logs for suspicious activity
+# - docker compose logs for suspicious activity
 # - MySQL audit log (if enabled)
 
 # Check for:
@@ -460,13 +465,13 @@ docker-compose exec backend chown -R www-data:www-data /var/www/html/uploads
 
 ```bash
 # 1. Data count matches expectations
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 
 # 2. Recent entries present
-docker-compose exec mysql mysql -u root -p -e "SELECT id, name, created_at FROM anmeldung.anmeldungen ORDER BY created_at DESC LIMIT 10;"
+docker compose exec mysql mysql -u root -p -e "SELECT id, name, created_at FROM anmeldung.anmeldungen ORDER BY created_at DESC LIMIT 10;"
 
 # 3. Uploads accessible
-curl http://localhost:8080/uploads/test.pdf -I
+curl http://localhost:9080/uploads/test.pdf -I
 
 # 4. Full system test
 # → Admin-Login
@@ -502,11 +507,11 @@ curl http://localhost:8080/uploads/test.pdf -I
 
 ```bash
 # 1. ISOLATE SYSTEM IMMEDIATELY
-sudo ufw deny 8080  # Block backend access
+sudo ufw deny 9080  # Block backend access
 sudo ufw deny 80    # Block frontend access (if needed)
 
 # 2. BACKUP CURRENT STATE (for forensics)
-docker-compose logs > /tmp/incident-$(date +%Y%m%d_%H%M%S).log
+docker compose logs > /tmp/incident-$(date +%Y%m%d_%H%M%S).log
 tar czf /tmp/uploads-forensics.tar.gz backend/uploads/
 
 # 3. CHANGE ALL PASSWORDS
@@ -516,8 +521,8 @@ tar czf /tmp/uploads-forensics.tar.gz backend/uploads/
 # - Server SSH keys
 
 # 4. CHECK FOR UNAUTHORIZED ACCESS
-docker-compose logs backend | grep -i "login"
-docker-compose logs backend | grep -i "upload"
+docker compose logs backend | grep -i "login"
+docker compose logs backend | grep -i "upload"
 ```
 
 ### Recovery Steps
@@ -526,7 +531,7 @@ docker-compose logs backend | grep -i "upload"
 
 ```bash
 # 1. Check running processes
-docker-compose exec backend ps aux
+docker compose exec backend ps aux
 
 # 2. Check for backdoors/webshells
 find backend/ -name "*.php" -mtime -7  # Modified in last 7 days
@@ -535,11 +540,11 @@ grep -r "base64_decode" backend/
 grep -r "system(" backend/
 
 # 3. Check uploads for malicious files
-docker-compose exec backend find /var/www/html/uploads -type f -name "*.php"
-docker-compose exec backend find /var/www/html/uploads -type f -executable
+docker compose exec backend find /var/www/html/uploads -type f -name "*.php"
+docker compose exec backend find /var/www/html/uploads -type f -executable
 
 # 4. Check database for SQL injection traces
-docker-compose exec mysql mysql -u root -p -e "SHOW PROCESSLIST;"
+docker compose exec mysql mysql -u root -p -e "SHOW PROCESSLIST;"
 ```
 
 #### Step 2: Clean & Harden
@@ -559,13 +564,26 @@ git fetch origin
 git checkout origin/main
 
 # 4. Rebuild containers (fresh images)
-docker-compose build --no-cache
-docker-compose up -d --force-recreate
+docker compose build --no-cache
+docker compose up -d --force-recreate
 
 # 5. Harden .htaccess
 cp backend/public/.htaccess.example backend/public/.htaccess
 # Enable all security headers!
 ```
+
+#### Step 2b: Secrets rotieren (nach jedem Verdacht auf Kompromittierung)
+
+Alle Secrets gelten als bekannt, sobald Server, `.env`-Dateien oder Backups in fremde Hände geraten sein könnten:
+
+| Secret | Wo | Erneuern |
+|---|---|---|
+| Tenant-API-Secret (`tenants.api_secret`) | Backend-DB + **Frontend** (`TENANT_API_SECRET`, WP-Einstellung) | Backend: `tenants.php` → *Secret neu generieren* (Tenant 1: `UPDATE tenants SET api_secret='…' WHERE id=1` und `API_SECRET_KEY` anpassen). Danach **sofort** dasselbe Secret im zugehörigen Frontend eintragen — bis dahin lehnt das Backend dessen Anfragen mit `401` ab. |
+| `PDF_TOKEN_SECRET` | Backend `.env` | `openssl rand -hex 32`; alle offenen PDF-Links werden ungültig |
+| Datenbank-Passwörter | Root-`.env` (`DB_PASS`, `MYSQL_ROOT_PASSWORD`) | im MySQL **und** in der `.env` ändern |
+| Admin-Zugang | `ADMIN_PASSWORD_HASH`, Tenant-Admins | neue Hashes (`scripts/generate-password-hash.php`), Tenant-Admin-Passwörter in `tenants.php` zurücksetzen |
+
+Den Audit-Log (`backend/logs/audit.log`) auf `login_failed`, `idor_attempt` und ungewöhnliche `upload_*`-Einträge prüfen — jeder Eintrag enthält die `tenant_id`.
 
 #### Step 3: Restore from Clean Backup
 
@@ -573,7 +591,7 @@ cp backend/public/.htaccess.example backend/public/.htaccess
 
 ```bash
 # 1. Vollständiger Neuaufbau
-docker-compose down -v  # Remove all volumes!
+docker compose down -v  # Remove all volumes!
 
 # 2. Code frisch auschecken
 cd /var/www
@@ -583,8 +601,8 @@ git clone <repo-url> ondisos
 
 # 3. Restore nur DB-Daten (nach Review!)
 cd ondisos/backend
-docker-compose up -d mysql
-docker-compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-clean.sql
+docker compose up -d mysql
+docker compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-clean.sql
 
 # 4. Uploads nach Review wiederherstellen
 # (Nur nach Malware-Scan!)
@@ -599,7 +617,7 @@ clamscan -r backend/
 
 # 2. Vulnerability Scan
 # OWASP ZAP oder Nikto
-nikto -h http://localhost:8080
+nikto -h http://localhost:9080
 
 # 3. Check for remaining backdoors
 grep -r "eval\|base64_decode\|system\|exec" backend/src/
@@ -663,8 +681,8 @@ find /var/log -name "*.log" -mtime +30 -delete
 truncate -s 0 /var/log/apache2/*.log
 
 # 3. Clear application logs
-docker-compose exec backend rm -rf /var/www/html/logs/*.log
-docker-compose exec backend rm -rf /var/www/html/cache/*
+docker compose exec backend rm -rf /var/www/html/logs/*.log
+docker compose exec backend rm -rf /var/www/html/cache/*
 
 # 4. Clear old backups (keep last 7 days)
 find /var/backups/ondisos -name "*.sql" -mtime +7 -delete
@@ -706,11 +724,11 @@ df -h | grep "/$"
 docker ps
 
 # 3. Backend can write
-docker-compose exec backend touch /var/www/html/uploads/test.txt
-docker-compose exec backend rm /var/www/html/uploads/test.txt
+docker compose exec backend touch /var/www/html/uploads/test.txt
+docker compose exec backend rm /var/www/html/uploads/test.txt
 
 # 4. MySQL can write
-docker-compose exec mysql mysql -u root -p -e "CREATE TABLE test (id INT); DROP TABLE test;" anmeldung
+docker compose exec mysql mysql -u root -p -e "CREATE TABLE test (id INT); DROP TABLE test;" anmeldung
 ```
 
 ### Prevention
@@ -743,7 +761,7 @@ htop  # if available
 docker stats
 
 # 3. Check slow queries
-docker-compose exec mysql mysql -u root -p -e "SHOW PROCESSLIST;"
+docker compose exec mysql mysql -u root -p -e "SHOW PROCESSLIST;"
 ```
 
 ### Recovery Steps
@@ -768,7 +786,7 @@ free -h
 docker stats
 
 # If backend using too much RAM:
-# → Restart backend: docker-compose restart backend
+# → Restart backend: docker compose restart backend
 # → Increase limits in docker-compose.yml
 ```
 
@@ -786,27 +804,27 @@ iostat -x 1
 **Database-bound:**
 ```bash
 # Enable slow query log
-docker-compose exec mysql mysql -u root -p << 'EOF'
+docker compose exec mysql mysql -u root -p << 'EOF'
 SET GLOBAL slow_query_log = 'ON';
 SET GLOBAL long_query_time = 2;
 SET GLOBAL slow_query_log_file = '/var/log/mysql/slow.log';
 EOF
 
 # Check slow queries after some time
-docker-compose exec mysql tail -f /var/log/mysql/slow.log
+docker compose exec mysql tail -f /var/log/mysql/slow.log
 ```
 
 #### Step 2: Quick Fixes
 
 ```bash
 # 1. Clear cache
-docker-compose exec backend rm -rf /var/www/html/cache/*
+docker compose exec backend rm -rf /var/www/html/cache/*
 
 # 2. Restart services
-docker-compose restart
+docker compose restart
 
 # 3. Optimize database (if many deleted entries)
-docker-compose exec mysql mysqlcheck -u root -p --optimize anmeldung
+docker compose exec mysql mysqlcheck -u root -p --optimize anmeldung
 
 # 4. Increase PHP memory limit (if needed)
 # backend/php.ini or docker-compose.yml environment:
@@ -817,16 +835,16 @@ docker-compose exec mysql mysqlcheck -u root -p --optimize anmeldung
 
 ```bash
 # 1. Response time < 2s
-time curl http://localhost:8080/index.php
+time curl http://localhost:9080/index.php
 
 # 2. Low server load
 uptime  # Load average < number of CPUs
 
 # 3. Database queries fast
-docker-compose exec mysql mysqladmin -u root -p processlist
+docker compose exec mysql mysqladmin -u root -p processlist
 
 # 4. No slow queries
-docker-compose exec mysql mysql -u root -p -e "SELECT * FROM mysql.slow_log LIMIT 10;"
+docker compose exec mysql mysql -u root -p -e "SELECT * FROM mysql.slow_log LIMIT 10;"
 ```
 
 ### Prevention
@@ -856,7 +874,7 @@ docker-compose exec mysql mysql -u root -p -e "SELECT * FROM mysql.slow_log LIMI
 git log --oneline -5
 
 # 2. Check logs for new errors
-docker-compose logs --tail=200 backend | grep -i error
+docker compose logs --tail=200 backend | grep -i error
 
 # 3. Decide: Fix forward or rollback?
 ```
@@ -873,27 +891,29 @@ git log --oneline -10
 git checkout <previous-commit-hash>
 
 # 3. Rebuild and restart
-docker-compose build --no-cache backend
-docker-compose up -d --force-recreate backend
+docker compose build --no-cache backend
+docker compose up -d --force-recreate backend
 
 # 4. Verify
-curl -I http://localhost:8080/index.php
+curl -I http://localhost:9080/index.php
 
 # 5. If database changes: restore DB backup
-docker-compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-before-deployment.sql
+docker compose exec -T mysql mysql -u root -p anmeldung < /var/backups/ondisos/mysql-before-deployment.sql
 ```
+
+> **Hinweis:** `migrate.php` ändert das Schema nur vorwärts (Tabellen/Spalten hinzufügen, Uploads verschieben). Ein Zurückrollen auf 2.x erfordert daher das Backup von **vor** der Migration — siehe [MIGRATION-3.0.md § Rollback](MIGRATION-3.0.md#8-rollback).
 
 #### Option B: Fix Forward (für P2/P3)
 
 ```bash
 # 1. Identify issue
-docker-compose logs --tail=500 backend
+docker compose logs --tail=500 backend
 
 # 2. Fix code
 nano backend/src/...
 
 # 3. Test locally
-docker-compose restart backend
+docker compose restart backend
 
 # 4. Commit fix
 git add .
@@ -915,10 +935,10 @@ gitlab-runner exec docker rollback:production
 
 ```bash
 # 1. System works
-curl http://localhost:8080/index.php | grep -i "anmeldungen"
+curl http://localhost:9080/index.php | grep -i "anmeldungen"
 
 # 2. No errors in logs
-docker-compose logs --tail=100 backend | grep -i error
+docker compose logs --tail=100 backend | grep -i error
 
 # 3. Test key features
 # → Login
@@ -927,7 +947,7 @@ docker-compose logs --tail=100 backend | grep -i error
 # → Excel Export
 
 # 4. Database intact
-docker-compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
+docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.anmeldungen;"
 ```
 
 ### Prevention
@@ -1029,7 +1049,7 @@ MySQL container crashed due to out-of-memory condition.
 
 ```bash
 # Simuliere Data Loss und restore
-docker-compose exec mysql mysql -u root -p -e "DROP DATABASE anmeldung;"
+docker compose exec mysql mysql -u root -p -e "DROP DATABASE anmeldung;"
 # → Restore from backup
 # → Verify data intact
 ```
@@ -1038,7 +1058,7 @@ docker-compose exec mysql mysql -u root -p -e "DROP DATABASE anmeldung;"
 
 ```bash
 # Simuliere Server-Crash
-docker-compose down -v
+docker compose down -v
 # → Rebuild from scratch
 # → Restore all data
 # → Verify system works
@@ -1059,6 +1079,9 @@ docker-compose down -v
 ## 📚 Weitere Ressourcen
 
 - [DOCKER.md](DOCKER.md) - Docker Deployment Guide
+- [DEPLOYMENT.md](DEPLOYMENT.md) - Production Deployment, Backups
+- [MIGRATION-3.0.md](MIGRATION-3.0.md) - Upgrade von 2.x, Rollback
+- [MULTI-TENANT.md](MULTI-TENANT.md) - Tenants, Secrets, Isolierung
 - [CI_CD.md](CI_CD.md) - Automated Deployment
 - [CLAUDE.md](CLAUDE.md) - Full Documentation
 
@@ -1072,6 +1095,4 @@ docker-compose down -v
 
 ---
 
-**Version:** 1.0
-**Last Updated:** Februar 2026
-**Review Date:** Mai 2026
+Gilt für Ondisos 3.x.

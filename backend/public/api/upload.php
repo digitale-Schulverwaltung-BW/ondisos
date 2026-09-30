@@ -3,9 +3,19 @@
 
 declare(strict_types=1);
 
+// Skip auth check - this API is called from frontend and doesn't use session auth
+define('SKIP_AUTH_CHECK', true);
+
+// Mark as API request so bootstrap.php resolves tenant from ?tenant=<slug>
+define('API_REQUEST', true);
+
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Config\Config;
+use App\Config\TenantContext;
+use App\Repositories\AnmeldungRepository;
+use App\Repositories\TenantRepository;
+use App\Services\HmacValidator;
 use App\Validators\AnmeldungValidator;
 use App\Services\AuditLogger;
 use App\Services\VirusScanService;
@@ -13,14 +23,55 @@ use App\Utils\FilenameSanitizer;
 
 header('Content-Type: application/json; charset=utf-8');
 
-// CORS
-$allowedOrigins = getenv('ALLOWED_ORIGINS')
-    ? explode(',', getenv('ALLOWED_ORIGINS'))
-    : ['http://localhost'];
+// Per-tenant HMAC + CORS validation
+// Must run before processing so that unauthorized requests never reach business logic.
+try {
+    $tenantId = TenantContext::getTenantId();
+} catch (\RuntimeException $e) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
 
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $allowedOrigins, true)) {
-    header('Access-Control-Allow-Origin: ' . $origin);
+$tenant = (new TenantRepository())->findById($tenantId);
+if ($tenant === null || !(bool)$tenant['active']) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
+}
+
+// Per-tenant CORS (replaces the old global ALLOWED_ORIGINS block)
+$requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+if (!empty($tenant['origin'])) {
+    // Tenant has an explicit origin configured — only allow that origin
+    if ($requestOrigin === $tenant['origin']) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Access-Control-Allow-Methods: POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+    }
+} else {
+    // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
+    $allowedOrigins = getenv('ALLOWED_ORIGINS')
+        ? explode(',', getenv('ALLOWED_ORIGINS'))
+        : ['http://localhost'];
+    if (in_array($requestOrigin, $allowedOrigins, true)) {
+        header('Access-Control-Allow-Origin: ' . $requestOrigin);
+        header('Access-Control-Allow-Methods: POST, OPTIONS');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+    }
+}
+
+// HMAC validation — sign over canonical string (not multipart body)
+// Canonical string: "{anmeldung_id}:{fieldname}:{original_filename}"
+$providedSig      = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
+$anmeldungIdStr   = $_POST['anmeldung_id'] ?? '';
+$fieldname        = $_POST['fieldname'] ?? '';
+$originalFilename = $_FILES['file']['name'] ?? '';
+$hmacValidator    = new HmacValidator($tenant['api_secret']);
+if (!$hmacValidator->validateUploadSignature($anmeldungIdStr, $fieldname, $originalFilename, $providedSig)) {
+    http_response_code(401);
+    echo json_encode(['error' => 'Unauthorized']);
+    exit;
 }
 
 try {
@@ -29,15 +80,21 @@ try {
     }
 
     // Validate anmeldung_id
-    $anmeldungId = (int)($_POST['anmeldung_id'] ?? 0);
+    $anmeldungId = (int)$anmeldungIdStr;
     if ($anmeldungId <= 0) {
         throw new RuntimeException('Invalid anmeldung_id', 400);
     }
 
-    // Validate fieldname
-    $fieldname = $_POST['fieldname'] ?? '';
+    // Validate fieldname (already read above for HMAC; re-use)
     if (empty($fieldname)) {
         throw new RuntimeException('Missing fieldname', 400);
+    }
+
+    // The entry must exist and belong to the authenticated tenant. The HMAC only proves
+    // the caller holds this tenant's secret, not that anmeldung_id is theirs. findById()
+    // is tenant-scoped and logs an IDOR attempt for foreign ids.
+    if ((new AnmeldungRepository())->findById($anmeldungId) === null) {
+        throw new RuntimeException('Anmeldung nicht gefunden', 404);
     }
 
     // Check if file was uploaded
@@ -88,8 +145,9 @@ try {
         }
     }
 
-    // Upload directory
-    $uploadDir = __DIR__ . '/../../uploads';
+    // Upload directory — scoped to the current tenant
+    $tenantId  = TenantContext::getTenantId();
+    $uploadDir = realpath(__DIR__ . '/../../uploads') . '/tenant-' . $tenantId;
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }

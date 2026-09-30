@@ -3,275 +3,112 @@ declare(strict_types=1);
 
 namespace Tests\Unit\Upload;
 
+use App\Utils\FilenameSanitizer;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Tests for File Upload Security
+ * Tests for the filename handling of uploads (App\Utils\FilenameSanitizer, used by upload.php).
  *
- * This test validates the filename sanitization logic used in upload.php
- * to prevent directory traversal, double extension attacks, and other injection attempts.
- *
- * NOTE: These tests validate the sanitization logic, not the actual file upload.
+ * Filenames are SANITIZED, not rejected: path components, dots and special characters
+ * become underscores, umlauts are transliterated, and upload.php forces the extension
+ * that was validated from the file content. The actual file type checks live in
+ * MimeTypeValidationTest / AnmeldungValidator.
  */
 class UploadSecurityTest extends TestCase
 {
+    private const SAFE = '/^[a-zA-Z0-9_-]+$/';
+
     /**
-     * Test the filename sanitization logic from upload.php
-     *
-     * This simulates the logic: basename() + validation + forced extension
+     * Mirrors upload.php: basename(), stem, sanitize, forced validated extension.
      */
-    private function sanitizeFilename(string $originalName, string $validatedExtension, int $anmeldungId): string
+    private function storedName(int $anmeldungId, string $originalName, string $validatedExtension): string
     {
-        // 1. Strip path components
-        $originalName = basename($originalName);
+        $stem = pathinfo(basename($originalName), PATHINFO_FILENAME);
 
-        // 2. Get filename without extension
-        $nameWithoutExt = pathinfo($originalName, PATHINFO_FILENAME);
+        return $anmeldungId . '_' . FilenameSanitizer::sanitizeStem($stem) . '.' . $validatedExtension;
+    }
 
-        // 3. Validate (only alphanumeric, underscore, hyphen)
-        if (!preg_match('/^[a-zA-Z0-9_-]+$/', $nameWithoutExt)) {
-            throw new \RuntimeException('Invalid filename');
+    public function testValidNamesAreKept(): void
+    {
+        foreach (['file', 'test-file', 'test_file', 'Test123', 'a'] as $stem) {
+            $this->assertSame($stem, FilenameSanitizer::sanitizeStem($stem));
         }
+    }
 
-        // 4. Force extension (prevents double extension)
-        return $anmeldungId . '_' . $nameWithoutExt . '.' . $validatedExtension;
+    public function testUmlautsAreTransliterated(): void
+    {
+        $this->assertSame('Zeugnis_Uebersicht_2026', FilenameSanitizer::sanitizeStem('Zeugnis Übersicht 2026'));
+        $this->assertSame('aeoeuess_AeOeUe', FilenameSanitizer::sanitizeStem('äöüß ÄÖÜ'));
+    }
+
+    public function testDotsAndDoubleExtensionsAreNeutralised(): void
+    {
+        $this->assertSame('evil_php', FilenameSanitizer::sanitizeStem('evil.php'));
+        // The extension is forced from the validated content type, not taken from the name
+        $this->assertSame('5_evil_php.jpg', $this->storedName(5, 'evil.php.jpg', 'jpg'));
+        $this->assertSame('5_test_backup.pdf', $this->storedName(5, 'test.backup.pdf', 'pdf'));
+    }
+
+    public function testDirectoryTraversalCannotEscape(): void
+    {
+        $this->assertSame('7_passwd.pdf', $this->storedName(7, '../../etc/passwd', 'pdf'));
+        $this->assertSame('etc_passwd', FilenameSanitizer::sanitizeStem('../../etc/passwd'));
+        $this->assertSame('7_upload.pdf', $this->storedName(7, '..', 'pdf'));
+    }
+
+    public function testSpecialCharactersNullBytesAndUnicodeBecomeUnderscores(): void
+    {
+        $this->assertSame('test_rm_-rf', FilenameSanitizer::sanitizeStem('test;rm -rf'));
+        $this->assertSame('a_b', FilenameSanitizer::sanitizeStem("a\0b"));
+        $this->assertSame('a_b', FilenameSanitizer::sanitizeStem('a   |&   b'));
+        $this->assertSame('caf', FilenameSanitizer::sanitizeStem('café'));
+    }
+
+    public function testEmptyAndHiddenNamesFallBackToUpload(): void
+    {
+        $this->assertSame('upload', FilenameSanitizer::sanitizeStem(''));
+        $this->assertSame('upload', FilenameSanitizer::sanitizeStem('***'));
+        // ".htaccess" has an empty stem in pathinfo(): it can never be stored as a dotfile
+        $this->assertSame('3_upload.txt', $this->storedName(3, '.htaccess', 'txt'));
+    }
+
+    public function testStoredNameIsPrefixedWithAnmeldungId(): void
+    {
+        $this->assertStringStartsWith('123_', $this->storedName(123, 'x.pdf', 'pdf'));
+        $this->assertSame('123_x.pdf', $this->storedName(123, 'x.pdf', 'pdf'));
     }
 
     /**
-     * Test that valid filenames are accepted
+     * @return array<string,array{string}>
      */
-    public function testSanitizeAcceptsValidFilenames(): void
+    public static function hostileStems(): array
     {
-        $validFiles = [
-            ['file.jpg', 'jpg', '123_file.jpg'],
-            ['test-file.pdf', 'pdf', '123_test-file.pdf'],
-            ['test_file.png', 'png', '123_test_file.png'],
-            ['Test123.doc', 'doc', '123_Test123.doc'],
-            ['a.jpg', 'jpg', '123_a.jpg'],
+        return [
+            'traversal'      => ['../../../etc/passwd'],
+            'windows path'   => ['..\\..\\windows\\system32'],
+            'null byte'      => ["evil.php\0.jpg"],
+            'shell'          => ['$(rm -rf /);`id`'],
+            'html'           => ['<script>alert(1)</script>'],
+            'unicode'        => ['名前'],
+            'newline'        => ["a\nb\r\nc"],
+            'only dots'      => ['....'],
+            'very long'      => [str_repeat('a b.', 200)],
         ];
-
-        foreach ($validFiles as [$input, $ext, $expected]) {
-            $result = $this->sanitizeFilename($input, $ext, 123);
-            $this->assertEquals($expected, $result, "Failed for input: $input");
-        }
     }
 
     /**
-     * Test that directory traversal attempts are blocked
-     *
-     * Note: Full paths like '../../etc/passwd' are handled by basename()
-     * which returns 'passwd' (valid). We test direct attempts like '..' or '.'
+     * @dataProvider hostileStems
      */
-    public function testSanitizeBlocksDirectoryTraversal(): void
+    public function testAnyInputYieldsOnlySafeCharacters(string $stem): void
     {
-        // Test attempts that would remain after basename()
-        $traversalAttempts = [
-            '..',       // Parent directory
-            '.',        // Current directory
-            '...',      // Multiple dots
-        ];
+        $result = FilenameSanitizer::sanitizeStem($stem);
 
-        foreach ($traversalAttempts as $attempt) {
-            try {
-                $this->sanitizeFilename($attempt, 'txt', 123);
-                $this->fail("Expected exception for traversal attempt: $attempt");
-            } catch (\RuntimeException $e) {
-                $this->assertStringContainsString('Invalid filename', $e->getMessage());
-            }
-        }
+        $this->assertMatchesRegularExpression(self::SAFE, $result);
+        $this->assertStringNotContainsString('..', $result);
     }
 
-    /**
-     * Test that basename() strips path components
-     */
-    public function testBasenameStripsPathComponents(): void
+    public function testDiskNameKeepsGivenExtensionAndSanitizesStem(): void
     {
-        // Even if slashes were allowed, basename() would strip them
-        $input = 'some/path/to/file.jpg';
-        $result = basename($input);
-
-        $this->assertEquals('file.jpg', $result);
-    }
-
-    /**
-     * Test that double extensions are prevented (evil.php.jpg)
-     */
-    public function testSanitizePreventsDoubleExtensions(): void
-    {
-        // Input: evil.php.jpg
-        // pathinfo(FILENAME): evil.php
-        // Validation: FAILS because of dot in middle
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        $this->sanitizeFilename('evil.php.jpg', 'jpg', 123);
-    }
-
-    /**
-     * Test that extension is forced (prevents extension injection)
-     */
-    public function testSanitizeForcesExtension(): void
-    {
-        // Even if user uploads "test.jpg", we force the validated extension
-        $result = $this->sanitizeFilename('test.jpg', 'png', 123);
-
-        // Should be: 123_test.png (not .jpg!)
-        $this->assertEquals('123_test.png', $result);
-        $this->assertStringEndsWith('.png', $result);
-    }
-
-    /**
-     * Test that dots in filename (except extension) are blocked
-     */
-    public function testSanitizeRejectsDotInFilename(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        // test.backup.jpg -> filename is "test.backup" (has dot)
-        $this->sanitizeFilename('test.backup.jpg', 'jpg', 123);
-    }
-
-    /**
-     * Test that special characters are blocked
-     *
-     * Note: Path separators (/ and \) are already handled by basename() which
-     * strips them out. We test characters that would remain after basename().
-     */
-    public function testSanitizeRejectsSpecialCharacters(): void
-    {
-        $invalidNames = [
-            'test@file.jpg',
-            'test!file.jpg',
-            'test$file.jpg',
-            'test%file.jpg',
-            'test&file.jpg',
-            'test*file.jpg',
-            'test(file).jpg',
-            'test[file].jpg',
-            'test{file}.jpg',
-            'test|file.jpg',
-            // Note: Slashes are already stripped by basename(), so we don't test them here
-            // 'test\\file.jpg' -> basename() -> 'file.jpg' (valid)
-            // 'test/file.jpg' -> basename() -> 'file.jpg' (valid)
-            'test<file>.jpg',
-            'test>file.jpg',
-            'test,file.jpg',
-            'test;file.jpg',
-            'test:file.jpg',
-            'test?file.jpg',
-            'test file.jpg', // space
-            "test'file.jpg", // single quote
-            'test"file.jpg', // double quote
-            'test`file.jpg', // backtick
-        ];
-
-        foreach ($invalidNames as $name) {
-            try {
-                $this->sanitizeFilename($name, 'jpg', 123);
-                $this->fail("Expected exception for invalid filename: $name");
-            } catch (\RuntimeException $e) {
-                $this->assertStringContainsString('Invalid filename', $e->getMessage());
-            }
-        }
-    }
-
-    /**
-     * Test that null bytes are blocked (prevents null byte injection)
-     */
-    public function testSanitizeRejectsNullByte(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        // test\0.php.jpg (null byte injection)
-        $this->sanitizeFilename("test\0.php.jpg", 'jpg', 123);
-    }
-
-    /**
-     * Test that unicode characters are blocked
-     */
-    public function testSanitizeRejectsUnicode(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        $this->sanitizeFilename('testö.jpg', 'jpg', 123);
-    }
-
-    /**
-     * Test that empty filename is blocked
-     */
-    public function testSanitizeRejectsEmptyFilename(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        $this->sanitizeFilename('.jpg', 'jpg', 123);
-    }
-
-    /**
-     * Test that only extension (no name) is blocked
-     */
-    public function testSanitizeRejectsOnlyExtension(): void
-    {
-        $this->expectException(\RuntimeException::class);
-        $this->expectExceptionMessage('Invalid filename');
-
-        $this->sanitizeFilename('.htaccess', 'txt', 123);
-    }
-
-    /**
-     * Test anmeldungId is prepended correctly
-     */
-    public function testSanitizePrependsAnmeldungId(): void
-    {
-        $result = $this->sanitizeFilename('test.jpg', 'jpg', 456);
-
-        $this->assertEquals('456_test.jpg', $result);
-        $this->assertStringStartsWith('456_', $result);
-    }
-
-    /**
-     * Test pathinfo() behavior with various inputs
-     */
-    public function testPathinfoExtractsFilenameCorrectly(): void
-    {
-        $tests = [
-            ['test.jpg', 'test', 'jpg'],
-            ['test.backup.jpg', 'test.backup', 'jpg'],
-            ['test', 'test', ''],
-            ['.htaccess', '', 'htaccess'],
-            ['test.', 'test', ''],
-        ];
-
-        foreach ($tests as [$input, $expectedFilename, $expectedExt]) {
-            $filename = pathinfo($input, PATHINFO_FILENAME);
-            $ext = pathinfo($input, PATHINFO_EXTENSION);
-
-            $this->assertEquals($expectedFilename, $filename, "Filename mismatch for: $input");
-            $this->assertEquals($expectedExt, $ext, "Extension mismatch for: $input");
-        }
-    }
-
-    /**
-     * Test that the regex pattern is strict enough
-     */
-    public function testRegexPatternIsStrict(): void
-    {
-        $pattern = '/^[a-zA-Z0-9_-]+$/';
-
-        // Valid
-        $this->assertEquals(1, preg_match($pattern, 'test'));
-        $this->assertEquals(1, preg_match($pattern, 'test123'));
-        $this->assertEquals(1, preg_match($pattern, 'test_file'));
-        $this->assertEquals(1, preg_match($pattern, 'test-file'));
-
-        // Invalid
-        $this->assertEquals(0, preg_match($pattern, 'test.file')); // dot
-        $this->assertEquals(0, preg_match($pattern, 'test file')); // space
-        $this->assertEquals(0, preg_match($pattern, 'test/file')); // slash
-        $this->assertEquals(0, preg_match($pattern, '../test')); // dots
-        $this->assertEquals(0, preg_match($pattern, '')); // empty
+        $this->assertSame('9_Uebersicht.pdf', FilenameSanitizer::diskName(9, 'Übersicht.pdf'));
     }
 }

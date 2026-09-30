@@ -352,7 +352,8 @@ class SurveyHandler extends SurveyHandlerBase {
      * Submit form to server
      */
     async submitForm(formData) {
-        const url = `save.php?form=${encodeURIComponent(this.config.formKey)}`;
+        const tenantSlug = this.config.tenantSlug || 'default';
+        const url = `save.php?form=${encodeURIComponent(this.config.formKey)}&tenant=${encodeURIComponent(tenantSlug)}`;
 
         const response = await fetch(url, {
             method: 'POST',

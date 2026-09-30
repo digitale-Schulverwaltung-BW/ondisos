@@ -63,9 +63,62 @@
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">Dashboard</a>
                 </li>
+                <?php if (!empty($_SESSION['is_platform_admin'])): ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= (basename($_SERVER['PHP_SELF'] ?? '') === 'tenants.php') ? ' active' : '' ?>"
+                       href="tenants.php">Tenants</a>
+                </li>
+                <?php endif; ?>
             </ul>
 
-            <div class="d-flex align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <?php
+                $multiTenantHeaderEnabled = filter_var(
+                    \App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'),
+                    FILTER_VALIDATE_BOOLEAN
+                );
+                if ($multiTenantHeaderEnabled && !empty($_SESSION['is_platform_admin'])):
+                    $tenantRepo = new \App\Repositories\TenantRepository();
+                    $allTenants = $tenantRepo->findAll();
+                    $switchedId  = $_SESSION['switched_tenant_id'] ?? null;
+                    $activeLabel = 'Alle Tenants';
+                    if ($switchedId !== null) {
+                        foreach ($allTenants as $t) {
+                            if ((int)$t['id'] === (int)$switchedId) {
+                                $activeLabel = htmlspecialchars($t['name']);
+                                break;
+                            }
+                        }
+                    }
+                    $currentPage = basename($_SERVER['PHP_SELF'] ?? 'index.php');
+                ?>
+                    <div class="dropdown me-2">
+                        <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                            <?= $activeLabel ?>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <a class="dropdown-item<?= $switchedId === null ? ' active' : '' ?>"
+                                   href="<?= htmlspecialchars($currentPage) ?>?switch_tenant=0">
+                                    Alle Tenants
+                                </a>
+                            </li>
+                            <?php if (!empty($allTenants)): ?>
+                                <li><hr class="dropdown-divider"></li>
+                                <?php foreach ($allTenants as $t): ?>
+                                    <li>
+                                        <a class="dropdown-item<?= ((int)($switchedId ?? -1) === (int)$t['id']) ? ' active' : '' ?>"
+                                           href="<?= htmlspecialchars($currentPage) ?>?switch_tenant=<?= (int)$t['id'] ?>">
+                                            <?= htmlspecialchars($t['name']) ?>
+                                        </a>
+                                    </li>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </ul>
+                    </div>
+                <?php endif; ?>
+
                 <?php if (!empty($_SESSION['admin_logged_in'])): ?>
                     <span class="navbar-text text-light me-3">
                         <small>Angemeldet als: <?= htmlspecialchars($_SESSION['admin_username'] ?? 'Admin') ?></small>

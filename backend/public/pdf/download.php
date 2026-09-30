@@ -16,6 +16,7 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 use App\Services\PdfGeneratorService;
 use App\Services\PdfTokenService;
 use App\Services\PdfTemplateRenderer;
+use App\Config\TenantContext;
 use App\Repositories\AnmeldungRepository;
 use App\Services\MessageService as M;
 
@@ -38,8 +39,18 @@ try {
         throw new RuntimeException(M::get('pdf.errors.invalid_token', 'Ungültiger oder abgelaufener Token'), 403);
     }
 
-    // Load Anmeldung from database
+    // Load Anmeldung from database.
+    // The token authorizes this id but has no tenant, and this endpoint has no tenant
+    // session (SKIP_AUTH_CHECK). Resolve the row's tenant, then load through the normal
+    // tenant-scoped findById() so IDOR logging and scoping stay in effect.
     $repository = new AnmeldungRepository();
+    $tenantId = $repository->findTenantIdById($anmeldungId);
+
+    if ($tenantId === null) {
+        throw new RuntimeException(M::get('errors.not_found', 'Anmeldung nicht gefunden'), 404);
+    }
+
+    TenantContext::initialize($tenantId);
     $anmeldung = $repository->findById($anmeldungId);
 
     if ($anmeldung === null) {

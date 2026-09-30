@@ -114,6 +114,19 @@ class Plugin
             $_ENV['BACKEND_API_URL'] = $backend_url;
         }
 
+        $tenant_slug = get_option('ondisos_tenant_slug');
+        if (!empty($tenant_slug)) {
+            putenv('TENANT_SLUG=' . $tenant_slug);
+            $_ENV['TENANT_SLUG'] = $tenant_slug;
+        }
+
+        // Tenant API secret: only ever used server-side to sign backend requests
+        $api_secret = get_option('ondisos_tenant_api_secret');
+        if (!empty($api_secret)) {
+            putenv('TENANT_API_SECRET=' . $api_secret);
+            $_ENV['TENANT_API_SECRET'] = $api_secret;
+        }
+
         $from_email = get_option('ondisos_from_email');
         if (!empty($from_email)) {
             putenv('FROM_EMAIL=' . $from_email);
