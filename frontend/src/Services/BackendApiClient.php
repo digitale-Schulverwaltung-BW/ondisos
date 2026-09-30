@@ -10,10 +10,41 @@ use Frontend\Config\FormConfig;
 class BackendApiClient
 {
     private string $baseUrl;
+    private string $tenantSlug;
+    private string $apiSecret;
 
-    public function __construct(?string $baseUrl = null)
+    /**
+     * @param string|null $baseUrl    Backend API base URL (default: BACKEND_API_URL)
+     * @param string|null $tenantSlug Tenant slug (default: TENANT_SLUG env, else 'default')
+     * @param string|null $apiSecret  Tenant API secret used to sign requests
+     *                                (default: TENANT_API_SECRET env). Stays server-side;
+     *                                it is never sent, only used to compute X-Signature.
+     */
+    public function __construct(?string $baseUrl = null, ?string $tenantSlug = null, ?string $apiSecret = null)
     {
-        $this->baseUrl = $baseUrl ?? FormConfig::getBackendUrl();
+        $this->baseUrl    = $baseUrl ?? FormConfig::getBackendUrl();
+        $this->tenantSlug = $tenantSlug ?? (getenv('TENANT_SLUG') ?: 'default');
+        $this->apiSecret  = $apiSecret ?? (getenv('TENANT_API_SECRET') ?: '');
+    }
+
+    /**
+     * Build an endpoint URL carrying the tenant slug.
+     *
+     * The slug only tells the backend which tenant to look up; authorization
+     * comes from the HMAC signature (see sign()), which only the holder of the
+     * tenant's api_secret can produce.
+     */
+    private function endpoint(string $path): string
+    {
+        return $this->baseUrl . '/' . $path . '?tenant=' . urlencode($this->tenantSlug);
+    }
+
+    /**
+     * HMAC-SHA256 signature as validated by backend App\Services\HmacValidator.
+     */
+    private function sign(string $message): string
+    {
+        return hash_hmac('sha256', $message, $this->apiSecret);
     }
 
     /**
@@ -29,7 +60,12 @@ class BackendApiClient
         array $files = [],
         ?array $pdfConfig = null
     ): array {
-        $endpoint = $this->baseUrl . '/submit.php';
+        if ($this->apiSecret === '') {
+            error_log('Backend API error: TENANT_API_SECRET is not configured');
+            return ['success' => false, 'error' => 'Backend-Zugang nicht konfiguriert'];
+        }
+
+        $endpoint = $this->endpoint('submit.php');
 
         // Build payload
         $payload = [
@@ -43,17 +79,19 @@ class BackendApiClient
             $payload['pdf_config'] = $pdfConfig;
         }
 
-        // Send request
+        // Send request — signature covers the exact raw body that is sent
+        $body = json_encode($payload);
         $ch = curl_init($endpoint);
         
         curl_setopt_array($ch, [
             CURLOPT_POST => true,
-            CURLOPT_POSTFIELDS => json_encode($payload),
+            CURLOPT_POSTFIELDS => $body,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 30,
             CURLOPT_HTTPHEADER => [
                 'Content-Type: application/json',
-                'Accept: application/json'
+                'Accept: application/json',
+                'X-Signature: ' . $this->sign($body),
             ]
         ]);
 
@@ -114,7 +152,7 @@ class BackendApiClient
      */
     private function uploadFiles(int $anmeldungId, array $files): array
     {
-        $endpoint = $this->baseUrl . '/upload.php';
+        $endpoint = $this->endpoint('upload.php');
 
         foreach ($files as $fieldName => $file) {
             if ($file['error'] !== UPLOAD_ERR_OK) {
@@ -138,13 +176,17 @@ class BackendApiClient
                 )
             ];
 
+            // Signature over "{anmeldung_id}:{fieldname}:{original_filename}" (see HmacValidator)
+            $signature = $this->sign($anmeldungId . ':' . $fieldName . ':' . basename((string) $file['name']));
+
             $ch = curl_init($endpoint);
             
             curl_setopt_array($ch, [
                 CURLOPT_POST => true,
                 CURLOPT_POSTFIELDS => $postData,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_TIMEOUT => 60
+                CURLOPT_TIMEOUT => 60,
+                CURLOPT_HTTPHEADER => ['X-Signature: ' . $signature],
             ]);
 
             $response = curl_exec($ch);

@@ -93,6 +93,16 @@ class Settings
             ]
         );
 
+        register_setting(
+            self::OPTION_GROUP,
+            'ondisos_tenant_api_secret',
+            [
+                'type' => 'string',
+                'sanitize_callback' => [$this, 'sanitize_api_secret'],
+                'default' => ''
+            ]
+        );
+
         // Add settings section
         add_settings_section(
             'ondisos_main_section',
@@ -115,6 +125,15 @@ class Settings
             'ondisos_tenant_slug',
             'Tenant-Slug',
             [$this, 'render_tenant_slug_field'],
+            self::PAGE_SLUG,
+            'ondisos_main_section'
+        );
+
+        // Tenant API secret field
+        add_settings_field(
+            'ondisos_tenant_api_secret',
+            'Tenant-API-Secret',
+            [$this, 'render_api_secret_field'],
             self::PAGE_SLUG,
             'ondisos_main_section'
         );
@@ -192,6 +211,42 @@ class Settings
             Kennung der Schule (Tenant), deren Formular-Konfiguration vom Backend geladen wird. Leer = <code>default</code>.<br>
             <strong>Aktueller Wert aus .env:</strong> <code><?php echo esc_html($env_value); ?></code><br>
             <strong>Verwendet:</strong> <code><?php echo esc_html(Form_Config_Loader::tenant_slug()); ?></code>
+        </p>
+        <?php
+    }
+
+    /**
+     * Keep the stored secret when the field is submitted empty.
+     *
+     * The secret is never rendered back into the form, so an empty submit
+     * means "unchanged", not "delete".
+     */
+    public function sanitize_api_secret($value): string
+    {
+        $value = trim((string) $value);
+
+        return $value !== '' ? $value : (string) get_option('ondisos_tenant_api_secret', '');
+    }
+
+    /**
+     * Render Tenant API secret field (write-only)
+     */
+    public function render_api_secret_field(): void
+    {
+        $is_set = (string) get_option('ondisos_tenant_api_secret', '') !== ''
+            || (string) (getenv('TENANT_API_SECRET') ?: '') !== '';
+
+        ?>
+        <input type="password"
+               name="ondisos_tenant_api_secret"
+               value=""
+               class="regular-text"
+               autocomplete="new-password"
+               placeholder="<?php echo $is_set ? '(gesetzt — leer lassen, um beizubehalten)' : ''; ?>">
+        <p class="description">
+            API-Secret des Tenants zum Signieren der Backend-Anfragen (aus der Tenant-Verwaltung im Backend).
+            Wird nie im Browser ausgegeben. Alternativ <code>TENANT_API_SECRET</code> in der .env.<br>
+            <strong>Status:</strong> <?php echo $is_set ? 'gesetzt' : '<em>nicht gesetzt — Formulare können nicht abgesendet werden</em>'; ?>
         </p>
         <?php
     }
