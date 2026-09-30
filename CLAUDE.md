@@ -2,16 +2,23 @@
 
 ## 📋 Projekt-Übersicht
 
-**Zweck:** Webbasiertes System für Schulanmeldungen mit SurveyJS-Frontend und PHP-Backend
+**Zweck:** Webbasiertes System für Schulanmeldungen mit SurveyJS-Frontend und PHP-Backend. Ab Version 3.0 **mandantenfähig**: Eine Backend-Instanz kann mehrere Schulen (*Tenants*) bedienen.
 
 **Stack:**
-- **Frontend:** SurveyJS, Vanilla JavaScript, Bootstrap 5
+- **Frontend:** SurveyJS, Vanilla JavaScript, Bootstrap 5 (Standalone-PHP-Frontend **oder** WordPress-Plugin)
 - **Backend:** PHP 8.2+, MySQL/MariaDB
 - **Architecture:** Clean MVC mit Service Layer
 
 **Deployment:**
 - Frontend-Server: Öffentlich zugänglich, zeigt SurveyJS-Formulare
 - Backend-Server: Intranet, Admin-Interface für Anmeldungsverwaltung
+
+**Kernkonzepte (3.0):**
+- **Tenant** = eine Schule. Jede Anmeldung, jede Formular-Konfiguration und jedes Upload-Verzeichnis gehört zu genau einem Tenant. Tenant 1 (`slug = default`) gibt es immer; der Betrieb mit nur einer Schule ist der Single-Tenant-Modus (`MULTI_TENANT_ENABLED=false`).
+- **Signierte API:** Das Frontend authentifiziert sich pro Tenant mit HMAC-SHA256 (`X-Signature`) und nennt den Tenant per `?tenant=<slug>`. Das Secret (`tenants.api_secret`) bleibt serverseitig.
+- **Formular-Konfiguration in der Datenbank:** Tabelle `form_configs`; das Frontend holt sie per `GET /api/form-config.php`. Die Survey-Definitionen (`frontend/surveys/*.json`) bleiben im Frontend.
+
+**Weiterführende Dokumente:** [MIGRATION-3.0.md](MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
 
 ---
 
@@ -21,136 +28,154 @@
 
 ```
 projekt/
-├── frontend/              # Öffentlich zugänglich
+├── frontend/                      # Öffentlich zugänglich
 │   ├── public/
-│   │   ├── index.php     # Formular-Anzeige
-│   │   ├── save.php      # API-Endpoint für Submissions
+│   │   ├── index.php             # Formular-Anzeige (holt die Config vom Backend)
+│   │   ├── save.php              # API-Endpoint für Submissions
+│   │   ├── ical.php              # iCal-Download (optional pro Formular)
 │   │   ├── csrf_token.php
-│   │   ├── pdf/
-│   │   │   └── download.php  # PDF Download Proxy (leitet zu Backend)
+│   │   ├── pdf/download.php      # PDF Download Proxy (leitet zum Backend)
+│   │   ├── api/messages.json.php # UI-Texte für JavaScript
 │   │   └── js/
-│   │       └── survey-handler.js
+│   │       ├── survey-handler-base.js  # gemeinsame Basis (Standalone + WordPress)
+│   │       └── survey-handler.js       # Standalone-Handler
+│   ├── inc/bootstrap.php         # Autoloader, .env laden
 │   ├── src/
 │   │   ├── Config/
-│   │   │   └── FormConfig.php
+│   │   │   ├── FormConfig.php        # Config-Container (wird per load() befüllt)
+│   │   │   └── FormConfigLoader.php  # holt/merged die Config eines Formulars
 │   │   ├── Services/
 │   │   │   ├── AnmeldungService.php
-│   │   │   ├── BackendApiClient.php
-│   │   │   └── EmailService.php
-│   │   └── Utils/
-│   │       └── CsrfProtection.php
+│   │   │   ├── BackendApiClient.php  # signiert Requests, hängt ?tenant= an
+│   │   │   ├── EmailService.php
+│   │   │   └── MessageService.php
+│   │   └── Utils/CsrfProtection.php
 │   ├── config/
-│   │   └── forms-config.php
-│   └── surveys/
-│       ├── bs.json
-│       ├── bk.json
-│       └── survey_theme.json
+│   │   ├── forms-config-dist.php     # Vorlage / Quelle für backend/seed-forms.php
+│   │   └── messages.php
+│   └── surveys/                  # SurveyJS-Definitionen (bs.json, vabo.json, ...)
 │
-└── backend/               # Intranet-Admin
+├── wordpress-plugin/              # Alternative zum Standalone-Frontend
+│   ├── ondisos.php               # Plugin-Bootstrap, Shortcode [ondisos form="…"]
+│   ├── includes/                 # class-shortcode, -ajax-handler, -pdf-proxy, -settings,
+│   │                             # -form-config-loader, -assets, -plugin, -autoloader
+│   ├── assets/js/survey-handler-wp.js
+│   └── INSTALL.md
+│
+├── database/
+│   ├── schema.sql                # Neuinstallation (Tenant 1 mit Platzhalter-Secret!)
+│   └── migrations/               # einzelne SQL-Migrationen (z. B. add_pdf_config_column.sql)
+│
+└── backend/                       # Intranet-Admin
+    ├── migrate.php               # Schema-Migration auf 3.0 (idempotent)
+    ├── seed-forms.php            # forms-config.php → Tabelle form_configs (Tenant 1)
     ├── public/
-    │   ├── index.php     # Übersicht
-    │   ├── detail.php    # Detail-Ansicht
-    │   ├── trash.php     # Papierkorb
-    │   ├── dashboard.php # Dashboard
-    │   ├── excel_export.php
-    │   ├── bulk_actions.php
-    │   ├── restore.php
-    │   ├── hard_delete.php
+    │   ├── index.php · detail.php · trash.php · dashboard.php
+    │   ├── excel_export.php · bulk_actions.php · change_status.php
+    │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
+    │   ├── login.php · logout.php
+    │   ├── tenants.php           # Tenant-Verwaltung (Platform-Admin)
     │   ├── pdf/
-    │   │   └── download.php  # PDF Download Endpoint
+    │   │   ├── download.php          # PDF per Token (ohne Session)
+    │   │   └── admin_download.php    # PDF aus der Detailansicht (Admin)
     │   └── api/
-    │       ├── submit.php    # API für Frontend (mit PDF Token)
-    │       └── upload.php    # File-Upload API
+    │       ├── submit.php        # Anmeldung speichern (HMAC)
+    │       ├── upload.php        # Datei-Upload (HMAC, Virenscan)
+    │       ├── form-config.php   # Formular-Konfiguration je Tenant (öffentlich per Slug)
+    │       └── health.php
     ├── src/
-    │   ├── Config/
-    │   │   ├── Database.php
-    │   │   ├── Config.php
-    │   │   ├── FormConfig.php
-    │   │   └── EnvLoader.php
-    │   ├── Models/
-    │   │   ├── Anmeldung.php
-    │   │   └── AnmeldungStatus.php (Enum)
-    │   ├── Repositories/
-    │   │   └── AnmeldungRepository.php
-    │   ├── Services/
-    │   │   ├── AnmeldungService.php
-    │   │   ├── StatusService.php
-    │   │   ├── ExportService.php
-    │   │   ├── ExpungeService.php
-    │   │   ├── RequestExpungeService.php
-    │   │   ├── SpreadsheetBuilder.php
-    │   │   ├── PdfGeneratorService.php
-    │   │   ├── PdfTemplateRenderer.php
-    │   │   ├── PdfTokenService.php
-    │   │   └── MessageService.php
-    │   ├── Controllers/
-    │   │   ├── AnmeldungController.php
-    │   │   ├── DetailController.php
-    │   │   └── BulkActionsController.php
-    │   ├── Validators/
-    │   │   └── AnmeldungValidator.php
-    │   └── Utils/
-    │       ├── NullableHelpers.php
-    │       └── DataFormatter.php
-    ├── templates/
-    │   └── pdf/
-    │       ├── base.php
-    │       ├── styles.css
-    │       └── sections/
-    │           ├── header.php
-    │           ├── data-table.php
-    │           ├── custom-section.php
-    │           └── footer.php
-    ├── config/
-    │   ├── messages.php
-    │   └── messages.example.php
-    ├── inc/
-    │   ├── bootstrap.php
-    │   ├── header.php
-    │   └── footer.php
-    ├── uploads/
-    ├── cache/
-    ├── composer.json
-    ├── composer.lock (after install)
-    ├── vendor/ (after install)
-    └── PDF_SETUP.md
+    │   ├── Config/        Config · Database · EnvLoader · FormConfig · TenantContext
+    │   ├── Models/        Anmeldung · AnmeldungStatus (Enum)
+    │   ├── Repositories/  AnmeldungRepository · TenantRepository · TenantAdminRepository
+    │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController
+    │   ├── Services/      AnmeldungService · StatusService · ExportService · SpreadsheetBuilder
+    │   │                  ExpungeService · RequestExpungeService
+    │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
+    │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger
+    │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
+    │   ├── Validators/    AnmeldungValidator
+    │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
+    ├── inc/               bootstrap · auth · csrf · header · footer
+    ├── templates/pdf/     base.php · styles.css · sections/
+    ├── config/            messages.php (+ messages.local.php, forms-config.php als Seed-Fallback)
+    ├── scripts/           generate-password-hash.php
+    ├── uploads/           tenant-<id>/ je Tenant · cache/ · logs/ (audit.log)
+    ├── tests/             Unit/ · Integration/
+    └── composer.json · PDF_SETUP.md · UPLOAD_SECURITY.md · UNITTESTS.md · MULTI-TENANT.md
 ```
+
+### Tenant-Kontext
+
+`TenantContext` (statisch, einmal pro Request) bestimmt den aktiven Tenant; `bootstrap.php` initialisiert ihn:
+
+| Situation | Tenant |
+|---|---|
+| `MULTI_TENANT_ENABLED=false` | immer Tenant 1 |
+| API-Request (`API_REQUEST`) | aus `?tenant=<slug>`; unbekannt/inaktiv ⇒ uninitialisiert ⇒ `401` |
+| Browser, Tenant-Admin | aus der Session (`tenant_id`) |
+| Browser, Platform-Admin | `switch_tenant`: ein Tenant oder „alle" (`isAllTenants()`) |
+| Token-Endpoint (`pdf/download.php`) | Tenant der per Token autorisierten Anmeldung (`findTenantIdById()`) |
+
+Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen auf „alle Daten"). Repositories filtern **jede** Abfrage nach `tenant_id` (außer im All-Tenants-Modus); `AnmeldungRepository::findById()` protokolliert fremde IDs als `idor_attempt`.
 
 ---
 
 ## 🔄 Datenfluss
 
+### Formular anzeigen
+
+```
+1. Browser ruft frontend/public/index.php?form=bs auf (oder eine WordPress-Seite mit [ondisos form="bs"])
+   ↓
+2. FormConfigLoader::ensure('bs') → BackendApiClient::fetchFormConfig()
+   GET {BACKEND_API_URL}/form-config.php?form=bs&tenant={TENANT_SLUG}
+   ↓
+3. Antwort {"success":true,"config":{…}} wird in FormConfig geladen
+   (Backend nicht erreichbar / Formular unbekannt ⇒ Wartungsseite 503 bzw. Fehlermeldung im Plugin)
+   ↓
+4. Survey-Definition (frontend/surveys/bs.json) + Theme werden gerendert
+```
+
 ### Submission Flow (Neue Anmeldung)
 
 ```
-1. User füllt Formular aus (frontend/public/index.php?form=bs)
+1. User füllt Formular aus
    ↓
-2. JavaScript (survey-handler.js) sammelt Daten
+2. JavaScript (survey-handler-base.js + survey-handler.js / -wp.js) sammelt Daten
    ↓
-3. POST an frontend/public/save.php
+3. POST an frontend/public/save.php  (WordPress: admin-ajax.php?action=ondisos_submit)
+   CSRF-Prüfung (Standalone) bzw. WP-Nonce
    ↓
-4. AnmeldungService validiert & verarbeitet
+4. Frontend AnmeldungService validiert & verarbeitet
    ↓
-5. BackendApiClient sendet JSON an backend/api/submit.php
+5. BackendApiClient signiert den Raw-Body mit dem Tenant-Secret und sendet ihn an
+   POST {BACKEND_API_URL}/submit.php?tenant={slug}   Header: X-Signature: HMAC-SHA256
    ↓
-6. Backend AnmeldungRepository speichert in DB
+6. Backend: Tenant auflösen → HMAC prüfen (HmacValidator + SecretPolicy) → Rate Limit →
+   Validierung → AnmeldungRepository speichert mit tenant_id → PDF-Token erzeugen
    ↓
-7. EmailService sendet Benachrichtigung
+7. Uploads: pro Datei POST upload.php?tenant={slug}  (X-Signature über "id:feld:dateiname");
+   Backend prüft, dass die Anmeldung zum Tenant gehört, scannt mit ClamAV, speichert in uploads/tenant-<id>/
    ↓
-8. Success-Meldung an User
+8. EmailService sendet Benachrichtigung
+   ↓
+9. Success-Meldung (+ PDF-Download-Karte) an User
 ```
 
 ### Admin Workflow
 
 ```
-1. Admin öffnet backend/public/index.php
+1. Login (Pflicht bei MULTI_TENANT_ENABLED=true, sonst optional via AUTH_ENABLED)
+   - Platform-Admin (ADMIN_USERNAME/ADMIN_PASSWORD_HASH): sieht alle Tenants, wechselt per Tenant-Switcher,
+     verwaltet Tenants unter tenants.php
+   - Tenant-Admin (Tabelle tenant_admins): sieht nur den eigenen Tenant
    ↓
-2. AnmeldungController holt Daten via Repository
+2. AnmeldungController holt Daten via Repository (automatisch auf den Tenant gefiltert)
    ↓
-3. Status wird automatisch "neu" → "exportiert" gesetzt (bei Excel-Export)
+3. Status wird automatisch "neu" → "exportiert" gesetzt (bei Excel-Export, AUTO_MARK_AS_READ=true)
    ↓
 4. Admin kann:
-   - Einzeln ansehen (detail.php)
+   - Einzeln ansehen (detail.php) inkl. PDF-Download und Datei-Download
    - Excel exportieren (excel_export.php)
    - Bulk-Actions (archivieren/löschen)
    - Papierkorb verwalten (trash.php)
@@ -160,40 +185,73 @@ projekt/
 
 ## 🗄️ Datenbank-Schema
 
+Maßgeblich ist `database/schema.sql` (Neuinstallation) bzw. `backend/migrate.php` (Upgrade). Hier die Kernstruktur:
+
 ```sql
+CREATE TABLE tenants (
+    id            INT AUTO_INCREMENT PRIMARY KEY,
+    name          VARCHAR(255) NOT NULL,
+    slug          VARCHAR(100) NULL,              -- adressiert den Tenant in API-Aufrufen (eindeutig)
+    origin        VARCHAR(255) NULL,              -- CORS-Origin des Frontends
+    api_secret    VARCHAR(255) NOT NULL,          -- HMAC-Secret für submit/upload
+    active        TINYINT(1) DEFAULT 1,
+    created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tenant_admins (       -- Backend-Benutzer eines Tenants
+    id INT AUTO_INCREMENT PRIMARY KEY, tenant_id INT NOT NULL, username VARCHAR(100) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL, is_platform_admin TINYINT(1) DEFAULT 0,
+    active TINYINT(1) NOT NULL DEFAULT 1, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_tenant_username (tenant_id, username)
+);
+
+CREATE TABLE form_configs (        -- Formular-Konfiguration je Tenant
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id   INT NOT NULL,
+    form_key    VARCHAR(100) NOT NULL,
+    config_json LONGTEXT NOT NULL,       -- wie ein Eintrag in forms-config-dist.php, als JSON
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_tenant_form (tenant_id, form_key)
+);
+
 CREATE TABLE anmeldungen (
     id INT(11) AUTO_INCREMENT PRIMARY KEY,
+    tenant_id INT NOT NULL DEFAULT 1,             -- FK → tenants.id
     formular VARCHAR(100) NOT NULL,
     formular_version VARCHAR(50) NULL,
     name VARCHAR(255) NULL,
     email VARCHAR(255) NULL,
     status VARCHAR(30) DEFAULT 'neu',
-    data LONGTEXT NOT NULL,
+    data LONGTEXT NOT NULL,                       -- JSON mit allen Formulardaten
+    pdf_config LONGTEXT NULL,                     -- JSON: PDF-Konfiguration zum Zeitpunkt der Anmeldung
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     deleted TINYINT(1) DEFAULT 0,
     deleted_at DATETIME NULL,
-    INDEX idx_formular (formular),
-    INDEX idx_email (email),
-    INDEX idx_created (created_at)
+    INDEX idx_tenant (tenant_id), INDEX idx_tenant_formular (tenant_id, formular),
+    INDEX idx_tenant_status (tenant_id, status), INDEX idx_formular (formular),
+    INDEX idx_email (email), INDEX idx_created (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 ```
 
 **Wichtige Felder:**
 - `data`: JSON mit allen Formulardaten
 - `status`: neu, exportiert, in_bearbeitung, akzeptiert, abgelehnt, archiviert
-- `deleted`: Soft-delete Flag
-- `deleted_at`: Timestamp für Soft-delete
+- `deleted` / `deleted_at`: Soft-delete
+- `tenants.api_secret`: Secret für die HMAC-Signatur; `SecretPolicy` lehnt Platzhalter/Standardwerte ab
+- Tenant 1 (`slug = default`) wird bei Migration/Seed immer angelegt
 
 ---
 
 ## ⚙️ Konfiguration
 
+Docker: die **Root-`.env`** ist die Single Source of Truth (DB-Credentials, Secrets). `backend/.env` ist optional und nur für Backend-Overrides — **Werte in `backend/.env` überschreiben die Container-Umgebung** (`EnvLoader::load()`). Ohne Docker stehen alle Backend-Werte in `backend/.env`.
+
 ### Backend (.env)
 
 ```bash
 # Application
-APP_ENV=production
+APP_ENV=production            # bei "production" werden bekannte Standard-Secrets abgelehnt
 APP_DEBUG=false
 
 # Database
@@ -203,15 +261,27 @@ DB_NAME=anmeldung
 DB_USER=admin
 DB_PASS=secret
 
+# Secrets (openssl rand -hex 32). Docker: in der Root-.env; manuell: hier anhängen
+PDF_TOKEN_SECRET=...          # min. 32 Zeichen, signiert PDF-Download-Tokens
+API_SECRET_KEY=...            # wird beim Migrieren das Secret von Tenant 1
+
+# Multi-Tenant (Default: false)
+MULTI_TENANT_ENABLED=false    # true ⇒ Login erzwungen, Tenant-Verwaltung, Tenant-Switcher
+ADMIN_USERNAME=               # Platform-Admin (bei MULTI_TENANT_ENABLED=true erforderlich)
+ADMIN_PASSWORD_HASH=''        # password_hash(), in EINFACHE Anführungszeichen (Compose-Interpolation von $)
+
 # Auto-Expunge (Tage nach denen archivierte Einträge gelöscht werden)
 AUTO_EXPUNGE_DAYS=90
 
 # Auto-Mark as Read (bei Ansicht/Export)
 AUTO_MARK_AS_READ=true
 
-# Session
+# Session / Auth
 SESSION_LIFETIME=3600
 SESSION_SECURE=true
+AUTH_ENABLED=false
+
+# Rate Limiting, Virenscan, PDF-Logo, ...: siehe backend/.env.example
 ```
 
 ### Frontend (.env)
@@ -219,6 +289,10 @@ SESSION_SECURE=true
 ```bash
 # Backend API
 BACKEND_API_URL=http://intranet.example.com/backend/api
+
+# Tenant (Single-Tenant: default)
+TENANT_SLUG=default
+TENANT_API_SECRET=...         # Secret des Tenants; signiert Submit/Upload. Nur serverseitig!
 
 # Email
 FROM_EMAIL=noreply@example.com
@@ -232,21 +306,27 @@ UPLOAD_MAX_SIZE=10485760
 UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png
 ```
 
-### Formular-Konfiguration (forms-config.php)
+WordPress: `Tenant-Slug` und `Tenant-API-Secret` unter *Einstellungen → Ondisos* (haben Vorrang vor der `.env`).
+
+### Formular-Konfiguration (Tabelle `form_configs`)
+
+Die Konfiguration eines Formulars ist ein JSON-Objekt in `form_configs.config_json` (Tenant + `form_key`).
+`frontend/config/forms-config-dist.php` dokumentiert die möglichen Schlüssel und dient als Quelle für
+`backend/seed-forms.php` (einmalig, nur Tenant 1, `INSERT IGNORE`). Änderungen danach per SQL;
+eine Admin-Oberfläche ist für 3.1 geplant.
 
 ```php
+// Beispiel: Inhalt einer forms-config.php (wird beim Seed zu config_json)
 return [
     'bs' => [
         'db' => true,
         'form' => 'bs.json',
         'theme' => 'survey_theme.json',
+        'version' => '2026-01-v1',
         'notify_email' => 'sekretariat@example.com',
-    ],
-    'bk' => [
-        'db' => true,
-        'form' => 'bk.json',
-        'theme' => 'survey_theme.json',
-        'notify_email' => 'berufskolleg@example.com',
+        'prefill_fields' => ['Ausbildungsbetrieb', 'Ausbilder'],
+        'pdf' => [ 'enabled' => true, /* siehe PDF Download System */ ],
+        // optional: 'email' => ['intro_template' => …], 'ical' => […]
     ],
 ];
 ```
@@ -257,8 +337,20 @@ return [
 
 ### ✅ Implementiert
 
+**Multi-Tenant (3.0):**
+- Mehrere Schulen pro Backend-Instanz, vollständige Datenisolierung (`tenant_id` in allen Abfragen)
+- Platform-Admin (Zugang aus `.env`) mit Tenant-Switcher und Tenant-Verwaltung (`tenants.php`)
+- Tenant-Admins (Tabelle `tenant_admins`) sehen nur ihren Tenant
+- Signierte API: pro Tenant HMAC-SHA256 (`X-Signature`) für Submit und Upload
+- Formular-Konfiguration pro Tenant in der Datenbank (`form_configs`), vom Frontend per API abgerufen
+- Upload-Isolierung (`uploads/tenant-<id>/`), Audit-Log mit `tenant_id`, IDOR-Protokollierung
+- Härtung: bekannte Platzhalter-/Standard-Secrets authentifizieren nichts (`SecretPolicy`)
+
 **Frontend:**
 - SurveyJS-Integration mit lokalen Fonts (DSGVO-konform)
+- Standalone-PHP-Frontend **oder** WordPress-Plugin (Shortcode `[ondisos form="…"]`)
+- Gemeinsame JS-Basis (`survey-handler-base.js`), Prefill per `?prefill=<base64>` oder einfachen Query-Parametern (`?Klasse=5a`)
+- Dynamische Platzhalter (`placeholderExpression`)
 - CSRF-Protection
 - File-Upload Support
 - Automatische Consent-Feld-Filterung
@@ -299,7 +391,8 @@ return [
 - Dashboard mit Statistiken
 - Auto-Expunge (request-based, alle 6h)
 - Virus Scanning bei Upload (ClamAV TCP/INSTREAM, DSGVO-konform)
-- Audit Trail (JSON-Lines: `backend/logs/audit.log`, Login/Status/Upload/Bulk-Events)
+- Audit Trail (JSON-Lines: `backend/logs/audit.log`, Login/Status/Upload/Bulk-Events, mit `tenant_id`)
+- Admin-PDF-Download in der Detailansicht, Prev/Next-Navigation zwischen Einträgen
 
 **Architecture:**
 - Clean MVC mit Service Layer
@@ -334,7 +427,7 @@ User klickt Download → Frontend Proxy (frontend/public/pdf/download.php)
   ↓
 Frontend Proxy leitet Anfrage weiter → Backend (backend/public/pdf/download.php)
   ↓
-Backend: Token validieren → Anmeldung laden → PDF generieren
+Backend: Token validieren → Tenant der Anmeldung ermitteln → Anmeldung laden → PDF generieren
   ↓
 Backend sendet PDF → Frontend Proxy → User
 ```
@@ -370,7 +463,7 @@ base64(id:timestamp:lifetime:hmac)
 PDF_TOKEN_SECRET=your-secret-key-here
 ```
 
-**forms-config.php:**
+**Formular-Konfiguration** (`form_configs.config_json`, Quelle: `forms-config.php`):
 ```php
 'bs' => [
     'pdf' => [
@@ -485,26 +578,31 @@ archiviert
 ## 🔐 Sicherheit
 
 **Implementiert:**
-- ✅ CSRF-Protection (Token-basiert)
+- ✅ CSRF-Protection (Token-basiert; WordPress: WP-Nonce)
 - ✅ SQL Injection Prevention (Prepared Statements)
 - ✅ XSS Protection (htmlspecialchars überall)
-- ✅ File Upload Validation (Type, Size, Extension)
+- ✅ File Upload Validation (Type, Size, Extension, MIME per Inhalt)
 - ✅ Directory Traversal Prevention
 - ✅ Input Validation (AnmeldungValidator)
 - ✅ Type Safety (declare(strict_types=1))
 - ✅ Error Handling (keine sensitive Daten in Errors)
-- ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt)
-- ✅ Secret Key Management (PDF_TOKEN_SECRET in .env, min 32 Zeichen)
-- ✅ Admin Authentication (Optional, session-basiert, mit Login/Logout)
+- ✅ **Tenant-Isolierung** (`TenantContext`, `tenant_id` in jeder Abfrage, IDOR-Erkennung → `idor_attempt` im Audit-Log)
+- ✅ **Signierte API** (`HmacValidator`): `submit.php` über den Raw-Body, `upload.php` über `id:feldname:dateiname`; der Slug (`?tenant=`) adressiert nur, die Signatur autorisiert
+- ✅ **Secret-Policy** (`SecretPolicy`): Platzhalter (`CHANGE_ME_IN_PRODUCTION`, leer) authentifizieren nie; der Dev-Default `dev-api-key-replace-in-production` wird bei `APP_ENV=production` abgelehnt; `migrate.php` bricht dort ab, wenn `API_SECRET_KEY` so ein Wert ist
+- ✅ **Upload-Zuordnung:** Ein Upload wird nur angenommen, wenn die Anmeldung zum authentifizierten Tenant gehört (sonst 404 + `idor_attempt`)
+- ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt; der Token autorisiert genau eine Anmeldung, deren Tenant wird für den Zugriff ermittelt)
+- ✅ Secret Key Management (`PDF_TOKEN_SECRET`, `API_SECRET_KEY` in `.env`; `TENANT_API_SECRET` nur serverseitig, nie im Browser; WP-Einstellung ist write-only)
+- ✅ Admin Authentication (Optional, session-basiert; bei `MULTI_TENANT_ENABLED=true` erzwungen)
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
 - ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
 - ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
 - ✅ HTTPS Enforcement (Apache .htaccess + PHP Fallback)
 - ✅ Virus Scanning (ClamAV via TCP/INSTREAM, Docker-Service, DSGVO-konform, EICAR-getestet)
-- ✅ Audit Trail (JSON-Lines-Log: Login, Status-Änderungen, Uploads, Bulk-Actions)
+- ✅ Audit Trail (JSON-Lines-Log: Login, Status-Änderungen, Uploads, Bulk-Actions, IDOR-Versuche)
 
-**TODO:**
-- Keine offenen Security-TODOs 🎉
+**Bekannte Einschränkungen:**
+- `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar und liefert z. B. `notify_email` — keine Geheimnisse in `config_json` ablegen.
+- Signaturen enthalten keinen Zeitstempel (kein Replay-Schutz über die Transportschicht hinaus): HTTPS zwischen Frontend und Backend verwenden.
 
 ---
 
@@ -531,18 +629,26 @@ nano .env  # DB_USER, DB_PASS, Secrets
 
 # 2. Secrets generieren
 openssl rand -hex 32  # → PDF_TOKEN_SECRET
+openssl rand -hex 32  # → API_SECRET_KEY (Secret von Tenant 1; darf kein Standardwert sein)
 
-# 3. Container starten
+# 3. Container starten (führt migrate.php bei jedem Start aus)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
-# 4. Health Check
-curl http://your-server:8080/api/health.php
+# 4. Formular-Konfiguration einspielen (einmalig)
+cp frontend/config/forms-config-dist.php backend/config/forms-config.php   # anpassen
+docker compose exec backend php seed-forms.php
+
+# 5. Health Check
+curl http://your-server:9080/api/health.php
 ```
 
-**Neue Credentials-Struktur (v2.6):**
+**Credentials-Struktur:**
 - ✅ `/.env` - Core Credentials (DB_USER, DB_PASS, Secrets) — **Single Source of Truth**
-- ✅ `/backend/.env` - Optional, nur für Backend-spezifische Overrides
+- ✅ `/backend/.env` - Optional, nur für Backend-spezifische Overrides (überschreibt die Container-Umgebung!)
 - ✅ Automatisches Mapping: `DB_USER` → `MYSQL_USER`, keine Duplikation!
+- ✅ Frontend (manuell): `frontend/.env` mit `BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`
+
+**Upgrade von 2.x:** [MIGRATION-3.0.md](MIGRATION-3.0.md). **Mehrere Schulen:** [MULTI-TENANT.md](MULTI-TENANT.md).
 
 ### Weitere Themen
 
@@ -591,14 +697,21 @@ Das Projekt verfügt über eine umfassende PHPUnit Test-Suite mit Unit- und Inte
 ```
 backend/tests/
 ├── bootstrap.php              # Test-Setup (Autoloader, Env-Variablen)
-├── Unit/                      # Unit Tests (ohne DB)
-│   └── Services/
-│       ├── RateLimiterTest.php       # 11 Tests
-│       ├── PdfTokenServiceTest.php   # 20 Tests
-│       └── MessageServiceTest.php    # 30+ Tests
-└── Integration/               # Integration Tests (mit DB)
-    └── (zukünftige Tests)
+├── Unit/                      # Unit Tests (ohne DB; mysqli wird per Anonymous-Subclass gemockt)
+│   ├── Auth/                  # LoginService
+│   ├── Config/                # FormConfig (DB), TenantContext
+│   ├── Controllers/           # DetailController
+│   ├── Models/                # Anmeldung
+│   ├── Repositories/          # Anmeldung (Adjacent/Tenant-Lookup), Tenant*, TenantAdmin
+│   ├── Services/              # u. a. HmacValidation, SecretPolicy, BackendApiClient(+Signing),
+│   │                          # FormConfigLoader, PdfToken, RateLimiter, VirusScan, AuditLogger, …
+│   ├── Upload/                # MIME, Sicherheit, Pfad-Isolierung
+│   ├── Utils/                 # DataFormatter
+│   └── Validators/
+└── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest)
 ```
+
+Stand: ~500 Unit-Tests (`composer test -- --testsuite=Unit`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 
@@ -656,32 +769,17 @@ composer test -- --testdox
 - Setzt Test-Environment-Variablen
 - Definiert Test-Konstanten: `TESTING`, `SKIP_AUTO_EXPUNGE`, `SKIP_AUTH_CHECK`
 
-#### Bestehende Tests
+#### Schwerpunkte der Test-Suite
 
-**RateLimiterTest (11 Tests):**
-- Request-Tracking und Limit-Enforcement
-- Window-Expiration
-- getRemainingRequests() und getRetryAfter()
-- Identifier-Isolation
-- Reset-Funktionalität
-- Corrupted-Storage-Handling
-- Special-Characters in Identifiers
+| Bereich | Was abgesichert ist |
+|---|---|
+| **Tenant-Isolierung** | `TenantContext`, tenant-gefilterte Repository-Abfragen (`findAdjacentIds`, `findTenantIdById`), Upload-Pfade, Expunge pro Tenant |
+| **API-Sicherheit** | `HmacValidator` (Body/Upload-Signatur), `SecretPolicy` (Platzhalter, Dev-Default in Production), Round-Trip Client-Signatur ↔ Validator (`BackendApiClientSigningTest`) |
+| **Frontend-Config** | `FormConfigLoader` (laden, mergen, einmalig abfragen), `BackendApiClient::fetchFormConfig` |
+| **PDF** | `PdfTokenService` (Token-Format, Ablauf, Manipulation) |
+| **Sonstiges** | `RateLimiter`, `MessageService`, `VirusScanService`, `AuditLogger`, Export, Status, Upload-Validierung |
 
-**PdfTokenServiceTest (20 Tests):**
-- Token-Generierung (Base64, Format, Parts)
-- Token-Validierung (gültig, abgelaufen, manipuliert)
-- HMAC-Sicherheit (Timing-safe Vergleich)
-- Malformed-Token-Handling
-- Edge-Cases (große IDs, Zero-Lifetime)
-
-**MessageServiceTest (30+ Tests):**
-- Dot-Notation-Access (nested keys)
-- Placeholder-Replacement
-- withContact() Helper
-- Local-Overrides (messages.local.php)
-- Deep-Merge-Funktionalität
-- Cache-Reset
-- Edge-Cases (empty keys, missing messages)
+**Nicht durch Unit-Tests abgedeckt:** die Endpoint-Skripte selbst (`public/api/*.php`, `pdf/download.php`) und der Browser-Teil (SurveyJS/JavaScript). Dafür gibt es die Manual Tests unten.
 
 #### Neue Tests schreiben
 
@@ -781,7 +879,7 @@ docker run --rm -v $(pwd):/app -w /app/backend php:8.1-cli \
 
 **Frontend Submission:**
 ```bash
-# 1. Formular öffnen
+# 1. Formular öffnen (Standalone) bzw. WordPress-Seite mit [ondisos form="bs"]
 http://anmeldung.example.com/index.php?form=bs
 
 # 2. Ausfüllen und absenden
@@ -810,41 +908,33 @@ http://intranet.example.com/backend/dashboard.php
 
 ### Test Coverage Ziele
 
-**Aktuell getestet:**
-- ✅ RateLimiter (100%)
-- ✅ PdfTokenService (100%)
-- ✅ MessageService (100%)
+**Gut abgedeckt:** RateLimiter, PdfTokenService, MessageService, VirusScanService, HmacValidator, SecretPolicy, TenantContext, Tenant-Repositories, Upload-Validierung, FormConfigLoader.
 
-**Noch nicht getestet:**
-- ⏳ AnmeldungService
-- ⏳ ExportService
-- ⏳ StatusService
-- ⏳ ExpungeService
-- ⏳ AnmeldungValidator
-- ⏳ PdfGeneratorService
-- ⏳ AnmeldungRepository (Integration Tests)
+**Lücken:**
+- ⏳ Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) — bisher nur manuell/live geprüft
+- ⏳ AnmeldungRepository (Integration Tests gegen eine Test-Datenbank)
+- ⏳ JavaScript (`survey-handler-*.js`), WordPress-Plugin
 
-**Langfristig:**
-- Target: >80% Code Coverage
-- Integration Tests mit Test-Datenbank
-- E2E Tests für kritische User-Flows
+**Langfristig:** >80 % Code Coverage, Integration Tests mit Test-Datenbank, E2E-Tests für die kritischen Flows (Submit, Upload, PDF).
 
 ---
 ## 🐛 Known Issues & TODOs
 
 ### Known Issues
-- ⚠️ Email-Service nutzt PHP mail() → ggf. auf SMTP umstellen
+- ⚠️ Email-Service nutzt PHP `mail()` → ggf. auf SMTP umstellen
+- ⚠️ Formular-Konfiguration ist nur per SQL änderbar (Admin-UI geplant, 3.1); `seed-forms.php` schreibt nur Tenant 1 und überschreibt nichts
+- ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
+- ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)
+- ⚠️ Unbekanntes Formular und nicht erreichbares Backend führen im Standalone-Frontend beide zur Wartungsseite (503)
 
 ### TODOs
-1. ✅ **PHPUnit Tests** schreiben (Done: RateLimiter, PdfTokenService, MessageService, VirusScanService)
-2. ✅ **Docker Setup** für Production (Done: DOCKER.md, docker-compose.prod.yml, CI/CD.md)
-3. ✅ **Disaster Recovery** Playbook (Done: DISASTER_RECOVERY.md)
-4. ✅ **Virus Scanning** (Done: ClamAV, VirusScanService, docker-compose.yml)
-5. ✅ **Audit Trail** (Done: AuditLogger, JSON-Lines, backend/logs/audit.log)
-6. **Weitere Unit Tests** für Services, Repositories, Validators
-7. **Integration Tests** mit Test-Datenbank
-8. **Monitoring** Setup (z.B. Sentry, Prometheus)
-9. **API Documentation** (OpenAPI/Swagger)
+1. **Weitere Unit Tests** für Services, Repositories, Validators; Tests für die Endpoint-Skripte
+2. **Integration Tests** mit Test-Datenbank
+3. **Monitoring** Setup (z.B. Sentry, Prometheus)
+4. **API Documentation** (OpenAPI/Swagger)
+5. **Form-Config Admin-UI** und Survey-JSON-Upload (3.1)
+6. **Managed Multi-Frontend** (ein Frontend für mehrere Tenants, 3.0.5)
+7. **Deutsche Locale** für SurveyJS
 
 ---
 
@@ -1052,6 +1142,18 @@ php -l backend/config/messages.local.php
 → Backend .env: ALLOWED_ORIGINS anpassen
 → Check api/submit.php CORS Headers
 
+### Absenden: "Unauthorized" / HTTP 401 vom Backend
+→ `TENANT_API_SECRET` im Frontend (bzw. WP-Einstellung) muss dem `tenants.api_secret` des Tenants entsprechen
+→ Backend-Log: `tenant api_secret is a known placeholder/default` ⇒ echtes Secret setzen (`openssl rand -hex 32`) und `php migrate.php`
+→ `TENANT_SLUG` muss ein aktiver Tenant sein
+
+### Wartungsseite (503) / "Unknown form"
+→ `BACKEND_API_URL` erreichbar? `curl "$BACKEND_API_URL/form-config.php?form=bs&tenant=default"`
+→ Formular in `form_configs` vorhanden? (`seed-forms.php`), richtiger `TENANT_SLUG`?
+
+### `Unknown column 'tenant_id'`
+→ Migration nicht gelaufen: `php backend/migrate.php` (Docker: läuft bei jedem Start)
+
 ### "Permission denied" für uploads/cache
 → `chmod 755 uploads cache`
 → `chown www-data:www-data uploads cache`
@@ -1074,7 +1176,7 @@ php -l backend/config/messages.local.php
 ## 📞 Support & Kontakt
 
 **Entwickler:** [Name]
-**Stand:** Februar 2026
+**Version:** 3.0
 **PHP Version:** 8.2+
 **Database:** MySQL 8.0+ / MariaDB 10.5+
 
@@ -1082,166 +1184,31 @@ php -l backend/config/messages.local.php
 
 ## 🔄 Änderungshistorie
 
-### v2.6 (Februar 2026)
-- ✅ ClamAV Virus Scanning
-  - `VirusScanService` (TCP/INSTREAM-Protokoll, kein Zusatz-Binary, keine PHP-Extension)
-  - Docker-Service `clamav/clamav:stable` in `docker-compose.yml`
-  - `freshclam`-Daemon im Container: automatische Signatur-Updates alle 2h, kein Cronjob nötig
-  - Persistentes Volume `clamav-data` (Signaturen bleiben bei Neustart erhalten)
-  - DSGVO-konform: Dateien verlassen niemals die lokale Infrastruktur
-  - Soft-fail (VIRUS_SCAN_STRICT=false) und Strict-Mode (=true) konfigurierbar
-  - EICAR-Testdatei abgelehnt, saubere Dateien durchgelassen ✅
-- ✅ Audit Trail (AuditLogger)
-  - `AuditLogger` (statische Klasse, JSON-Lines, thread-safe via LOCK_EX)
-  - Log-Datei: `backend/logs/audit.log`
-  - Events: `login_success`, `login_failed`, `logout`, `status_changed`, `bulk_archive/delete/restore/hard_delete`, `upload_success`, `virus_found`, `export_run`
-  - IP-Erkennung: `HTTP_X_FORWARDED_FOR` (Reverse-Proxy-kompatibel) / `REMOTE_ADDR`
-  - Integration: `login.php`, `StatusService`, `BulkActionsController`, `upload.php`
-- ✅ Unit Tests: `VirusScanServiceTest` (10 Tests, 376 Tests gesamt, 901 Assertions)
-  - Anonymous-Subclass-Pattern für socket-freie Tests via Reflection
-  - `testFromEnvReadsHostAndPort`: `$_ENV`-Direktzuweisung statt `putenv()`
-- ✅ Simplified Credentials Management
-  - Root `.env` als Single Source of Truth (keine Duplikation mehr)
-  - Automatisches Mapping: `DB_USER` → `MYSQL_USER`, `DB_PASS` → `MYSQL_PASSWORD`
-  - Variable Substitution in docker-compose.yml: `${DB_USER:-anmeldung}`
-  - `backend/.env` nur noch für optionale Backend-spezifische Overrides
-  - Reduzierte Fehlerquellen bei Credential-Mismatches
-- ✅ Docker Optimierungen
-  - Entrypoint.sh: Nur noch writable directories chownen (uploads, cache, logs)
-  - Host-Filesystem bleibt bei Non-Root-User (kein chown auf `/var/www/html`)
-  - MySQL: Kein Host-Port-Exposure in Production (nur internes Docker-Netzwerk)
-  - `version:` aus docker-compose.prod.yml entfernt (obsolet, verursachte Warnings)
+### 3.0
 
-### v2.5 (Februar 2026)
-- ✅ Docker Production Deployment
-  - Deployment-Section in CLAUDE.md komplett neu strukturiert
-  - Drei Deployment-Optionen: Docker Backend (✅ Empfohlen), Komplett Manuell, Komplett Docker
-  - docker-compose.prod.yml für Production Overrides
-  - Persistenz über Reboots (restart: unless-stopped + systemd)
-  - Secrets Management (env_file, Docker secrets)
-  - Volume Backups & Recovery
-  - Updates & Rollbacks
-  - Monitoring & Logging
-- ✅ DOCKER.md massiv erweitert
-  - Production-Section mit vollständigem Setup-Guide
-  - Automatische Backups (Cron-Script)
-  - Update-Strategie mit Zero-Downtime
-  - Reverse Proxy Setup (Nginx, Traefik)
-  - Security Checklist erweitert
-  - Testing Production Setup
-- ✅ CI/CD Pipeline Dokumentation
-  - Neue CI_CD.md mit vollständiger GitLab CI/CD Pipeline
-  - Automated Tests & Deployments
-  - Staging & Production Workflows
-  - Rollback-Strategien
-  - SSH-Key Setup für Deployment
-  - Pipeline-Monitoring & Alerts
-- ✅ Disaster Recovery Playbook
-  - Neue DISASTER_RECOVERY.md
-  - 8 Notfall-Szenarien (Complete Outage, DB Corruption, Data Loss, Security Breach, etc.)
-  - Schritt-für-Schritt Recovery-Anleitungen
-  - Prevention Best Practices
-  - Incident Log Templates
-  - Regular Drill Procedures
-- ✅ Improved .env.example files
-  - Backend .env.example: Bessere Gruppierung, Docker-Variablen, Production Checklist
-  - Frontend .env.example: Bessere Kommentare, Docker vs Manual Unterschiede
-  - Security-Hinweise und Beispielwerte
-- ✅ Dokumentation aktualisiert
-  - README.md mit Links zu neuen Dokumenten
-  - Roadmap aktualisiert (v2.5 Features als completed)
-  - CLAUDE.md TODOs aktualisiert
+**Multi-Tenant**
+- ✅ Tenants (`tenants`, `tenant_admins`), Platform-Admin, Tenant-Switcher, Tenant-Verwaltung (`tenants.php`)
+- ✅ Datenisolierung: `tenant_id` in allen Abfragen, `TenantContext`, IDOR-Protokollierung
+- ✅ Signierte API (HMAC-SHA256 pro Tenant) für Submit und Upload; Upload-Isolierung und -Zuordnungsprüfung
+- ✅ Formular-Konfiguration in der Datenbank (`form_configs`), `seed-forms.php`, API `form-config.php`
+- ✅ `migrate.php` (idempotent) — läuft im Docker-Backend bei jedem Start
 
-### v2.4 (Januar 2026)
-- ✅ PHPUnit Test-Suite implementiert
-  - PHPUnit 10.5 als dev-dependency
-  - Separate Test-Suites: Unit, Integration
-  - tests/bootstrap.php für Test-Setup
-  - Test-Environment-Variablen in phpunit.xml
-  - Composer Scripts: test, test:coverage, test:filter
-- ✅ Umfassende Unit Tests
-  - RateLimiterTest: 11 Tests (Request-Tracking, Window-Expiration, etc.)
-  - PdfTokenServiceTest: 20 Tests (Token-Generierung, Validierung, HMAC-Sicherheit)
-  - MessageServiceTest: 30+ Tests (Dot-Notation, Placeholders, Local-Overrides)
-- ✅ GitLab CI/CD Pipeline
-  - Stages: install, test, coverage, security
-  - Automated Unit Tests mit JUnit-Reports
-  - Integration Tests mit MySQL 8.0 (optional)
-  - Code Coverage mit Xdebug (HTML-Report als Artefakt)
-  - PHP Syntax-Linting
-  - Secret Detection und SAST
-- ✅ Dokumentation
-  - Umfassender Testing-Guide in CLAUDE.md
-  - Test-Struktur und Ausführung
-  - Best Practices für neue Tests
-  - GitLab CI/CD Erklärung
-  - Coverage Ziele
+**Frontend / WordPress**
+- ✅ `FormConfigLoader`: gemeinsamer Weg, die Config eines Formulars vom Backend zu laden (Standalone `index/save/ical`, WordPress)
+- ✅ `BackendApiClient` signiert Requests und hängt den Tenant an
+- ✅ WordPress-Plugin 2.1: Config vom Backend, Einstellungen *Tenant-Slug* und *Tenant-API-Secret* (write-only)
+- ✅ Gemeinsame JS-Basis `survey-handler-base.js`, Prefill über einfache Query-Parameter, `placeholderExpression`
 
-### v2.3 (Januar 2026)
-- ✅ Admin Authentication System (Optional)
-  - Session-basiertes Login/Logout
-  - Optional aktivierbar via AUTH_ENABLED in .env
-  - CSRF-Protection für Login-Formular
-  - Brute-Force-Protection (0.5s Delay)
-  - Session Timeout (konfigurierbar)
-  - Bootstrap 5 Login-UI
-  - Passwort-Hash-Generator Script
-  - API-Endpoints bleiben öffentlich zugänglich
-- ✅ Rate Limiting System
-  - File-based Rate Limiter (keine Redis-Dependency)
-  - Konfigurierbar via .env (10 req/min default)
-  - Sliding Window Algorithm
-  - Probabilistic Cleanup
-  - HTTP 429 mit Retry-After Header
-- ✅ PDF Verbesserungen
-  - Zweispaltiges Datentabellen-Layout (kompakter)
-  - Logo-Support für absolute und relative Pfade
-  - PNG-Transparenz korrekt erhalten
-  - Explizite Dimensionen für bessere Auflösung
-- ✅ Excel-Export Verbesserungen
-  - File-Upload-Felder automatisch filtern
-  - Verhindert base64-Daten in Excel-Exporten
-- ✅ HTTPS Enforcement
-  - Apache .htaccess Templates mit Security Headers
-  - PHP Fallback-Check in bootstrap.php
-  - HSTS, CSP, X-Frame-Options Support
-  - Proxy/Load-Balancer Detection
+**Härtung**
+- ✅ `SecretPolicy`: Platzhalter-/Standard-Secrets authentifizieren nichts; `migrate.php` ersetzt den Platzhalter von Tenant 1 durch `API_SECRET_KEY`
+- ✅ PDF-Download funktioniert im Multi-Tenant-Modus (Tenant wird aus der Anmeldung ermittelt)
 
-### v2.2 (Januar 2026)
-- ✅ PDF Download System
-  - HMAC-basierte Token-Authentifizierung (selbstvalidierend)
-  - On-Demand PDF-Generierung (mPDF)
-  - Frontend-Proxy für öffentlichen Zugriff (Backend bleibt im Intranet)
-  - Konfigurierbar per Formular
-  - Logo-Support mit automatischer Optimierung
-  - Custom Sections (Pre/Post Data-Table)
-  - Field-Filtering und Ordering
-  - User-Friendly Error Pages
-  - Composer-Integration
-  - Umfassende Dokumentation (PDF_SETUP.md)
+**Sonstiges**
+- ✅ Admin-PDF-Download und Prev/Next-Navigation in der Detailansicht
+- ✅ Dateinamen-Sanitizing (`FilenameSanitizer`), Download-Links für Uploads in E-Mails
+- ✅ Docker: Migration bei jedem Start, `docker compose` (Compose-Plugin), Makefile
 
-### v2.1 (Januar 2026)
-- ✅ Zentrale Message-Verwaltung (MessageService)
-- ✅ Local Override System (messages.local.php)
-- ✅ JavaScript Message Loader
-- ✅ Placeholder-Unterstützung ({{variable}})
-- ✅ Git-safe lokale Anpassungen
-- ✅ ~90+ Messages zentralisiert
-
-### v2.0 (Januar 2026)
-- ✅ Komplett refactored (Frontend + Backend)
-- ✅ Clean Architecture (MVC + Services)
-- ✅ Soft-Delete System
-- ✅ Auto-Expunge
-- ✅ Excel-Export mit Auto-Formatierung
-- ✅ Status-System
-- ✅ Bulk-Actions
-- ✅ Type-Safety (PHP 8.2+)
-
-### v1.0 (Original)
-- Legacy Spaghetti Code
-- Direkte DB-Verbindungen
-- Keine Struktur
+**Upgrade von 2.x:** siehe [MIGRATION-3.0.md](MIGRATION-3.0.md).
 
 ---
 
