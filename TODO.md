@@ -15,10 +15,15 @@ In einer Demo-Umgebung (WordPress + Standalone-Frontend + Backend, Multi-Tenant-
 - [x] Formular-Konfiguration vom Backend (Standalone `index/save/ical`, WordPress-Shortcode)
 - [x] Migration `migrate.php` inkl. Ersatz des Platzhalter-Secrets; Abbruch in Production bei Standard-Secret
 
+Im Browser gegen die Demo geprüft (Platform-Admin und Tenant-Admin):
+
+- [x] Tenant-Switcher: Wechsel auf einen Tenant, Default und „Alle Tenants"; der Redirect bereinigt die URL, die Kopfzeile zeigt den Kontext, Liste und Zähler passen (Tenant B: 1, Default: 8, alle: 9)
+- [x] Tenant-Verwaltung (`tenants.php`): Tenant anlegen (Slug aus dem Namen, API-Schlüssel nur einmal sichtbar), Tenant-Admin anlegen (Passwort nur einmal sichtbar), Schlüssel erneuern (alter sofort ungültig, neuer gültig), Tenant deaktivieren (API 401, Admin-Login abgelehnt)
+- [x] Zugriffsgrenzen: fremder Eintrag → 404 + `idor_attempt`; Tenant-Admin sieht nur den eigenen Tenant (Liste, Dashboard, Papierkorb, Excel-Export), `tenants.php` → 403, `switch_tenant` wirkungslos
+
 Noch offen (nur manuell prüfbar):
 
-- [ ] Tenant-Switcher-Navigation im Backend (URL-Redirect ohne `switch_tenant`, „Alle Tenants" zurücksetzen)
-- [ ] Tenant-Verwaltung (`tenants.php`): anlegen, Secret regenerieren, Tenant-Admins
+- [ ] Backend-Oberfläche: Bootstrap/DataTables lokal ausliefern statt von `cdn.jsdelivr.net` (Datenschutz, Intranet ohne Internet, Versions-Pinning/SRI)
 - [ ] Upload im Browser-Formular (Datei auswählen; der Server-Teil ist verifiziert)
 - [ ] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests
 
