@@ -65,6 +65,16 @@ class AuditLogger
         self::log('virus_found', ['anmeldung_id' => $anmeldungId, 'file' => $filename, 'virus' => $virusName]);
     }
 
+    public static function uploadsDeleted(int $anmeldungId, int $count): void
+    {
+        self::log('uploads_deleted', ['anmeldung_id' => $anmeldungId, 'count' => $count]);
+    }
+
+    public static function uploadCleanupFailed(int $anmeldungId, string $filename, string $reason): void
+    {
+        self::log('upload_cleanup_failed', ['anmeldung_id' => $anmeldungId, 'file' => $filename, 'reason' => $reason]);
+    }
+
     public static function exportRun(string $formular, int $count): void
     {
         self::log('export', ['formular' => $formular ?: 'all', 'count' => $count]);

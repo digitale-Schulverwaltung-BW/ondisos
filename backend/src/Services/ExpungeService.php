@@ -11,8 +11,11 @@ use App\Config\Config;
 class ExpungeService
 {
     public function __construct(
-        private AnmeldungRepository $repository
-    ) {}
+        private AnmeldungRepository $repository,
+        private ?UploadCleanupService $uploadCleanup = null
+    ) {
+        $this->uploadCleanup ??= new UploadCleanupService();
+    }
 
     /**
      * Auto-expunge old archived entries
@@ -49,6 +52,7 @@ class ExpungeService
             // In production: you might want another grace period before hard delete
             // For now: hard delete immediately
             if ($this->repository->hardDelete($anmeldung->id)) {
+                $this->uploadCleanup->deleteForAnmeldung($anmeldung->id);
                 $deletedIds[] = $anmeldung->id;
                 $deletedCount++;
             }
@@ -108,6 +112,7 @@ class ExpungeService
 
         foreach ($ids as $id) {
             if ($this->repository->hardDelete($id)) {
+                $this->uploadCleanup->deleteForAnmeldung($id);
                 $deletedCount++;
             }
         }

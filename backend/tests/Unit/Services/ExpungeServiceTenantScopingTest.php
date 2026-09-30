@@ -38,7 +38,7 @@ class ExpungeServiceTenantScopingTest extends TestCase
     {
         parent::setUp();
         $this->mockRepo = $this->createMock(AnmeldungRepository::class);
-        $this->service  = new ExpungeService($this->mockRepo);
+        $this->service  = new ExpungeService($this->mockRepo, $this->createMock(\App\Services\UploadCleanupService::class));
 
         // Isolate env vars so putenv() controls what Config reads
         $this->savedExpungeDays = $_ENV['AUTO_EXPUNGE_DAYS'] ?? $_SERVER['AUTO_EXPUNGE_DAYS'] ?? null;

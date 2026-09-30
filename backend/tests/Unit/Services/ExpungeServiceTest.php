@@ -22,7 +22,7 @@ class ExpungeServiceTest extends TestCase
     {
         parent::setUp();
         $this->mockRepo = $this->createMock(AnmeldungRepository::class);
-        $this->service = new ExpungeService($this->mockRepo);
+        $this->service = new ExpungeService($this->mockRepo, $this->createMock(\App\Services\UploadCleanupService::class));
         // Isolate $_ENV and $_SERVER so putenv() controls what Config reads
         $this->savedExpungeDays = $_ENV['AUTO_EXPUNGE_DAYS'] ?? $_SERVER['AUTO_EXPUNGE_DAYS'] ?? null;
         unset($_ENV['AUTO_EXPUNGE_DAYS'], $_SERVER['AUTO_EXPUNGE_DAYS']);
