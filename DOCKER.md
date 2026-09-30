@@ -15,16 +15,22 @@ Vollständiges Docker-Setup für das Schulanmeldungs-System mit Backend, Fronten
 # Repository klonen (falls noch nicht geschehen)
 cd /path/to/ondisos
 
-# Datenbank-Schema erstellen (falls noch nicht vorhanden)
-mkdir -p database
-# Kopiere database/schema.sql aus dem Backend-Verzeichnis
+# Root .env anlegen (Credentials, Secrets)
+cp .env.example .env
 
-# Container starten
-docker-compose up -d
+# Container starten (das Schema database/schema.sql wird beim ersten Start automatisch importiert,
+# die Migration migrate.php läuft bei jedem Start des Backend-Containers)
+docker compose --profile dev up -d
+
+# Formular-Konfiguration einspielen (einmalig): ohne sie gibt es keine Formulare
+cp frontend/config/forms-config-dist.php backend/config/forms-config.php   # ggf. anpassen
+docker compose exec backend php seed-forms.php
 
 # Logs anschauen
-docker-compose logs -f
+docker compose logs -f
 ```
+
+`--profile dev` startet zusätzlich das Frontend (`:8081`) und phpMyAdmin (`:8082`). Ohne das Profil läuft nur der Backend-Stack. Das Frontend im Dev-Setup bekommt `TENANT_SLUG=default` und `TENANT_API_SECRET=${API_SECRET_KEY}` automatisch aus der Compose-Datei.
 
 ### 3. Zugriff
 
@@ -32,7 +38,7 @@ Nach erfolgreichem Start sind folgende Services verfügbar:
 
 | Service | URL | Beschreibung |
 |---------|-----|--------------|
-| **Backend** | http://localhost:8080 | Admin-Interface |
+| **Backend** | http://localhost:9080 | Admin-Interface + API |
 | **Frontend** | http://localhost:8081 | Öffentliche Formulare |
 | **MySQL** | localhost:3306 | Datenbank (user: anmeldung, pass: secret123) |
 | **PHPMyAdmin** | http://localhost:8082 | Datenbank-Verwaltung (dev only) |
@@ -41,16 +47,16 @@ Nach erfolgreichem Start sind folgende Services verfügbar:
 
 ```bash
 # Im Backend-Container
-docker-compose exec backend composer test
+docker compose exec backend composer test
 
 # Mit Code Coverage
-docker-compose exec backend composer test:coverage
+docker compose exec backend composer test:coverage
 
 # Nur Unit Tests
-docker-compose exec backend composer test -- --testsuite=Unit
+docker compose exec backend composer test -- --testsuite=Unit
 
 # Spezifische Test-Klasse
-docker-compose exec backend composer test:filter AnmeldungValidatorTest
+docker compose exec backend composer test:filter AnmeldungValidatorTest
 ```
 
 ## 📦 Services
@@ -58,20 +64,21 @@ docker-compose exec backend composer test:filter AnmeldungValidatorTest
 ### Backend (Admin Interface)
 
 **Container:** `ondisos-backend`
-**Port:** 8080
+**Port:** 9080
 **Image:** PHP 8.2-Apache mit Composer, Xdebug, MySQL-Extensions
 
 **Features:**
 - Auto-Installation von Composer-Dependencies
 - Automatische .env-Erstellung
+- Datenbank-Migration (`migrate.php`) bei jedem Start
 - Volumes für Uploads/Cache/Logs
 - Hot-Reload bei Code-Änderungen (Volume-Mount)
 
 **Wichtige Pfade:**
-- Admin: http://localhost:8080/index.php
-- API: http://localhost:8080/api/submit.php
-- Excel Export: http://localhost:8080/excel_export.php
-- Dashboard: http://localhost:8080/dashboard.php
+- Admin: http://localhost:9080/index.php
+- API: http://localhost:9080/api/submit.php (HMAC-signiert), `/api/form-config.php`, `/api/health.php`
+- Excel Export: http://localhost:9080/excel_export.php
+- Dashboard: http://localhost:9080/dashboard.php
 
 ### Frontend (Öffentliche Formulare)
 
@@ -80,9 +87,10 @@ docker-compose exec backend composer test:filter AnmeldungValidatorTest
 **Image:** PHP 8.2-Apache
 
 **Features:**
-- SurveyJS-Formulare
-- API-Integration mit Backend
+- SurveyJS-Formulare (Konfiguration kommt vom Backend: `/api/form-config.php`)
+- API-Integration mit Backend (Requests mit `?tenant=<slug>` und HMAC-Signatur)
 - CORS-konfiguriert für lokale Entwicklung
+- Startet nur mit `--profile dev`
 
 **Wichtige Pfade:**
 - Formular BS: http://localhost:8081/index.php?form=bs
@@ -122,7 +130,7 @@ Beim allerersten Start lädt ClamAV die Virus-Signaturdatenbank (~300 MB) herunt
 
 ```bash
 # Warten bis ClamAV bereit ist:
-docker-compose logs -f clamav
+docker compose logs -f clamav
 # Warten auf: "ClamAV daemon started"
 ```
 
@@ -146,7 +154,7 @@ VIRUS_SCAN_STRICT=false  # false = soft fail (Upload erlaubt, wenn ClamAV nicht 
 echo 'X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*' > /tmp/eicar.txt
 
 # Upload via curl (sollte abgelehnt werden)
-curl -X POST http://localhost:8080/upload.php \
+curl -X POST http://localhost:9080/upload.php \
   -F "anmeldung_id=1" \
   -F "fieldname=test" \
   -F "file=@/tmp/eicar.txt"
@@ -164,10 +172,10 @@ curl -X POST http://localhost:8080/upload.php \
 **Starten:**
 ```bash
 # Mit PHPMyAdmin
-docker-compose --profile dev up -d
+docker compose --profile dev up -d
 
 # Ohne PHPMyAdmin (Standard)
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 🛠️ Entwicklung
@@ -184,74 +192,74 @@ Alle Änderungen am Code werden sofort reflektiert (Hot-Reload):
 
 ```bash
 # Im Backend-Container
-docker-compose exec backend composer require vendor/package
+docker compose exec backend composer require vendor/package
 
 # Composer-Cache löschen
-docker-compose exec backend composer clear-cache
+docker compose exec backend composer clear-cache
 ```
 
 ### Tests debuggen
 
 ```bash
 # Mit verbose Output
-docker-compose exec backend composer test -- --testdox
+docker compose exec backend composer test -- --testdox
 
 # Mit Debug-Ausgabe
-docker-compose exec backend composer test -- --debug
+docker compose exec backend composer test -- --debug
 
 # Einzelner Test
-docker-compose exec backend ./vendor/bin/phpunit tests/Unit/Validators/AnmeldungValidatorTest.php::testValidateFormularNameRejectsSqlInjection
+docker compose exec backend ./vendor/bin/phpunit tests/Unit/Validators/AnmeldungValidatorTest.php::testValidateFormularNameRejectsSqlInjection
 ```
 
 ### Logs anschauen
 
 ```bash
 # Alle Services
-docker-compose logs -f
+docker compose logs -f
 
 # Nur Backend
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # Nur MySQL
-docker-compose logs -f mysql
+docker compose logs -f mysql
 
 # PHP Error Log
-docker-compose exec backend tail -f /var/www/html/logs/php_errors.log
+docker compose exec backend tail -f /var/www/html/logs/php_errors.log
 
 # Apache Error Log
-docker-compose exec backend tail -f /var/log/apache2/error.log
+docker compose exec backend tail -f /var/log/apache2/error.log
 
 # Audit Log (Login, Uploads, Status-Änderungen, Bulk-Actions)
-docker-compose exec backend tail -f /var/www/html/logs/audit.log
+docker compose exec backend tail -f /var/www/html/logs/audit.log
 
 # ClamAV Log
-docker-compose logs -f clamav
+docker compose logs -f clamav
 ```
 
 ### Datenbank-Zugriff
 
 ```bash
 # MySQL CLI
-docker-compose exec mysql mysql -u anmeldung -psecret123 anmeldung
+docker compose exec mysql mysql -u anmeldung -psecret123 anmeldung
 
 # Datenbank-Dump erstellen
-docker-compose exec mysql mysqldump -u anmeldung -psecret123 anmeldung > backup.sql
+docker compose exec mysql mysqldump -u anmeldung -psecret123 anmeldung > backup.sql
 
 # Datenbank-Dump importieren
-docker-compose exec -T mysql mysql -u anmeldung -psecret123 anmeldung < backup.sql
+docker compose exec -T mysql mysql -u anmeldung -psecret123 anmeldung < backup.sql
 ```
 
 ### Shell-Zugriff
 
 ```bash
 # Backend
-docker-compose exec backend bash
+docker compose exec backend bash
 
 # Frontend
-docker-compose exec frontend bash
+docker compose exec frontend bash
 
 # MySQL
-docker-compose exec mysql bash
+docker compose exec mysql bash
 ```
 
 ## 🔧 Konfiguration
@@ -267,15 +275,21 @@ DB_PORT=3306
 DB_NAME=anmeldung
 DB_USER=anmeldung
 DB_PASS=secret123
-PDF_TOKEN_SECRET=dev-secret-key-replace-in-production
+PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars
+API_SECRET_KEY=dev-api-key-replace-in-production   # Secret von Tenant 1 (in Production: echter Wert!)
+MULTI_TENANT_ENABLED=false
 ```
 
 **Frontend (.env):**
 ```bash
 BACKEND_API_URL=http://backend/api
+TENANT_SLUG=default
+TENANT_API_SECRET=<API_SECRET_KEY>   # signiert die Anfragen ans Backend
 FROM_EMAIL=noreply@example.com
 ALLOWED_ORIGINS=http://localhost:8081
 ```
+
+Die Werte kommen aus der Root-`.env` bzw. `docker-compose.yml`. Bekannte Standard-Secrets werden bei `APP_ENV=production` abgelehnt — für Production siehe [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ### Ports ändern
 
@@ -284,7 +298,7 @@ In `docker-compose.yml`:
 services:
   backend:
     ports:
-      - "9000:80"  # Statt 8080
+      - "9000:80"  # Statt 9080
 
   frontend:
     ports:
@@ -307,7 +321,7 @@ services:
 | Volume | Zweck | Persistenz |
 |--------|-------|------------|
 | `mysql-data` | MySQL Datenbank | ✅ Persistent |
-| `backend-uploads` | Hochgeladene Dateien | ✅ Persistent |
+| `backend-uploads` | Hochgeladene Dateien (`tenant-<id>/…`) | ✅ Persistent |
 | `backend-cache` | App-Cache | ❌ Temporär |
 | `backend-logs` | Logs | ❌ Temporär |
 | `clamav-data` | ClamAV Virus-Signaturen (~300 MB) | ✅ Persistent |
@@ -322,7 +336,7 @@ docker volume ls
 docker volume inspect ondisos_mysql-data
 
 # Volume-Daten löschen (⚠️ VORSICHT!)
-docker-compose down -v
+docker compose down -v
 
 # Nur Cache löschen (sicher)
 docker volume rm ondisos_backend-cache
@@ -334,37 +348,37 @@ docker volume rm ondisos_backend-cache
 
 ```bash
 # Alle Container
-docker-compose build
+docker compose build
 
 # Nur Backend
-docker-compose build backend
+docker compose build backend
 
 # Build ohne Cache
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### Container neu starten
 
 ```bash
 # Alle Services
-docker-compose restart
+docker compose restart
 
 # Nur Backend
-docker-compose restart backend
+docker compose restart backend
 ```
 
 ### Alles löschen und neu starten
 
 ```bash
 # Container stoppen und löschen
-docker-compose down
+docker compose down
 
 # Mit Volumes (⚠️ Datenbank wird gelöscht!)
-docker-compose down -v
+docker compose down -v
 
 # Neu bauen und starten
-docker-compose build
-docker-compose up -d
+docker compose build
+docker compose up -d
 ```
 
 ### Docker aufräumen
@@ -384,13 +398,13 @@ docker image prune -a
 
 ### Port bereits belegt
 
-**Problem:** `Bind for 0.0.0.0:8080 failed: port is already allocated`
+**Problem:** `Bind for 0.0.0.0:9080 failed: port is already allocated`
 
 **Lösung:**
 ```bash
 # Prozess auf Port finden
-lsof -i :8080  # Mac/Linux
-netstat -ano | findstr :8080  # Windows
+lsof -i :9080  # Mac/Linux
+netstat -ano | findstr :9080  # Windows
 
 # Port in docker-compose.yml ändern oder Prozess beenden
 ```
@@ -402,14 +416,14 @@ netstat -ano | findstr :8080  # Windows
 **Lösung:**
 ```bash
 # MySQL-Logs prüfen
-docker-compose logs mysql
+docker compose logs mysql
 
 # MySQL Healthcheck prüfen
-docker-compose ps
+docker compose ps
 
 # Datenbank-Volume neu erstellen
-docker-compose down -v
-docker-compose up -d
+docker compose down -v
+docker compose up -d
 ```
 
 ### Composer-Dependencies fehlen
@@ -419,10 +433,10 @@ docker-compose up -d
 **Lösung:**
 ```bash
 # Composer install ausführen
-docker-compose exec backend composer install
+docker compose exec backend composer install
 
 # Autoloader neu generieren
-docker-compose exec backend composer dump-autoload
+docker compose exec backend composer dump-autoload
 ```
 
 ### Permissions-Fehler
@@ -432,8 +446,8 @@ docker-compose exec backend composer dump-autoload
 **Lösung:**
 ```bash
 # Im Container
-docker-compose exec backend chown -R www-data:www-data uploads cache logs
-docker-compose exec backend chmod -R 755 uploads cache logs
+docker compose exec backend chown -R www-data:www-data uploads cache logs
+docker compose exec backend chmod -R 755 uploads cache logs
 
 # Auf Host-System (wenn Volume-Mount)
 sudo chown -R $(id -u):$(id -g) backend/uploads backend/cache backend/logs
@@ -446,10 +460,10 @@ sudo chown -R $(id -u):$(id -g) backend/uploads backend/cache backend/logs
 **Lösung:**
 ```bash
 # OPcache leeren (oder Container restart)
-docker-compose restart backend
+docker compose restart backend
 
 # Cache-Verzeichnis löschen
-docker-compose exec backend rm -rf cache/*
+docker compose exec backend rm -rf cache/*
 ```
 
 ## 🚀 Production Deployment
@@ -485,7 +499,7 @@ services:
     container_name: ondisos-backend-prod
     restart: unless-stopped  # Automatischer Start nach Reboot
     ports:
-      - "8080:80"  # Port anpassen nach Bedarf
+      - "9080:80"  # Port anpassen nach Bedarf
     environment:
       - APP_ENV=production
       - APP_DEBUG=false
@@ -596,9 +610,9 @@ Wants=network-online.target
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/path/to/ondisos/backend
-ExecStart=/usr/bin/docker-compose up -d
-ExecStop=/usr/bin/docker-compose down
-ExecReload=/usr/bin/docker-compose restart
+ExecStart=/usr/bin/docker compose up -d
+ExecStop=/usr/bin/docker compose down
+ExecReload=/usr/bin/docker compose restart
 TimeoutStartSec=0
 Restart=on-failure
 
@@ -632,7 +646,7 @@ sudo systemctl restart ondisos-backend
 PDF_TOKEN_SECRET=<generiert mit: openssl rand -hex 32>
 MYSQL_ROOT_PASSWORD=secure-root-password-here
 MYSQL_PASSWORD=secure-user-password-here
-ADMIN_PASSWORD_HASH=<generiert mit: docker-compose exec backend php scripts/generate-password-hash.php>
+ADMIN_PASSWORD_HASH=<generiert mit: docker compose exec backend php scripts/generate-password-hash.php>
 
 # In .gitignore sicherstellen
 echo ".env" >> .gitignore
@@ -671,17 +685,17 @@ cd backend
 cat .env | grep -v "PASSWORD\|SECRET"  # Zeigt config ohne Secrets
 
 # 3. Container bauen und starten
-docker-compose up -d --build
+docker compose up -d --build
 
 # 4. Logs prüfen
-docker-compose logs -f
+docker compose logs -f
 
 # 5. Health Check
-docker-compose ps
+docker compose ps
 # Sollte: State: Up (healthy)
 
 # 6. Backend testen
-curl http://localhost:8080/index.php
+curl http://localhost:9080/index.php
 ```
 
 ---
@@ -707,7 +721,7 @@ mkdir -p "$BACKUP_DIR"
 
 # MySQL Backup
 echo "Backing up MySQL..."
-docker-compose -f "$PROJECT_DIR/docker-compose.yml" exec -T mysql \
+docker compose -f "$PROJECT_DIR/docker-compose.yml" exec -T mysql \
   mysqldump -u anmeldung -p"$MYSQL_PASSWORD" anmeldung \
   > "$BACKUP_DIR/mysql-$DATE.sql"
 
@@ -740,7 +754,7 @@ sudo crontab -e
 
 ```bash
 # MySQL Backup
-docker-compose exec mysql mysqldump -u anmeldung -psecret123 anmeldung > backup-$(date +%Y%m%d).sql
+docker compose exec mysql mysqldump -u anmeldung -psecret123 anmeldung > backup-$(date +%Y%m%d).sql
 
 # Uploads-Volume Backup
 docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
@@ -755,7 +769,7 @@ docker run --rm -v backend_mysql-data:/data -v $(pwd):/backup \
 
 ```bash
 # MySQL Restore
-docker-compose exec -T mysql mysql -u anmeldung -psecret123 anmeldung < backup-20260205.sql
+docker compose exec -T mysql mysql -u anmeldung -psecret123 anmeldung < backup-20260205.sql
 
 # Uploads-Volume Restore
 docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
@@ -764,7 +778,7 @@ docker run --rm -v backend_backend-uploads:/data -v $(pwd):/backup \
 # Komplettes Volume Restore
 docker run --rm -v backend_mysql-data:/data -v $(pwd):/backup \
   alpine sh -c "rm -rf /data/* && tar xzf /backup/mysql-data-backup-20260205.tar.gz -C /data"
-docker-compose restart mysql
+docker compose restart mysql
 ```
 
 ---
@@ -784,17 +798,17 @@ git fetch origin
 git pull origin main
 
 # 3. Container neu bauen
-docker-compose build --no-cache
+docker compose build --no-cache
 
 # 4. Container neu starten (Rolling Update)
-docker-compose up -d --no-deps backend
+docker compose up -d --no-deps backend
 
 # 5. Logs prüfen
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # 6. Health Check
-docker-compose ps
-curl http://localhost:8080/index.php
+docker compose ps
+curl http://localhost:9080/index.php
 
 # 7. Bei Erfolg: Alte Images aufräumen
 docker image prune -f
@@ -806,32 +820,32 @@ docker image prune -f
 # Methode 1: Git Rollback
 git log --oneline -5  # Letzten Commit finden
 git checkout <previous-commit-hash>
-docker-compose up -d --build backend
+docker compose up -d --build backend
 
 # Methode 2: DB Restore (falls DB-Änderungen)
-docker-compose exec -T mysql mysql -u anmeldung -p anmeldung < backup-20260205.sql
-docker-compose restart backend
+docker compose exec -T mysql mysql -u anmeldung -p anmeldung < backup-20260205.sql
+docker compose restart backend
 
 # Methode 3: Kompletter Rollback
-docker-compose down
+docker compose down
 git checkout <previous-commit-hash>
 # Restore Volumes (siehe Recovery oben)
-docker-compose up -d
+docker compose up -d
 ```
 
 #### Zero-Downtime Updates (Advanced)
 
 ```bash
 # 1. Neue Version als separaten Service starten
-docker-compose up -d --scale backend=2 --no-recreate
+docker compose up -d --scale backend=2 --no-recreate
 
 # 2. Health Check der neuen Instanz
-docker-compose ps
+docker compose ps
 
 # 3. Load Balancer umschalten (z.B. Nginx)
 
 # 4. Alte Instanz stoppen
-docker-compose up -d --scale backend=1
+docker compose up -d --scale backend=1
 ```
 
 ---
@@ -861,36 +875,36 @@ sudo nano /etc/docker/daemon.json
 sudo systemctl restart docker
 
 # Container neu starten (um neue Log-Config zu übernehmen)
-docker-compose restart
+docker compose restart
 ```
 
 #### Logs anschauen
 
 ```bash
 # Live-Logs (alle Services)
-docker-compose logs -f
+docker compose logs -f
 
 # Nur Backend
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # Nur MySQL
-docker-compose logs -f mysql
+docker compose logs -f mysql
 
 # Letzte 100 Zeilen
-docker-compose logs --tail=100 backend
+docker compose logs --tail=100 backend
 
 # Mit Timestamps
-docker-compose logs -t backend
+docker compose logs -t backend
 
 # PHP Error Log (im Container)
-docker-compose exec backend tail -f /var/log/apache2/error.log
+docker compose exec backend tail -f /var/log/apache2/error.log
 ```
 
 #### Health Checks
 
 ```bash
 # Container-Status
-docker-compose ps
+docker compose ps
 
 # Health-Status prüfen
 docker inspect --format='{{.State.Health.Status}}' ondisos-backend-prod
@@ -899,10 +913,10 @@ docker inspect --format='{{.State.Health.Status}}' ondisos-backend-prod
 docker inspect --format='{{range .State.Health.Log}}{{.Output}}{{end}}' ondisos-backend-prod
 
 # Backend-API testen
-curl -I http://localhost:8080/index.php
+curl -I http://localhost:9080/index.php
 
 # MySQL-Verbindung testen
-docker-compose exec mysql mysqladmin ping -h localhost
+docker compose exec mysql mysqladmin ping -h localhost
 ```
 
 #### Monitoring mit Prometheus (Optional)
@@ -948,7 +962,7 @@ volumes:
 - [ ] `.env` Permissions: `chmod 600 .env`
 - [ ] Secrets-Verzeichnis: `chmod 700 secrets/`
 - [ ] `VIRUS_SCAN_ENABLED=true` in Production (nach erstem ClamAV-Start, ~90s warten)
-- [ ] Audit-Log prüfbar: `docker-compose exec backend tail -f logs/audit.log`
+- [ ] Audit-Log prüfbar: `docker compose exec backend tail -f logs/audit.log`
 
 #### Docker-Security
 
@@ -959,7 +973,7 @@ volumes:
 - [ ] Resource Limits gesetzt (memory, cpu)
 - [ ] Health Checks aktiv
 - [ ] Log-Rotation konfiguriert
-- [ ] Docker Image Updates regelmäßig (`docker-compose pull`)
+- [ ] Docker Image Updates regelmäßig (`docker compose pull`)
 
 #### Network-Security
 
@@ -970,7 +984,7 @@ volumes:
   sudo ufw allow 80/tcp    # HTTP
   sudo ufw allow 443/tcp   # HTTPS
   sudo ufw deny 3306/tcp   # MySQL (intern only)
-  sudo ufw deny 8080/tcp   # Backend (hinter Proxy)
+  sudo ufw deny 9080/tcp   # Backend (hinter Proxy)
   sudo ufw enable
   ```
 - [ ] Reverse Proxy Headers gesetzt (X-Forwarded-Proto, X-Real-IP)
@@ -1009,7 +1023,7 @@ Für Production sollte der Backend-Container hinter einem Reverse Proxy mit HTTP
 ```nginx
 # /etc/nginx/sites-available/ondisos-backend
 upstream backend {
-    server localhost:8080;
+    server localhost:9080;
 }
 
 server {
@@ -1086,22 +1100,22 @@ networks:
 
 ```bash
 # 1. Container-Status
-docker-compose ps
+docker compose ps
 # Sollte: State: Up (healthy)
 
 # 2. Logs prüfen
-docker-compose logs --tail=50
+docker compose logs --tail=50
 
 # 3. Backend erreichbar
-curl -I http://localhost:8080/index.php
+curl -I http://localhost:9080/index.php
 # Sollte: 200 OK
 
 # 4. MySQL-Verbindung
-docker-compose exec backend php -r "new PDO('mysql:host=mysql;dbname=anmeldung', 'anmeldung', 'secret123');"
+docker compose exec backend php -r "new PDO('mysql:host=mysql;dbname=anmeldung', 'anmeldung', 'secret123');"
 # Sollte: Keine Fehler
 
 # 5. Health Check
-curl http://localhost:8080/index.php | grep -i "anmeldungen"
+curl http://localhost:9080/index.php | grep -i "anmeldungen"
 
 # 6. HTTPS testen (wenn Reverse Proxy)
 curl -I https://intranet.example.com
@@ -1115,9 +1129,9 @@ curl -I https://intranet.example.com | grep -i "strict-transport"
 ls -lh /var/backups/ondisos/
 
 # 9. Auto-Start testen (Reboot simulieren)
-docker-compose restart
+docker compose restart
 sleep 10
-docker-compose ps
+docker compose ps
 ```
 
 ## 📚 Weitere Informationen
@@ -1130,9 +1144,9 @@ docker-compose ps
 ## 🆘 Support
 
 Bei Problemen:
-1. Logs prüfen: `docker-compose logs`
-2. Container-Status: `docker-compose ps`
-3. Container neu starten: `docker-compose restart`
+1. Logs prüfen: `docker compose logs`
+2. Container-Status: `docker compose ps`
+3. Container neu starten: `docker compose restart`
 4. Issue auf GitHub erstellen
 
 ---

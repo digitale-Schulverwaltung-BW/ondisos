@@ -12,6 +12,8 @@ backend/.env
 inc/config.php
 config.php
 frontend/config/forms-config.php
+# Local seed source for seed-forms.php (Docker: the backend cannot see frontend/)
+backend/config/forms-config.php
 
 # Debug files
 debug-email.html

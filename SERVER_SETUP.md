@@ -349,5 +349,4 @@ Bei Problemen:
 
 ---
 
-**Stand:** Januar 2026
-**Version:** 2.5
+Gilt für Ondisos 3.x.
