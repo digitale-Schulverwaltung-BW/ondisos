@@ -29,7 +29,9 @@ RUN docker-php-ext-install \
     opcache
 
 # Install Xdebug (for code coverage)
-RUN pecl install xdebug \
+# Pinned: an unpinned `pecl install xdebug` fails on PHP 8.2 with
+# "No releases available" once a release requiring a newer PHP becomes the latest.
+RUN pecl install xdebug-3.5.0 \
     && docker-php-ext-enable xdebug
 
 # Configure Xdebug for coverage only (not debugging)
