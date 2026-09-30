@@ -11,6 +11,7 @@ use Frontend\Services\BackendApiClient;
 use Frontend\Services\EmailService;
 use Frontend\Utils\CsrfProtection;
 use Frontend\Config\FormConfig;
+use Frontend\Config\FormConfigLoader;
 use Frontend\Services\MessageService as M;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -31,7 +32,7 @@ try {
     // 3. Get form key
     $formKey = $_REQUEST['form'] ?? '';
 
-    if (empty($formKey) || !FormConfig::exists($formKey)) {
+    if (empty($formKey) || !FormConfigLoader::ensure($formKey)) {
         throw new RuntimeException(M::get('errors.unknown_form'), 400);
     }
 

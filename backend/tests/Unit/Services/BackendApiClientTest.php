@@ -28,18 +28,8 @@ class BackendApiClientTest extends TestCase
         parent::setUp();
 
         if (!self::$frontendLoaded) {
-            // Load the frontend config stub required by BackendApiClient constructor
-            // We need FormConfig::getBackendUrl() — provide a minimal stub if not loaded
-            if (!class_exists(\Frontend\Config\FormConfig::class, false)) {
-                // Provide minimal stub so BackendApiClient can be loaded
-                // (It references FormConfig only in constructor when $baseUrl is null)
-                eval('
-                    namespace Frontend\Config;
-                    class FormConfig {
-                        public static function getBackendUrl(): string { return "http://stub.example.com/api"; }
-                    }
-                ');
-            }
+            // The real FormConfig is used (BackendApiClient only needs getBackendUrl())
+            require_once __DIR__ . '/../../../../frontend/src/Config/FormConfig.php';
             $frontendFile = __DIR__ . '/../../../../frontend/src/Services/BackendApiClient.php';
             if (!file_exists($frontendFile)) {
                 $this->markTestSkipped('Frontend BackendApiClient.php not found at expected path');

@@ -21,14 +21,7 @@ class BackendApiClientSigningTest extends TestCase
     {
         parent::setUp();
 
-        if (!class_exists(\Frontend\Config\FormConfig::class, false)) {
-            eval('
-                namespace Frontend\Config;
-                class FormConfig {
-                    public static function getBackendUrl(): string { return "http://stub.example.com/api"; }
-                }
-            ');
-        }
+        require_once __DIR__ . '/../../../../frontend/src/Config/FormConfig.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/BackendApiClient.php';
     }
 

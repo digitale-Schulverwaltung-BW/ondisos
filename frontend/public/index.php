@@ -7,7 +7,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;
-use Frontend\Services\BackendApiClient;
+use Frontend\Config\FormConfigLoader;
 use Frontend\Services\MessageService as M;
 use Frontend\Utils\CsrfProtection;
 
@@ -40,17 +40,11 @@ if (empty($formKey)) {
     exit;
 }
 
-// Read tenant slug — TENANT_SLUG in .env, defaults to 'default' for single-tenant deployments
-$tenantSlug = getenv('TENANT_SLUG') ?: 'default';
-
-// Fetch form configuration from backend API.
-// This replaces the previous local forms-config.php file lookup.
-// If the backend is unreachable or the form does not exist for this tenant,
-// fetchFormConfig() returns null and we render a 503 maintenance page.
-$client     = new BackendApiClient();
-$configData = $client->fetchFormConfig($formKey, $tenantSlug);
-
-if ($configData === null) {
+// Fetch the form configuration from the backend API (tenant = TENANT_SLUG in .env,
+// 'default' for single-tenant deployments) and load it into FormConfig.
+// If the backend is unreachable or the form does not exist for this tenant, render a
+// 503 maintenance page.
+if (!FormConfigLoader::ensure($formKey)) {
     http_response_code(503);
     $pageTitle   = M::get('maintenance.unavailable_title');
     $heading     = M::get('maintenance.unavailable_heading');
@@ -102,9 +96,6 @@ if ($configData === null) {
     exit;
 }
 
-// Inject the API-fetched config into FormConfig.
-// All subsequent calls (getFormPath, getThemePath, etc.) use this injected config.
-FormConfig::load($configData);
 $formConfig = FormConfig::get($formKey);
 
 $formPath = FormConfig::getFormPath($formKey);

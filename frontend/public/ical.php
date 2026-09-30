@@ -6,11 +6,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;
+use Frontend\Config\FormConfigLoader;
 
 // Validate form key
 $formKey = $_GET['form'] ?? '';
 
-if (empty($formKey) || !FormConfig::exists($formKey)) {
+if (empty($formKey) || !FormConfigLoader::ensure($formKey)) {
     http_response_code(404);
     header('Content-Type: text/plain; charset=utf-8');
     exit('Formular nicht gefunden.');
