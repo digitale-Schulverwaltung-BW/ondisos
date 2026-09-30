@@ -69,6 +69,9 @@ CREATE TABLE IF NOT EXISTS anmeldungen (
         REFERENCES tenants(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Seed: default tenant (id=1) so existing data and FK constraint are satisfied
+-- Seed: default tenant (id=1) so existing data and FK constraint are satisfied.
+-- The secret below is a placeholder and never authenticates anything: HmacValidator
+-- rejects it (see App\Services\SecretPolicy) and backend/migrate.php replaces it with
+-- API_SECRET_KEY. Run migrate.php (or set a real secret) before accepting submissions.
 INSERT IGNORE INTO tenants (id, name, slug, api_secret, active, created_at)
 VALUES (1, 'Default', 'default', 'CHANGE_ME_IN_PRODUCTION', 1, NOW());

@@ -26,7 +26,7 @@ class HmacValidator
      */
     public function validate(string $body, string $providedSig): bool
     {
-        if ($providedSig === '') {
+        if ($providedSig === '' || !$this->secretIsUsable()) {
             return false;
         }
 
@@ -49,7 +49,7 @@ class HmacValidator
         string $filename,
         string $providedSig,
     ): bool {
-        if ($providedSig === '') {
+        if ($providedSig === '' || !$this->secretIsUsable()) {
             return false;
         }
 
@@ -57,5 +57,20 @@ class HmacValidator
         $expected  = hash_hmac('sha256', $canonical, $this->secret);
 
         return hash_equals($expected, $providedSig);
+    }
+
+    /**
+     * Refuse to authenticate against a publicly known secret (see SecretPolicy).
+     * Logged without the secret so a misconfigured tenant is diagnosable.
+     */
+    private function secretIsUsable(): bool
+    {
+        if (SecretPolicy::isAcceptable($this->secret)) {
+            return true;
+        }
+
+        error_log('HmacValidator: tenant api_secret is a known placeholder/default — rejecting request. Set a real secret.');
+
+        return false;
     }
 }

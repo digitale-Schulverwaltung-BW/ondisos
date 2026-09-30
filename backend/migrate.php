@@ -10,6 +10,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 
 use App\Config\Database;
 use App\Config\EnvLoader;
+use App\Services\SecretPolicy;
 
 $envFile = __DIR__ . '/.env';
 if (!file_exists($envFile)) {
@@ -22,6 +23,13 @@ EnvLoader::load($envFile);
 $apiSecret = EnvLoader::get('API_SECRET_KEY');
 if (empty($apiSecret)) {
     fwrite(STDERR, "Error: API_SECRET_KEY not set in .env\n");
+    exit(1);
+}
+
+// Never seed/adopt a publicly known secret in production (see SecretPolicy).
+$apiSecretAcceptable = SecretPolicy::isAcceptable((string)$apiSecret);
+if (!$apiSecretAcceptable && SecretPolicy::isProduction()) {
+    fwrite(STDERR, "Error: API_SECRET_KEY is a known default/placeholder. Generate one: openssl rand -hex 32\n");
     exit(1);
 }
 
@@ -87,6 +95,26 @@ try {
         echo "SKIPPED (already exists)\n";
     }
     $stmt->close();
+
+    // schema.sql seeds tenant 1 with a placeholder secret, and INSERT IGNORE above
+    // does not touch an existing row. Adopt API_SECRET_KEY so tenant 1 never keeps
+    // a publicly known secret.
+    $stmt = $db->prepare("SELECT api_secret FROM tenants WHERE id = 1");
+    $stmt->execute();
+    $seedRow = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ($seedRow !== null && SecretPolicy::isPlaceholder((string)$seedRow['api_secret'])) {
+        echo "Step 4a: Replace placeholder secret of default tenant... ";
+        if ($apiSecretAcceptable) {
+            $stmt = $db->prepare("UPDATE tenants SET api_secret = ? WHERE id = 1");
+            $stmt->bind_param('s', $apiSecret);
+            $stmt->execute();
+            $stmt->close();
+            echo "OK\n";
+        } else {
+            echo "SKIPPED (API_SECRET_KEY is a dev default; tenant stays locked until a real secret is set)\n";
+        }
+    }
 
     // $dbName is needed for INFORMATION_SCHEMA queries throughout the migration
     $dbName = EnvLoader::require('DB_NAME');
