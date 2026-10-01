@@ -39,6 +39,13 @@ class FormConfigLoader
     public const MAX_STALE_SECONDS = 604800;
 
     /**
+     * Why a form could not be loaded in this request.
+     *
+     * @var array<string,array{reason: string, detail: string, http_code: int, backend_url: string}>
+     */
+    private static array $failures = [];
+
+    /**
      * Tenant slug of this frontend: TENANT_SLUG env, 'default' for single-tenant setups.
      */
     public static function tenantSlug(): string
@@ -69,9 +76,24 @@ class FormConfigLoader
         }
 
         $client ??= new BackendApiClient();
-        $config = $client->fetchFormConfig($formKey, $tenantSlug ?? self::tenantSlug());
+        $result = $client->fetchFormConfigResult($formKey, $tenantSlug ?? self::tenantSlug());
+        $config = $result['config'];
 
         if ($config === null) {
+            self::$failures[$formKey] = [
+                'reason'      => (string) ($result['reason'] ?? BackendApiClient::FAIL_ERROR),
+                'detail'      => $result['detail'],
+                'http_code'   => $result['http_code'],
+                'backend_url' => self::redactUrl($client->baseUrl()),
+            ];
+            error_log(sprintf(
+                'FormConfigLoader: form "%s" not loaded (%s): %s [backend %s]',
+                $formKey,
+                self::$failures[$formKey]['reason'],
+                $result['detail'],
+                self::$failures[$formKey]['backend_url']
+            ));
+
             return self::$requested[$formKey] = false;
         }
 
@@ -138,6 +160,21 @@ class FormConfigLoader
         }
 
         if ($use === null) {
+            if (isset($answer['reason'])) {
+                self::$failures[$formKey] = [
+                    'reason'      => (string) $answer['reason'],
+                    'detail'      => (string) ($answer['detail'] ?? ''),
+                    'http_code'   => (int) ($answer['http_code'] ?? 0),
+                    'backend_url' => self::redactUrl($client->baseUrl()),
+                ];
+                error_log(sprintf(
+                    'FormConfigLoader: form "%s" not loaded (%s): %s [backend %s]',
+                    $formKey,
+                    self::$failures[$formKey]['reason'],
+                    self::$failures[$formKey]['detail'],
+                    self::$failures[$formKey]['backend_url']
+                ));
+            }
             return self::$bundleFailed[$formKey] = false;
         }
 
@@ -171,6 +208,27 @@ class FormConfigLoader
     }
 
     /**
+     * Why ensure() returned false for $formKey (null if it did not fail in this request).
+     *
+     * reason is one of BackendApiClient::FAIL_UNREACHABLE / FAIL_UNAUTHORIZED / FAIL_NOT_FOUND / FAIL_ERROR.
+     * detail and backend_url are meant for logs and administrators, not for the public.
+     *
+     * @return array{reason: string, detail: string, http_code: int, backend_url: string}|null
+     */
+    public static function failure(string $formKey): ?array
+    {
+        return self::$failures[$formKey] ?? null;
+    }
+
+    /**
+     * Strip credentials ("user:password@") from a URL before it is logged or shown to an administrator.
+     */
+    public static function redactUrl(string $url): string
+    {
+        return (string) preg_replace('#(://)[^/@\s]*@#', '$1***@', $url);
+    }
+
+    /**
      * Forget request-local state. Intended for tests.
      */
     public static function reset(): void
@@ -178,5 +236,6 @@ class FormConfigLoader
         self::$requested = [];
         self::$bundles = [];
         self::$bundleFailed = [];
+        self::$failures = [];
     }
 }

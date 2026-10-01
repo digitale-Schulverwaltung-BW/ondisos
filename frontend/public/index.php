@@ -15,8 +15,8 @@ use Frontend\Utils\CsrfProtection;
 // Get form key from request
 $formKey = $_REQUEST['form'] ?? '';
 
-// Basic validation: form key must not be empty
-if (empty($formKey)) {
+// 404 page for a missing or unknown form
+$renderNotFound = static function (): never {
     http_response_code(404);
     ?>
     <!DOCTYPE html>
@@ -39,15 +39,26 @@ if (empty($formKey)) {
     </html>
     <?php
     exit;
+};
+
+// Basic validation: form key must not be empty
+if (empty($formKey)) {
+    $renderNotFound();
 }
 
 // Fetch the form configuration, survey and theme from the backend API (tenant = TENANT_SLUG in .env,
 // 'default' for single-tenant deployments) and load them. A cached copy is used while the backend
-// says "not modified" or is unreachable. If the form does not exist for this tenant or there is
-// neither backend nor cache, render a 503 maintenance page.
+// says "not modified" or is unreachable. A form the backend does not know for this tenant is a plain 404.
+// If there is neither a reachable backend nor a cached copy, or the backend rejects the tenant
+// (wrong BACKEND_API_URL, TENANT_SLUG ...), render a 503 maintenance page; the reason is written to the
+// PHP error log by FormConfigLoader.
 $tenantSlug = FormConfigLoader::tenantSlug();
 
 if (!FormConfigLoader::ensureWithSurvey($formKey)) {
+    if ((FormConfigLoader::failure($formKey)['reason'] ?? null) === \Frontend\Services\BackendApiClient::FAIL_NOT_FOUND) {
+        $renderNotFound();
+    }
+
     http_response_code(503);
     $pageTitle   = M::get('maintenance.unavailable_title');
     $heading     = M::get('maintenance.unavailable_heading');
@@ -96,6 +107,20 @@ if (!FormConfigLoader::ensureWithSurvey($formKey)) {
     </body>
     </html>
     <?php
+    exit;
+}
+
+// A form that stores nothing (db=false) and mails nobody (no valid notify_email) would discard every
+// submission while the visitor sees a success page: do not show it at all.
+if (FormConfig::discardsSubmissions($formKey)) {
+    error_log("Form '{$formKey}' not shown: db is false and no valid notify_email is configured, submissions would be discarded");
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>'
+        . htmlspecialchars(M::get('maintenance.unavailable_title')) . '</title></head>'
+        . '<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;"><h1>'
+        . htmlspecialchars(M::get('maintenance.unavailable_heading')) . '</h1><p>'
+        . htmlspecialchars(M::get('maintenance.unavailable_hint')) . '</p></body></html>';
     exit;
 }
 
