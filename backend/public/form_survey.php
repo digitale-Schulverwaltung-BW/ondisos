@@ -207,6 +207,25 @@ require __DIR__ . '/../inc/header.php';
                     </ul>
                 <?php endif; ?>
 
+                <?php if ($report['required_fields'] !== null): $rf = $report['required_fields']; ?>
+                    <h6><?= ff_e(M::get('survey_editor.required.title', 'Pflichtfelder für Ondisos')) ?></h6>
+                    <ul class="list-unstyled mb-3" id="required-fields">
+                        <?php foreach (['name' => M::get('survey_editor.required.name', 'Name'), 'email' => M::get('survey_editor.required.email', 'E-Mail-Adresse')] as $slot => $label):
+                            $f = $rf[$slot];
+                            if ($f['present'] && $f['required']) { $icon = '✓'; $cls = 'text-success'; $text = M::format('survey_editor.required.ok', ['field' => $f['field']], 'Feld „{{field}}" vorhanden, Pflichtfeld'); }
+                            elseif ($f['present']) { $icon = $rf['applies'] ? '⚠' : '·'; $cls = $rf['applies'] ? 'text-warning-emphasis' : 'text-muted'; $text = M::format('survey_editor.required.not_required', ['field' => $f['field']], 'Feld „{{field}}" vorhanden, aber nicht als Pflichtfeld markiert'); }
+                            else { $icon = $rf['applies'] ? '✗' : '·'; $cls = $rf['applies'] ? 'text-danger' : 'text-muted'; $text = M::get('survey_editor.required.missing', 'Es fehlt ein Feld dafür'); }
+                        ?>
+                            <li class="<?= $cls ?>"><strong><?= $icon ?> <?= ff_e($label) ?>:</strong> <?= ff_e($text) ?></li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <?php if (!$rf['applies']): ?>
+                        <p class="small text-muted mt-n2"><?= ff_e(M::get('survey_editor.required.not_needed', 'Dieses Formular speichert nicht im Backend; Name und E-Mail sind dafür nicht nötig.')) ?></p>
+                    <?php else: ?>
+                        <p class="small text-muted mt-n2"><?= ff_e(M::get('survey_editor.required.help', 'Gespeicherte Anmeldungen brauchen Name (Feld „Name") und E-Mail (Feld „email"): sie erscheinen in der Übersicht, im Excel-Export und in Benachrichtigungen.')) ?></p>
+                    <?php endif; ?>
+                <?php endif; ?>
+
                 <?php if ($report['warnings'] !== []): ?>
                     <h6><?= ff_e(M::get('survey_editor.report.warnings', 'Hinweise')) ?></h6>
                     <ul class="mb-3">

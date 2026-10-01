@@ -14,6 +14,9 @@ final class SurveyLinter
     /** Field names submit.php/AnmeldungValidator accept as the registrant's e-mail address. */
     public const EMAIL_FIELDS = ['email', 'email1', 'Email', 'E-mail', 'E-Mail'];
 
+    /** Field names submit.php / AnmeldungService take as the registrant's name. */
+    public const NAME_FIELDS = ['Name', 'name'];
+
     /**
      * @param array<string,mixed> $config decoded form config
      * @param array<string,mixed> $survey decoded survey
@@ -36,12 +39,16 @@ final class SurveyLinter
             $this->checkNames($result, 'email.intro_template', array_unique($m[1]), $known, 'Platzhalter');
         }
 
-        if (($config['db'] ?? true) && array_intersect(self::EMAIL_FIELDS, $keys) === []) {
-            $result->addWarning(
-                'db',
-                'Die Survey hat kein E-Mail-Feld (erwartet: ' . implode(', ', self::EMAIL_FIELDS) . '): '
-                . 'beim Speichern der Anmeldung wird eine E-Mail-Adresse verlangt'
-            );
+        if ($config['db'] ?? true) {
+            foreach ($this->requiredFields($survey) as $slot => $info) {
+                $label = $slot === 'name' ? 'Name' : 'E-Mail-Adresse';
+                if (!$info['present']) {
+                    $result->addWarning($slot, "Die Survey hat kein Feld für die {$label} (erwartet: " . implode(', ', $slot === 'name' ? self::NAME_FIELDS : self::EMAIL_FIELDS)
+                        . "): beim Speichern der Anmeldung wird sie verlangt, sonst wird die Anmeldung abgelehnt");
+                } elseif (!$info['required']) {
+                    $result->addWarning($slot, "Das Feld \"{$info['field']}\" ({$label}) ist nicht als Pflichtfeld markiert: bleibt es leer, wird die Anmeldung beim Speichern abgelehnt");
+                }
+            }
         }
 
         // The frontend refuses a form that stores nothing and mails nobody (FormConfig::discardsSubmissions()).
@@ -54,6 +61,31 @@ final class SurveyLinter
         }
 
         return $result;
+    }
+
+    /**
+     * The two fields Ondisos needs from every form that stores its submissions: the registrant's name and e-mail address
+     * (submit.php rejects a submission without them).
+     *
+     * @param array<string,mixed> $survey
+     * @return array{name: array{present:bool, field:?string, required:bool}, email: array{present:bool, field:?string, required:bool}}
+     */
+    public function requiredFields(array $survey): array
+    {
+        $fields = SurveyFieldExtractor::fields($survey);
+
+        $find = static function (array $accepted) use ($fields): array {
+            foreach ($accepted as $name) {
+                if (isset($fields[$name])) {
+                    // "required" in the sense that matters: always filled when the form is submitted
+                    $always = $fields[$name]['required'] && !$fields[$name]['conditional'];
+                    return ['present' => true, 'field' => $name, 'required' => $always];
+                }
+            }
+            return ['present' => false, 'field' => null, 'required' => false];
+        };
+
+        return ['name' => $find(self::NAME_FIELDS), 'email' => $find(self::EMAIL_FIELDS)];
     }
 
     /**

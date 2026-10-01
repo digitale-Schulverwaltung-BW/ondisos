@@ -330,8 +330,9 @@ class FormPublishServiceTest extends FormEditorTestCase
         $result = $this->service->saveDraft('bs', $this->surveyJson('Firma', 'email'), 'u');
 
         $this->assertTrue($result->ok());
-        $this->assertCount(1, $result->validation->warnings());
-        $this->assertStringContainsString('Tippfehler', $result->validation->warnings()[0]['message']);
+        $about = array_values(array_filter($result->validation->warnings(), static fn (array $w): bool => $w['path'] === 'prefill_fields'));
+        $this->assertCount(1, $about);
+        $this->assertStringContainsString('Tippfehler', $about[0]['message']);
     }
 
     // ---- restoreRevision --------------------------------------------------------------------

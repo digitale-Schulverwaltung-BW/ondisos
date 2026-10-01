@@ -228,6 +228,7 @@ class FormEditorControllerTest extends FormEditorTestCase
         $out = $c->save('bs', $this->post($c->load('bs')['sha256'], ['prefill_fields' => ['Vorname', 'Tippfehler']]));
 
         $this->assertSame('saved', $out['status']);
-        $this->assertCount(1, $out['result']->warnings());
+        $about = array_filter($out['result']->warnings(), static fn (array $w): bool => $w['path'] === 'prefill_fields');
+        $this->assertCount(1, $about);
     }
 }

@@ -91,7 +91,8 @@ class SurveyEditorController
      * Check a text without storing anything: findings with line numbers, field changes and a diff against the live survey.
      *
      * @return array{
-     *   valid:bool, errors:list<array{path:string,message:string,line:?int,column:?int}>,
+     *   valid:bool, required_fields:?array{applies:bool, name:array{present:bool,field:?string,required:bool}, email:array{present:bool,field:?string,required:bool}},
+     *   errors:list<array{path:string,message:string,line:?int,column:?int}>,
      *   warnings:list<array{path:string,message:string,line:?int}>,
      *   fields:?array{added:list<string>,removed:list<string>,type_changed:list<array{name:string,from:string,to:string}>},
      *   diff:?array<string,mixed>, first_publish:bool
@@ -138,8 +139,11 @@ class SurveyEditorController
             $diff   = $live !== null ? SurveyDiff::lines($live['content'], $text) : null;
         }
 
+        $needed = $survey !== null ? $this->linter()->requiredFields($survey) : null;
+
         return [
             'valid'         => $errors === [],
+            'required_fields' => $needed === null ? null : ['applies' => (bool)($config['db'] ?? true)] + $needed,
             'errors'        => $errors,
             'warnings'      => $warnings,
             'fields'        => $fields,

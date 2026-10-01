@@ -16,7 +16,8 @@ final class SurveyFieldExtractor
 
     /**
      * @param array<string,mixed> $survey decoded survey definition
-     * @return array<string, array{type:string, title:?string}> field name => info (insertion order = form order)
+     * @return array<string, array{type:string, title:?string, required:bool, conditional:bool}> field name => info (insertion order = form order);
+     *         required = isRequired is true, conditional = required/visible only under a condition (requiredIf, visibleIf, enableIf)
      */
     public static function fields(array $survey): array
     {
@@ -79,7 +80,7 @@ final class SurveyFieldExtractor
 
     /**
      * @param mixed $element
-     * @param array<string, array{type:string, title:?string}> $fields
+     * @param array<string, array{type:string, title:?string, required:bool, conditional:bool}> $fields
      */
     private static function collect(mixed $element, array &$fields): void
     {
@@ -99,8 +100,10 @@ final class SurveyFieldExtractor
         if (is_string($name) && $name !== '' && !in_array($type, self::DISPLAY_TYPES, true)) {
             $title = $element['title'] ?? null;
             $fields[$name] ??= [
-                'type'  => $type,
-                'title' => is_string($title) ? $title : null,
+                'type'        => $type,
+                'title'       => is_string($title) ? $title : null,
+                'required'    => ($element['isRequired'] ?? false) === true,
+                'conditional' => !empty($element['requiredIf']) || !empty($element['visibleIf']) || !empty($element['enableIf']),
             ];
         }
     }

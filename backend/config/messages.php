@@ -476,6 +476,16 @@ return [
             'nothing_saved' => 'Es wurde nichts gespeichert.',
             'warnings' => 'Hinweise',
         ],
+        'required' => [
+            'title' => 'Pflichtfelder für Ondisos',
+            'name' => 'Name',
+            'email' => 'E-Mail-Adresse',
+            'ok' => 'Feld „{{field}}" vorhanden, Pflichtfeld',
+            'not_required' => 'Feld „{{field}}" vorhanden, aber nicht als Pflichtfeld markiert',
+            'missing' => 'Es fehlt ein Feld dafür',
+            'help' => 'Gespeicherte Anmeldungen brauchen Name (Feld „Name") und E-Mail (Feld „email"): sie erscheinen in der Übersicht, im Excel-Export und in Benachrichtigungen.',
+            'not_needed' => 'Dieses Formular speichert nicht im Backend; Name und E-Mail sind dafür nicht nötig.',
+        ],
         'fields' => [
             'title' => 'Änderungen an den Feldern',
             'removed' => 'Entfernte oder umbenannte Felder:',

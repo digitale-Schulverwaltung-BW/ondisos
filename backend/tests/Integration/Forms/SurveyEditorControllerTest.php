@@ -94,8 +94,9 @@ class SurveyEditorControllerTest extends FormEditorTestCase
         $r = $this->editor()->check('bs', $this->surveyJson('Vorname', 'email'));
 
         $this->assertTrue($r['valid']);
-        $this->assertCount(1, $r['warnings']);
-        $this->assertStringContainsString('Firma', $r['warnings'][0]['message']);
+        $about = array_values(array_filter($r['warnings'], static fn (array $w): bool => $w['path'] === 'prefill_fields'));
+        $this->assertCount(1, $about);
+        $this->assertStringContainsString('Firma', $about[0]['message']);
     }
 
     public function testCheckOfAnotherTenantsFormIsNull(): void
@@ -230,5 +231,41 @@ class SurveyEditorControllerTest extends FormEditorTestCase
         $again = $this->editor()->check('bs', $text);
         $this->assertTrue($again['diff']['identical']);
         $this->assertSame([], $again['fields']['added'] + $again['fields']['removed']);
+    }
+
+    public function testCheckReportsTheNameAndEmailChecklist(): void
+    {
+        $json = '{"pages":[{"elements":[{"type":"text","name":"Name","isRequired":true},{"type":"text","name":"E-Mail"}]}]}';
+
+        $r = $this->editor()->check('bs', $json);
+
+        $this->assertTrue($r['valid'], 'missing/optional fields are warnings, not errors');
+        $this->assertTrue($r['required_fields']['applies']);
+        $this->assertSame(['present' => true, 'field' => 'Name', 'required' => true], $r['required_fields']['name']);
+        $this->assertSame(['present' => true, 'field' => 'E-Mail', 'required' => false], $r['required_fields']['email']);
+        $this->assertSame(['email'], array_column($r['warnings'], 'path'));
+    }
+
+    public function testChecklistSaysWhenTheSurveyHasNoNameFieldAtAll(): void
+    {
+        $r = $this->editor()->check('bs', $this->surveyJson('Vorname', 'email'));
+
+        $this->assertFalse($r['required_fields']['name']['present']);
+        $this->assertContains('name', array_column($r['warnings'], 'path'));
+    }
+
+    public function testChecklistDoesNotApplyToFormsThatStoreNothingInTheBackend(): void
+    {
+        $this->service->saveConfig('bs', ['db' => '0', 'notify_email' => 'a@b.de'], S::ROLE_TENANT, 'u', null);
+
+        $r = $this->editor()->check('bs', $this->surveyJson('Vorname'));
+
+        $this->assertFalse($r['required_fields']['applies']);
+        $this->assertSame([], array_filter($r['warnings'], static fn (array $w): bool => in_array($w['path'], ['name', 'email'], true)));
+    }
+
+    public function testNoChecklistForUnparsableText(): void
+    {
+        $this->assertNull($this->editor()->check('bs', '{kaputt')['required_fields']);
     }
 }
