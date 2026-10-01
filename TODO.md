@@ -23,7 +23,7 @@ Im Browser gegen die Demo geprüft (Platform-Admin und Tenant-Admin):
 
 Noch offen (nur manuell prüfbar):
 
-- [ ] Backend-Oberfläche: Bootstrap/DataTables lokal ausliefern statt von `cdn.jsdelivr.net` (Datenschutz, Intranet ohne Internet, Versions-Pinning/SRI)
+- [x] Backend-Oberfläche: Bootstrap 5.3.8 lokal unter `backend/public/assets/bootstrap/` (kein CDN mehr; DataTables war ungenutzt und entfällt)
 - [ ] Upload im Browser-Formular (Datei auswählen; der Server-Teil ist verifiziert)
 - [ ] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests
 
