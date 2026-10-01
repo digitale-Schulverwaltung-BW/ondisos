@@ -309,6 +309,20 @@ Das Frontend holt die Konfiguration bei jedem Aufruf neu — Änderungen wirken 
 
 Die Survey-Definitionen (`frontend/surveys/*.json`) liegen weiterhin im Frontend-Verzeichnis.
 
+### Formulare ohne Datenbank (`db: false`)
+
+Mit `"db": false` wird ein Formular **nicht** im Backend gespeichert; die Absendung geht nur per E-Mail an `notify_email`. Ohne gültige `notify_email` (fehlt,
+leer oder mindestens eine Adresse ungültig) würde sie **ins Leere** laufen — der Besucher sähe eine Erfolgsseite, die Daten wären weg. Deshalb zeigt das
+Frontend ein solches Formular nicht an (503, im WordPress-Plugin eine neutrale Meldung; Administratoren sehen die Ursache), und `AnmeldungService` nimmt
+keine Absendung an. `seed-forms.php` warnt für **alle** Formulare von Tenant 1 in der Datenbank. Beheben:
+
+```sql
+-- speichern ...
+UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = 1 AND form_key = 'ausbildernachmittag';
+-- ... oder einen Empfänger eintragen (db bleibt false; das Frontend braucht einen funktionierenden Mailversand)
+UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@schule.example') WHERE tenant_id = 1 AND form_key = 'ausbildernachmittag';
+```
+
 > **Datenschutzhinweis:** `/api/form-config.php` liefert die Konfiguration eines Formulars an
 > jeden, der den Tenant-Slug kennt, ohne Signatur. Sie enthält z. B. `notify_email`. Lege keine
 > Geheimnisse in die Formular-Konfiguration.

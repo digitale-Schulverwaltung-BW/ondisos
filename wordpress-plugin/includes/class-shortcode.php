@@ -55,6 +55,21 @@ class Shortcode
             return $this->render_error('Error: Unknown form "' . esc_html($form_key) . '" (or backend unavailable)');
         }
 
+        // A form that stores nothing (db=false) and mails nobody (no valid notify_email) would discard submissions
+        if (FormConfig::discardsSubmissions($form_key)) {
+            error_log("Form '{$form_key}' not shown: db is false and no valid notify_email is configured, submissions would be discarded");
+
+            return $this->render_error(
+                current_user_can('manage_options')
+                    ? sprintf(
+                        'Error (shown to administrators only): form "%s" has db=false and no valid notify_email, so submissions would be discarded. '
+                        . 'Set db to true or a notify_email in the form configuration (backend, table form_configs).',
+                        $form_key
+                    )
+                    : 'Error: The form is currently unavailable. Please try again later.'
+            );
+        }
+
         // Load survey and theme JSON
         try {
             $survey_json = $this->load_survey_json($form_key);

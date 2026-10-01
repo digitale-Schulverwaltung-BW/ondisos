@@ -1168,6 +1168,10 @@ php -l backend/config/messages.local.php
 → `chmod 755 uploads cache`
 → `chown www-data:www-data uploads cache`
 
+### Anmeldung „erfolgreich", aber nichts im Backend / Formular „currently unavailable" trotz erreichbarem Backend
+→ Formular mit `db: false` speichert nicht im Backend (nur E-Mail an `notify_email`). Ohne gültige `notify_email` würde die Absendung verworfen: das Frontend zeigt das Formular dann nicht an (503 / neutrale Meldung, Administratoren sehen die Ursache), `seed-forms.php` warnt
+→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
+
 ### Excel-Export zeigt Formular-Spalte
 → Check dass Filter gesetzt ist: `?form=bs`
 → Metadata['filter'] muss nicht-leer sein

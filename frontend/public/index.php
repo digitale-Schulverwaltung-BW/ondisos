@@ -96,6 +96,20 @@ if (!FormConfigLoader::ensure($formKey)) {
     exit;
 }
 
+// A form that stores nothing (db=false) and mails nobody (no valid notify_email) would discard every
+// submission while the visitor sees a success page: do not show it at all.
+if (FormConfig::discardsSubmissions($formKey)) {
+    error_log("Form '{$formKey}' not shown: db is false and no valid notify_email is configured, submissions would be discarded");
+    http_response_code(503);
+    header('Content-Type: text/html; charset=utf-8');
+    echo '<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>'
+        . htmlspecialchars(M::get('maintenance.unavailable_title')) . '</title></head>'
+        . '<body style="font-family: Arial, sans-serif; text-align: center; padding: 50px;"><h1>'
+        . htmlspecialchars(M::get('maintenance.unavailable_heading')) . '</h1><p>'
+        . htmlspecialchars(M::get('maintenance.unavailable_hint')) . '</p></body></html>';
+    exit;
+}
+
 $formConfig = FormConfig::get($formKey);
 
 $formPath = FormConfig::getFormPath($formKey);
