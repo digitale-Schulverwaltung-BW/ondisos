@@ -218,6 +218,42 @@ In Production (`APP_ENV=production`) bricht die Migration ab, wenn `API_SECRET_K
 und das Backend weist Anfragen mit einem solchen Tenant-Secret mit `401` ab (Log: `tenant api_secret
 is a known placeholder/default`). Weitere Tenants und ihre Secrets: [MULTI-TENANT.md](MULTI-TENANT.md).
 
+#### Datenbank-Zugriff verweigert
+
+```
+Error: Cannot connect to database — Access denied for user 'anmeldung'@'172.24.0.3' (using password: YES)
+```
+
+**Ursache:** Das MySQL-Daten-Volume behält die Zugangsdaten, mit denen es **angelegt** wurde. `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_ROOT_PASSWORD` und `MYSQL_DATABASE`
+(aus `DB_USER`, `DB_PASS`, `MYSQL_ROOT_PASSWORD`, `DB_NAME` der Root-`.env`) gelten **nur beim ersten Start**. Wer die Werte später ändert — oder den Stack
+einmal mit den Beispielwerten gestartet hat, bevor er die Passwörter angepasst hat —, hat danach ein Volume mit alten und eine `.env` mit neuen Passwörtern.
+(`Unknown database 'anmeldung'` hat dieselbe Ursache bei einem geänderten `DB_NAME`.) `migrate.php` und `seed-forms.php` geben dafür einen Hinweis aus.
+
+**Vorbeugen:** `DB_PASS` und `MYSQL_ROOT_PASSWORD` **vor** dem ersten `up` setzen. Ein späteres Ändern ist nicht möglich, ohne es auch in MySQL nachzuziehen (Weg 2).
+
+**Lösungen — in dieser Reihenfolge prüfen:**
+
+1. **Alte Werte wiederherstellen.** Du kennst sie noch (oder findest sie in `.env.bak`, das `sed -i.bak` beim Erzeugen der Secrets anlegt)? Die Root-`.env` zurücksetzen und
+   `docker compose up -d` — kein Datenverlust.
+2. **Passwort in MySQL nachziehen** (verlangt das *alte* Root-Passwort, die Daten bleiben erhalten):
+   ```bash
+   docker compose exec mysql mysql -uroot -p            # altes Root-Passwort eingeben
+   mysql> ALTER USER 'anmeldung'@'%' IDENTIFIED BY '<neues DB_PASS>';
+   mysql> ALTER USER 'root'@'%' IDENTIFIED BY '<neues MYSQL_ROOT_PASSWORD>';
+   mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY '<neues MYSQL_ROOT_PASSWORD>';
+   ```
+   Danach `docker compose up -d`. (Bei Passwörtern mit `#` nach einem Leerzeichen, `$` oder Anführungszeichen in der Root-`.env` den Wert in einfache Quotes setzen.)
+3. **Von vorn beginnen — löscht alle Daten dieser Datenbank** (Anmeldungen, Tenants, Formular-Konfiguration). Nur das MySQL-Volume entfernen, nicht `down -v`:
+   ```bash
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml stop backend mysql
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml rm -f mysql
+   docker volume ls | grep mysql-data                      # Namen ablesen, z. B. <projekt>_mysql-data
+   docker volume rm <projekt>_mysql-data
+   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d    # legt die Datenbank mit den aktuellen Werten neu an
+   ```
+   Danach Formular-Konfiguration (`seed-forms.php`) und Admin-Zugang wie bei einer Neuinstallation einrichten. `docker compose down -v` würde zusätzlich
+   die Volumes für Uploads, Logs und alles andere im Projekt löschen — hier **nicht** verwenden.
+
 **Admin Authentication Setup:**
 
 ```bash

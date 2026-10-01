@@ -383,6 +383,7 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | `migrate.php`: „API_SECRET_KEY is a known default" | Production mit Standard-Secret | `openssl rand -hex 32` in die Root-`.env` |
 | Seite zeigt „Wartungsmodus" / `503` | Backend nicht erreichbar, oder Formular/Tenant unbekannt | `BACKEND_API_URL` prüfen, `form-config.php?form=…&tenant=…` aufrufen, `form_configs` seeden |
 | WordPress: `Unknown form "bs" (or backend unavailable)` | wie oben, oder Plugin < 2.1.0 | Plugin aktualisieren, Backend-URL/Tenant-Slug prüfen |
+| `Access denied for user 'anmeldung'` / `Unknown database` bei der Migration | Das MySQL-Volume wurde mit anderen Zugangsdaten angelegt; `DB_PASS` & Co. in der `.env` wirken nur beim ersten Start | Alte Werte wiederherstellen oder Passwort in MySQL nachziehen; sonst nur das MySQL-Volume neu anlegen (Datenverlust) — siehe [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert) |
 | `Unknown column 'tenant_id'` im Backend-Log | Migration nicht gelaufen (manuelle Installation) | `php migrate.php` |
 | PDF-Link liefert „TenantContext not initialized" | Backend älter als die Fix-Version | Backend auf aktuellen 3.0-Stand bringen |
 | Alte Uploads im Backend nicht zu öffnen | Dateien nicht nach `uploads/tenant-1/` verschoben | `php migrate.php` erneut (Step 4d); Schreibrechte auf `uploads/` prüfen |

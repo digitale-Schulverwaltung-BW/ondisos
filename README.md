@@ -124,7 +124,7 @@ cp .env.example .env
 sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
 sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 
-nano .env  # DB-Passwörter anpassen, Secrets überprüfen
+nano .env  # DB-Passwörter anpassen, Secrets überprüfen — VOR dem ersten Start: DB_PASS & Co. wirken nur beim Anlegen der Datenbank
 
 # backend/.env ist optional und wird im Docker-Betrieb beim Start erzeugt (siehe unten);
 # Backend-spezifische Overrides (Rate Limits, Virenscan, ...) einfach an sie anhängen.

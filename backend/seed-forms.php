@@ -64,6 +64,10 @@ try {
     $db = Database::getConnection();
 } catch (\RuntimeException $e) {
     fwrite(STDERR, "Error: Cannot connect to database — {$e->getMessage()}\n");
+    $hint = Database::connectionHint($e->getMessage());
+    if ($hint !== null) {
+        fwrite(STDERR, "\n{$hint}\n");
+    }
     exit(1);
 }
 
