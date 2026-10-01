@@ -4,7 +4,7 @@
 
 Eine moderne, Open Source Lösung für digitale (Schul-)anmeldungen mit professionellem Admin-Backend.
 
-Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](ASV.md) möglich.
+Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](docs/ASV.md) möglich.
 
 [![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
 [![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
@@ -44,13 +44,13 @@ Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-B
 ### 👩‍💼 Backend (Admin-Bereich)
 - **Übersichtliche Verwaltung** aller Anmeldungen
 - **Filterung & Suche** mit DataTables
-- **Excel-Export** mit Auto-Formatierung. Bei geeigneten Feld-Bezeichnern ist ein direkter Import in [ASV](ASV.md) möglich.
+- **Excel-Export** mit Auto-Formatierung. Bei geeigneten Feld-Bezeichnern ist ein direkter Import in [ASV](docs/ASV.md) möglich.
 - **Dashboard** mit Statistiken
 - **Status-System** (neu, exportiert, in Bearbeitung, akzeptiert, abgelehnt, archiviert)
 - **Soft-Delete** mit Papierkorb
 - **Bulk-Actions** (Archivieren, Löschen, Wiederherstellen)
 - **Optionale Authentifizierung** (session-basiert)
-- **Multi-Tenant** — mehrere Schulen auf einer Backend-Instanz, mit Platform-Admin, Tenant-Admins und vollständiger Datenisolierung ([MULTI-TENANT.md](MULTI-TENANT.md))
+- **Multi-Tenant** — mehrere Schulen auf einer Backend-Instanz, mit Platform-Admin, Tenant-Admins und vollständiger Datenisolierung ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
 - **Auto-Expunge** (automatisches Löschen archivierter Einträge)
 
 ### ⚙️ Technische Features
@@ -100,7 +100,7 @@ SurveyJS, die Engine, welche die Frontend-Formulare bereitstellt, beinhaltet ein
 Designer. Dieser ist nicht Bestandteil von ondisos, kann aber einfach über die Projektseite unter
 https://surveyjs.io/create-free-survey erreicht werden. 
 
-Eine ausführliche Anleitung findet sich in **[SURVEYJS.md](SURVEYJS.md)**.
+Eine ausführliche Anleitung findet sich in **[SURVEYJS.md](docs/SURVEYJS.md)**.
 
 ---
 
@@ -150,7 +150,7 @@ docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'
 
 **Credentials-Struktur:**
 - ✅ `/.env` - Alle Core-Credentials (DB_USER, DB_PASS, Secrets)
-- ✅ `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt, eigene Zusatz-Einstellungen bleiben erhalten ([DEPLOYMENT.md](DEPLOYMENT.md#backendenv-im-docker-betrieb))
+- ✅ `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt, eigene Zusatz-Einstellungen bleiben erhalten ([DEPLOYMENT.md](docs/DEPLOYMENT.md#backendenv-im-docker-betrieb))
 - ✅ `API_SECRET_KEY` ist das Secret des ersten Tenants; das Frontend signiert damit seine Anfragen
 
 ### 3. Frontend Setup
@@ -178,20 +178,20 @@ Eine `forms-config.php` im Frontend ist nicht nötig: Die Formular-Konfiguration
 mysql -u root -p < database/schema.sql       # Schema
 cd backend
 composer install --no-dev --optimize-autoloader
-cp .env.example .env                          # dann Secrets anhängen, siehe DEPLOYMENT.md
+cp .env.example .env                          # dann Secrets anhängen, siehe docs/DEPLOYMENT.md
 php migrate.php                               # Pflicht: setzt das Secret von Tenant 1
 cp ../frontend/config/forms-config-dist.php ../frontend/config/forms-config.php
 php seed-forms.php                            # Formular-Konfiguration übernehmen
 ```
 
-**Von 2.x?** Nicht diese Anleitung, sondern [MIGRATION-3.0.md](MIGRATION-3.0.md) verwenden.
+**Von 2.x?** Nicht diese Anleitung, sondern [MIGRATION-3.0.md](docs/MIGRATION-3.0.md) verwenden.
 
 ### 5. Fertig! 🎉
 
 - **Frontend:** http://anmeldung.example.com
 - **Backend:** http://backend.example.com (nur Intranet)
 
-**Detaillierte Anleitung:** Siehe [DEPLOYMENT.md](DEPLOYMENT.md)
+**Detaillierte Anleitung:** Siehe [DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
 ---
 
@@ -324,11 +324,11 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
   - Troubleshooting
 
 ### Upgrade & Mehrschul-Betrieb
-- **[MIGRATION-3.0.md](MIGRATION-3.0.md)** - ⬆️ Upgrade von 2.x auf 3.0 (Schritte, Rollback, Fehlersuche)
-- **[MULTI-TENANT.md](MULTI-TENANT.md)** - 🏫 Mehrere Schulen auf einem Backend (Betrieb, Tenants, Sicherheit)
+- **[MIGRATION-3.0.md](docs/MIGRATION-3.0.md)** - ⬆️ Upgrade von 2.x auf 3.0 (Schritte, Rollback, Fehlersuche)
+- **[MULTI-TENANT.md](docs/MULTI-TENANT.md)** - 🏫 Mehrere Schulen auf einem Backend (Betrieb, Tenants, Sicherheit)
 
 ### Deployment & Operations
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - 🚀 Production Deployment Guide
+- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - 🚀 Production Deployment Guide
   - 3 Deployment-Optionen (Docker Backend ✅, Komplett Manuell, Komplett Docker)
   - Quick Start für Docker Production
   - Credentials & Secrets (Root .env, API-Secret)
@@ -336,17 +336,17 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
   - Backup-Strategien
   - HTTPS Enforcement
   - Production Checkliste
-- **[DOCKER.md](DOCKER.md)** - 🐳 Docker Deep Dive (Dev/Testing)
+- **[DOCKER.md](docs/DOCKER.md)** - 🐳 Docker Deep Dive (Dev/Testing)
   - Development Environment
   - Docker Compose Details
   - Volume Management
   - Monitoring & Logging
-- **[CI_CD.md](CI_CD.md)** - 🚀 Automated Deployment Pipeline
+- **[CI_CD.md](docs/CI_CD.md)** - 🚀 Automated Deployment Pipeline
   - GitLab CI/CD Setup
   - Automated Tests & Deployments
   - Staging & Production Workflows
   - Rollback-Strategien
-- **[DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)** - 🆘 Notfall-Playbook
+- **[DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md)** - 🆘 Notfall-Playbook
   - 8 Notfall-Szenarien mit Recovery-Steps
   - Complete Outage, Data Loss, Security Breach, etc.
   - Schritt-für-Schritt Anleitungen
@@ -355,7 +355,7 @@ Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md §
 ### Spezial-Dokumentation
 - **[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)** - 🔌 WordPress-Plugin installieren & konfigurieren
 - **[backend/MULTI-TENANT.md](backend/MULTI-TENANT.md)** - 🏗️ Multi-Tenant-Architektur (Design, Schema)
-- **[SURVEYJS.md](SURVEYJS.md)** - 📝 Formulardefinitionen (SurveyJS) erstellen
+- **[SURVEYJS.md](docs/SURVEYJS.md)** - 📝 Formulardefinitionen (SurveyJS) erstellen
 - **[PDF_SETUP.md](backend/PDF_SETUP.md)** - 📄 PDF-System Setup & Testing
 - **[UPLOADS.md](backend/src/UPLOADS.md)** - 📎 File-Upload Dokumentation
 
@@ -387,7 +387,8 @@ ondisos/
 │   │   ├── detail.php  # Detail-Ansicht
 │   │   ├── login.php   # Login (optional; bei Multi-Tenant Pflicht)
 │   │   ├── tenants.php # Tenant-Verwaltung (Platform-Admin)
-│   │   ├── api/        # API-Endpoints (submit, upload, form-config, health)
+│   │   ├── forms.php · form_edit.php · form_survey.php · form_preview.php  # Formular-Editor (3.1)
+│   │   ├── api/        # API-Endpoints (submit, upload, form-config, forms, health)
 │   │   └── pdf/        # PDF-Generator
 │   ├── src/            # MVC Struktur
 │   │   ├── Models/
@@ -398,12 +399,12 @@ ondisos/
 │   ├── templates/      # PDF-Templates
 │   ├── config/         # Konfiguration
 │   ├── migrate.php     # Datenbank-Migration (idempotent)
-│   ├── seed-forms.php  # Formular-Konfiguration → Datenbank
+│   ├── seed-forms.php · import-surveys.php · copy-forms.php  # CLI: Formulare/Surveys einspielen, zwischen Tenants kopieren
 │   └── scripts/        # Helper-Scripts
 │
 ├── database/           # SQL Schemas & Migrationen
-├── MIGRATION-3.0.md   # Upgrade-Anleitung
-├── CLAUDE.md          # Haupt-Dokumentation
+├── docs/              # Betriebs-/Projektdokumentation (Index: docs/README.md)
+├── CLAUDE.md          # Haupt-Dokumentation (Architektur, Konventionen)
 └── README.md          # Diese Datei
 ```
 
@@ -523,14 +524,14 @@ Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondi
 
 ### Was ist neu in 3.0?
 
-- ✅ **Multi-Tenant** — mehrere Schulen, eine Backend-Instanz ([MULTI-TENANT.md](MULTI-TENANT.md))
+- ✅ **Multi-Tenant** — mehrere Schulen, eine Backend-Instanz ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
 - ✅ **Platform-Admin** mit Tenant-Switcher und Tenant-Verwaltung
 - ✅ **Signierte API** — pro Tenant HMAC-SHA256 für Submit und Upload; Upload-Isolierung pro Tenant
 - ✅ **Formular-Konfiguration in der Datenbank** statt `forms-config.php` (Migration + `seed-forms.php`)
 - ✅ **WordPress-Plugin 2.1** — lädt die Konfiguration vom Backend, Tenant-Einstellungen
 - ✅ **Härtung** — bekannte Platzhalter-/Standard-Secrets authentifizieren nichts
 
-**Upgrade von 2.x:** [MIGRATION-3.0.md](MIGRATION-3.0.md). Release-Historie: [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie).
+**Upgrade von 2.x:** [MIGRATION-3.0.md](docs/MIGRATION-3.0.md). Release-Historie: [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie).
 
 ---
 
@@ -551,7 +552,7 @@ Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondi
 - [x] Upload-Isolierung pro Tenant (✅ `uploads/tenant-<id>/`)
 - [x] WordPress-Plugin (✅ Shortcode, Tenant-Einstellungen)
 
-Siehe **[MULTI-TENANT.md](MULTI-TENANT.md)** und **[MIGRATION-3.0.md](MIGRATION-3.0.md)**.
+Siehe **[MULTI-TENANT.md](docs/MULTI-TENANT.md)** und **[MIGRATION-3.0.md](docs/MIGRATION-3.0.md)**.
 
 ### In Planung
 - [ ] Weitere Unit Tests (Services, Repositories, Validators)
@@ -561,10 +562,15 @@ Siehe **[MULTI-TENANT.md](MULTI-TENANT.md)** und **[MIGRATION-3.0.md](MIGRATION-
 - [ ] API Documentation (OpenAPI/Swagger)
 - [ ] SMTP-Support für Email-Service
 
-### Geplant (3.0.5+)
-- [ ] Managed Multi-Frontend (Szenario B: ein Frontend, mehrere Tenants)
-- [ ] Form-Config Admin-UI (CRUD im Browser, 3.1)
-- [ ] Survey-JSON-Upload vom Backend-Admin (3.1)
+### Umgesetzt in 3.1
+- [x] Formulare im Backend pflegen: Konfiguration als HTML-Formular, Survey-Editor (Creator-JSON einfügen, prüfen, Entwurf, Vorschau, veröffentlichen, Verlauf)
+- [x] Neue Schulen: Formulare von einem anderen Tenant übernehmen (Empfänger und Logo bleiben leer)
+- [x] Frontend holt Surveys vom Backend (ETag, Cache, Ausfallschutz); Backend ohne externe CDN-Abhängigkeit
+
+### Geplant
+- [ ] **3.2:** Managed Multi-Frontend (Szenario B: ein Frontend, mehrere Tenants), Datei-Fallback für Surveys abschaffen
+- [ ] **3.1.1:** WordPress-Plugin ohne Shell (ZIP, Verbindungscode, Update-Prüfung) — Entwurf: [docs/plans/PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md)
+- [ ] Logo-Upload für PDFs
 
 ### Ideen
 - [ ] Workflow-System (z.B. Freigabe-Prozess)

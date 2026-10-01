@@ -346,7 +346,7 @@ return [
             'file' => 'Datei',
             'edit' => 'Survey bearbeiten',
             'fields' => '{{count}} Felder',
-            'import_hint' => 'Diese Survey liegt als Datei im Frontend. Mit „php import-surveys.php" lässt sie sich ins Backend übernehmen (siehe MIGRATION-3.1.md).',
+            'import_hint' => 'Diese Survey liegt als Datei im Frontend. Mit „php import-surveys.php" lässt sie sich ins Backend übernehmen (siehe docs/MIGRATION-3.1.md).',
         ],
         'history' => [
             'title' => 'Verlauf',

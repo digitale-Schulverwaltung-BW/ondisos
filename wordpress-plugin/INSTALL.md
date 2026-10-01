@@ -10,8 +10,8 @@ Die Formulardaten werden **nicht** in WordPress gespeichert: Das Plugin leitet s
 Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet laufen sollte.
 
 - Plugin-Version: **2.1.0** — benötigt ein **Ondisos-Backend ab 3.0**
-- Upgrade von einer älteren Installation: [../MIGRATION-3.0.md](../MIGRATION-3.0.md)
-- Mehrere Schulen / Tenants: [../MULTI-TENANT.md](../MULTI-TENANT.md)
+- Upgrade von einer älteren Installation: [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md)
+- Mehrere Schulen / Tenants: [../MULTI-TENANT.md](../docs/MULTI-TENANT.md)
 
 ## Inhalt
 
@@ -32,7 +32,7 @@ Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet la
 - Ein laufendes Ondisos-Backend (3.0+), das **vom WordPress-Server aus** erreichbar ist
   (die Anfragen kommen serverseitig von WordPress, nicht aus dem Browser)
 - Im Backend: ein Tenant (für eine Schule genügt Tenant 1, Slug `default`) mit **API-Secret** und
-  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [../DEPLOYMENT.md](../DEPLOYMENT.md)
+  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [../DEPLOYMENT.md](../docs/DEPLOYMENT.md)
 - Der Webserver muss Symlinks folgen, falls Variante A (Symlinks) benutzt wird
 
 ## Installation
@@ -133,7 +133,7 @@ Das Plugin ruft das Backend **vom WordPress-Container aus** auf. In einem Contai
 Das Plugin warnt, wenn in einem Container `localhost`/`127.0.0.1` eingetragen wird.
 
 **Woher das Secret kommt:** Tenant 1 verwendet den `API_SECRET_KEY` aus der Backend-`.env`; weitere Tenants
-zeigen ihr Secret einmalig nach dem Anlegen in `tenants.php` (siehe [../MULTI-TENANT.md](../MULTI-TENANT.md)).
+zeigen ihr Secret einmalig nach dem Anlegen in `tenants.php` (siehe [../MULTI-TENANT.md](../docs/MULTI-TENANT.md)).
 
 **Alternative `.env`:** Dieselben Werte können in `.env` im Frontend-Verzeichnis stehen
 (`BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`, `FROM_EMAIL`). **Die WordPress-Einstellungen haben Vorrang.**
@@ -180,7 +180,7 @@ git pull               # bzw. git checkout <neues-Tag>
 Die Änderungen sind sofort in WordPress wirksam (kein Neustart). Bei aktiven Cache-Plugins den Cache leeren;
 die Plugin-Version ist an die Asset-URLs gekoppelt, sodass Browser geänderte JavaScript-Dateien neu laden.
 
-Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](../MIGRATION-3.0.md) ausführen
+Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md) ausführen
 (Tenant-Slug und Tenant-API-Secret eintragen).
 
 ## Fehlersuche

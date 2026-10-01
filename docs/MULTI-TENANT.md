@@ -5,7 +5,7 @@ Datenisolierung pro Schule (*Tenant*). Dieses Dokument ist die Betriebsanleitung
 
 - **Upgrade von 2.x:** → [MIGRATION-3.0.md](MIGRATION-3.0.md)
 - **Architektur-Hintergründe** (Design-Entscheidungen, Datenbankschema, Impact Assessment):
-  → [`backend/MULTI-TENANT.md`](backend/MULTI-TENANT.md)
+  → [`backend/MULTI-TENANT.md`](../backend/MULTI-TENANT.md)
 - **Betrieb/Deployment allgemein:** → [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
@@ -166,7 +166,7 @@ Der Tenant gehört zur **Installation**, nicht zur einzelnen Seite — der Short
 Slug und Secret stehen unter *Einstellungen → Ondisos* (Felder **Tenant-Slug** und
 **Tenant-API-Secret**; das Secret wird nie wieder angezeigt, leer lassen = unverändert) oder
 alternativ in `plugins/ondisos-frontend/.env`. Die WordPress-Einstellungen haben Vorrang.
-Siehe [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
+Siehe [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md).
 
 ---
 
@@ -237,7 +237,7 @@ Der aktive Kontext wird in der Session gespeichert und in der Navigation angezei
 - **Keine bekannten Secrets:** Platzhalter (`CHANGE_ME_IN_PRODUCTION`, leer) authentifizieren
   nie; der mitgelieferte Dev-Standardwert (`dev-api-key-replace-in-production`) wird in
   Production (`APP_ENV=production`) abgelehnt. `migrate.php` bricht dort ab, wenn
-  `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](backend/src/Services/SecretPolicy.php).
+  `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](../backend/src/Services/SecretPolicy.php).
 - **Upload-Isolierung:** Dateien liegen in `uploads/tenant-<id>/`. Ein Upload wird nur
   angenommen, wenn der Zieleintrag zum authentifizierten Tenant gehört (sonst `404` +
   `idor_attempt`).
@@ -260,6 +260,7 @@ Der aktive Kontext wird in der Session gespeichert und in der Navigation angezei
 | Feature | Version | Status |
 |---------|---------|--------|
 | Mehrere Frontends → ein Backend | 3.0 | ✅ implementiert |
-| Managed Multi-Frontend (ein Frontend, mehrere Tenants) | 3.0.5 | geplant |
-| Form-Config-Admin-UI (CRUD im Browser) | 3.1 | geplant |
-| Survey-JSON-Upload vom Backend-Admin | 3.1 | geplant |
+| Form-Config-Admin-UI (HTML-Formular im Backend) | 3.1 | ✅ implementiert |
+| Surveys im Backend pflegen (Einfügen, Vorschau, Verlauf), Frontend zieht sie per API | 3.1 | ✅ implementiert |
+| Neue Tenants: Formulare von einem anderen Tenant übernehmen | 3.1 | ✅ implementiert |
+| Managed Multi-Frontend (ein Frontend, mehrere Tenants); Datei-Fallback für Surveys abschaffen | 3.2 | geplant |

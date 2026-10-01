@@ -43,7 +43,7 @@ Ausführlich: [../UPLOAD_SECURITY.md](../UPLOAD_SECURITY.md).
 - **Authentifizierung:** Upload nur mit gültiger Tenant-Signatur (`X-Signature`); Download nur für angemeldete Admins
   des Tenants.
 - **Zuordnung:** Ein Upload wird nur angenommen, wenn die Anmeldung existiert **und** zum Tenant gehört.
-- **Virenscan:** ClamAV (optional, `VIRUS_SCAN_ENABLED=true`), siehe [../../DOCKER.md](../../DOCKER.md).
+- **Virenscan:** ClamAV (optional, `VIRUS_SCAN_ENABLED=true`), siehe [../../DOCKER.md](../../docs/DOCKER.md).
 
 ## File Upload API
 
@@ -73,7 +73,7 @@ file: {binary}
 | 404 | Anmeldung existiert nicht oder gehört einem anderen Tenant (Audit-Log: `idor_attempt`) |
 | 503 | Virenscan nicht verfügbar (nur bei `VIRUS_SCAN_STRICT=true`) |
 
-Signatur-Details und Beispiele: [../../MIGRATION-3.0.md § Eigene API-Clients](../../MIGRATION-3.0.md#7-eigene-api-clients).
+Signatur-Details und Beispiele: [../../MIGRATION-3.0.md § Eigene API-Clients](../../docs/MIGRATION-3.0.md#7-eigene-api-clients).
 
 ## Permissions
 

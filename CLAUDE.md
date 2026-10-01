@@ -13,12 +13,17 @@
 - Frontend-Server: Öffentlich zugänglich, zeigt SurveyJS-Formulare
 - Backend-Server: Intranet, Admin-Interface für Anmeldungsverwaltung
 
-**Kernkonzepte (3.0):**
+**Kernkonzepte (3.0, erweitert in 3.1):**
 - **Tenant** = eine Schule. Jede Anmeldung, jede Formular-Konfiguration und jedes Upload-Verzeichnis gehört zu genau einem Tenant. Tenant 1 (`slug = default`) gibt es immer; der Betrieb mit nur einer Schule ist der Single-Tenant-Modus (`MULTI_TENANT_ENABLED=false`).
 - **Signierte API:** Das Frontend authentifiziert sich pro Tenant mit HMAC-SHA256 (`X-Signature`) und nennt den Tenant per `?tenant=<slug>`. Das Secret (`tenants.api_secret`) bleibt serverseitig.
-- **Formular-Konfiguration in der Datenbank:** Tabelle `form_configs`; das Frontend holt sie per `GET /api/form-config.php`. Die Survey-Definitionen (`frontend/surveys/*.json`) bleiben im Frontend.
+- **Formular-Konfiguration in der Datenbank:** Tabelle `form_configs`; das Frontend holt sie per `GET /api/form-config.php`.
+- **Formulare im Backend pflegen (3.1):** Schul-Admins ändern die Konfiguration eines Formulars in einem HTML-Formular (kein JSON) und bearbeiten die Survey
+  (Text aus dem SurveyJS-Creator einfügen → prüfen → Entwurf → Vorschau → veröffentlichen, mit Verlauf und Wiederherstellen). Surveys und Themes liegen
+  dann in der Datenbank (`form_resources`) und kommen mit der Config zum Frontend; die Dateien in `frontend/surveys/` bleiben als Fallback.
+  Neue Tenants starten mit den Formularen eines anderen Tenants (`FormCopyService`; Empfänger und Logo werden nie kopiert).
+  Der Creator selbst ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/SURVEYJS.md).
 
-**Weiterführende Dokumente:** [MIGRATION-3.0.md](MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
+**Weiterführende Dokumente:** [docs/README.md](docs/README.md) (Index) · [MIGRATION-3.1.md](docs/MIGRATION-3.1.md) (Upgrade 3.0 → 3.1) · [MIGRATION-3.0.md](docs/MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](docs/MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](docs/DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
 
 ---
 
@@ -63,6 +68,9 @@ projekt/
 │   │                             # -form-config-loader, -assets, -plugin, -autoloader
 │   ├── assets/js/survey-handler-wp.js
 │   └── INSTALL.md
+│
+├── docs/                          # Betriebs- und Projektdokumentation (Index: docs/README.md)
+│   └── plans/                    # Planungsdokumente (PLAN-3.1.md, …)
 │
 ├── database/
 │   ├── schema.sql                # Neuinstallation (Tenant 1 mit Platzhalter-Secret!)
@@ -235,7 +243,7 @@ CREATE TABLE form_configs (        -- Formular-Konfiguration je Tenant
     UNIQUE KEY uq_tenant_form (tenant_id, form_key)
 );
 
--- 3.1 (Formular-Editor, Details: PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
+-- 3.1 (Formular-Editor, Details: docs/plans/PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
 -- form_resources:  veröffentlichte Surveys/Themes je Tenant, UNIQUE (tenant_id, kind, name), sha256 = Versions-Token
 -- form_drafts:     höchstens ein Survey-Entwurf je Formular (based_on_sha = Live-Stand beim Anlegen → Konflikterkennung)
 -- form_revisions:  Historie, nur anhängen (config | survey | theme), Aufbewahrung 50 je Formular und Typ
@@ -338,8 +346,8 @@ WordPress: `Tenant-Slug` und `Tenant-API-Secret` unter *Einstellungen → Ondiso
 
 Die Konfiguration eines Formulars ist ein JSON-Objekt in `form_configs.config_json` (Tenant + `form_key`).
 `frontend/config/forms-config-dist.php` dokumentiert die möglichen Schlüssel und dient als Quelle für
-`backend/seed-forms.php` (`--tenant=<slug>`, Standard Tenant 1; neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben, ungültige Einträge übersprungen; Quelle ohne Argument `../frontend/config/forms-config.php` bzw. `config/forms-config.php`, sonst eine Datei oder `-` für STDIN — im Docker-Betrieb `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`; das Skript warnt vor `@example.com`-Platzhaltern). Änderungen an bestehenden Formularen per SQL;
-eine Admin-Oberfläche ist für 3.1 geplant.
+`backend/seed-forms.php` (`--tenant=<slug>`, Standard Tenant 1; neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben, ungültige Einträge übersprungen; Quelle ohne Argument `../frontend/config/forms-config.php` bzw. `config/forms-config.php`, sonst eine Datei oder `-` für STDIN — im Docker-Betrieb `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`; das Skript warnt vor `@example.com`-Platzhaltern). Seit 3.1 werden bestehende Formulare im Backend bearbeitet (*Formulare*, `form_edit.php`; Felder und Regeln stehen einmal in `FormConfigSchema`);
+`copy-forms.php` kopiert Formulare zwischen Tenants. Per SQL geht es weiterhin.
 
 ```php
 // Beispiel: Inhalt einer forms-config.php (wird beim Seed zu config_json)
@@ -634,7 +642,7 @@ archiviert
 
 ## 🚀 Deployment
 
-> **📖 Vollständige Deployment-Dokumentation:** Siehe **[DEPLOYMENT.md](DEPLOYMENT.md)**
+> **📖 Vollständige Deployment-Dokumentation:** Siehe **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**
 
 ### Quick Overview
 
@@ -674,11 +682,11 @@ curl http://your-server:9080/api/health.php
 - ✅ Automatisches Mapping: `DB_USER` → `MYSQL_USER`, keine Duplikation!
 - ✅ Frontend (manuell): `frontend/.env` mit `BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`
 
-**Upgrade von 2.x:** [MIGRATION-3.0.md](MIGRATION-3.0.md). **Mehrere Schulen:** [MULTI-TENANT.md](MULTI-TENANT.md).
+**Upgrade von 2.x:** [MIGRATION-3.0.md](docs/MIGRATION-3.0.md). **Mehrere Schulen:** [MULTI-TENANT.md](docs/MULTI-TENANT.md).
 
 ### Weitere Themen
 
-Siehe **[DEPLOYMENT.md](DEPLOYMENT.md)** für Details zu:
+Siehe **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** für Details zu:
 
 - **Option 1**: Docker Backend + Manuelles Frontend (empfohlen)
   - Docker-Setup mit vorkonfigurierten Compose-Files
@@ -693,7 +701,7 @@ Siehe **[DEPLOYMENT.md](DEPLOYMENT.md)** für Details zu:
 
 - **Option 3**: Komplett Docker
   - Dev/Testing Environment
-  - Referenz: [DOCKER.md](DOCKER.md)
+  - Referenz: [DOCKER.md](docs/DOCKER.md)
 
 - **Wartung & Updates**
   - Docker-Updates & Rollbacks
@@ -738,7 +746,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 909 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 178 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 912 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 178 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 
@@ -949,7 +957,10 @@ http://intranet.example.com/backend/dashboard.php
 
 ### Known Issues
 - ⚠️ Email-Service nutzt PHP `mail()` → ggf. auf SMTP umstellen
-- ⚠️ Formular-Konfiguration ist nur per SQL änderbar (Admin-UI geplant, 3.1); `seed-forms.php` überschreibt vorhandene Einträge nie (Tenant per `--tenant=<slug>`)
+- ⚠️ `seed-forms.php` überschreibt vorhandene Einträge nie (Tenant per `--tenant=<slug>`); Änderungen bestehender Formulare laufen über den Editor im Backend
+- ⚠️ Surveys liegen entweder im Backend (`form_resources`) oder als Datei im Frontend (Fallback bis 3.2); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien
+- ⚠️ Die Vorschau im Backend trägt eigene Kopien der SurveyJS-Dateien (`backend/public/assets/preview/`); nach SurveyJS-Updates `backend/tools/sync-preview-assets.sh` ausführen
+- ⚠️ Der Docker-Apache sendet `X-Frame-Options: SAMEORIGIN` (statt `DENY`), damit der Vorschau-Frame einbettbar ist
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
 - ⚠️ Die Backend-Oberfläche lädt Bootstrap und DataTables von `cdn.jsdelivr.net` (unversioniert, ohne Integritätsprüfung, `backend/inc/header.php`, `footer.php`, `login.php`): Admin-Browser kontaktieren einen externen CDN, und in einem Intranet ohne Internetzugang bleibt die Oberfläche ungestylt. Frontend und WordPress-Plugin sind frei von externen Quellen
 - ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)
@@ -959,9 +970,12 @@ http://intranet.example.com/backend/dashboard.php
 2. **Integration Tests** mit Test-Datenbank
 3. **Monitoring** Setup (z.B. Sentry, Prometheus)
 4. **API Documentation** (OpenAPI/Swagger)
-5. **Form-Config Admin-UI** und Survey-JSON-Upload (3.1)
-6. **Managed Multi-Frontend** (ein Frontend für mehrere Tenants, 3.0.5)
-7. **Deutsche Locale** für SurveyJS
+5. ~~Form-Config Admin-UI und Survey-Pflege im Backend~~ (3.1 ✅, Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md))
+6. **Managed Multi-Frontend** (ein Frontend für mehrere Tenants, 3.2)
+7. **WordPress-Plugin ohne Shell** (ZIP, Verbindungscode, Update-Prüfung; Entwurf: [PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md))
+8. **Datei-Fallback abschaffen** (`frontend/surveys/` nur noch als Importquelle, 3.2)
+9. **Logo-Upload** für PDFs statt Dateipfad (bisher nur Plattform-Admin)
+10. **Deutsche Locale** für SurveyJS
 
 ---
 
@@ -1171,7 +1185,7 @@ php -l backend/config/messages.local.php
 
 ### `Access denied for user 'anmeldung'` beim Start (Migration)
 → Das MySQL-Volume behält die Zugangsdaten vom **ersten** Start; spätere Änderungen von `DB_PASS`/`MYSQL_ROOT_PASSWORD` in der `.env` kommen nicht an
-→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert)
+→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](docs/DEPLOYMENT.md#datenbank-zugriff-verweigert)
 
 ### Admin-Login abgelehnt, obwohl das Passwort stimmt
 → Meist ein beschädigter `ADMIN_PASSWORD_HASH`: In der Root-`.env` MUSS der Hash in einfachen Anführungszeichen stehen, sonst expandiert Docker Compose die `$…`-Teile (Länge im Container ≠ 60: `docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'`)
@@ -1200,7 +1214,7 @@ php -l backend/config/messages.local.php
 
 ### Anmeldung „erfolgreich", aber nichts im Backend / Formular „currently unavailable" trotz erreichbarem Backend
 → Formular mit `db: false` speichert nicht im Backend (nur E-Mail an `notify_email`). Ohne gültige `notify_email` würde die Absendung verworfen: das Frontend zeigt das Formular dann nicht an (503 / neutrale Meldung, Administratoren sehen die Ursache), `seed-forms.php` warnt
-→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
+→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](docs/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
 
 ### Excel-Export zeigt Formular-Spalte
 → Check dass Filter gesetzt ist: `?form=bs`
@@ -1220,13 +1234,27 @@ php -l backend/config/messages.local.php
 ## 📞 Support & Kontakt
 
 **Entwickler:** [Name]
-**Version:** 3.0
+**Version:** 3.1
 **PHP Version:** 8.2+
 **Database:** MySQL 8.0+ / MariaDB 10.5+
 
 ---
 
 ## 🔄 Änderungshistorie
+
+### 3.1
+
+**Formulare im Backend pflegen** (Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md), Upgrade: [MIGRATION-3.1.md](docs/MIGRATION-3.1.md))
+- ✅ Neue Tabellen `form_resources` (veröffentlichte Surveys/Themes), `form_drafts` (ein Entwurf je Formular), `form_revisions` (Verlauf); `migrate.php` (Schritte 8–10)
+- ✅ Formular-Editor: Liste, anlegen, Konfiguration als HTML-Formular (Schema-getrieben, rollenabhängig: Tenant-Admins ohne Dateinamen/Logo), Verlauf mit Wiederherstellen, Konflikterkennung
+- ✅ Survey-Editor: JSON einfügen/laden (CodeMirror 6), Prüfung mit Zeile/Spalte, Feldänderungen, Diff, Entwurf, Veröffentlichen mit Versionsvorschlag, Wiederherstellen
+- ✅ Vorschau im Backend (Entwurf/veröffentlicht, Breitenumschalter) in einem per CSP sandboxed Frame
+- ✅ Auslieferung ans Frontend: `form-config.php?with=survey` mit ETag (304), Datei-Cache im Frontend mit Stale-if-error (7 Tage), sichere Einbettung (`JsonEmbed`); Datei-Fallback
+- ✅ Neue Tenants: Formulare von einem anderen Tenant kopieren (`copy-forms.php`, Oberfläche), Empfänger/Logo werden nie kopiert; signierter Endpunkt `api/forms.php` → Plugin-Status „Secret passt / 0 Formulare"
+- ✅ CLI: `import-surveys.php`, `copy-forms.php`, `seed-forms.php --tenant`
+- ✅ Härtung: HTML-Allowlist (auch Rohtext-Prüfung), Auslieferung nur validierter Inhalte, Rate-Limit für Schreibaktionen, Limits (Größen, 100 Formulare/Tenant), Audit-Ereignisse ohne Inhalte
+- ✅ Backend ohne CDN (Bootstrap lokal); Fix: `index.php` ohne definierte `$tenantSlug`
+- ✅ Dokumentation nach `docs/` verschoben (Index: `docs/README.md`)
 
 ### 3.0
 
@@ -1253,7 +1281,7 @@ php -l backend/config/messages.local.php
 - ✅ Endgültiges Löschen (Hard-Delete, Auto-/manuelles Expunge) entfernt auch die Upload-Dateien (`UploadCleanupService`)
 - ✅ Docker: Migration bei jedem Start, `docker compose` (Compose-Plugin), Makefile
 
-**Upgrade von 2.x:** siehe [MIGRATION-3.0.md](MIGRATION-3.0.md).
+**Upgrade von 2.x:** siehe [MIGRATION-3.0.md](docs/MIGRATION-3.0.md).
 
 ---
 

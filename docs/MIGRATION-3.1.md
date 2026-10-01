@@ -1,6 +1,6 @@
 # Migration 3.0 → 3.1
 
-3.1 bringt die Formular-Pflege ins Backend (siehe [PLAN-3.1.md](PLAN-3.1.md)). Dieses Dokument wächst mit den Arbeitspaketen;
+3.1 bringt die Formular-Pflege ins Backend (siehe [PLAN-3.1.md](plans/PLAN-3.1.md)). Dieses Dokument wächst mit den Arbeitspaketen;
 es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne Änderung laufen alle Formulare wie unter 3.0 weiter.
 
 ## Backend

@@ -28,6 +28,28 @@ Noch offen (nur manuell prüfbar):
 - [ ] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests
 
 
+### v3.1.0 — Stand der Abnahme
+
+Automatisiert: 912 Unit- und 178 Integration-Tests (`composer test`; Integration braucht MySQL mit `database/schema.sql`, siehe `backend/UNITTESTS.md`).
+
+In einer Demo-Umgebung (WordPress + Standalone-Frontend + Backend, Multi-Tenant) verifiziert:
+
+- [x] Surveys aus der Datenbank gewinnen gegen die Datei; ETag/304; Backend gestoppt ⇒ gecachte Fassung (Standalone und WordPress), unbekanntes Formular 404, ohne Cache 503
+- [x] Manipulierte Survey in der Datenbank (`</script>`, `<img onerror>`) bricht nicht aus und wird nicht ausgeliefert (Frontend nimmt die Datei, Audit `form_delivery_rejected`)
+- [x] Formular-Editor als Plattform-Admin und Tenant-Admin: Validierung je Feld, Speichern, Wiederherstellen; Tenant-Admin ohne Logo/Dateinamen (Eingabe gesperrt, gebauter POST abgelehnt), fremdes Formular 404, `tenants.php` 403, POST ohne CSRF wirkungslos
+- [x] Survey-Editor: Fehler mit Zeile/Spalte, Feldbericht und Diff, Entwurf ändert das öffentliche Formular nicht, Veröffentlichen ändert es sofort und erhöht die Version, Wiederherstellen; Code-Editor (CodeMirror) synchron mit dem Formular
+- [x] Vorschau in echtem Chrome (DevTools-Protokoll): sieht aus wie das Frontend, Entwurf zeigt Änderung, schmales Fenster; ungültig gespeicherte Survey wird abgelehnt; ohne Sitzung Redirect
+- [x] Neuer Tenant mit „Formulare übernehmen von Default": API 200, ohne `notify_email`; signierter Endpunkt `forms.php` (richtige/falsche/fremde Signatur, POST 405) und die echte Client-Klasse
+- [x] Rate-Limit: 60 Schreibaktionen/Minute, danach 429 mit `Retry-After`, GET unberührt
+- [x] `import-surveys.php` (Trockenlauf, Wiederholung, `--overwrite` mit Verlauf), `seed-forms.php --tenant` mit ungültigem Eintrag
+
+Noch offen (nur manuell prüfbar):
+
+- [ ] WordPress-Plugin: Verbindungsstatus-Seite (*Einstellungen → Ondisos*) im Browser mit den neuen Zeilen „Secret passt" / „0 Formulare"
+- [ ] Breitenumschalter der Vorschau (Handy/Tablet) in einem echten Browser
+- [ ] Docker-Image neu bauen und Vorschau gegen das frisch gebaute Image prüfen (in der Demo wurde die Apache-Konfiguration im laufenden Container ersetzt)
+- [ ] Endpoint-Skripte `forms.php` und `form-config.php?with=survey` haben keine Unit-Tests (ihre Logik liegt in getesteten Services; strukturelle Tests prüfen Reihenfolge und Abhängigkeiten)
+
 ### ✅ Abgeschlossen
 
 - [x] **ExportService** - 88.46% (92/104 lines) 🎉

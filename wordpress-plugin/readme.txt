@@ -109,7 +109,7 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 Nur Diagnose-Verbesserungen, keine Konfigurationsänderung nötig.
 
 = 2.1.0 =
-Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe MIGRATION-3.0.md).
+Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe docs/MIGRATION-3.0.md im Ondisos-Repository).
 
 == Developer Notes ==
 

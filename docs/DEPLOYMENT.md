@@ -7,7 +7,7 @@
 > **Von 2.x kommend?** Lies zuerst **[MIGRATION-3.0.md](MIGRATION-3.0.md)** — das Upgrade betrifft
 > Datenbank, Frontend-Konfiguration und die Frontend↔Backend-Kommunikation.
 > **Mehrere Schulen auf einem Backend?** → **[MULTI-TENANT.md](MULTI-TENANT.md)**.
-> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)**.
+> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md)**.
 
 Das System besteht aus zwei Servern:
 
@@ -962,6 +962,17 @@ curl -F "file=@test.bin" https://anmeldung.example.com/api/upload.php
 - [ ] **Firewall:** Unnötige Ports geschlossen (nur 80, 443, ggf. 22)
 - [ ] **Git:** `.env` nicht committed, `.gitignore` geprüft
 - [ ] **Upload-Limits:** Nginx `client_max_body_size` (10M+), PHP `upload_max_filesize` (10M+), `post_max_size` (12M+) konfiguriert
+
+#### Ab 3.1 (Formular-Editor)
+
+- [ ] **Migration** gelaufen (neue Tabellen `form_resources`, `form_drafts`, `form_revisions`); Details: [MIGRATION-3.1.md](MIGRATION-3.1.md)
+- [ ] **Frontend-Cache:** `frontend/cache/` (bzw. `FORM_CACHE_DIR`; WordPress: `wp-content/uploads`) für den Webserver-Benutzer beschreibbar
+- [ ] **Backend-Image neu gebaut** (`docker compose build backend`): Apache sendet `X-Frame-Options: SAMEORIGIN`, sonst bleibt die Vorschau leer. Eigene Apache/Nginx-Konfiguration: ebenfalls `SAMEORIGIN` (fremdes Einbetten bleibt verboten)
+- [ ] **Surveys** ins Backend übernommen (`import-surveys.php`) oder bewusst als Dateien im Frontend belassen
+- [ ] **Neue Schulen:** Tenant anlegen → Formulare übernehmen (`copy-forms.php` oder Oberfläche) → Empfänger eintragen ([MULTI-TENANT.md](MULTI-TENANT.md))
+- [ ] **Rate-Limit** für Schreibaktionen passt (`EDITOR_RATE_LIMIT_MAX`/`_WINDOW`, Standard 60/min)
+- [ ] **Backup** umfasst die neuen Tabellen (Verlauf und Entwürfe liegen in der Datenbank; ein DB-Dump enthält sie)
+- [ ] **WordPress-Plugin:** Verbindungsstatus unter *Einstellungen → Ondisos* zeigt „Secret passt zum Tenant" und die Formularzahl
 
 #### Docker-spezifisch (Option 1 & 3)
 

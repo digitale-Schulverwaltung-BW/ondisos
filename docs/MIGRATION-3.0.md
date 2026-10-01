@@ -140,7 +140,7 @@ Secret verwenden (3.4).
 > **Sicherheitsregel:** Bekannte Platzhalter und Standardwerte (`CHANGE_ME_IN_PRODUCTION`,
 > `dev-api-key-replace-in-production`) authentifizieren nichts. In Production
 > (`APP_ENV=production`) bricht `migrate.php` mit einer Fehlermeldung ab, wenn
-> `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](backend/src/Services/SecretPolicy.php).
+> `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](../backend/src/Services/SecretPolicy.php).
 
 Optional, nur für Mehrschul-Betrieb: `MULTI_TENANT_ENABLED=true` — siehe
 [MULTI-TENANT.md](MULTI-TENANT.md). Für den Single-Tenant-Betrieb **nicht** setzen.
@@ -249,7 +249,7 @@ signiert Anfragen wie das Standalone-Frontend.
 
 1. Plugin-Code aktualisieren (Git-Pull im verlinkten Repository bzw. Dateien ersetzen).
    Erwartetes Layout: `plugins/ondisos/` (Plugin) und `plugins/ondisos-frontend/`
-   (Frontend-Assets) — Details in [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
+   (Frontend-Assets) — Details in [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md).
 2. WordPress → *Einstellungen → Ondisos*:
    - **Backend API URL:** wie bisher
    - **Tenant-Slug:** `default` (oder leer lassen)
@@ -397,7 +397,7 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | `migrate.php`: „API_SECRET_KEY is a known default" | Production mit Standard-Secret | `openssl rand -hex 32` in die Root-`.env` |
 | Seite zeigt „Wartungsmodus" / `503` | Backend nicht erreichbar oder Tenant abgelehnt (Ursache im PHP-Log: `FormConfigLoader: … not loaded (unreachable\|unauthorized\|error)`) | `BACKEND_API_URL` und `TENANT_SLUG` prüfen, `health.php` und `form-config.php?form=…&tenant=…` aufrufen |
 | `index.php?form=…` zeigt 404 „Formular nicht gefunden" | Backend erreichbar, Formular für den Tenant nicht vorhanden | `form_configs` seeden, Formular-Key prüfen |
-| WordPress: `The form is currently unavailable` / als Administrator `Error (shown to administrators only): …` | Backend nicht erreichbar oder Tenant abgelehnt; in Docker meist `localhost` als Backend-URL | Als Administrator die Seite ansehen (die Meldung nennt die Ursache), *Einstellungen → Ondisos* (Verbindungsstatus); in Docker `host.docker.internal` bzw. Dienstname ([INSTALL.md](wordpress-plugin/INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft)) |
+| WordPress: `The form is currently unavailable` / als Administrator `Error (shown to administrators only): …` | Backend nicht erreichbar oder Tenant abgelehnt; in Docker meist `localhost` als Backend-URL | Als Administrator die Seite ansehen (die Meldung nennt die Ursache), *Einstellungen → Ondisos* (Verbindungsstatus); in Docker `host.docker.internal` bzw. Dienstname ([INSTALL.md](../wordpress-plugin/INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft)) |
 | WordPress: `Unknown form "bs"` | Backend erreichbar, Formular nicht für den Tenant (oder Plugin < 2.1.0 mit unklarer Meldung) | `seed-forms.php`, Formular-Key und Tenant-Slug prüfen; Plugin aktualisieren |
 | `Access denied for user 'anmeldung'` / `Unknown database` bei der Migration | Das MySQL-Volume wurde mit anderen Zugangsdaten angelegt; `DB_PASS` & Co. in der `.env` wirken nur beim ersten Start | Alte Werte wiederherstellen oder Passwort in MySQL nachziehen; sonst nur das MySQL-Volume neu anlegen (Datenverlust) — siehe [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert) |
 | `Unknown column 'tenant_id'` im Backend-Log | Migration nicht gelaufen (manuelle Installation) | `php migrate.php` |

@@ -428,7 +428,7 @@ docker compose exec mysql mysql -u root -p -e "SELECT COUNT(*) FROM anmeldung.an
 docker compose start backend
 ```
 
-Der Dump enthält auch Tenants (inkl. `api_secret`), Tenant-Admins und die Formular-Konfiguration (`form_configs`). **Nicht** enthalten sind die `.env`-Dateien: Secrets (`API_SECRET_KEY`, `PDF_TOKEN_SECRET`, `TENANT_API_SECRET` im Frontend) separat und verschlüsselt sichern. Weicht `tenants.api_secret` nach dem Restore vom Frontend-Secret ab, antwortet das Backend mit `401` — Secrets angleichen.
+Der Dump enthält auch Tenants (inkl. `api_secret`), Tenant-Admins und die Formular-Konfiguration (`form_configs`; ab 3.1 auch veröffentlichte Surveys/Themes `form_resources`, Entwürfe `form_drafts` und den Verlauf `form_revisions` — ein Restore stellt Formulare samt Historie wieder her). **Nicht** enthalten sind die `.env`-Dateien: Secrets (`API_SECRET_KEY`, `PDF_TOKEN_SECRET`, `TENANT_API_SECRET` im Frontend) separat und verschlüsselt sichern. Weicht `tenants.api_secret` nach dem Restore vom Frontend-Secret ab, antwortet das Backend mit `401` — Secrets angleichen.
 
 **Uploads Restore:**
 
@@ -1083,7 +1083,7 @@ docker compose down -v
 - [MIGRATION-3.0.md](MIGRATION-3.0.md) - Upgrade von 2.x, Rollback
 - [MULTI-TENANT.md](MULTI-TENANT.md) - Tenants, Secrets, Isolierung
 - [CI_CD.md](CI_CD.md) - Automated Deployment
-- [CLAUDE.md](CLAUDE.md) - Full Documentation
+- [CLAUDE.md](../CLAUDE.md) - Full Documentation
 
 **Checklisten:**
 - [ ] Backup-Prozedur getestet (monatlich)
