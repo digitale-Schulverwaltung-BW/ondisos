@@ -456,6 +456,8 @@ return [
         'btn' => [
             'check' => 'Prüfen',
             'save_draft' => 'Entwurf speichern',
+            'save_and_preview' => 'Entwurf speichern & Vorschau',
+            'preview' => 'Vorschau',
             'publish' => 'Veröffentlichen',
             'upload' => 'Datei laden',
             'discard' => 'Entwurf verwerfen',
@@ -495,5 +497,29 @@ return [
             '4' => 'Für eine Änderung am bestehenden Formular: den Text aus dem Editor hier („JSON kopieren") im Creator unter „JSON Editor" einfügen.',
             'license' => 'Der Creator gehört nicht zu Ondisos; die Online-Version von surveyjs.io wird von SurveyJS betrieben.',
         ],
+    ],
+    /**
+     * Survey preview (3.1): form_preview.php
+     */
+    'preview' => [
+        'title' => 'Vorschau',
+        'heading' => 'Vorschau von „{{form}}"',
+        'back_to_editor' => 'Zurück zum Survey-Editor',
+        'source' => 'Welche Fassung',
+        'draft' => 'Entwurf',
+        'live' => 'Veröffentlicht',
+        'width' => 'Breite',
+        'phone' => 'Handy',
+        'tablet' => 'Tablet',
+        'desktop' => 'Desktop',
+        'showing_draft' => 'Gezeigt wird der Entwurf. Besucher sehen noch die veröffentlichte Fassung.',
+        'showing_live' => 'Gezeigt wird die veröffentlichte Fassung.',
+        'invalid_title' => 'Die Vorschau wird nicht angezeigt.',
+        'invalid' => 'Diese Survey enthält Inhalte, die nicht angezeigt werden dürfen. Bitte im Survey-Editor korrigieren:',
+        'nothing' => 'Zu diesem Formular gibt es im Backend noch keine Survey, die sich anzeigen ließe (sie liegt als Datei im Frontend).',
+        'to_editor' => 'Survey im Editor einfügen',
+        'no_theme' => 'Das Theme (Farben, Schrift) liegt als Datei im Frontend und fehlt in der Vorschau. Das Formular sieht für Besucher also etwas anders aus.',
+        'note' => 'Vorschau: Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.',
+        'completed' => 'Vorschau: Das Formular wurde nicht abgeschickt, es wird nichts gespeichert.',
     ],
 ];

@@ -188,6 +188,9 @@ require __DIR__ . '/../inc/header.php';
             <?php endif; ?>
             <?php if ($form['has_draft']): ?><p class="mb-0 mt-2"><span class="badge text-bg-warning"><?= ff_e(M::get('forms.draft', 'Entwurf')) ?></span></p><?php endif; ?>
             <a href="form_survey.php?form=<?= urlencode($formKey) ?>" class="btn btn-outline-primary mt-3"><?= ff_e(M::get('forms.survey.edit', 'Survey bearbeiten')) ?></a>
+            <?php if ($form['survey_source'] === 'database' || $form['has_draft']): ?>
+                <a href="form_preview.php?form=<?= urlencode($formKey) ?>&source=<?= $form['has_draft'] ? 'draft' : 'live' ?>" class="btn btn-outline-secondary mt-3"><?= ff_e(M::get('survey_editor.btn.preview', 'Vorschau')) ?></a>
+            <?php endif; ?>
         </div>
     </div>
 

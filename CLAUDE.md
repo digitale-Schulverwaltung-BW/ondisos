@@ -76,8 +76,9 @@ projekt/
     ├── public/
     │   ├── index.php · detail.php · trash.php · dashboard.php
     │   ├── forms.php · form_edit.php   # Formular-Editor (3.1): Liste, anlegen, Konfiguration als HTML-Formular, Verlauf, löschen
+    │   ├── form_preview.php · form_preview_frame.php   # Vorschau (3.1): Entwurf/veröffentlichte Survey wie für Besucher, in einem per CSP sandboxed Frame
     │   ├── form_survey.php             # Survey-Editor (3.1): JSON einfügen/laden, prüfen (mit Zeilen), Diff, Entwurf, veröffentlichen, wiederherstellen
-    │   ├── assets/                     # survey-editor.js; codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
+    │   ├── assets/                     # preview/ (SurveyJS-Laufzeit, Kopie des Frontends; tools/sync-preview-assets.sh), survey-editor.js; codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
     │   ├── login.php · logout.php
@@ -98,7 +99,7 @@ projekt/
     │   │                  FormConfigRepository · FormResourceRepository · FormDraftRepository · FormRevisionRepository  (3.1, alle tenant-gefiltert)
     │   ├── Forms/         (3.1, reine Logik ohne DB) ValidationResult · Identifiers · SurveyValidator · HtmlPolicy · ThemeValidator
     │   │                  SurveyFieldExtractor · SurveyLinter · FormConfigSchema · FormConfigValidator · FormConfigFormMapper · EditorAccess · JsonLocator · SurveyDiff · ServiceResult
-    │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController · FormEditorController · SurveyEditorController
+    │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController · FormEditorController · SurveyEditorController · SurveyPreviewController
     │   ├── Services/      AnmeldungService · StatusService · ExportService · SpreadsheetBuilder
     │   │                  ExpungeService · RequestExpungeService
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
@@ -737,7 +738,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 828 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 158 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 839 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 168 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

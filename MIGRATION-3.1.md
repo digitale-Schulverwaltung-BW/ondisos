@@ -74,6 +74,19 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
 9. **Hinweis im Editor:** Ohne Empfänger und ohne Speichern im Backend meldet die Konfigurations-Seite nach dem Speichern, dass das Formular
    vom Frontend nicht angezeigt wird.
 
+10. **Vorschau** (Knöpfe *Vorschau* und *Entwurf speichern & Vorschau* im Survey-Editor): zeigt den Entwurf oder die veröffentlichte Survey so, wie
+    Besucher sie sehen (SurveyJS-Laufzeit, Theme, dynamische Platzhalter), mit Umschalter für Handy-/Tablet-/Desktop-Breite. „Abschicken" sendet
+    nichts, es wird nichts gespeichert.
+    - Sicherheit: Die Vorschau läuft in einem Frame mit `Content-Security-Policy: sandbox allow-scripts` (eigener, leerer Origin — kein Zugriff auf
+      Sitzung und Admin-Seiten), Skripte nur per Nonce, und es wird nur gerendert, was die Validatoren bestehen (eine früher per SQL gespeicherte
+      Survey mit `<img onerror>` wird mit Begründung abgelehnt).
+    - **Docker:** Der Frame muss vom Admin-Seiten-Origin eingebettet werden dürfen. Die mitgelieferte Apache-Konfiguration sendet deshalb
+      `X-Frame-Options: SAMEORIGIN` statt `DENY` (Einbetten durch fremde Seiten bleibt verboten). **Backend-Image neu bauen**
+      (`docker compose build backend`), sonst bleibt die Vorschau leer. Eigene Apache/Nginx-Konfiguration: `SAMEORIGIN` setzen, siehe `backend/public/.htaccess.example`.
+    - Die Vorschau bringt eigene Kopien der SurveyJS-Dateien mit (`backend/public/assets/preview/`, ca. 2 MB); nach einem SurveyJS-Update im Frontend
+      `backend/tools/sync-preview-assets.sh` ausführen (ein Test schlägt sonst an).
+    - Das Theme wird angezeigt, wenn es im Backend liegt (Import); liegt es nur als Datei im Frontend, fehlt es in der Vorschau (mit Hinweis).
+
 ## Frontend / WordPress
 
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).

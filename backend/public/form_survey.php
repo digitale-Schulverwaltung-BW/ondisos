@@ -72,6 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $report     = $out['report'];
             break;
 
+        case 'save_draft_preview':
+            $out = $surveyEditor->saveDraft($formKey, $text);
+            if ($out['status'] === 'saved') {
+                header('Location: form_preview.php?form=' . urlencode($formKey) . '&source=draft');
+                exit;
+            }
+            $postedText = $text;
+            $report     = $out['report'];
+            break;
+
         case 'discard':
             $surveyEditor->discard($formKey);
             editor_flash('success', M::get('survey_editor.draft_discarded', 'Der Entwurf wurde verworfen.'));
@@ -267,6 +277,10 @@ require __DIR__ . '/../inc/header.php';
         <div class="d-flex flex-wrap gap-2 mb-4">
             <button type="submit" name="action" value="check" class="btn btn-outline-primary"><?= ff_e(M::get('survey_editor.btn.check', 'Prüfen')) ?></button>
             <button type="submit" name="action" value="save_draft" class="btn btn-primary"><?= ff_e(M::get('survey_editor.btn.save_draft', 'Entwurf speichern')) ?></button>
+            <button type="submit" name="action" value="save_draft_preview" class="btn btn-outline-primary"><?= ff_e(M::get('survey_editor.btn.save_and_preview', 'Entwurf speichern & Vorschau')) ?></button>
+            <?php if ($view['draft'] !== null || $view['live'] !== null): ?>
+                <a class="btn btn-outline-secondary" href="form_preview.php?form=<?= urlencode($formKey) ?>&source=<?= $view['draft'] !== null ? 'draft' : 'live' ?>"><?= ff_e(M::get('survey_editor.btn.preview', 'Vorschau')) ?></a>
+            <?php endif; ?>
         </div>
 
         <div class="card mb-4">
