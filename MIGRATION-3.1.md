@@ -58,6 +58,9 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    - Beim Veröffentlichen kann die Formular-Version erhöht werden (Vorschlag aus der bisherigen, z. B. `2026-01-v2` → `2026-01-v3`).
    - Entfernte oder umbenannte Felder werden deutlich gemeldet: sie fehlen künftig in neuen Anmeldungen, im Excel-Export, in Prefill-Links und
      im PDF; bereits gespeicherte Anmeldungen behalten ihre Daten.
+   - Der Editor ist ein Code-Editor (CodeMirror 6, MIT-lizenziert) mit Zeilennummern, JSON-Farben und Fehlermarkierung. Das fertige
+     Bundle liegt unter `backend/public/assets/codemirror/` (mit Lizenztext); **Node.js ist für den Betrieb nicht nötig**, nur zum Neubauen
+     (`backend/tools/survey-editor-bundle/README.md`). Fehlt das Bundle, arbeitet die Seite mit einer normalen Textarea.
    - Liegt die Survey eines Formulars noch als Datei im Frontend, ist der Editor zunächst leer; zuerst importieren (Abschnitt 3) oder
      den Text aus dem Creator einfügen. Mit der ersten Veröffentlichung übernimmt das Backend das Formular.
 

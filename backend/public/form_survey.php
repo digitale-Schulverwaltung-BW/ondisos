@@ -357,5 +357,25 @@ require __DIR__ . '/../inc/header.php';
     <?php endif; ?>
 </div>
 
+<?php
+// Findings for the code editor (marks them on their line). Escaped for use inside a <script> element.
+$diagnostics = [];
+if ($report !== null) {
+    foreach ($report['errors'] as $e) {
+        if ($e['line'] !== null) {
+            $diagnostics[] = ['line' => $e['line'], 'message' => ($e['path'] !== '' ? $e['path'] . ': ' : '') . $e['message'], 'severity' => 'error'];
+        }
+    }
+    foreach ($report['warnings'] as $w) {
+        if ($w['line'] !== null) {
+            $diagnostics[] = ['line' => $w['line'], 'message' => ($w['path'] !== '' ? $w['path'] . ': ' : '') . $w['message'], 'severity' => 'warning'];
+        }
+    }
+}
+?>
+<script type="application/json" id="survey-diagnostics"><?= json_encode($diagnostics, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php if (is_file(__DIR__ . '/assets/codemirror/survey-editor-cm.js')): ?>
+<script src="assets/codemirror/survey-editor-cm.js"></script>
+<?php endif; ?>
 <script src="assets/survey-editor.js"></script>
 <?php require __DIR__ . '/../inc/footer.php'; ?>

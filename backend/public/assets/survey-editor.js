@@ -8,6 +8,21 @@
         return;
     }
 
+    // Code editor (CodeMirror, optional bundle): replaces the textarea visually, which keeps holding the text.
+    var cm = null;
+    if (window.OndisosSurveyEditor) {
+        var diagnostics = [];
+        try {
+            diagnostics = JSON.parse(document.getElementById('survey-diagnostics').textContent || '[]');
+        } catch (e) { /* no markers */ }
+        try {
+            cm = window.OndisosSurveyEditor.attach(area, { diagnostics: diagnostics });
+        } catch (e) {
+            cm = null;
+            area.style.display = '';
+        }
+    }
+
     // "JSON kopieren"
     var copy = document.getElementById('se-copy');
     if (copy) {
@@ -35,6 +50,10 @@
             if (!line) {
                 return;
             }
+            if (cm) {
+                cm.goto(line);
+                return;
+            }
             var lines = area.value.split('\n');
             var start = 0;
             for (var i = 0; i < line - 1 && i < lines.length; i++) {
@@ -60,9 +79,9 @@
         }
     });
 
-    // Tab inserts two spaces instead of leaving the field.
+    // Tab inserts two spaces instead of leaving the field (the code editor does this itself).
     area.addEventListener('keydown', function (event) {
-        if (event.key === 'Tab' && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        if (!cm && event.key === 'Tab' && !event.shiftKey && !event.ctrlKey && !event.metaKey && !event.altKey) {
             event.preventDefault();
             var s = area.selectionStart;
             area.value = area.value.slice(0, s) + '  ' + area.value.slice(area.selectionEnd);

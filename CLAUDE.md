@@ -76,6 +76,7 @@ projekt/
     │   ├── index.php · detail.php · trash.php · dashboard.php
     │   ├── forms.php · form_edit.php   # Formular-Editor (3.1): Liste, anlegen, Konfiguration als HTML-Formular, Verlauf, löschen
     │   ├── form_survey.php             # Survey-Editor (3.1): JSON einfügen/laden, prüfen (mit Zeilen), Diff, Entwurf, veröffentlichen, wiederherstellen
+    │   ├── assets/                     # survey-editor.js; codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
     │   ├── login.php · logout.php
