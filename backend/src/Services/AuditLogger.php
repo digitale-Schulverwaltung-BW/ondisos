@@ -94,6 +94,17 @@ class AuditLogger
         ]);
     }
 
+    /**
+     * Log a change made through the form editor (config saved, survey published, form created/deleted, ...).
+     *
+     * @param string $event   e.g. form_created, form_config_saved, form_draft_saved, form_published, form_rolled_back
+     * @param array<string,mixed> $details no secrets, no survey contents: form key, hashes, counts
+     */
+    public static function formEvent(string $event, string $formKey, array $details = []): void
+    {
+        self::log($event, ['form' => $formKey] + $details);
+    }
+
     // =========================================================================
     // Log rotation
     // =========================================================================

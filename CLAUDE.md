@@ -64,7 +64,7 @@ projekt/
 │
 ├── database/
 │   ├── schema.sql                # Neuinstallation (Tenant 1 mit Platzhalter-Secret!)
-│   └── migrations/               # einzelne SQL-Migrationen (z. B. add_pdf_config_column.sql)
+│   └── migrations/               # einzelne SQL-Migrationen (z. B. add_pdf_config_column.sql, add_form_editor_tables.sql)
 │
 └── backend/                       # Intranet-Admin
     ├── migrate.php               # Schema-Migration auf 3.0 (idempotent)
@@ -87,12 +87,16 @@ projekt/
     │   ├── Config/        Config · Database · EnvLoader · FormConfig · TenantContext
     │   ├── Models/        Anmeldung · AnmeldungStatus (Enum)
     │   ├── Repositories/  AnmeldungRepository · TenantRepository · TenantAdminRepository
+    │   │                  FormConfigRepository · FormResourceRepository · FormDraftRepository · FormRevisionRepository  (3.1, alle tenant-gefiltert)
+    │   ├── Forms/         (3.1, reine Logik ohne DB) ValidationResult · Identifiers · SurveyValidator · HtmlPolicy · ThemeValidator
+    │   │                  SurveyFieldExtractor · SurveyLinter · FormConfigSchema · FormConfigValidator · ServiceResult
     │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController
     │   ├── Services/      AnmeldungService · StatusService · ExportService · SpreadsheetBuilder
     │   │                  ExpungeService · RequestExpungeService
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
     │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger · UploadCleanupService
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
+    │   │                  FormPublishService · SurveyImportService  (3.1: Formular-Editor, Veröffentlichen, Wiederherstellen, Import)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
     ├── inc/               bootstrap · auth · csrf · header · footer
@@ -213,6 +217,11 @@ CREATE TABLE form_configs (        -- Formular-Konfiguration je Tenant
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_tenant_form (tenant_id, form_key)
 );
+
+-- 3.1 (Formular-Editor, Details: PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
+-- form_resources:  veröffentlichte Surveys/Themes je Tenant, UNIQUE (tenant_id, kind, name), sha256 = Versions-Token
+-- form_drafts:     höchstens ein Survey-Entwurf je Formular (based_on_sha = Live-Stand beim Anlegen → Konflikterkennung)
+-- form_revisions:  Historie, nur anhängen (config | survey | theme), Aufbewahrung 50 je Formular und Typ
 
 CREATE TABLE anmeldungen (
     id INT(11) AUTO_INCREMENT PRIMARY KEY,
@@ -705,13 +714,14 @@ backend/tests/
 │   ├── Repositories/          # Anmeldung (Adjacent/Tenant-Lookup), Tenant*, TenantAdmin
 │   ├── Services/              # u. a. HmacValidation, SecretPolicy, BackendApiClient(+Signing),
 │   │                          # FormConfigLoader, PdfToken, RateLimiter, VirusScan, AuditLogger, …
+│   ├── Forms/                 # 3.1: SurveyValidator, HtmlPolicy, FormConfigValidator, SurveyLinter, Schema-Drift
 │   ├── Upload/                # MIME, Sicherheit, Pfad-Isolierung
 │   ├── Utils/                 # DataFormatter
 │   └── Validators/
-└── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest)
+└── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 513 Unit-Tests, 55,7 % Line-Coverage (`composer test -- --testsuite=Unit`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 628 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 63 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

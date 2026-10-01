@@ -322,6 +322,59 @@ try {
         echo "SKIPPED (already exists)\n";
     }
 
+    // Step 8: Create form_resources table (3.1 form editor)
+    echo "Step 8: Create form_resources table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS form_resources (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id  INT          NOT NULL,
+    kind       ENUM('survey','theme') NOT NULL,
+    name       VARCHAR(100) NOT NULL,
+    content    LONGTEXT     NOT NULL,
+    sha256     CHAR(64)     NOT NULL,
+    created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP,
+    updated_by VARCHAR(100) NULL,
+    UNIQUE KEY uq_tenant_kind_name (tenant_id, kind, name),
+    FOREIGN KEY fk_form_resource_tenant (tenant_id)
+        REFERENCES tenants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
+    // Step 9: Create form_drafts table (3.1 form editor)
+    echo "Step 9: Create form_drafts table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS form_drafts (
+    id           INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id    INT          NOT NULL,
+    form_key     VARCHAR(100) NOT NULL,
+    survey_json  LONGTEXT     NOT NULL,
+    based_on_sha CHAR(64)     NULL,
+    updated_at   DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updated_by   VARCHAR(100) NULL,
+    UNIQUE KEY uq_tenant_form_draft (tenant_id, form_key),
+    FOREIGN KEY fk_form_draft_tenant (tenant_id)
+        REFERENCES tenants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
+    // Step 10: Create form_revisions table (3.1 form editor)
+    echo "Step 10: Create form_revisions table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS form_revisions (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    tenant_id  INT          NOT NULL,
+    form_key   VARCHAR(100) NOT NULL,
+    kind       ENUM('config','survey','theme') NOT NULL,
+    name       VARCHAR(100) NULL,
+    content    LONGTEXT     NOT NULL,
+    sha256     CHAR(64)     NOT NULL,
+    note       VARCHAR(255) NULL,
+    created_by VARCHAR(100) NULL,
+    created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_tenant_form (tenant_id, form_key, created_at),
+    FOREIGN KEY fk_form_revision_tenant (tenant_id)
+        REFERENCES tenants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
     echo "Migration complete.\n";
 } catch (\Throwable $e) {
     fwrite(STDERR, "Migration failed: {$e->getMessage()}\n");
