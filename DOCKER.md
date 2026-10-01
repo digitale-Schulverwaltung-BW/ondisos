@@ -642,7 +642,7 @@ sudo systemctl restart ondisos-backend
 **Methode 1: .env-Datei (Einfach)**
 
 ```bash
-# backend/.env
+# Root-.env (neben docker-compose.yml)
 PDF_TOKEN_SECRET=<generiert mit: openssl rand -hex 32>
 MYSQL_ROOT_PASSWORD=secure-root-password-here
 MYSQL_PASSWORD=secure-user-password-here

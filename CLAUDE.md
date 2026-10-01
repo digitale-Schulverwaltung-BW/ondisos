@@ -245,7 +245,7 @@ CREATE TABLE anmeldungen (
 
 ## ⚙️ Konfiguration
 
-Docker: die **Root-`.env`** ist die Single Source of Truth (DB-Credentials, Secrets). `backend/.env` ist optional und nur für Backend-Overrides — **Werte in `backend/.env` überschreiben die Container-Umgebung** (`EnvLoader::load()`). Ohne Docker stehen alle Backend-Werte in `backend/.env`.
+Docker: die **Root-`.env`** ist die Single Source of Truth (DB-Credentials, Secrets). `backend/.env` ist optional; **Werte in `backend/.env` überschreiben die Container-Umgebung** (`EnvLoader::load()`). Im Docker-Betrieb erzeugt der Entrypoint die Datei aus der Container-Umgebung und schreibt sie bei **jedem Start** neu (Marker `# GENERATED-BY-ENTRYPOINT` in Zeile 1; nicht verwaltete Zusatz-Schlüssel bleiben erhalten, eine Datei ohne Marker wird nie angefasst). Geänderte Compose-Variablen brauchen `docker compose up -d backend` (nicht `restart`). Ohne Docker stehen alle Backend-Werte in `backend/.env`.
 
 ### Backend (.env)
 
@@ -644,7 +644,7 @@ curl http://your-server:9080/api/health.php
 
 **Credentials-Struktur:**
 - ✅ `/.env` - Core Credentials (DB_USER, DB_PASS, Secrets) — **Single Source of Truth**
-- ✅ `/backend/.env` - Optional, nur für Backend-spezifische Overrides (überschreibt die Container-Umgebung!)
+- ✅ `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt (jeder Start), überschreibt die Container-Umgebung; Zusatz-Schlüssel bleiben erhalten
 - ✅ Automatisches Mapping: `DB_USER` → `MYSQL_USER`, keine Duplikation!
 - ✅ Frontend (manuell): `frontend/.env` mit `BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`
 

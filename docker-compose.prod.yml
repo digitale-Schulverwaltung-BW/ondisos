@@ -22,8 +22,11 @@ services:
     ports:
       - "9080:80"  # Or configure reverse proxy
     env_file:
-      - ./backend/.env  # Optional: Backend-specific overrides (rate limits, virus scan, etc.)
-                        # Core credentials (DB_USER, DB_PASS) come from root .env
+      # Optional: Backend-specific overrides (rate limits, virus scan, etc.).
+      # Core credentials (DB_USER, DB_PASS) come from root .env.
+      # `required: false` needs Docker Compose >= 2.24; without it a missing file aborts `up`.
+      - path: ./backend/.env
+        required: false
     environment:
       # Override with production values
       - APP_ENV=production

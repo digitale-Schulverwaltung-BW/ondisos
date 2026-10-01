@@ -63,7 +63,7 @@ Für Production stehen verschiedene Setup-Varianten zur Verfügung:
 #### 1. Backend als Docker Container
 
 **Voraussetzungen:**
-- Docker Engine 20.10+ oder Docker Desktop (inkl. Compose Plugin)
+- Docker Engine 20.10+ oder Docker Desktop (inkl. Compose Plugin **≥ 2.24**, für das optionale `backend/.env`)
 
 **Setup:**
 
@@ -104,7 +104,7 @@ können die `forms-config.php`-Dateien gelöscht werden.
 
 Das Projekt verwendet eine **Root-`.env`** als Single Source of Truth:
 - `/.env` - Core-Credentials (DB_USER, DB_PASS, Secrets) ← **HIER ALLES WICHTIGE**
-- `/backend/.env` - Optional, nur für Backend-spezifische Overrides
+- `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt (siehe [unten](#backendenv-im-docker-betrieb))
 
 Dadurch **keine Duplikation** zwischen `DB_USER` und `MYSQL_USER` — beide Werte kommen aus den gleichen Variablen in der Root-`.env`.
 
@@ -190,8 +190,24 @@ grep -q "^\.env$" .gitignore || echo ".env" >> .gitignore
 
 # Struktur (kein backend/.env nötig für Credentials):
 # /.env                  ← Alle Secrets HIER
-# /backend/.env          ← Optional, nur für Overrides (Rate Limits, etc.)
+# /backend/.env          ← Optional; im Docker-Betrieb vom Entrypoint erzeugt, eigene Zusätze bleiben erhalten
 ```
+
+#### backend/.env im Docker-Betrieb
+
+ Das Backend liest im Container `backend/.env` — und diese Datei gewinnt gegen die
+Container-Umgebung. Der Entrypoint **erzeugt** sie beim Start aus der Container-Umgebung (Root-`.env` → `docker-compose`) und schreibt sie bei
+**jedem Start neu** (Marker `# GENERATED-BY-ENTRYPOINT` in Zeile 1). Daraus folgt:
+
+- Änderungen in der Root-`.env` wirken nach `docker compose up -d backend` (der Container wird dabei neu erstellt; ein bloßes `docker compose restart backend`
+  übernimmt geänderte Compose-Variablen **nicht**).
+- Eigene Zusatz-Einstellungen (PDF-Logo, Rate-Limits, Virenscan, …) kannst du an die Datei anhängen: Schlüssel, die der Entrypoint nicht selbst
+  verwaltet, bleiben beim Neuschreiben erhalten. Die verwalteten Schlüssel (DB, Secrets, `ADMIN_*`, `AUTH_ENABLED`, …) kommen immer aus der Umgebung.
+- Wer die Datei selbst pflegen will, löscht die Marker-Zeile oder legt `backend/.env` aus `backend/.env.example` an: Sie wird dann nie angefasst, hat aber
+  Vorrang vor der Root-`.env` — alle Werte (auch DB und Admin) pflegst du dann dort.
+- Dateien aus 2.x (erste Zeile `# Application`, ohne Marker) werden beim ersten Start nach dem Update gesichert (`backend/.env.bak`) und neu erzeugt;
+  eigene Zusatz-Zeilen bleiben erhalten.
+
 
 **API-Secret (`API_SECRET_KEY`):** Wird beim Migrieren das Secret von Tenant 1 ("Default"). Das
 Frontend signiert alle Anfragen an das Backend mit diesem Secret (`TENANT_API_SECRET` in der
@@ -209,13 +225,13 @@ is a known placeholder/default`). Weitere Tenants und ihre Secrets: [MULTI-TENAN
 # 2. Passwort-Hash generieren
 docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
 
-# 3. Hash in backend/.env (oder Root .env) eintragen — in EINFACHE Anführungszeichen,
-#    sonst interpretiert Docker Compose das `$` in der Root-.env als Variable
+# 3. Benutzername und Hash in die ROOT-.env eintragen — den Hash in EINFACHE Anführungszeichen,
+#    sonst interpretiert Docker Compose das `$` als Variable
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH='$2y$10$abc123...'
 
-# 4. Container neu starten
-docker compose restart backend
+# 4. Container NEU ERSTELLEN (ein bloßes `restart` übernimmt geänderte Compose-Variablen nicht)
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend
 ```
 
 ---
