@@ -1143,6 +1143,10 @@ php -l backend/config/messages.local.php
 → Backend .env: ALLOWED_ORIGINS anpassen
 → Check api/submit.php CORS Headers
 
+### `Access denied for user 'anmeldung'` beim Start (Migration)
+→ Das MySQL-Volume behält die Zugangsdaten vom **ersten** Start; spätere Änderungen von `DB_PASS`/`MYSQL_ROOT_PASSWORD` in der `.env` kommen nicht an
+→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert)
+
 ### Admin-Login abgelehnt, obwohl das Passwort stimmt
 → Meist ein beschädigter `ADMIN_PASSWORD_HASH`: In der Root-`.env` MUSS der Hash in einfachen Anführungszeichen stehen, sonst expandiert Docker Compose die `$…`-Teile (Länge im Container ≠ 60: `docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'`)
 → Danach `docker compose up -d backend` (nicht `restart`); Backend-Log: `⚠️ ADMIN_PASSWORD_HASH looks damaged`
