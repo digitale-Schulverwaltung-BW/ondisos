@@ -95,6 +95,10 @@ Das Verzeichnis `ondisos-frontend` ist **kein** eigenes Plugin und wird nicht ak
 Das WordPress-Benutzerkonto (z. B. `www-data`) muss beide Verzeichnisse lesen können
 (Verzeichnisse 755, Dateien 644).
 
+WordPress legt den Formular-Cache unter `wp-content/uploads/ondisos-cache/` an (ab 3.1; beschreibbar wie der Rest von `uploads`).
+Er enthält die zuletzt vom Backend gelieferte Fassung eines Formulars und hält das Formular verfügbar, wenn das Backend
+kurz nicht erreichbar ist. Ohne Schreibrecht arbeitet das Plugin ohne Cache.
+
 ### Plugin aktivieren
 
 WordPress-Admin → *Plugins* → **„ondisos - Onboarding Digital Souverän + Open Source"** → *Aktivieren*.
@@ -174,6 +178,7 @@ Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](.
 | 403 Forbidden auf Plugin-Dateien | Variante A: `Options +FollowSymLinks`; Dateirechte und Besitzer prüfen |
 | Assets (SurveyJS/Fonts) 404 | Variante A: Existiert `wordpress-plugin/frontend-assets` (Symlink → `../frontend/public`)? Variante B: `plugins/ondisos-frontend/public/assets/` vorhanden? |
 | Formular lädt, PDF-Link schlägt fehl | Backend-URL und Erreichbarkeit vom WordPress-Server aus prüfen; Plugin-Proxy: `admin-ajax.php?action=ondisos_pdf_download` |
+| Formular zeigt eine alte Fassung | Der Cache wird bei jedem Aufruf beim Backend per ETag geprüft; eine alte Fassung erscheint nur, wenn das Backend nicht erreichbar ist (dann bis zu 7 Tage). Backend-Erreichbarkeit prüfen; im Zweifel `wp-content/uploads/ondisos-cache/` leeren |
 | Permission denied | `sudo chown -R www-data:www-data <ondisos>/wordpress-plugin <ondisos>/frontend` |
 
 Debug-Log: `define('WP_DEBUG', true); define('WP_DEBUG_LOG', true);` → `wp-content/debug.log`.

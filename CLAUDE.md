@@ -43,7 +43,9 @@ projekt/
 │   ├── src/
 │   │   ├── Config/
 │   │   │   ├── FormConfig.php        # Config-Container (wird per load() befüllt)
-│   │   │   └── FormConfigLoader.php  # holt/merged die Config eines Formulars
+│   │   │   ├── FormConfigLoader.php  # holt/merged die Config (+ Survey/Theme) eines Formulars
+│   │   │   ├── FormBundleCache.php   # Datei-Cache (ETag, Stale-if-error), frontend/cache/forms
+│   │   │   └── SurveySource.php      # Survey/Theme: Backend zuerst, sonst frontend/surveys/*.json
 │   │   ├── Services/
 │   │   │   ├── AnmeldungService.php
 │   │   │   ├── BackendApiClient.php  # signiert Requests, hängt ?tenant= an
@@ -131,13 +133,19 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 ```
 1. Browser ruft frontend/public/index.php?form=bs auf (oder eine WordPress-Seite mit [ondisos form="bs"])
    ↓
-2. FormConfigLoader::ensure('bs') → BackendApiClient::fetchFormConfig()
-   GET {BACKEND_API_URL}/form-config.php?form=bs&tenant={TENANT_SLUG}
+2. FormConfigLoader::ensureWithSurvey('bs') → BackendApiClient::fetchFormBundle()
+   GET {BACKEND_API_URL}/form-config.php?form=bs&tenant={TENANT_SLUG}&with=survey
+   Header If-None-Match: <ETag der zwischengespeicherten Fassung>
    ↓
-3. Antwort {"success":true,"config":{…}} wird in FormConfig geladen
-   (Backend nicht erreichbar / Formular unbekannt ⇒ Wartungsseite 503 bzw. Fehlermeldung im Plugin)
+3. Backend: Config + veröffentlichte Survey/Theme (nie Entwürfe) + ETag; unverändert ⇒ 304.
+   Antwort {"success":true,"config":{…},"survey_json":"…"|null,"theme_json":"…"|null}
+   Das Frontend legt sie in FormBundleCache ab (frontend/cache/forms, WordPress: uploads/ondisos-cache)
    ↓
-4. Survey-Definition (frontend/surveys/bs.json) + Theme werden gerendert
+4. Backend nicht erreichbar ⇒ die zwischengespeicherte Fassung (höchstens 7 Tage alt) wird ausgeliefert;
+   ohne Cache bzw. bei unbekanntem Formular/Tenant ⇒ Wartungsseite 503 bzw. Fehlermeldung im Plugin
+   ↓
+5. SurveySource: Survey/Theme aus dem Backend, sonst Datei frontend/surveys/<form>.json (Fallback wie in 3.0);
+   JsonEmbed kodiert beides neu (\u003C …), damit „</script>" im JSON nie aus dem <script>-Element ausbricht
 ```
 
 ### Submission Flow (Neue Anmeldung)
@@ -721,7 +729,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 628 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 63 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 703 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 72 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

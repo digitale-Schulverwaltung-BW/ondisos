@@ -84,7 +84,7 @@ class FormConfig
             throw new \InvalidArgumentException("Unknown form: $formKey");
         }
 
-        return __DIR__ . '/../../surveys/' . $config['form'];
+        return __DIR__ . '/../../surveys/' . self::safeFileName($config['form'] ?? '');
     }
 
     /**
@@ -98,7 +98,18 @@ class FormConfig
             throw new \InvalidArgumentException("Unknown form: $formKey");
         }
 
-        return __DIR__ . '/../../surveys/' . $config['theme'];
+        return __DIR__ . '/../../surveys/' . self::safeFileName($config['theme'] ?? '');
+    }
+
+    /**
+     * File names from the configuration end up in a path: only plain names (no directories) are allowed.
+     */
+    private static function safeFileName(mixed $name): string
+    {
+        if (!is_string($name) || preg_match('/^[A-Za-z0-9_][A-Za-z0-9._-]*\.json$/D', $name) !== 1) {
+            throw new \InvalidArgumentException('Invalid survey file name in form configuration');
+        }
+        return $name;
     }
 
     /**

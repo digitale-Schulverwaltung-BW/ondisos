@@ -304,6 +304,12 @@ mkdir -p cache
 chmod 755 cache
 ```
 
+**Formular-Cache (ab 3.1):** Das Frontend legt die vom Backend gelieferte Formular-Fassung unter `frontend/cache/forms/`
+ab (anderer Ort: `FORM_CACHE_DIR` in der `.env`). Der Webserver-Benutzer muss dort schreiben dürfen (`chown www-data:www-data cache`).
+Damit holt das Frontend bei jedem Aufruf nur noch ein „304 Not Modified" und liefert das Formular weiter aus, wenn das Backend
+kurz nicht erreichbar ist (bis zu 7 Tage alte Fassung). Ist das Verzeichnis nicht beschreibbar, funktioniert alles weiter,
+nur ohne Cache und ohne diesen Ausfallschutz. Die Dateien beginnen mit einer PHP-Schutzzeile und sind nicht als Text abrufbar.
+
 Eine `forms-config.php` ist im Frontend **nicht mehr nötig**: Die Formular-Konfiguration kommt aus
 dem Backend (siehe oben). Die Survey-Definitionen liegen weiter in `frontend/surveys/`.
 

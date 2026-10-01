@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Ondisos;
 
 use Frontend\Config\FormConfig;
+use Frontend\Config\SurveySource;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -51,15 +52,16 @@ class Shortcode
         }
 
         // Check if form exists
-        if (!Form_Config_Loader::ensure($form_key)) {
+        if (!Form_Config_Loader::ensure_with_survey($form_key)) {
             return $this->render_error('Error: Unknown form "' . esc_html($form_key) . '" (or backend unavailable)');
         }
 
-        // Load survey and theme JSON
+        // Survey and theme: from the backend if it delivers them, else from the files in frontend/surveys/.
+        // Both come back re-encoded so they are safe inside a <script> element.
         try {
-            $survey_json = $this->load_survey_json($form_key);
-            $theme_json = $this->load_theme_json($form_key);
-        } catch (\Exception $e) {
+            $survey_json = SurveySource::survey($form_key);
+            $theme_json = SurveySource::theme($form_key);
+        } catch (\RuntimeException $e) {
             return $this->render_error('Error: ' . esc_html($e->getMessage()));
         }
 
@@ -80,64 +82,6 @@ class Shortcode
 
         // Render container
         return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data);
-    }
-
-    /**
-     * Load survey JSON for a form
-     *
-     * @param string $form_key Form key
-     * @return string JSON string
-     * @throws \RuntimeException If file not found or invalid
-     */
-    private function load_survey_json(string $form_key): string
-    {
-        $file_path = FormConfig::getFormPath($form_key);
-
-        if (!file_exists($file_path)) {
-            throw new \RuntimeException("Survey file not found: $file_path");
-        }
-
-        $json = file_get_contents($file_path);
-        if ($json === false) {
-            throw new \RuntimeException("Failed to read survey file: $file_path");
-        }
-
-        // Validate JSON
-        json_decode($json);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("Invalid JSON in survey file: " . json_last_error_msg());
-        }
-
-        return $json;
-    }
-
-    /**
-     * Load theme JSON for a form
-     *
-     * @param string $form_key Form key
-     * @return string JSON string
-     * @throws \RuntimeException If file not found or invalid
-     */
-    private function load_theme_json(string $form_key): string
-    {
-        $file_path = FormConfig::getThemePath($form_key);
-
-        if (!file_exists($file_path)) {
-            throw new \RuntimeException("Theme file not found: $file_path");
-        }
-
-        $json = file_get_contents($file_path);
-        if ($json === false) {
-            throw new \RuntimeException("Failed to read theme file: $file_path");
-        }
-
-        // Validate JSON
-        json_decode($json);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            throw new \RuntimeException("Invalid JSON in theme file: " . json_last_error_msg());
-        }
-
-        return $json;
     }
 
     /**

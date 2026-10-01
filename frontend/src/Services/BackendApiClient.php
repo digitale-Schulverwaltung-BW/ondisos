@@ -249,6 +249,108 @@ class BackendApiClient
     }
 
     /**
+     * Fetch config, survey and theme of a form in one request (3.1).
+     *
+     * Calls GET {baseUrl}/form-config.php?form=…&tenant=…&with=survey and sends $etag (from an earlier
+     * response) as If-None-Match, so the backend answers 304 while nothing changed.
+     *
+     * Status values:
+     *   ok           → config, survey_json, theme_json (null = the backend has none, use the file), etag
+     *   not_modified → the cached copy is still current
+     *   not_found    → the form does not exist for this tenant (HTTP 404)
+     *   denied       → unknown or inactive tenant (HTTP 401/403)
+     *   error        → anything else: backend unreachable, 5xx, unreadable answer
+     *
+     * A backend from before 3.1 ignores "with=survey" and answers with the config only: that is "ok" with
+     * survey_json/theme_json = null and no etag.
+     *
+     * @return array{status:string, config?:array<string,mixed>, survey_json?:?string, theme_json?:?string, etag?:?string}
+     */
+    public function fetchFormBundle(string $formKey, string $tenantSlug, ?string $etag = null): array
+    {
+        $url = $this->baseUrl . '/form-config.php?form=' . urlencode($formKey)
+             . '&tenant=' . urlencode($tenantSlug) . '&with=survey';
+
+        $headers = ['Accept: application/json'];
+        if ($etag !== null && $etag !== '') {
+            $headers[] = 'If-None-Match: "' . $etag . '"';
+        }
+
+        $response = $this->httpGet($url, $headers);
+
+        if ($response['error'] !== null) {
+            error_log('fetchFormBundle curl error: ' . $response['error']);
+            return ['status' => 'error'];
+        }
+        if ($response['status'] === 304) {
+            return ['status' => 'not_modified'];
+        }
+        if ($response['status'] === 404) {
+            return ['status' => 'not_found'];
+        }
+        if ($response['status'] === 401 || $response['status'] === 403) {
+            return ['status' => 'denied'];
+        }
+        if ($response['status'] !== 200) {
+            return ['status' => 'error'];
+        }
+
+        $result = json_decode($response['body'], true);
+        if (!is_array($result) || ($result['success'] ?? false) !== true || !is_array($result['config'] ?? null)) {
+            return ['status' => 'error'];
+        }
+
+        $text = static fn (mixed $v): ?string => is_string($v) && $v !== '' ? $v : null;
+        $etagHeader = isset($response['headers']['etag']) ? trim($response['headers']['etag'], " \t\"") : '';
+
+        return [
+            'status'      => 'ok',
+            'config'      => $result['config'],
+            'survey_json' => $text($result['survey_json'] ?? null),
+            'theme_json'  => $text($result['theme_json'] ?? null),
+            'etag'        => $etagHeader !== '' ? $etagHeader : null,
+        ];
+    }
+
+    /**
+     * One GET request. Separate from fetchFormBundle() so tests can replace the network.
+     *
+     * @param list<string> $headers
+     * @return array{status:int, headers:array<string,string>, body:string, error:?string} header names lower-cased
+     */
+    protected function httpGet(string $url, array $headers): array
+    {
+        $responseHeaders = [];
+
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => 5,
+            CURLOPT_CONNECTTIMEOUT => 5,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$responseHeaders): int {
+                $parts = explode(':', $line, 2);
+                if (count($parts) === 2) {
+                    $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+                return strlen($line);
+            },
+        ]);
+
+        $body      = curl_exec($ch);
+        $status    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        return [
+            'status'  => $status,
+            'headers' => $responseHeaders,
+            'body'    => is_string($body) ? $body : '',
+            'error'   => $curlError !== '' ? $curlError : null,
+        ];
+    }
+
+    /**
      * Health check - test if backend is reachable.
      *
      * Uses a short 3-second timeout so a slow/unreachable backend
