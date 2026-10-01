@@ -31,6 +31,12 @@ echo "--------------------------------------------------------------------------
 echo $hash . "\n";
 echo "--------------------------------------------------------------------------------\n";
 echo "\n";
-echo "Add this to your .env file:\n";
-echo "ADMIN_PASSWORD_HASH=" . $hash . "\n";
+echo "Add this to your .env file. Keep the single quotes: Docker Compose expands every '\$...' in an\n";
+echo "unquoted value, which silently truncates the hash and makes the login fail.\n";
+echo "ADMIN_PASSWORD_HASH='" . $hash . "'\n";
+echo "\n";
+echo "Docker: after editing the root .env re-create the container (restart is not enough):\n";
+echo "  docker compose up -d backend\n";
+echo "Check that the full hash arrived (expected: 60):\n";
+echo "  docker compose exec backend sh -c 'echo \${#ADMIN_PASSWORD_HASH}'\n";
 echo "\n";

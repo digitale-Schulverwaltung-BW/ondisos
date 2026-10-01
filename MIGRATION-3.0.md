@@ -383,6 +383,7 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | PDF-Link liefert „TenantContext not initialized" | Backend älter als die Fix-Version | Backend auf aktuellen 3.0-Stand bringen |
 | Alte Uploads im Backend nicht zu öffnen | Dateien nicht nach `uploads/tenant-1/` verschoben | `php migrate.php` erneut (Step 4d); Schreibrechte auf `uploads/` prüfen |
 | `docker-compose: command not found` | Altes Kommando | `docker compose …` (Compose-Plugin installieren) |
+| Admin-Login wird abgelehnt, obwohl das Passwort stimmt; `echo ${#ADMIN_PASSWORD_HASH}` im Container zeigt nicht 60 | `ADMIN_PASSWORD_HASH` steht in der Root-`.env` ohne einfache Anführungszeichen — Compose hat den Hash zerstört | `ADMIN_PASSWORD_HASH='$2y$10$…'` (einfache Quotes), dann `docker compose up -d backend`; Warnung im Log: `ADMIN_PASSWORD_HASH looks damaged` |
 | Änderung der Root-`.env` (Secret, `ADMIN_*`) kommt im Backend nicht an | Container wurde nur neu gestartet, nicht neu erstellt; oder `backend/.env` ist von Hand angelegt (ohne Marker `# GENERATED-BY-ENTRYPOINT`) und hat Vorrang | `docker compose up -d backend`; bei handgeschriebener Datei dort ändern oder die Datei entfernen |
 | `env file …/backend/.env not found` | Compose < 2.24 | Compose-Plugin aktualisieren, oder `touch backend/.env` |
 

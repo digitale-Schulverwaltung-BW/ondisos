@@ -42,6 +42,20 @@ class LoginService
             return false;
         }
 
+        // A hash that password_get_info() cannot classify (bcrypt hashes are exactly 60 characters)
+        // can never match any password. Typical cause: Docker Compose expanded the "$..." parts of an
+        // unquoted ADMIN_PASSWORD_HASH in the root .env. Say so instead of failing silently.
+        if (empty(password_get_info($adminPasswordHash)['algo'])) {
+            error_log(sprintf(
+                'ADMIN_PASSWORD_HASH is not a valid password hash (length %d, expected 60 for bcrypt) - '
+                . 'platform admin login cannot succeed. In the root .env wrap the value in single quotes '
+                . "(ADMIN_PASSWORD_HASH='\$2y\$10\$...'), then re-create the container: docker compose up -d backend",
+                strlen($adminPasswordHash)
+            ));
+
+            return false;
+        }
+
         if ($username !== $adminUsername) {
             return false;
         }
