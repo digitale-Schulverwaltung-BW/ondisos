@@ -711,7 +711,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest)
 ```
 
-Stand: ~500 Unit-Tests (`composer test -- --testsuite=Unit`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 513 Unit-Tests, 55,7 % Line-Coverage (`composer test -- --testsuite=Unit`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

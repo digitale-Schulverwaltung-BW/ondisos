@@ -50,7 +50,7 @@ before_script:
 
   # Configure and install PHP extensions required for project
   - docker-php-ext-configure gd --with-freetype --with-jpeg
-  - docker-php-ext-install pdo pdo_mysql gd zip
+  - docker-php-ext-install pdo pdo_mysql mysqli gd zip
 
   # Install Composer
   - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -163,13 +163,15 @@ coverage:
     - for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done   # pinned + retried (pecl.php.net is flaky)
     - docker-php-ext-enable xdebug
     - docker-php-ext-configure gd --with-freetype --with-jpeg
-    - docker-php-ext-install pdo pdo_mysql gd zip
+    - docker-php-ext-install pdo pdo_mysql mysqli gd zip
 
     # Install Composer
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
   script:
     - export XDEBUG_MODE=coverage
-    - composer test:coverage
+    # Unit suite only: the Integration suite needs MySQL and has its own job (test_integration).
+    # --coverage-text prints the "Lines: NN%" summary that the `coverage:` regex below reads.
+    - composer test:coverage -- --testsuite=Unit --coverage-text --colors=never
     - echo "Coverage report generated at backend/coverage/index.html"
   coverage: '/^\s*Lines:\s*\d+\.\d+\%/'
   artifacts:
