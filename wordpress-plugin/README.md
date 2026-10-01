@@ -125,7 +125,8 @@ Siehe [INSTALL.md § Testen](INSTALL.md#testen).
 
 ## Fehlersuche
 
-- **„Unknown form … (or backend unavailable)"** — Backend-URL/Tenant-Slug prüfen; `curl "<Backend-URL>/form-config.php?form=<key>&tenant=<slug>"` vom WordPress-Server aus
+- **„The form is currently unavailable" / als Administrator „Error (shown to administrators only): …"** — Die Meldung für angemeldete Administratoren nennt die Ursache (Backend nicht erreichbar, Tenant abgelehnt); *Einstellungen → Ondisos* zeigt den Verbindungsstatus. In Docker ist `localhost` der Container selbst: `http://host.docker.internal:9080/api` bzw. der Dienstname ([INSTALL.md](INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft))
+- **„Unknown form …"** — Das Backend ist erreichbar, kennt das Formular aber nicht für den Tenant: `seed-forms.php`, Formular-Key und Tenant-Slug prüfen
 - **„Unauthorized" beim Absenden** — Tenant-API-Secret fehlt oder passt nicht zum Backend
 - **Assets 404** — Layout A: `frontend-assets`-Symlink und `FollowSymLinks`; Layout B: `plugins/ondisos-frontend/public/assets/`
 

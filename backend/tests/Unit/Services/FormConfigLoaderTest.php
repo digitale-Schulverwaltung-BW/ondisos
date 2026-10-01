@@ -36,11 +36,17 @@ class FormConfigLoaderTest extends TestCase
                 parent::__construct($u, $t, $s);
             }
 
-            public function fetchFormConfig(string $formKey, string $tenantSlug): ?array
+            public function fetchFormConfigResult(string $formKey, string $tenantSlug): array
             {
                 $this->calls[] = [$formKey, $tenantSlug];
-                return $this->responses[$formKey] ?? null;
+                $config = $this->responses[$formKey] ?? null;
+
+                return $config !== null
+                    ? ['config' => $config, 'reason' => null, 'http_code' => 200, 'detail' => '']
+                    : ['config' => null, 'reason' => $this->failReason, 'http_code' => 0, 'detail' => 'canned failure'];
             }
+
+            public string $failReason = 'not_found';
         };
     }
 
@@ -103,5 +109,40 @@ class FormConfigLoaderTest extends TestCase
         } finally {
             putenv('TENANT_SLUG');
         }
+    }
+
+    public function testFailureReasonIsRecordedPerForm(): void
+    {
+        $client = $this->fakeClient([]);
+        $client->failReason = 'unreachable';
+
+        $this->assertFalse(\Frontend\Config\FormConfigLoader::ensure('bs', $client));
+
+        $failure = \Frontend\Config\FormConfigLoader::failure('bs');
+        $this->assertSame('unreachable', $failure['reason']);
+        $this->assertSame('canned failure', $failure['detail']);
+        $this->assertSame('http://backend.test/api', $failure['backend_url']);
+        $this->assertNull(\Frontend\Config\FormConfigLoader::failure('other'));
+    }
+
+    public function testSuccessLeavesNoFailureAndResetClearsIt(): void
+    {
+        $client = $this->fakeClient(['bs' => ['form' => 'bs.json']]);
+        \Frontend\Config\FormConfigLoader::ensure('bs', $client);
+        $this->assertNull(\Frontend\Config\FormConfigLoader::failure('bs'));
+
+        $client->failReason = 'not_found';
+        \Frontend\Config\FormConfigLoader::ensure('nope', $client);
+        $this->assertNotNull(\Frontend\Config\FormConfigLoader::failure('nope'));
+
+        \Frontend\Config\FormConfigLoader::reset();
+        $this->assertNull(\Frontend\Config\FormConfigLoader::failure('nope'));
+    }
+
+    public function testBackendUrlIsRedactedBeforeItIsStoredOrLogged(): void
+    {
+        $this->assertSame('http://***@host/api', \Frontend\Config\FormConfigLoader::redactUrl('http://user:pa55@host/api'));
+        $this->assertSame('https://***@host:9080/api', \Frontend\Config\FormConfigLoader::redactUrl('https://token@host:9080/api'));
+        $this->assertSame('http://backend/api', \Frontend\Config\FormConfigLoader::redactUrl('http://backend/api'));
     }
 }
