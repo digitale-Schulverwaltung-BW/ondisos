@@ -481,6 +481,35 @@ docker compose exec backend composer test
 
 ---
 
+### Backend für externe WordPress-Hostings erreichbar machen
+
+Betreibt eine Schule WordPress bei einem **externen** Hosting (und das Backend steht zentral, z. B. im Intranet des Schulträgers), muss das Backend
+von dort aus **nur die API** erreichen, nicht den Admin-Bereich. Das Plugin ruft diese Pfade serverseitig auf:
+
+| Pfad | Zweck | Öffentlich erreichbar? |
+|---|---|---|
+| `/api/form-config.php` | Konfiguration, Survey und Theme eines Formulars (`?with=survey`, ETag) | ja |
+| `/api/submit.php` | Anmeldung speichern (HMAC) | ja |
+| `/api/upload.php` | Datei-Upload (HMAC, Virenscan) | ja |
+| `/api/forms.php` | Formularliste des eigenen Tenants für den Verbindungsstatus (HMAC über `forms:<slug>`, 3.1) | ja |
+| `/api/health.php` | Erreichbarkeit | ja |
+| `/pdf/download.php` | PDF-Download per Token | ja |
+| alles andere (`index.php`, `forms.php`, `form_edit.php`, `form_survey.php`, `form_preview*.php`, `tenants.php`, `login.php`, `assets/`, …) | Admin-Oberfläche | **nein, nur intern** |
+
+Achtung beim Namen: `/api/forms.php` (öffentlich, signiert) ist nicht `/forms.php` im Wurzelverzeichnis (Admin-Seite, intern).
+
+Beispiel Nginx (Reverse Proxy vor dem Backend):
+
+```nginx
+location /api/            { proxy_pass http://backend_intern; }
+location = /pdf/download.php { proxy_pass http://backend_intern; }
+location /                { allow 10.0.0.0/8; deny all; proxy_pass http://backend_intern; }   # Admin nur aus dem Intranet
+```
+
+- **HTTPS ist Pflicht** zwischen Frontend/Plugin und Backend: die Signaturen enthalten keinen Zeitstempel und bieten allein keinen Replay-Schutz.
+- Die Antworten von `form-config.php` sind ohne Signatur per Tenant-Slug lesbar (Konfiguration, veröffentlichte Surveys): keine Geheimnisse hineinschreiben.
+- Das Ganze muss stehen, **bevor** der erste externe Tenant angebunden wird.
+
 ### PDF Logo konfigurieren
 
 Das Backend generiert PDF-Bestätigungen mit einem Schullogo. Die Logo-Datei liegt auf dem **Backend-Server** (nicht im Frontend), da nur das Backend PDFs erzeugt.

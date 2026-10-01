@@ -21,6 +21,13 @@ Die Projekt-Übersicht steht in [../README.md](../README.md), Architektur, Daten
 | [MIGRATION-3.1.md](MIGRATION-3.1.md) | 3.0 → 3.1: Formular-Editor, Cache, CLI, Sicherheit |
 | [MIGRATION-3.0.md](MIGRATION-3.0.md) | 2.x → 3.0: Mehrmandantenfähigkeit |
 
+## Release
+
+| Dokument | Inhalt |
+|---|---|
+| [RELEASE-NOTES-3.1.0.md](RELEASE-NOTES-3.1.0.md) | Was 3.1.0 bringt (für Anwender und Betreiber) |
+| [RELEASE-3.1.0.md](RELEASE-3.1.0.md) | Release-Check: Prüfstand, Merge-Reihenfolge, Tag, Rückfall |
+
 ## Formulare
 
 | Dokument | Inhalt |

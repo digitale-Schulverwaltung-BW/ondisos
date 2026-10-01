@@ -1,6 +1,9 @@
 # PLAN 3.1.1 – WordPress-Plugin ohne Shell: ZIP, Verbindungscode, Update-Prüfung
 
-**Status:** Entwurf, nicht dringend. Ergebnis einer Beratung, noch nicht umgesetzt.
+**Status:** Entwurf, nicht dringend. Ergebnis einer Beratung, noch nicht umgesetzt. Für ein eigenes Release **3.1.1** vorgesehen (bewusst nicht in 3.1; siehe [PLAN-3.1.md](PLAN-3.1.md)).
+
+**Stand der Voraussetzungen (nach 3.1):** Die Pfad-Whitelist für externe Hostings ist in [../DEPLOYMENT.md](../DEPLOYMENT.md) beschrieben. Der signierte Endpunkt
+`GET /api/forms.php` und die Statuszeilen im Plugin („Secret passt zum Tenant", Formularzahl) existieren bereits und sind die Grundlage für „Verbindung testen" (AP2).
 
 ## Ausgangslage
 
@@ -8,9 +11,10 @@ Schulen betreiben WordPress teils in einem Hosting ohne Shell-Zugang. Das Backen
 (z. B. vom Stadtmedienzentrum Karlsruhe) für mehrere Schulen gehostet und bleibt shell-pflichtig
 (Docker, `migrate.php`, CLI-Skripte): Diese Rolle setzt Wissen voraus und wird nicht vereinfacht.
 
-Das Plugin braucht bereits weder Composer noch CLI (eigener Autoloader, Surveys kommen aus dem
-Backend). Die Schule soll nur noch eine ZIP hochladen, einen Code einfügen und das Plugin per
-Update-Meldung aktuell halten.
+Das Plugin braucht weder Composer noch CLI (eigener Autoloader, Surveys kommen seit 3.1 aus dem Backend). **Es erwartet aber den Frontend-Code neben sich**
+(PHP-Klassen `Frontend\*`, SurveyJS-Assets, JS): als Git-Clone mit Symlink (Layout A) oder als zweites Verzeichnis `ondisos-frontend` (Layout B), siehe
+[../../wordpress-plugin/INSTALL.md](../../wordpress-plugin/INSTALL.md). Ohne Shell geht beides nicht. Die Schule soll nur noch eine ZIP hochladen, einen Code einfügen
+und das Plugin per Update-Meldung aktuell halten.
 
 ## Ziel
 
@@ -22,18 +26,23 @@ Nicht Ziel: Backend ohne Shell betreiben (Web-Installer, Shared-Hosting-Release)
 
 ## Voraussetzung: Erreichbarkeit des Backends (Betrieb)
 
-Externe WordPress-Hostings müssen `submit.php`, `upload.php`, `form-config.php` und den
+Externe WordPress-Hostings müssen `submit.php`, `upload.php`, `form-config.php`, `forms.php` und den
 PDF-Download erreichen, nicht aber den Admin-Bereich.
 
 - Reverse Proxy mit Pfad-Whitelist: `/api/*` und `/pdf/download.php` öffentlich, alles andere nur intern.
 - HTTPS verpflichtend (Signaturen haben keinen Replay-Schutz).
-- Muss vor dem ersten externen Tenant stehen. Kein Code, aber in `DEPLOYMENT.md` zu dokumentieren.
+- Muss vor dem ersten externen Tenant stehen. Kein Code; dokumentiert in [../DEPLOYMENT.md](../DEPLOYMENT.md) („Backend für externe WordPress-Hostings erreichbar machen", inklusive `/api/forms.php`).
 
 ## Arbeitspakete
 
 ### AP1 – Release-Build der Plugin-ZIP
 
-- Build-Schritt (Make-Target und/oder CI-Job) erzeugt `ondisos-<version>.zip` aus `wordpress-plugin/`.
+- Build-Schritt (Make-Target und/oder CI-Job) erzeugt `ondisos-<version>.zip` aus `wordpress-plugin/` **und den benötigten Teilen des Frontends**.
+  Eine ZIP nur aus `wordpress-plugin/` liefe ohne Shell nicht (siehe Ausgangslage). Dafür braucht es ein **drittes Layout C (selbsttragend)**: Der Build legt
+  `frontend/src/`, `frontend/public/assets/` (SurveyJS, Schriften), `frontend/public/js/` und `frontend/config/messages.php` *in* das Plugin-Verzeichnis;
+  `ONDISOS_FRONTEND_DIR` und die Asset-URL (`frontend-assets`, heute ein Symlink) zeigen dann dorthin. Nicht gebraucht werden `frontend/surveys/`
+  (kommen aus dem Backend; der Datei-Fallback entfällt ohnehin in 3.2), `frontend/public/index.php` und die Standalone-Skripte.
+- Das Cache-Verzeichnis des Plugins liegt in `wp-content/uploads` (3.1) und ist von diesem Layout unabhängig.
 - Ohne Entwicklungsdateien (Tests, `.git*`, Doku außer `INSTALL.md`); Ordnername im ZIP = Plugin-Slug,
   damit WordPress beim Update dasselbe Verzeichnis überschreibt.
 - Version aus dem Plugin-Header; Prüfsumme (SHA-256) wird mit erzeugt.
@@ -41,7 +50,7 @@ PDF-Download erreichen, nicht aber den Admin-Bereich.
 
 ### AP2 – Verbindungscode (Backend und Plugin)
 
-Backend (`tenants.php`):
+Backend (`tenants.php`; baut auf dem Neuerzeugen des Secrets und auf `forms.php` aus 3.1 auf):
 - Button „Anbindungscode erzeugen" je Tenant. Der Code enthält Backend-URL, Slug und Secret, dazu
   Formatversion und Prüfsumme (Tippfehler erkennen, Format später änderbar).
 - Das Secret ist nur im Moment des Erzeugens sichtbar. Neu erzeugen ⇒ Secret wird rotiert
@@ -49,7 +58,7 @@ Backend (`tenants.php`):
 
 Plugin (*Einstellungen → Ondisos*):
 - Ein Eingabefeld für den Code (write-only wie bisher das Secret); Anzeige nach dem Speichern nur Slug und URL.
-- Button „Verbindung testen": `health.php`, dann `form-config.php` mit Signatur. Eigene Meldungen für
+- Button „Verbindung testen": `health.php`, dann der signierte Aufruf `forms.php` (3.1; prüft zugleich, ob das Secret zum Tenant passt, und zählt die Formulare). Eigene Meldungen für
   ungültigen Code, Backend nicht erreichbar, Tenant unbekannt/inaktiv, falsches Secret, Backend-Version zu alt.
 - Optional: Konstante `ONDISOS_CONNECTION` in `wp-config.php` ersetzt die Einstellungsseite (für Betreuer,
   die es fest verdrahten wollen).
