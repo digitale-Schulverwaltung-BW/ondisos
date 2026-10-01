@@ -206,12 +206,26 @@ class BackendApiClient
         return ['success' => true];
     }
 
+    // Failure reasons reported by fetchFormConfigResult() / checkTenant()
+    public const FAIL_UNREACHABLE  = 'unreachable';  // DNS, connection refused, timeout, TLS
+    public const FAIL_UNAUTHORIZED = 'unauthorized'; // 401: tenant slug unknown or inactive
+    public const FAIL_NOT_FOUND    = 'not_found';    // 404: backend reachable, form unknown for the tenant
+    public const FAIL_ERROR        = 'error';        // any other HTTP status or an unusable response
+
+    /**
+     * Backend API base URL this client talks to (for diagnostics).
+     */
+    public function baseUrl(): string
+    {
+        return $this->baseUrl;
+    }
+
     /**
      * Fetch form configuration from backend API.
      *
      * Calls GET {baseUrl}/form-config.php?form={formKey}&tenant={tenantSlug}.
      * Returns the config array on success (HTTP 200, success=true),
-     * or null on any failure (non-200, curl error, success=false).
+     * or null on any failure. Use fetchFormConfigResult() to learn WHY it failed.
      *
      * @param string $formKey    Form identifier (e.g. 'bs')
      * @param string $tenantSlug Tenant slug (e.g. 'default')
@@ -219,33 +233,117 @@ class BackendApiClient
      */
     public function fetchFormConfig(string $formKey, string $tenantSlug): ?array
     {
+        return $this->fetchFormConfigResult($formKey, $tenantSlug)['config'];
+    }
+
+    /**
+     * Like fetchFormConfig(), but says why a fetch failed.
+     *
+     * "Unreachable backend" and "unknown form" need different reactions (fix the URL vs. fix the form key),
+     * which a bare null cannot express.
+     *
+     * @return array{config: ?array, reason: ?string, http_code: int, detail: string}
+     *         reason is null on success, otherwise one of the FAIL_* constants; detail is a short
+     *         technical explanation for logs/admins (never contains secrets).
+     */
+    public function fetchFormConfigResult(string $formKey, string $tenantSlug): array
+    {
         $url = $this->baseUrl . '/form-config.php?form=' . urlencode($formKey)
              . '&tenant=' . urlencode($tenantSlug);
+
+        $response = $this->httpGet($url, 5);
+        $code     = $response['code'];
+
+        if ($response['error'] !== '' || $code === 0) {
+            $detail = $response['error'] !== '' ? $response['error'] : 'no response';
+            error_log('fetchFormConfig curl error: ' . $detail);
+            return ['config' => null, 'reason' => self::FAIL_UNREACHABLE, 'http_code' => 0, 'detail' => $detail];
+        }
+
+        if ($code === 401) {
+            return ['config' => null, 'reason' => self::FAIL_UNAUTHORIZED, 'http_code' => $code,
+                    'detail' => 'tenant "' . $tenantSlug . '" is unknown or inactive'];
+        }
+
+        if ($code === 404) {
+            return ['config' => null, 'reason' => self::FAIL_NOT_FOUND, 'http_code' => $code,
+                    'detail' => 'form "' . $formKey . '" does not exist for tenant "' . $tenantSlug . '"'];
+        }
+
+        if ($code !== 200) {
+            return ['config' => null, 'reason' => self::FAIL_ERROR, 'http_code' => $code, 'detail' => 'HTTP ' . $code];
+        }
+
+        $result = json_decode($response['body'], true);
+        if (!is_array($result) || ($result['success'] ?? false) !== true || !is_array($result['config'] ?? null)) {
+            return ['config' => null, 'reason' => self::FAIL_ERROR, 'http_code' => $code,
+                    'detail' => 'unexpected response (is the Backend API URL pointing at the ondisos API?)'];
+        }
+
+        return ['config' => $result['config'], 'reason' => null, 'http_code' => $code, 'detail' => ''];
+    }
+
+    /**
+     * Is the tenant slug accepted by the backend? (Probes form-config.php with a form that cannot exist:
+     * 404 = tenant known, 401 = tenant unknown/inactive.)
+     *
+     * @return array{ok: bool, reason: ?string, detail: string}
+     */
+    public function checkTenant(string $tenantSlug): array
+    {
+        $result = $this->fetchFormConfigResult('__probe__', $tenantSlug);
+
+        if ($result['reason'] === self::FAIL_NOT_FOUND || $result['reason'] === null) {
+            return ['ok' => true, 'reason' => null, 'detail' => ''];
+        }
+
+        return ['ok' => false, 'reason' => $result['reason'], 'detail' => $result['detail']];
+    }
+
+    /**
+     * Perform a GET request. Isolated so tests can replace the network.
+     *
+     * @return array{body: string, code: int, error: string} code 0 and a non-empty error when no HTTP response arrived
+     */
+    protected function httpGet(string $url, int $timeoutSeconds): array
+    {
+        $r = $this->httpRequest($url, $timeoutSeconds, ['Accept: application/json']);
+
+        return ['body' => $r['body'], 'code' => $r['code'], 'error' => $r['error']];
+    }
+
+    /**
+     * One GET request with custom request headers; also returns the response headers (names lower-cased).
+     * The only place that talks curl; tests replace httpGet() or this method.
+     *
+     * @param list<string> $headers
+     * @return array{body: string, code: int, error: string, headers: array<string,string>}
+     */
+    protected function httpRequest(string $url, int $timeoutSeconds, array $headers): array
+    {
+        $responseHeaders = [];
 
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 5,
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+            CURLOPT_TIMEOUT        => $timeoutSeconds,
+            CURLOPT_CONNECTTIMEOUT => $timeoutSeconds,
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$responseHeaders): int {
+                $parts = explode(':', $line, 2);
+                if (count($parts) === 2) {
+                    $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+                return strlen($line);
+            },
         ]);
 
-        $response  = curl_exec($ch);
-        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
+        $body  = curl_exec($ch);
+        $code  = (int) curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error = curl_error($ch);
         curl_close($ch);
 
-        if ($curlError) {
-            error_log('fetchFormConfig curl error: ' . $curlError);
-            return null;
-        }
-
-        if ($httpCode !== 200) {
-            return null;
-        }
-
-        $result = json_decode((string) $response, true);
-        return (($result['success'] ?? false) === true) ? ($result['config'] ?? null) : null;
+        return ['body' => is_string($body) ? $body : '', 'code' => $code, 'error' => $error, 'headers' => $responseHeaders];
     }
 
     /**
@@ -264,7 +362,9 @@ class BackendApiClient
      * A backend from before 3.1 ignores "with=survey" and answers with the config only: that is "ok" with
      * survey_json/theme_json = null and no etag.
      *
-     * @return array{status:string, config?:array<string,mixed>, survey_json?:?string, theme_json?:?string, etag?:?string}
+     * Failures also carry reason (one of the FAIL_* constants), http_code and detail, like fetchFormConfigResult().
+     *
+     * @return array{status:string, config?:array<string,mixed>, survey_json?:?string, theme_json?:?string, etag?:?string, reason?:string, http_code?:int, detail?:string}
      */
     public function fetchFormBundle(string $formKey, string $tenantSlug, ?string $etag = null): array
     {
@@ -276,28 +376,33 @@ class BackendApiClient
             $headers[] = 'If-None-Match: "' . $etag . '"';
         }
 
-        $response = $this->httpGet($url, $headers);
+        $response = $this->httpRequest($url, 5, $headers);
+        $code     = $response['code'];
 
-        if ($response['error'] !== null) {
-            error_log('fetchFormBundle curl error: ' . $response['error']);
-            return ['status' => 'error'];
+        if ($response['error'] !== '' || $code === 0) {
+            $detail = $response['error'] !== '' ? $response['error'] : 'no response';
+            error_log('fetchFormBundle curl error: ' . $detail);
+            return ['status' => 'error', 'reason' => self::FAIL_UNREACHABLE, 'http_code' => 0, 'detail' => $detail];
         }
-        if ($response['status'] === 304) {
+        if ($code === 304) {
             return ['status' => 'not_modified'];
         }
-        if ($response['status'] === 404) {
-            return ['status' => 'not_found'];
+        if ($code === 404) {
+            return ['status' => 'not_found', 'reason' => self::FAIL_NOT_FOUND, 'http_code' => $code,
+                    'detail' => 'form "' . $formKey . '" does not exist for tenant "' . $tenantSlug . '"'];
         }
-        if ($response['status'] === 401 || $response['status'] === 403) {
-            return ['status' => 'denied'];
+        if ($code === 401 || $code === 403) {
+            return ['status' => 'denied', 'reason' => self::FAIL_UNAUTHORIZED, 'http_code' => $code,
+                    'detail' => 'tenant "' . $tenantSlug . '" is unknown or inactive'];
         }
-        if ($response['status'] !== 200) {
-            return ['status' => 'error'];
+        if ($code !== 200) {
+            return ['status' => 'error', 'reason' => self::FAIL_ERROR, 'http_code' => $code, 'detail' => 'HTTP ' . $code];
         }
 
         $result = json_decode($response['body'], true);
         if (!is_array($result) || ($result['success'] ?? false) !== true || !is_array($result['config'] ?? null)) {
-            return ['status' => 'error'];
+            return ['status' => 'error', 'reason' => self::FAIL_ERROR, 'http_code' => $code,
+                    'detail' => 'unexpected response (is the Backend API URL pointing at the ondisos API?)'];
         }
 
         $text = static fn (mixed $v): ?string => is_string($v) && $v !== '' ? $v : null;
@@ -313,44 +418,6 @@ class BackendApiClient
     }
 
     /**
-     * One GET request. Separate from fetchFormBundle() so tests can replace the network.
-     *
-     * @param list<string> $headers
-     * @return array{status:int, headers:array<string,string>, body:string, error:?string} header names lower-cased
-     */
-    protected function httpGet(string $url, array $headers): array
-    {
-        $responseHeaders = [];
-
-        $ch = curl_init($url);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 5,
-            CURLOPT_CONNECTTIMEOUT => 5,
-            CURLOPT_HTTPHEADER     => $headers,
-            CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$responseHeaders): int {
-                $parts = explode(':', $line, 2);
-                if (count($parts) === 2) {
-                    $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
-                }
-                return strlen($line);
-            },
-        ]);
-
-        $body      = curl_exec($ch);
-        $status    = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        return [
-            'status'  => $status,
-            'headers' => $responseHeaders,
-            'body'    => is_string($body) ? $body : '',
-            'error'   => $curlError !== '' ? $curlError : null,
-        ];
-    }
-
-    /**
      * Health check - test if backend is reachable.
      *
      * Uses a short 3-second timeout so a slow/unreachable backend
@@ -360,28 +427,16 @@ class BackendApiClient
      */
     public function healthCheck(): array
     {
-        $endpoint = $this->baseUrl . '/health.php';
+        $response = $this->httpGet($this->baseUrl . '/health.php', 3);
 
-        $ch = curl_init($endpoint);
-        curl_setopt_array($ch, [
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_TIMEOUT        => 3,
-            CURLOPT_CONNECTTIMEOUT => 3,
-            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
-        ]);
-
-        curl_exec($ch);
-        $httpCode  = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        $curlError = curl_error($ch);
-        curl_close($ch);
-
-        if ($curlError || $httpCode === 0) {
-            error_log('Backend health check failed: ' . $curlError);
-            return ['status' => 'error', 'reason' => ''];
+        if ($response['error'] !== '' || $response['code'] === 0) {
+            $reason = $response['error'] !== '' ? $response['error'] : 'no response';
+            error_log('Backend health check failed: ' . $reason);
+            return ['status' => 'error', 'reason' => $reason];
         }
 
-        return $httpCode === 200
+        return $response['code'] === 200
             ? ['status' => 'ok', 'reason' => '']
-            : ['status' => 'error', 'reason' => ''];
+            : ['status' => 'error', 'reason' => 'HTTP ' . $response['code']];
     }
 }

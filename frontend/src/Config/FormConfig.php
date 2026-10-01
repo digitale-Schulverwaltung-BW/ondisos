@@ -135,6 +135,20 @@ class FormConfig
      *
      * @return ?string Single email or comma-separated list of emails
      */
+    /**
+     * Would a submission of this form be thrown away?
+     *
+     * True when the form is neither stored in the database (`db` false) nor reported by e-mail
+     * (`notify_email` missing or invalid): the data would go nowhere while the visitor sees a success page.
+     * Such a form is a configuration error and must not accept submissions.
+     */
+    public static function discardsSubmissions(string $formKey): bool
+    {
+        return self::get($formKey) !== null
+            && !self::shouldSaveToDb($formKey)
+            && self::getNotificationEmail($formKey) === null;
+    }
+
     public static function getNotificationEmail(string $formKey): ?string
     {
         $config = self::get($formKey);

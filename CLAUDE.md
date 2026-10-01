@@ -140,9 +140,10 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 3. Backend: Config + veröffentlichte Survey/Theme (nie Entwürfe) + ETag; unverändert ⇒ 304.
    Antwort {"success":true,"config":{…},"survey_json":"…"|null,"theme_json":"…"|null}
    Das Frontend legt sie in FormBundleCache ab (frontend/cache/forms, WordPress: uploads/ondisos-cache)
+   (Formular unbekannt ⇒ 404; Backend nicht erreichbar / Tenant abgelehnt ⇒ Wartungsseite 503 bzw. im Plugin eine neutrale Meldung für Besucher und die Diagnose für Administratoren; Ursache im PHP-Log)
    ↓
 4. Backend nicht erreichbar ⇒ die zwischengespeicherte Fassung (höchstens 7 Tage alt) wird ausgeliefert;
-   ohne Cache bzw. bei unbekanntem Formular/Tenant ⇒ Wartungsseite 503 bzw. Fehlermeldung im Plugin
+   ohne Cache ⇒ Wartungsseite 503, bei unbekanntem Formular 404, bei abgelehntem Tenant 503 (Plugin: Fehlermeldung)
    ↓
 5. SurveySource: Survey/Theme aus dem Backend, sonst Datei frontend/surveys/<form>.json (Fallback wie in 3.0);
    JsonEmbed kodiert beides neu (\u003C …), damit „</script>" im JSON nie aus dem <script>-Element ausbricht
@@ -944,7 +945,6 @@ http://intranet.example.com/backend/dashboard.php
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
 - ⚠️ Die Backend-Oberfläche lädt Bootstrap und DataTables von `cdn.jsdelivr.net` (unversioniert, ohne Integritätsprüfung, `backend/inc/header.php`, `footer.php`, `login.php`): Admin-Browser kontaktieren einen externen CDN, und in einem Intranet ohne Internetzugang bleibt die Oberfläche ungestylt. Frontend und WordPress-Plugin sind frei von externen Quellen
 - ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)
-- ⚠️ Unbekanntes Formular und nicht erreichbares Backend führen im Standalone-Frontend beide zur Wartungsseite (503)
 
 ### TODOs
 1. **Weitere Unit Tests** für Services, Repositories, Validators; Tests für die Endpoint-Skripte
@@ -1175,9 +1175,13 @@ php -l backend/config/messages.local.php
 → Backend-Log: `tenant api_secret is a known placeholder/default` ⇒ echtes Secret setzen (`openssl rand -hex 32`) und `php migrate.php`
 → `TENANT_SLUG` muss ein aktiver Tenant sein
 
-### Wartungsseite (503) / "Unknown form"
-→ `BACKEND_API_URL` erreichbar? `curl "$BACKEND_API_URL/form-config.php?form=bs&tenant=default"`
-→ Formular in `form_configs` vorhanden? (`seed-forms.php`), richtiger `TENANT_SLUG`?
+### Wartungsseite (503) / „The form is currently unavailable"
+→ Backend nicht erreichbar oder Tenant abgelehnt; die Ursache steht im PHP-Log (`FormConfigLoader: form "bs" not loaded (unreachable|unauthorized|error): …`), im WordPress-Plugin sieht sie ein angemeldeter Administrator direkt auf der Seite
+→ `BACKEND_API_URL` erreichbar? `curl "$BACKEND_API_URL/health.php"`; WordPress in Docker: `localhost` ist der Container selbst (`host.docker.internal` bzw. Dienstname)
+→ Richtiger `TENANT_SLUG`? (`curl "$BACKEND_API_URL/form-config.php?form=bs&tenant=<slug>"`: 401 = Tenant unbekannt/inaktiv)
+
+### 404 „Formular nicht gefunden" / `Unknown form "bs"`
+→ Das Backend ist erreichbar, kennt das Formular aber nicht für den Tenant: in `form_configs` vorhanden? (`seed-forms.php`), Formular-Key richtig geschrieben?
 
 ### `Unknown column 'tenant_id'`
 → Migration nicht gelaufen: `php backend/migrate.php` (Docker: läuft bei jedem Start)
@@ -1185,6 +1189,10 @@ php -l backend/config/messages.local.php
 ### "Permission denied" für uploads/cache
 → `chmod 755 uploads cache`
 → `chown www-data:www-data uploads cache`
+
+### Anmeldung „erfolgreich", aber nichts im Backend / Formular „currently unavailable" trotz erreichbarem Backend
+→ Formular mit `db: false` speichert nicht im Backend (nur E-Mail an `notify_email`). Ohne gültige `notify_email` würde die Absendung verworfen: das Frontend zeigt das Formular dann nicht an (503 / neutrale Meldung, Administratoren sehen die Ursache), `seed-forms.php` warnt
+→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
 
 ### Excel-Export zeigt Formular-Spalte
 → Check dass Filter gesetzt ist: `?form=bs`

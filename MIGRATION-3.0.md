@@ -309,6 +309,20 @@ Das Frontend holt die Konfiguration bei jedem Aufruf neu — Änderungen wirken 
 
 Die Survey-Definitionen (`frontend/surveys/*.json`) liegen weiterhin im Frontend-Verzeichnis.
 
+### Formulare ohne Datenbank (`db: false`)
+
+Mit `"db": false` wird ein Formular **nicht** im Backend gespeichert; die Absendung geht nur per E-Mail an `notify_email`. Ohne gültige `notify_email` (fehlt,
+leer oder mindestens eine Adresse ungültig) würde sie **ins Leere** laufen — der Besucher sähe eine Erfolgsseite, die Daten wären weg. Deshalb zeigt das
+Frontend ein solches Formular nicht an (503, im WordPress-Plugin eine neutrale Meldung; Administratoren sehen die Ursache), und `AnmeldungService` nimmt
+keine Absendung an. `seed-forms.php` warnt für **alle** Formulare von Tenant 1 in der Datenbank. Beheben:
+
+```sql
+-- speichern ...
+UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = 1 AND form_key = 'ausbildernachmittag';
+-- ... oder einen Empfänger eintragen (db bleibt false; das Frontend braucht einen funktionierenden Mailversand)
+UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@schule.example') WHERE tenant_id = 1 AND form_key = 'ausbildernachmittag';
+```
+
 > **Datenschutzhinweis:** `/api/form-config.php` liefert die Konfiguration eines Formulars an
 > jeden, der den Tenant-Slug kennt, ohne Signatur. Sie enthält z. B. `notify_email`. Lege keine
 > Geheimnisse in die Formular-Konfiguration.
@@ -381,8 +395,10 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | Absenden: „Unauthorized" / `401` im Backend-Log | `TENANT_API_SECRET` im Frontend ≠ `tenants.api_secret`; oder Secret ist Platzhalter/Standardwert | Secrets angleichen. Log-Hinweis: `tenant api_secret is a known placeholder/default` → echtes Secret setzen, `migrate.php` erneut ausführen |
 | Absenden: „Backend-Zugang nicht konfiguriert" | `TENANT_API_SECRET` fehlt im Frontend | `frontend/.env` bzw. WP-Einstellung setzen |
 | `migrate.php`: „API_SECRET_KEY is a known default" | Production mit Standard-Secret | `openssl rand -hex 32` in die Root-`.env` |
-| Seite zeigt „Wartungsmodus" / `503` | Backend nicht erreichbar, oder Formular/Tenant unbekannt | `BACKEND_API_URL` prüfen, `form-config.php?form=…&tenant=…` aufrufen, `form_configs` seeden |
-| WordPress: `Unknown form "bs" (or backend unavailable)` | wie oben, oder Plugin < 2.1.0 | Plugin aktualisieren, Backend-URL/Tenant-Slug prüfen |
+| Seite zeigt „Wartungsmodus" / `503` | Backend nicht erreichbar oder Tenant abgelehnt (Ursache im PHP-Log: `FormConfigLoader: … not loaded (unreachable\|unauthorized\|error)`) | `BACKEND_API_URL` und `TENANT_SLUG` prüfen, `health.php` und `form-config.php?form=…&tenant=…` aufrufen |
+| `index.php?form=…` zeigt 404 „Formular nicht gefunden" | Backend erreichbar, Formular für den Tenant nicht vorhanden | `form_configs` seeden, Formular-Key prüfen |
+| WordPress: `The form is currently unavailable` / als Administrator `Error (shown to administrators only): …` | Backend nicht erreichbar oder Tenant abgelehnt; in Docker meist `localhost` als Backend-URL | Als Administrator die Seite ansehen (die Meldung nennt die Ursache), *Einstellungen → Ondisos* (Verbindungsstatus); in Docker `host.docker.internal` bzw. Dienstname ([INSTALL.md](wordpress-plugin/INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft)) |
+| WordPress: `Unknown form "bs"` | Backend erreichbar, Formular nicht für den Tenant (oder Plugin < 2.1.0 mit unklarer Meldung) | `seed-forms.php`, Formular-Key und Tenant-Slug prüfen; Plugin aktualisieren |
 | `Access denied for user 'anmeldung'` / `Unknown database` bei der Migration | Das MySQL-Volume wurde mit anderen Zugangsdaten angelegt; `DB_PASS` & Co. in der `.env` wirken nur beim ersten Start | Alte Werte wiederherstellen oder Passwort in MySQL nachziehen; sonst nur das MySQL-Volume neu anlegen (Datenverlust) — siehe [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert) |
 | `Unknown column 'tenant_id'` im Backend-Log | Migration nicht gelaufen (manuelle Installation) | `php migrate.php` |
 | PDF-Link liefert „TenantContext not initialized" | Backend älter als die Fix-Version | Backend auf aktuellen 3.0-Stand bringen |
