@@ -189,7 +189,10 @@ try {
 // Forms in the database (not only those just read) that would throw submissions away: db=false and no
 // valid notify_email. The frontend refuses such forms (see Frontend\Config\FormConfig::discardsSubmissions()).
 $discardingForms = [];
-$rows = $db->query('SELECT form_key, config_json FROM form_configs WHERE tenant_id = 1 ORDER BY form_key');
+$scan = $db->prepare('SELECT form_key, config_json FROM form_configs WHERE tenant_id = ? ORDER BY form_key');
+$scan->bind_param('i', $tenantId);
+$scan->execute();
+$rows = $scan->get_result();
 while ($rows && ($row = $rows->fetch_assoc())) {
     $entry = json_decode((string) $row['config_json'], true);
     if (!is_array($entry)) {
@@ -231,8 +234,8 @@ if ($discardingForms !== []) {
 
 WARNING: these forms store nothing (db: false) and have no valid notify_email, so their submissions would be DISCARDED.
          The frontend therefore refuses to show/accept them until this is fixed: {$list}
-         Either store them:   UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = 1 AND form_key = '<form>';
-         or add a recipient:  UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@your-school.example') WHERE tenant_id = 1 AND form_key = '<form>';
+         Either store them:   UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = {\$tenantId} AND form_key = '<form>';
+         or add a recipient:  UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@your-school.example') WHERE tenant_id = {\$tenantId} AND form_key = '<form>';
          (Re-seeding never overwrites existing entries.)
 
 EOT;
