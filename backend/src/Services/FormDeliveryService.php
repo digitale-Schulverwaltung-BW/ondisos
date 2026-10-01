@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Forms\Identifiers;
+use App\Forms\SurveyValidator;
+use App\Forms\ThemeValidator;
 use App\Repositories\FormConfigRepository;
 use App\Repositories\FormResourceRepository;
 
@@ -19,7 +21,41 @@ class FormDeliveryService
     public function __construct(
         private readonly FormConfigRepository $configs,
         private readonly FormResourceRepository $resources,
+        private readonly SurveyValidator $surveyValidator = new SurveyValidator(),
+        private readonly ThemeValidator $themeValidator = new ThemeValidator(),
     ) {
+    }
+
+    /**
+     * Last line of defence before a survey/theme leaves the backend: content that does not pass today's validators
+     * (stored before the rules existed, or written by SQL) is not delivered. The frontend then falls back to its file
+     * or shows its "survey not found" page; visitors never receive e.g. an <img onerror> from the database.
+     *
+     * Call this only when a body is sent (not for 304 answers): validation parses the survey.
+     *
+     * @param array{config: array<string,mixed>, survey_json: ?string, theme_json: ?string, etag: string} $bundle
+     * @return array{config: array<string,mixed>, survey_json: ?string, theme_json: ?string, etag: string, rejected: list<array{kind:string,errors:int,first:string}>}
+     */
+    public function sanitized(array $bundle): array
+    {
+        $rejected = [];
+
+        if ($bundle['survey_json'] !== null) {
+            $r = $this->surveyValidator->validate($bundle['survey_json'])['result'];
+            if (!$r->isValid()) {
+                $rejected[] = ['kind' => 'survey', 'errors' => count($r->errors()), 'first' => $r->errors()[0]['message']];
+                $bundle['survey_json'] = null;
+            }
+        }
+        if ($bundle['theme_json'] !== null) {
+            $r = $this->themeValidator->validate($bundle['theme_json'])['result'];
+            if (!$r->isValid()) {
+                $rejected[] = ['kind' => 'theme', 'errors' => count($r->errors()), 'first' => $r->errors()[0]['message']];
+                $bundle['theme_json'] = null;
+            }
+        }
+
+        return $bundle + ['rejected' => $rejected];
     }
 
     /**

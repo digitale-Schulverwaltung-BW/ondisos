@@ -34,8 +34,14 @@ class SurveyImportService
         private readonly FormRevisionRepository $revisions,
         private readonly SurveyValidator $surveyValidator = new SurveyValidator(),
         private readonly ThemeValidator $themeValidator = new ThemeValidator(),
+        ?\Closure $audit = null,
     ) {
+        $this->audit = $audit ?? static function (string $event, string $name, array $details): void {
+            AuditLogger::formEvent($event, $name, $details);
+        };
     }
+
+    private \Closure $audit;
 
     /**
      * @param bool $dryRun validate and report what would happen, write nothing
@@ -54,6 +60,9 @@ class SurveyImportService
             ? $this->themeValidator->validate($json)['result']
             : $this->surveyValidator->validate($json)['result'];
         if (!$validation->isValid()) {
+            if (!$dryRun) {
+                ($this->audit)('survey_import_rejected', $name, ['kind' => $kind, 'errors' => count($validation->errors()), 'by' => $user]);
+            }
             return ['status' => self::STATUS_INVALID, 'validation' => $validation];
         }
 
@@ -72,6 +81,7 @@ class SurveyImportService
 
         if (!$dryRun) {
             $this->resources->save($kind, $name, $json, $user);
+            ($this->audit)('survey_imported', $name, ['kind' => $kind, 'sha256' => hash('sha256', $json), 'replaced' => $existing !== null, 'by' => $user]);
         }
 
         return ['status' => self::STATUS_IMPORTED, 'validation' => $validation];

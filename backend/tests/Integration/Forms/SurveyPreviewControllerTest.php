@@ -121,15 +121,24 @@ class SurveyPreviewControllerTest extends FormEditorTestCase
     public function testEmbeddedJsonCannotBreakOutOfTheScriptElement(): void
     {
         $this->form();
-        // "<" only inside text that passes the allowlist (a title), not as markup:
-        $this->resources->save(Res::KIND_SURVEY, 'bs.json', '{"title":"a </script> b <!-- c","pages":[{"elements":[{"type":"text","name":"x","title":"1 < 2 & 3"}]}]}', 'u');
+        // Text that passes the allowlist but contains characters significant in HTML/JS:
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', "{\"title\":\"Tom & Jerry's 1 < 2 > 0 \\u2028\",\"pages\":[{\"elements\":[{\"type\":\"text\",\"name\":\"x\",\"title\":\"a & b\"}]}]}", 'u');
 
         $r = $this->preview()->load('bs', P::SOURCE_LIVE);
 
-        $this->assertSame('ok', $r['status']);
+        $this->assertSame('ok', $r['status'], json_encode($r['errors']));
         $this->assertStringNotContainsString('<', $r['survey_json']);
         $this->assertStringNotContainsString('>', $r['survey_json']);
         $this->assertStringNotContainsString('&', $r['survey_json']);
+        $this->assertStringNotContainsString('\'', $r['survey_json']);
+    }
+
+    public function testTextThatLooksLikeATagOrCommentIsRefusedOutright(): void
+    {
+        $this->form();
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', '{"title":"a </script> b <!-- c","pages":[{"elements":[{"type":"text","name":"x"}]}]}', 'u');
+
+        $this->assertSame('invalid', $this->preview()->load('bs', P::SOURCE_LIVE)['status']);
     }
 
     public function testRealSurveyAndThemePreview(): void

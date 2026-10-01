@@ -13,6 +13,9 @@ namespace App\Forms;
  */
 final class FormConfigValidator
 {
+    /** Upper bound for a whole config (also keys the editor does not know): keeps form_configs rows and API answers small. */
+    public const MAX_CONFIG_BYTES = 65536;
+
     /**
      * Merge submitted values into $existing.
      *
@@ -92,6 +95,11 @@ final class FormConfigValidator
             if (!isset($config[$required]) || $config[$required] === '') {
                 $result->addError($required, 'Pflichtfeld');
             }
+        }
+
+        $size = strlen((string)json_encode($config));
+        if ($size > self::MAX_CONFIG_BYTES) {
+            $result->addError('', 'Die Konfiguration ist zu groß (' . intdiv($size, 1024) . ' KB, höchstens ' . intdiv(self::MAX_CONFIG_BYTES, 1024) . ' KB)');
         }
 
         foreach (FormConfigSchema::fields() as $path => $field) {

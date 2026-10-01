@@ -42,7 +42,8 @@ if ($formKey === '') {
 // got last time in If-None-Match and receives 304 while nothing changed. Without it the response is
 // the config only, as in 3.0.
 if (($_GET['with'] ?? '') === 'survey') {
-    $bundle = (new FormDeliveryService(new FormConfigRepository(), new FormResourceRepository()))->bundle($formKey);
+    $delivery = new FormDeliveryService(new FormConfigRepository(), new FormResourceRepository());
+    $bundle   = $delivery->bundle($formKey);
     if ($bundle === null) {
         http_response_code(404);
         echo json_encode(['error' => 'Form not found']);
@@ -55,6 +56,13 @@ if (($_GET['with'] ?? '') === 'survey') {
     if (FormDeliveryService::etagMatches($_SERVER['HTTP_IF_NONE_MATCH'] ?? null, $bundle['etag'])) {
         http_response_code(304);
         exit;
+    }
+
+    // Defence in depth: never deliver stored content that fails today's validators.
+    $bundle = $delivery->sanitized($bundle);
+    foreach ($bundle['rejected'] as $r) {
+        error_log(sprintf("form-config.php: %s of form '%s' not delivered (%d validation error(s): %s)", $r['kind'], $formKey, $r['errors'], $r['first']));
+        \App\Services\AuditLogger::formEvent('form_delivery_rejected', $formKey, ['kind' => $r['kind'], 'errors' => $r['errors']]);
     }
 
     echo json_encode([

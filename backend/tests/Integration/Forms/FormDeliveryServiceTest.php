@@ -138,4 +138,45 @@ class FormDeliveryServiceTest extends FormEditorTestCase
         $this->asTenant($this->tenantA);
         $this->assertSame(['bs', 'zq'], $this->delivery->formKeys(), 'sorted, own tenant only');
     }
+
+    public function testSanitizedWithholdsSurveysAndThemesThatFailTodaysValidators(): void
+    {
+        $this->configs->insert('bs', ['form' => 'bs.json', 'theme' => 't.json']);
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', '{"pages":[{"elements":[{"type":"html","name":"h","html":"<img src=x onerror=alert(1)>"}]}]}', 'sql');
+        $this->resources->save(Res::KIND_THEME, 't.json', '{"cssVariables":{"--x":"</style><script>1</script>"}}', 'sql');
+
+        $out = $this->delivery->sanitized($this->delivery->bundle('bs'));
+
+        $this->assertNull($out['survey_json']);
+        $this->assertNull($out['theme_json']);
+        $this->assertSame(['survey', 'theme'], array_column($out['rejected'], 'kind'));
+        $this->assertStringNotContainsString('onerror', json_encode($out));
+    }
+
+    public function testSanitizedLeavesValidContentAlone(): void
+    {
+        $this->configs->insert('bs', ['form' => 'bs.json', 'theme' => 't.json']);
+        $survey = $this->surveyJson('a', 'email');
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', $survey, 'u');
+        $this->resources->save(Res::KIND_THEME, 't.json', '{"themeName":"x"}', 'u');
+
+        $out = $this->delivery->sanitized($this->delivery->bundle('bs'));
+
+        $this->assertSame($survey, $out['survey_json']);
+        $this->assertSame('{"themeName":"x"}', $out['theme_json']);
+        $this->assertSame([], $out['rejected']);
+    }
+
+    public function testSanitizedAcceptsTheRealSurveysAndTheTheme(): void
+    {
+        $this->configs->insert('bs', ['form' => 'bs.json', 'theme' => 'survey_theme.json']);
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json'), 'u');
+        $this->resources->save(Res::KIND_THEME, 'survey_theme.json', (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/survey_theme.json'), 'u');
+
+        $out = $this->delivery->sanitized($this->delivery->bundle('bs'));
+
+        $this->assertNotNull($out['survey_json']);
+        $this->assertNotNull($out['theme_json']);
+        $this->assertSame([], $out['rejected']);
+    }
 }

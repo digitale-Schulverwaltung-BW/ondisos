@@ -51,6 +51,21 @@ final class HtmlPolicy
     {
         $problems = [];
 
+        // Browsers and libxml parse broken markup differently ("<!-->", unclosed tags, comments around tags), so a DOM
+        // walk alone can be talked past. These checks look at the raw text and are deliberately conservative:
+        // comments and other "<!" / "<?" constructs are not needed in survey texts and are refused, and every tag
+        // name that appears anywhere (also inside attribute values or comments) must be on the allowlist.
+        if (preg_match('/<[!?]/', $html) === 1) {
+            $problems[] = 'Kommentare und Sonderkonstrukte (<!…, <?…) sind nicht erlaubt';
+        }
+        if (preg_match_all('/<\/?\s*([a-zA-Z][^\s\/>\x00]*)/', $html, $m) > 0) {
+            foreach (array_unique(array_map('strtolower', $m[1])) as $name) {
+                if (!isset(self::ALLOWED[$name])) {
+                    $problems[] = "Nicht erlaubtes HTML-Element <{$name}>";
+                }
+            }
+        }
+
         $previous = libxml_use_internal_errors(true);
         $doc = new \DOMDocument();
         // The wrapper keeps fragments (several top-level nodes, plain text) parseable.

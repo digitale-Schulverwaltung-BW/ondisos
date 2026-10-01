@@ -27,6 +27,9 @@ function form_copy_service(): FormCopyService
  */
 function form_copy_run(int $fromTenantId, int $toTenantId, bool $overwrite): bool
 {
+    require_once __DIR__ . '/editor_rate_limit.php';
+    editor_rate_limit();
+
     $role = !empty($_SESSION['is_platform_admin']) || !filter_var(\App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN)
         ? FormConfigSchema::ROLE_PLATFORM
         : FormConfigSchema::ROLE_TENANT;

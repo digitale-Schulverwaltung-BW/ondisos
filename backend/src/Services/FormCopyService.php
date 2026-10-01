@@ -132,6 +132,13 @@ class FormCopyService
             }
         });
 
+        // The target must not end up with more forms than a tenant may have (existing keys do not count twice).
+        $existingInTarget = TenantContext::runAs($toTenantId, fn (): array => $this->configs->listKeys());
+        $newKeys          = array_diff(array_keys($plan), $existingInTarget);
+        if (count($existingInTarget) + count($newKeys) > FormPublishService::MAX_FORMS_PER_TENANT) {
+            throw new \InvalidArgumentException('Das Ziel würde mehr als ' . FormPublishService::MAX_FORMS_PER_TENANT . ' Formulare haben.');
+        }
+
         // ---- write the target ------------------------------------------------------------------
         $slug = (string)$from['slug'];
         $apply = function () use (&$plan, &$report, $overwrite, $dryRun, $slug, $user): void {

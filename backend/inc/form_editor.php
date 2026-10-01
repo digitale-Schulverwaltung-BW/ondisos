@@ -29,6 +29,9 @@ if ($editorRole === null) {
     die('Kein Zugriff.');
 }
 
+require_once __DIR__ . '/editor_rate_limit.php';
+editor_rate_limit();
+
 $editorNoTenant = TenantContext::isAllTenants();
 if (!$editorNoTenant) {
     $db       = Database::getConnection();

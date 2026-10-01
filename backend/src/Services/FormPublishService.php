@@ -34,6 +34,9 @@ class FormPublishService
     /** How many revisions to keep per form and kind. */
     public const KEEP_REVISIONS = 50;
 
+    /** A tenant can have at most this many forms (abuse guard; far above real use). */
+    public const MAX_FORMS_PER_TENANT = 100;
+
     private const DEFAULT_THEME = 'survey_theme.json';
 
     private \Closure $audit;
@@ -69,6 +72,10 @@ class FormPublishService
     {
         if (!Identifiers::isValidFormKey($formKey)) {
             return ServiceResult::error('form_key', 'Ungültiger Formular-Schlüssel (erlaubt: Kleinbuchstaben, Ziffern, _ und -)');
+        }
+
+        if (count($this->configs->listKeys()) >= self::MAX_FORMS_PER_TENANT) {
+            return ServiceResult::error('form_key', 'Es sind höchstens ' . self::MAX_FORMS_PER_TENANT . ' Formulare pro Tenant möglich');
         }
 
         $defaults = [
@@ -179,6 +186,7 @@ class FormPublishService
 
         ['result' => $result, 'survey' => $survey] = $this->surveyValidator->validate($surveyJson);
         if (!$result->isValid() || $survey === null) {
+            $this->auditRejected($formKey, $result);
             return new ServiceResult($result);
         }
         $name = $this->surveyName($form['config']);
@@ -210,6 +218,7 @@ class FormPublishService
 
             ['result' => $result, 'survey' => $survey] = $this->surveyValidator->validate($draft['survey_json']);
             if (!$result->isValid() || $survey === null) {
+                $this->auditRejected($formKey, $result);
                 return new ServiceResult($result);
             }
             $name = $this->surveyName($form['config']);
@@ -286,6 +295,7 @@ class FormPublishService
             // Content was valid when it went live, but rules may have become stricter: check again.
             ['result' => $result, 'survey' => $survey] = $this->surveyValidator->validate($rev['content']);
             if (!$result->isValid() || $survey === null) {
+                $this->auditRejected($formKey, $result);
                 return new ServiceResult($result);
             }
 
@@ -320,6 +330,16 @@ class FormPublishService
         $this->revisions->pruneOldest($formKey, FormRevisionRepository::KIND_SURVEY, self::KEEP_REVISIONS);
 
         return $revId;
+    }
+
+    /**
+     * Rejected survey content is a security signal (someone pasted script?): log how many problems and where,
+     * never the content itself.
+     */
+    private function auditRejected(string $formKey, ValidationResult $result): void
+    {
+        $paths = array_slice(array_values(array_unique(array_column($result->errors(), 'path'))), 0, 5);
+        ($this->audit)('form_survey_rejected', $formKey, ['errors' => count($result->errors()), 'paths' => $paths]);
     }
 
     /** Store $content as a revision unless it already is the newest one of that kind. */
