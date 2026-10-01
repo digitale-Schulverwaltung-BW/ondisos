@@ -84,9 +84,9 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 docker compose logs -f backend
 
 # 5. Formular-Konfiguration einspielen (siehe unten)
-cp frontend/config/forms-config-dist.php backend/config/forms-config.php
-nano backend/config/forms-config.php        # Formulare/Empfänger anpassen
-docker compose exec backend php seed-forms.php
+cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # eigene Datei (gitignored)
+nano frontend/config/forms-config.php       # Formulare/Empfänger anpassen — die Vorlage enthält Beispielformulare und @example.com-Adressen
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 
 # 6. Testen
 curl http://localhost:9080/api/health.php
@@ -95,7 +95,8 @@ curl "http://localhost:9080/api/form-config.php?form=bs&tenant=default"
 
 **Formular-Konfiguration:** Die Konfiguration der Formulare (`bs`, `bk`, …) liegt in der Datenbank
 (Tabelle `form_configs`), nicht mehr in einer Datei. `seed-forms.php` übernimmt eine
-`forms-config.php` für Tenant 1: neue Formulare werden hinzugefügt, vorhandene nie überschrieben. Das Frontend holt die Konfiguration bei jedem Aufruf über
+`forms-config.php` für Tenant 1: neue Formulare werden hinzugefügt, vorhandene nie überschrieben. Der Backend-Container sieht `frontend/` nicht — deshalb
+wird die Datei über STDIN hineingereicht (`… php seed-forms.php - < datei`, `exec -T` ist dafür nötig); eine Kopie ins Backend ist nicht mehr nötig. Das Frontend holt die Konfiguration bei jedem Aufruf über
 `/api/form-config.php`. Spätere Änderungen erfolgen per SQL (Admin-Oberfläche: geplant für 3.1) —
 siehe [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern). Nach dem Seed
 können die `forms-config.php`-Dateien gelöscht werden.

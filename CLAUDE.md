@@ -68,7 +68,7 @@ projekt/
 │
 └── backend/                       # Intranet-Admin
     ├── migrate.php               # Schema-Migration auf 3.0 (idempotent)
-    ├── seed-forms.php            # forms-config.php → Tabelle form_configs (Tenant 1)
+    ├── seed-forms.php            # forms-config.php → Tabelle form_configs (Tenant 1); `[<datei>|-]` für Pfad bzw. STDIN
     ├── public/
     │   ├── index.php · detail.php · trash.php · dashboard.php
     │   ├── excel_export.php · bulk_actions.php · change_status.php
@@ -312,7 +312,7 @@ WordPress: `Tenant-Slug` und `Tenant-API-Secret` unter *Einstellungen → Ondiso
 
 Die Konfiguration eines Formulars ist ein JSON-Objekt in `form_configs.config_json` (Tenant + `form_key`).
 `frontend/config/forms-config-dist.php` dokumentiert die möglichen Schlüssel und dient als Quelle für
-`backend/seed-forms.php` (nur Tenant 1, `INSERT IGNORE`: neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben). Änderungen an bestehenden Formularen per SQL;
+`backend/seed-forms.php` (nur Tenant 1, `INSERT IGNORE`: neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben; Quelle ohne Argument `../frontend/config/forms-config.php` bzw. `config/forms-config.php`, sonst eine Datei oder `-` für STDIN — im Docker-Betrieb `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`; das Skript warnt vor `@example.com`-Platzhaltern). Änderungen an bestehenden Formularen per SQL;
 eine Admin-Oberfläche ist für 3.1 geplant.
 
 ```php
@@ -635,8 +635,8 @@ openssl rand -hex 32  # → API_SECRET_KEY (Secret von Tenant 1; darf kein Stand
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # 4. Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
-cp frontend/config/forms-config-dist.php backend/config/forms-config.php   # anpassen
-docker compose exec backend php seed-forms.php
+cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # anpassen (Vorlage = Beispiele)
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 
 # 5. Health Check
 curl http://your-server:9080/api/health.php

@@ -23,8 +23,8 @@ cp .env.example .env
 docker compose --profile dev up -d
 
 # Formular-Konfiguration einspielen (ohne sie gibt es keine Formulare; überschreibt nichts Vorhandenes)
-cp frontend/config/forms-config-dist.php backend/config/forms-config.php   # ggf. anpassen
-docker compose exec backend php seed-forms.php
+cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # anpassen (Vorlage = Beispiele)
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 
 # Logs anschauen
 docker compose logs -f

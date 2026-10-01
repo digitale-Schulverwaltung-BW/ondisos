@@ -12,7 +12,7 @@ backend/.env
 inc/config.php
 config.php
 frontend/config/forms-config.php
-# Local seed source for seed-forms.php (Docker: the backend cannot see frontend/)
+# Optional local seed source for seed-forms.php (default lookup path; Docker users can pass the file via STDIN instead)
 backend/config/forms-config.php
 
 # Debug files
