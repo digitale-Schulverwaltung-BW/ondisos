@@ -15,7 +15,7 @@ SurveyJS-Creator, mit Prüfung, Vorschau und Verlauf. Neue Schulen starten mit d
 
 **Survey-Editor**
 - Text aus dem Creator einfügen (oder `.json` laden); Code-Editor mit Zeilennummern und Fehlermarkierung.
-- *Prüfen*: Syntaxfehler mit Zeile und Spalte, unzulässige Inhalte, Hinweise (z. B. Feldnamen aus der Konfiguration, die es nicht mehr gibt), geänderte/entfernte/neue Felder mit den
+- *Prüfen*: Syntaxfehler mit Zeile und Spalte, unzulässige Inhalte, **Checkliste „Pflichtfelder für Ondisos"** (hat die Survey ein Feld für Name und eines für E-Mail, und sind es Pflichtfelder? Beides braucht jede Anmeldung, die im Backend gespeichert wird), Hinweise (z. B. Feldnamen aus der Konfiguration, die es nicht mehr gibt), geänderte/entfernte/neue Felder mit den
   Folgen für Excel, Vorausfüll-Links und PDF, Unterschied zur veröffentlichten Fassung.
 - *Entwurf* ändert das öffentliche Formular nicht; *Veröffentlichen* wirkt sofort, schlägt eine neue Formular-Version vor und kann zurückgenommen werden (Verlauf).
 - **Vorschau**: Entwurf oder veröffentlichte Fassung wie für Besucher, mit Handy-/Tablet-Breite; „Abschicken" sendet nichts. Läuft in einem abgeschotteten Frame.
@@ -41,6 +41,7 @@ SurveyJS-Creator, mit Prüfung, Vorschau und Verlauf. Neue Schulen starten mit d
 - Schreibende Aktionen sind je Benutzer begrenzt (60/min), Größenlimits (Survey 512 KB, Konfiguration 64 KB, 100 Formulare je Tenant), CSRF und Mandanten-Isolierung in jeder Abfrage.
 - Audit-Ereignisse ohne Inhalte, darunter `form_survey_rejected`, `survey_import_rejected`, `form_delivery_rejected`, `form_copied`, `form_copy_denied`.
 - Das Backend lädt Bootstrap lokal (keine externe CDN mehr).
+- Der Name **ondisos** steht jetzt deutlich in der Kopfzeile des Backends und auf der Anmeldeseite.
 
 ## Behoben
 

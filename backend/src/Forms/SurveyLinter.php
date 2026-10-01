@@ -42,8 +42,9 @@ final class SurveyLinter
         if ($config['db'] ?? true) {
             foreach ($this->requiredFields($survey) as $slot => $info) {
                 $label = $slot === 'name' ? 'Name' : 'E-Mail-Adresse';
+                $target = $slot === 'name' ? 'den Namen' : 'die E-Mail-Adresse';
                 if (!$info['present']) {
-                    $result->addWarning($slot, "Die Survey hat kein Feld für die {$label} (erwartet: " . implode(', ', $slot === 'name' ? self::NAME_FIELDS : self::EMAIL_FIELDS)
+                    $result->addWarning($slot, "Die Survey hat kein Feld für {$target} (erwartet: " . implode(', ', $slot === 'name' ? self::NAME_FIELDS : self::EMAIL_FIELDS)
                         . "): beim Speichern der Anmeldung wird sie verlangt, sonst wird die Anmeldung abgelehnt");
                 } elseif (!$info['required']) {
                     $result->addWarning($slot, "Das Feld \"{$info['field']}\" ({$label}) ist nicht als Pflichtfeld markiert: bleibt es leer, wird die Anmeldung beim Speichern abgelehnt");

@@ -6,8 +6,8 @@ Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELE
 
 | Prüfung | Ergebnis |
 |---|---|
-| Unit-Tests (`composer test -- --testsuite=Unit`) | 912 grün |
-| Integration-Tests (MySQL 8, `database/schema.sql`) | 178 grün |
+| Unit-Tests (`composer test -- --testsuite=Unit`) | 924 grün |
+| Integration-Tests (MySQL 8, `database/schema.sql`) | 182 grün |
 | `php -l` über alle gegenüber `main` geänderten PHP-Dateien | 107 Dateien, keine Fehler |
 | Neuinstallation: `database/schema.sql` auf leerer Datenbank | alle 7 Tabellen, inkl. `form_resources`, `form_drafts`, `form_revisions` |
 | Upgrade: Schema von `main` + `migrate.php` (zweimal) | 3 neue Tabellen, zweiter Lauf ohne Änderung (idempotent) |

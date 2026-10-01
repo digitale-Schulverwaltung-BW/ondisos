@@ -30,7 +30,7 @@ Noch offen (nur manuell prüfbar):
 
 ### v3.1.0 — Stand der Abnahme
 
-Automatisiert: 912 Unit- und 178 Integration-Tests (`composer test`; Integration braucht MySQL mit `database/schema.sql`, siehe `backend/UNITTESTS.md`).
+Automatisiert: 924 Unit- und 182 Integration-Tests (`composer test`; Integration braucht MySQL mit `database/schema.sql`, siehe `backend/UNITTESTS.md`).
 
 In einer Demo-Umgebung (WordPress + Standalone-Frontend + Backend, Multi-Tenant) verifiziert:
 

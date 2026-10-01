@@ -56,6 +56,7 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    mit *Prüfen* kontrolliert (Fehler mit Zeilen- und Spaltenangabe, Hinweise, geänderte Felder, Unterschied zur veröffentlichten Fassung),
    als *Entwurf* gespeichert und erst mit *Veröffentlichen* für Besucher sichtbar. Der bisherige Stand bleibt im Verlauf (Wiederherstellen).
    - Beim Veröffentlichen kann die Formular-Version erhöht werden (Vorschlag aus der bisherigen, z. B. `2026-01-v2` → `2026-01-v3`).
+   - *Prüfen* zeigt eine Checkliste **„Pflichtfelder für Ondisos"**: Jede im Backend gespeicherte Anmeldung braucht ein Feld `Name` (oder `name`) und ein E-Mail-Feld (`email`, `email1`, `Email`, `E-mail`, `E-Mail`), jeweils als Pflichtfeld ohne Bedingung. Fehlt eines, ist es eine Warnung (Entwürfe dürfen unfertig sein); Formulare ohne Speichern im Backend sind ausgenommen.
    - Entfernte oder umbenannte Felder werden deutlich gemeldet: sie fehlen künftig in neuen Anmeldungen, im Excel-Export, in Prefill-Links und
      im PDF; bereits gespeicherte Anmeldungen behalten ihre Daten.
    - Der Editor ist ein Code-Editor (CodeMirror 6, MIT-lizenziert) mit Zeilennummern, JSON-Farben und Fehlermarkierung. Das fertige
