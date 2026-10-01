@@ -408,9 +408,26 @@ class Settings
         }
 
         $has_secret = (string) (getenv('TENANT_API_SECRET') ?: '') !== '';
-        $rows[] = $has_secret
-            ? ['info', 'Tenant-API-Secret: gesetzt (ob es zum Tenant passt, zeigt sich erst beim ersten Absenden)']
-            : ['error', 'Tenant-API-Secret: NICHT gesetzt — Formulare lassen sich nicht absenden.'];
+        if (!$has_secret) {
+            $rows[] = ['error', 'Tenant-API-Secret: NICHT gesetzt — Formulare lassen sich nicht absenden.'];
+        } elseif (!$reachable) {
+            $rows[] = ['info', 'Tenant-API-Secret: gesetzt (nicht geprüft, Backend nicht erreichbar)'];
+        } else {
+            // Signed request: also proves that the secret belongs to this tenant, and lists the tenant's forms.
+            $forms = $client->fetchTenantForms($slug);
+            if ($forms['ok']) {
+                $rows[] = ['ok', 'Tenant-API-Secret: passt zum Tenant'];
+                $rows[] = $forms['forms'] === []
+                    ? ['warning', sprintf('Tenant „%s" hat 0 Formulare: Besucher sehen „Formular nicht gefunden". Im Backend unter „Formulare" anlegen oder von einem anderen Tenant übernehmen.', $slug)]
+                    : ['ok', sprintf('%d Formular(e): %s', count($forms['forms']), implode(', ', array_slice($forms['forms'], 0, 12)) . (count($forms['forms']) > 12 ? ' …' : ''))];
+            } elseif ($forms['reason'] === 'unauthorized') {
+                $rows[] = ['error', 'Tenant-API-Secret: wird vom Backend abgelehnt — es passt nicht zum Tenant „' . $slug . '" (oder der Tenant ist inaktiv). Secret im Backend unter „Tenants" prüfen.'];
+            } elseif ($forms['reason'] === 'not_found') {
+                $rows[] = ['info', 'Tenant-API-Secret: gesetzt (das Backend ist älter als 3.1 und kann es nicht prüfen)'];
+            } else {
+                $rows[] = ['info', 'Tenant-API-Secret: gesetzt (nicht prüfbar: ' . $forms['detail'] . ')'];
+            }
+        }
 
         echo '<h2>Verbindungsstatus</h2>';
         foreach ($rows as [$type, $text]) {

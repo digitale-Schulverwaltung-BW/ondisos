@@ -81,6 +81,22 @@ final class FormConfigSchema
         ];
     }
 
+    /**
+     * What happens to an option when a form is copied to another tenant:
+     *  - 'clear':  not copied (it belongs to the source school: recipients, logo)
+     *  - 'review': copied, but the school should check it (texts that often name the source school)
+     *  - 'keep':   copied as is
+     */
+    public static function copyBehavior(string $path): string
+    {
+        return match ($path) {
+            'notify_email', 'pdf.logo' => 'clear',
+            'pdf.title', 'pdf.header_title', 'pdf.intro_text', 'pdf.footer_text', 'pdf.pre_sections', 'pdf.post_sections',
+            'ical.event_title', 'ical.event_location', 'ical.event_description', 'email.intro_template' => 'review',
+            default => 'keep',
+        };
+    }
+
     /** True if $role may change $path. */
     public static function isEditableBy(string $path, string $role): bool
     {

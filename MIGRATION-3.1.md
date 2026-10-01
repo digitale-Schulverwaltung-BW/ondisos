@@ -64,6 +64,16 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    - Liegt die Survey eines Formulars noch als Datei im Frontend, ist der Editor zunächst leer; zuerst importieren (Abschnitt 3) oder
      den Text aus dem Creator einfügen. Mit der ersten Veröffentlichung übernimmt das Backend das Formular.
 
+7. **Neue Tenants / Formulare kopieren:** `php copy-forms.php --from=<slug> --to=<slug> [--forms=bs,vabo] [--overwrite] [--dry-run]`
+   (Docker: `docker compose exec backend php copy-forms.php …`) oder in der Oberfläche beim Anlegen eines Tenants bzw. auf der Tenant-Seite
+   und unter *Formulare*. Empfänger-Adressen und PDF-Logo werden nicht kopiert; Details und Checkliste: [MULTI-TENANT.md](MULTI-TENANT.md).
+8. **Neuer signierter Endpunkt** `GET /api/forms.php?tenant=<slug>` (Header `X-Signature` = HMAC-SHA256 über `forms:<slug>` mit dem
+   Tenant-Secret): liefert die Formular-Schlüssel des eigenen Tenants. Das WordPress-Plugin nutzt ihn für den Verbindungsstatus
+   (Secret passt? wie viele Formulare?). Anders als `form-config.php` ist er nur mit dem Secret abrufbar. Ein älteres Backend ohne diesen
+   Endpunkt wird vom Plugin erkannt und nur als „nicht prüfbar" gemeldet.
+9. **Hinweis im Editor:** Ohne Empfänger und ohne Speichern im Backend meldet die Konfigurations-Seite nach dem Speichern, dass das Formular
+   vom Frontend nicht angezeigt wird.
+
 ## Frontend / WordPress
 
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).

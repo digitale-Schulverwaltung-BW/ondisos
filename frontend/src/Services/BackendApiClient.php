@@ -301,6 +301,50 @@ class BackendApiClient
     }
 
     /**
+     * Which forms does the tenant have? Signed request (HMAC over "forms:<slug>" with the tenant secret), so it also
+     * proves that the configured secret matches the tenant. Used by the WordPress plugin's connection status.
+     *
+     * reason: null on success; FAIL_UNAUTHORIZED = signature rejected (wrong secret, unknown/inactive tenant),
+     * FAIL_UNREACHABLE, FAIL_NOT_FOUND = backend older than 3.1 (no such endpoint), FAIL_ERROR otherwise.
+     *
+     * @return array{ok: bool, reason: ?string, detail: string, forms: list<string>}
+     */
+    public function fetchTenantForms(string $tenantSlug): array
+    {
+        $url = $this->baseUrl . '/forms.php?tenant=' . urlencode($tenantSlug);
+
+        if ($this->apiSecret === '') {
+            return ['ok' => false, 'reason' => self::FAIL_UNAUTHORIZED, 'detail' => 'no tenant API secret configured', 'forms' => []];
+        }
+
+        $response = $this->httpRequest($url, 5, [
+            'Accept: application/json',
+            'X-Signature: ' . $this->sign('forms:' . $tenantSlug),
+        ]);
+        $code = $response['code'];
+
+        if ($response['error'] !== '' || $code === 0) {
+            return ['ok' => false, 'reason' => self::FAIL_UNREACHABLE, 'detail' => $response['error'] !== '' ? $response['error'] : 'no response', 'forms' => []];
+        }
+        if ($code === 401 || $code === 403) {
+            return ['ok' => false, 'reason' => self::FAIL_UNAUTHORIZED, 'detail' => 'signature rejected: the tenant API secret does not match the tenant, or the tenant is unknown/inactive', 'forms' => []];
+        }
+        if ($code === 404) {
+            return ['ok' => false, 'reason' => self::FAIL_NOT_FOUND, 'detail' => 'the backend has no forms.php (older than 3.1)', 'forms' => []];
+        }
+        if ($code !== 200) {
+            return ['ok' => false, 'reason' => self::FAIL_ERROR, 'detail' => 'HTTP ' . $code, 'forms' => []];
+        }
+
+        $data = json_decode($response['body'], true);
+        if (!is_array($data) || ($data['success'] ?? false) !== true || !is_array($data['forms'] ?? null)) {
+            return ['ok' => false, 'reason' => self::FAIL_ERROR, 'detail' => 'unexpected response', 'forms' => []];
+        }
+
+        return ['ok' => true, 'reason' => null, 'detail' => '', 'forms' => array_values(array_filter($data['forms'], 'is_string'))];
+    }
+
+    /**
      * Perform a GET request. Isolated so tests can replace the network.
      *
      * @return array{body: string, code: int, error: string} code 0 and a non-empty error when no HTTP response arrived

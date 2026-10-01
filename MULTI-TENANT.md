@@ -100,10 +100,29 @@ Der Platform-Admin sieht alle Tenants und kann zwischen ihnen wechseln.
    - **Name**, z. B. `Berufliches Schulzentrum Karlsruhe`
    - **Slug**, z. B. `bsz-karlsruhe` (Kleinbuchstaben, Ziffern, Bindestriche; wird aus dem Namen vorgeschlagen)
    - **CORS Origin:** URL des zugehörigen Frontends, z. B. `https://anmeldung.bsz-karlsruhe.de` (optional)
+   - **Formulare übernehmen von:** ein neuer Tenant hat **keine Formulare** („Formular nicht gefunden", sobald das Frontend läuft).
+     Hier lassen sich die Formulare eines bestehenden Tenants übernehmen (3.1); „leer starten" legt keine an.
 3. Nach dem Speichern erscheint der **API-Schlüssel** (das Tenant-Secret) —
    **jetzt sichern, er wird nur einmal angezeigt.** Er geht als `TENANT_API_SECRET` in die
    Frontend-Konfiguration. Verloren? Auf der Tenant-Seite *„Secret neu generieren"* — das alte
    Secret ist danach ungültig, das Frontend muss angepasst werden.
+
+### Neuen Tenant einrichten (Checkliste)
+
+1. Tenant anlegen (siehe oben), **Formulare übernehmen** (oder später auf der Tenant-Seite bzw. unter *Formulare*, *Formulare von einem
+   anderen Tenant übernehmen*; auf der Kommandozeile `php copy-forms.php --from=<quelle> --to=<neu>`).
+2. **Empfänger eintragen:** Beim Kopieren werden `notify_email` und das PDF-Logo **bewusst nicht** übernommen (sonst gingen die
+   Anmeldungen der neuen Schule per Mail an das Sekretariat der alten). Unter *Formulare → Bearbeiten* trägt die Schule ihre Adresse ein.
+   Ein kopiertes Formular ohne Speichern im Backend (`db: false`) und ohne Empfänger wird vom Frontend **nicht angezeigt**, bis
+   ein Empfänger eingetragen ist — es gehen keine Anmeldungen verloren.
+3. Texte prüfen: Titel, PDF-Texte, Kalendereintrag und Mail-Einleitung werden kopiert und im Bericht aufgelistet (nennen sie noch die alte Schule?).
+   Enthält die Survey E-Mail-Adressen oder Telefonnummern, steht das ebenfalls im Bericht.
+4. Tenant-Admin anlegen, Secret und Slug ins Frontend bzw. WordPress-Plugin eintragen. Der Verbindungsstatus des Plugins zeigt dann
+   „Tenant-API-Secret: passt zum Tenant" und die Zahl der Formulare (bei 0: Hinweis).
+
+Nur **Plattform-Admins** dürfen kopieren (es werden Formulare eines anderen Tenants gelesen). Kopiert werden Konfiguration, Survey und Theme;
+**nie** Anmeldungen, Uploads, Entwürfe, Verlauf oder das API-Secret. Vorhandene Formulare des Ziels bleiben unverändert (außer mit
+„Vorhandene Formulare ersetzen" / `--overwrite`; der alte Stand bleibt dann im Verlauf). Das Kopieren geschieht ganz oder gar nicht.
 
 ### Tenant-Admin anlegen
 
@@ -156,9 +175,10 @@ Siehe [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
 Jeder Tenant hat seine eigene Formular-Konfiguration in `form_configs` (Schlüssel: Tenant +
 Formular-Key). Das Frontend holt sie bei jedem Aufruf über `/api/form-config.php?form=…&tenant=…`.
 
-- `seed-forms.php` übernimmt eine vorhandene `forms-config.php` **nur für Tenant 1**
-  (`INSERT IGNORE`, überschreibt nichts).
-- Für weitere Tenants fügst du die Konfiguration per SQL ein. Eine Admin-Oberfläche ist für 3.1 geplant.
+- `seed-forms.php [--tenant=<slug>]` übernimmt eine vorhandene `forms-config.php` (überschreibt nichts, prüft jeden Eintrag).
+- Ab 3.1 pflegen Schul-Admins ihre Formulare im Backend (*Formulare*); neue Tenants starten mit den Formularen eines anderen Tenants
+  (`copy-forms.php` bzw. Tenant-Seite, siehe „Neuen Tenant einrichten").
+- Per SQL geht es weiterhin:
 
 ```sql
 INSERT INTO form_configs (tenant_id, form_key, config_json)

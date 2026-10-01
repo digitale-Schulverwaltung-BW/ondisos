@@ -126,4 +126,16 @@ class FormDeliveryServiceTest extends FormEditorTestCase
         $this->editor->publish('bs', 'u');
         $this->assertNotSame($before, $this->delivery->bundle('bs')['etag']);
     }
+
+    public function testFormKeysAreThoseOfTheCurrentTenantOnly(): void
+    {
+        $this->configs->insert('zq', ['form' => 'zq.json', 'theme' => 't.json']);
+        $this->configs->insert('bs', ['form' => 'bs.json', 'theme' => 't.json']);
+        $this->asTenant($this->tenantB);
+        $this->configs->insert('nur-b', ['form' => 'b.json', 'theme' => 't.json']);
+
+        $this->assertSame(['nur-b'], $this->delivery->formKeys());
+        $this->asTenant($this->tenantA);
+        $this->assertSame(['bs', 'zq'], $this->delivery->formKeys(), 'sorted, own tenant only');
+    }
 }

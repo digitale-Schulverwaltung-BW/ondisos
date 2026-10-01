@@ -9,6 +9,7 @@ require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 require_once __DIR__ . '/../inc/form_editor.php';
 require_once __DIR__ . '/../inc/form_fields.php';
+require_once __DIR__ . '/../inc/form_copy.php';
 
 use App\Services\MessageService as M;
 
@@ -35,7 +36,25 @@ if (!$editorNoTenant && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action
     $createErrors = ff_group_by_path($outcome['result']->errors());
 }
 
+// Platform admins can copy the forms of another tenant into the current one.
+if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFORM && $_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'copy') {
+    try {
+        csrf_validate();
+        form_copy_run((int)($_POST['copy_from'] ?? 0), \App\Config\TenantContext::getTenantId(), !empty($_POST['overwrite']));
+    } catch (\InvalidArgumentException $e) {
+        editor_flash('danger', M::get('forms.csrf_failed', 'Die Sitzung ist abgelaufen. Bitte die Seite neu laden und erneut versuchen.'));
+    }
+    header('Location: forms.php');
+    exit;
+}
+
 $forms = $editorNoTenant ? [] : $editor->listForms();
+$copySources = [];
+if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFORM) {
+    $currentId   = \App\Config\TenantContext::getTenantId();
+    $copySources = array_values(array_filter((new \App\Repositories\TenantRepository())->findAll(), static fn (array $t): bool => (int)$t['id'] !== $currentId));
+}
+[$copyReport, $copyFlash] = form_copy_take();
 
 require __DIR__ . '/../inc/header.php';
 ?>
@@ -51,6 +70,9 @@ require __DIR__ . '/../inc/header.php';
 <?php if ($editorNoTenant): ?>
     <div class="alert alert-info"><?= ff_e(M::get('forms.choose_tenant', 'Bitte oben rechts einen Tenant wählen: Formulare gehören immer zu genau einer Schule.')) ?></div>
 <?php else: ?>
+
+    <?php if ($copyFlash !== null): ?><div class="alert alert-<?= ff_e($copyFlash[0]) ?>"><?= ff_e($copyFlash[1]) ?></div><?php endif; ?>
+    <?php if ($copyReport !== null): echo form_copy_report_html($copyReport); endif; ?>
 
     <?php if ($forms === []): ?>
         <div class="alert alert-secondary"><?= ff_e(M::get('forms.none_yet', 'Es gibt noch kein Formular.')) ?></div>
@@ -89,6 +111,33 @@ require __DIR__ . '/../inc/header.php';
                 </tbody>
             </table>
         </div>
+    <?php endif; ?>
+
+    <?php if ($copySources !== []): ?>
+    <div class="card mt-4">
+        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.copy.title', 'Formulare von einem anderen Tenant übernehmen')) ?></h5></div>
+        <div class="card-body">
+            <form method="post" action="forms.php" class="row g-3 align-items-end">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="copy">
+                <div class="col-md-5">
+                    <label class="form-label" for="copy_from"><?= ff_e(M::get('forms.copy.from', 'Von Tenant')) ?></label>
+                    <select class="form-select" id="copy_from" name="copy_from" required>
+                        <option value="">–</option>
+                        <?php foreach ($copySources as $t): ?>
+                            <option value="<?= (int)$t['id'] ?>"><?= ff_e($t['name']) ?> (<?= ff_e($t['slug']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-4"><div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="overwrite" name="overwrite" value="1">
+                    <label class="form-check-label" for="overwrite"><?= ff_e(M::get('forms.copy.overwrite', 'Vorhandene Formulare ersetzen')) ?></label>
+                </div></div>
+                <div class="col-md-3"><button type="submit" class="btn btn-outline-primary"><?= ff_e(M::get('forms.copy.submit', 'Übernehmen')) ?></button></div>
+                <div class="col-12 form-text"><?= ff_e(M::get('forms.copy.help', 'Kopiert Konfiguration, Survey und Theme. Nicht kopiert werden Empfänger-Adressen, das PDF-Logo, Anmeldungen, Entwürfe, Verlauf und Schlüssel.')) ?></div>
+            </form>
+        </div>
+    </div>
     <?php endif; ?>
 
     <div class="card mt-4">

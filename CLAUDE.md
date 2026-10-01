@@ -71,6 +71,7 @@ projekt/
 └── backend/                       # Intranet-Admin
     ├── migrate.php               # Schema-Migration auf 3.0 (idempotent)
     ├── seed-forms.php            # forms-config.php → Tabelle form_configs; `[--tenant=<slug>] [<datei>|-]` (Pfad bzw. STDIN), validiert jeden Eintrag
+    ├── copy-forms.php            # Formulare von Tenant zu Tenant kopieren (3.1): `--from --to [--forms] [--overwrite] [--dry-run]`
     ├── import-surveys.php        # Survey-/Theme-Dateien → Datenbank (3.1): `[--tenant=<slug>] [--overwrite] [--dry-run] <verzeichnis>`
     ├── public/
     │   ├── index.php · detail.php · trash.php · dashboard.php
@@ -87,7 +88,8 @@ projekt/
     │   └── api/
     │       ├── submit.php        # Anmeldung speichern (HMAC)
     │       ├── upload.php        # Datei-Upload (HMAC, Virenscan)
-    │       ├── form-config.php   # Formular-Konfiguration je Tenant (öffentlich per Slug)
+    │       ├── form-config.php   # Formular-Konfiguration je Tenant (öffentlich per Slug); ?with=survey liefert Survey/Theme + ETag
+    │       ├── forms.php         # Formular-Schlüssel des eigenen Tenants (HMAC über "forms:<slug>", für den Plugin-Status)
     │       └── health.php
     ├── src/
     │   ├── Config/        Config · Database · EnvLoader · FormConfig · TenantContext
@@ -102,11 +104,11 @@ projekt/
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
     │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger · UploadCleanupService
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
-    │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService  (3.1)
-    │   ├── Cli/           CliArgs · ImportSurveysCommand  (Logik der CLI-Skripte, testbar)
+    │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService · FormCopyService  (3.1)
+    │   ├── Cli/           CliArgs · ImportSurveysCommand · CopyFormsCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
-    ├── inc/               bootstrap · auth · csrf · header · footer · form_editor · form_fields (Editor-Helfer)
+    ├── inc/               bootstrap · auth · csrf · header · footer · form_editor · form_fields · form_copy (Editor-Helfer)
     ├── templates/pdf/     base.php · styles.css · sections/
     ├── config/            messages.php (+ messages.local.php, forms-config.php als Seed-Fallback)
     ├── scripts/           generate-password-hash.php
@@ -735,7 +737,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 760 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 124 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 828 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 158 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

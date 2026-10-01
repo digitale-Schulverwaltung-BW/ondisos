@@ -44,7 +44,60 @@ final class SurveyLinter
             );
         }
 
+        // The frontend refuses a form that stores nothing and mails nobody (FormConfig::discardsSubmissions()).
+        if (!($config['db'] ?? true) && !self::hasRecipient($config['notify_email'] ?? null)) {
+            $result->addWarning(
+                'notify_email',
+                'Ohne Empfänger und ohne Speichern im Backend würden Anmeldungen verloren gehen: das Formular wird deshalb nicht angezeigt. '
+                . 'Bitte einen Empfänger eintragen oder das Speichern im Backend einschalten.'
+            );
+        }
+
         return $result;
+    }
+
+    /**
+     * Contact data inside a survey (e-mail addresses, phone numbers), e.g. the secretariat of the school the survey was
+     * copied from. Reported once per finding with its path; used when copying forms between schools.
+     *
+     * @param array<string,mixed> $survey
+     */
+    public function contactData(array $survey): ValidationResult
+    {
+        $result = new ValidationResult();
+        $this->scanContact($survey, '', $result);
+        return $result;
+    }
+
+    private function scanContact(mixed $node, string $path, ValidationResult $result): void
+    {
+        if (is_array($node)) {
+            foreach ($node as $key => $value) {
+                $this->scanContact($value, is_int($key) ? "{$path}[{$key}]" : ($path === '' ? (string)$key : "{$path}.{$key}"), $result);
+            }
+            return;
+        }
+        if (!is_string($node)) {
+            return;
+        }
+        $text = html_entity_decode(strip_tags($node));
+        if (preg_match('/[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}/', $text, $m) === 1) {
+            $result->addWarning($path, 'enthält eine E-Mail-Adresse (' . $m[0] . '): gehört sie zu dieser Schule?');
+        }
+        if (preg_match('/(?:\+\d{2}|\b0)[\d \/().\-]{7,}\d/', $text, $m) === 1) {
+            $result->addWarning($path, 'enthält eine Telefonnummer (' . trim($m[0]) . '): gehört sie zu dieser Schule?');
+        }
+    }
+
+    private static function hasRecipient(mixed $notify): bool
+    {
+        $list = is_array($notify) ? $notify : explode(',', (string)$notify);
+        foreach ($list as $address) {
+            if (is_string($address) && filter_var(trim($address), FILTER_VALIDATE_EMAIL) !== false) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

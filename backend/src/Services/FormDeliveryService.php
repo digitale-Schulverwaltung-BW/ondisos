@@ -47,6 +47,16 @@ class FormDeliveryService
     }
 
     /**
+     * Form keys of the current tenant (for the signed forms.php status endpoint).
+     *
+     * @return list<string>
+     */
+    public function formKeys(): array
+    {
+        return $this->configs->listKeys();
+    }
+
+    /**
      * Does an If-None-Match header value match $etag?
      *
      * Tolerates what proxies and Apache's mod_deflate do to validators: quotes, a W/ prefix, a "-gzip"/"-br"
