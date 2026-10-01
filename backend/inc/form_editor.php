@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Shared start of forms.php and form_edit.php: access check, tenant check, controller.
  *
- * Sets: $editorRole (platform|tenant), $editor (FormEditorController) — or $editorNoTenant = true when a
+ * Sets: $editorRole (platform|tenant), $editor (FormEditorController), $surveyEditor (SurveyEditorController) — or $editorNoTenant = true when a
  * platform admin is in "all tenants" mode and has to pick a tenant first (then $editor is not set).
  * Stops with 403 for everybody who may not use the editor.
  */
@@ -13,6 +13,7 @@ use App\Config\Database;
 use App\Config\EnvLoader;
 use App\Config\TenantContext;
 use App\Controllers\FormEditorController;
+use App\Controllers\SurveyEditorController;
 use App\Forms\EditorAccess;
 use App\Repositories\FormConfigRepository;
 use App\Repositories\FormDraftRepository;
@@ -35,15 +36,10 @@ if (!$editorNoTenant) {
     $resources = new FormResourceRepository($db);
     $drafts   = new FormDraftRepository($db);
     $revisions = new FormRevisionRepository($db);
-    $editor   = new FormEditorController(
-        $configs,
-        $resources,
-        $drafts,
-        $revisions,
-        new FormPublishService($db, $configs, $resources, $drafts, $revisions),
-        $editorRole,
-        (string)($_SESSION['admin_username'] ?? 'admin'),
-    );
+    $publishService = new FormPublishService($db, $configs, $resources, $drafts, $revisions);
+    $editorUser     = (string)($_SESSION['admin_username'] ?? 'admin');
+    $editor         = new FormEditorController($configs, $resources, $drafts, $revisions, $publishService, $editorRole, $editorUser);
+    $surveyEditor   = new SurveyEditorController($configs, $resources, $drafts, $revisions, $publishService, $editorRole, $editorUser);
 }
 
 /** Flash message for the next page view: ['success'|'danger'|'warning', text]. */

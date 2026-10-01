@@ -233,6 +233,23 @@ class FormPublishService
     }
 
     /**
+     * Throw the survey draft away. The live survey is not touched.
+     *
+     * @return bool false if there was no draft
+     * @throws NotFoundException the form does not exist for this tenant
+     */
+    public function discardDraft(string $formKey, string $user): bool
+    {
+        $this->configs->find($formKey) ?? throw new NotFoundException("Formular '{$formKey}' nicht gefunden");
+
+        $discarded = $this->drafts->delete($formKey);
+        if ($discarded) {
+            ($this->audit)('form_draft_discarded', $formKey, []);
+        }
+        return $discarded;
+    }
+
+    /**
      * Restore an earlier state: a survey revision becomes the live survey, a config revision becomes the live config.
      * Revisions of other forms or tenants are "not found".
      *

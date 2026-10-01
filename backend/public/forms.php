@@ -82,7 +82,8 @@ require __DIR__ . '/../inc/header.php';
                             <?php endif; ?>
                         </td>
                         <td class="text-end"><?= (int)$f['submissions'] ?></td>
-                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="form_edit.php?form=<?= urlencode($f['key']) ?>"><?= ff_e(M::get('forms.edit', 'Bearbeiten')) ?></a></td>
+                        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="form_edit.php?form=<?= urlencode($f['key']) ?>"><?= ff_e(M::get('forms.edit', 'Bearbeiten')) ?></a>
+                            <a class="btn btn-sm btn-outline-secondary" href="form_survey.php?form=<?= urlencode($f['key']) ?>"><?= ff_e(M::get('forms.survey.edit', 'Survey bearbeiten')) ?></a></td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>

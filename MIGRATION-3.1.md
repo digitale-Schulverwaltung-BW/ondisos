@@ -52,7 +52,14 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    - Beim Speichern wird die Konfiguration einheitlich geschrieben: Benachrichtigungs-Adressen als Liste, leere Angaben und
      „kein Logo" (`false`) als fehlender Schlüssel. Das Verhalten ist dasselbe; nur die gespeicherte Form ändert sich.
    - Unbekannte Schlüssel, die jemand per SQL gesetzt hat, bleiben beim Speichern erhalten.
-   - Die Survey selbst (Fragen) wird in einem späteren Schritt im Editor bearbeitbar; bis dahin gilt der Import (Abschnitt 3).
+6. **Survey-Editor** (Seite *Survey bearbeiten* eines Formulars): Der Text aus dem SurveyJS-Creator wird eingefügt (oder als Datei geladen),
+   mit *Prüfen* kontrolliert (Fehler mit Zeilen- und Spaltenangabe, Hinweise, geänderte Felder, Unterschied zur veröffentlichten Fassung),
+   als *Entwurf* gespeichert und erst mit *Veröffentlichen* für Besucher sichtbar. Der bisherige Stand bleibt im Verlauf (Wiederherstellen).
+   - Beim Veröffentlichen kann die Formular-Version erhöht werden (Vorschlag aus der bisherigen, z. B. `2026-01-v2` → `2026-01-v3`).
+   - Entfernte oder umbenannte Felder werden deutlich gemeldet: sie fehlen künftig in neuen Anmeldungen, im Excel-Export, in Prefill-Links und
+     im PDF; bereits gespeicherte Anmeldungen behalten ihre Daten.
+   - Liegt die Survey eines Formulars noch als Datei im Frontend, ist der Editor zunächst leer; zuerst importieren (Abschnitt 3) oder
+     den Text aus dem Creator einfügen. Mit der ersten Veröffentlichung übernimmt das Backend das Formular.
 
 ## Frontend / WordPress
 
