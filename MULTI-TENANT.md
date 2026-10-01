@@ -79,8 +79,9 @@ ADMIN_PASSWORD_HASH='$2y$10$...'   # Hash aus Schritt 2
 ### 4. Backend neu starten
 
 ```bash
-docker compose restart backend
-# oder Apache/PHP-FPM neu laden
+docker compose up -d backend    # Container neu erstellen, damit die geänderte Root-.env ankommt
+# (ein bloßes `restart` übernimmt geänderte Compose-Variablen nicht);
+# ohne Docker: Apache/PHP-FPM neu laden
 ```
 
 ### 5. Als Platform-Admin einloggen

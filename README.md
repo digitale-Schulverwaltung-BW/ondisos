@@ -126,8 +126,8 @@ sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
 
 nano .env  # DB-Passwörter anpassen, Secrets überprüfen
 
-# Optional: Backend-spezifische Overrides (Rate Limits, Virenscan, ...)
-# cp backend/.env.example backend/.env
+# backend/.env ist optional und wird im Docker-Betrieb beim Start erzeugt (siehe unten);
+# Backend-spezifische Overrides (Rate Limits, Virenscan, ...) einfach an sie anhängen.
 
 # Container starten (Backend + MySQL + ClamAV) — die Datenbank-Migration läuft automatisch
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
@@ -137,13 +137,18 @@ cp frontend/config/forms-config-dist.php backend/config/forms-config.php
 nano backend/config/forms-config.php
 docker compose exec backend php seed-forms.php
 
-# Passwort-Hash generieren (optional, wenn AUTH_ENABLED=true)
+# Admin-Zugang: Pflicht mit dem Prod-Overlay, das AUTH_ENABLED=true setzt (sonst ist das Backend nicht bedienbar)
 docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
+#   → Benutzername und Hash in die Root-.env eintragen (den Hash in EINFACHE Anführungszeichen):
+#        ADMIN_USERNAME=admin
+#        ADMIN_PASSWORD_HASH='$2y$10$...'
+#   → Container neu erstellen, damit die Werte ankommen:
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend
 ```
 
 **Credentials-Struktur:**
 - ✅ `/.env` - Alle Core-Credentials (DB_USER, DB_PASS, Secrets)
-- ✅ `/backend/.env` - Optional, nur für Backend-Overrides
+- ✅ `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt, eigene Zusatz-Einstellungen bleiben erhalten ([DEPLOYMENT.md](DEPLOYMENT.md#backendenv-im-docker-betrieb))
 - ✅ `API_SECRET_KEY` ist das Secret des ersten Tenants; das Frontend signiert damit seine Anfragen
 
 ### 3. Frontend Setup

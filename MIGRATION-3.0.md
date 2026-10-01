@@ -85,7 +85,7 @@ Weitere Hinweise zu Backups: [DEPLOYMENT.md § Backup](DEPLOYMENT.md) und [DISAS
 ### 2.2 Voraussetzungen prüfen
 
 - PHP 8.2+ (unverändert), MySQL 8.0+ / MariaDB 10.5+
-- Docker: Compose-Plugin (`docker compose version`), nicht mehr das alte `docker-compose`
+- Docker: Compose-Plugin **≥ 2.24** (`docker compose version`), nicht mehr das alte `docker-compose`
 - Vorhandene `frontend/config/forms-config.php` — sie wird für den Seed gebraucht (siehe 3.5)
 
 ### 2.3 Spalte `pdf_config` vorhanden?
@@ -383,6 +383,8 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | PDF-Link liefert „TenantContext not initialized" | Backend älter als die Fix-Version | Backend auf aktuellen 3.0-Stand bringen |
 | Alte Uploads im Backend nicht zu öffnen | Dateien nicht nach `uploads/tenant-1/` verschoben | `php migrate.php` erneut (Step 4d); Schreibrechte auf `uploads/` prüfen |
 | `docker-compose: command not found` | Altes Kommando | `docker compose …` (Compose-Plugin installieren) |
+| Änderung der Root-`.env` (Secret, `ADMIN_*`) kommt im Backend nicht an | Container wurde nur neu gestartet, nicht neu erstellt; oder `backend/.env` ist von Hand angelegt (ohne Marker `# GENERATED-BY-ENTRYPOINT`) und hat Vorrang | `docker compose up -d backend`; bei handgeschriebener Datei dort ändern oder die Datei entfernen |
+| `env file …/backend/.env not found` | Compose < 2.24 | Compose-Plugin aktualisieren, oder `touch backend/.env` |
 
 Weitere Hilfe: [MULTI-TENANT.md](MULTI-TENANT.md) (Mehrschul-Betrieb),
 [DEPLOYMENT.md](DEPLOYMENT.md) (Betrieb), [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) (Notfälle).
