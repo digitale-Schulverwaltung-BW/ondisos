@@ -34,6 +34,17 @@ class Form_Config_Loader
     }
 
     /**
+     * Why ensure() failed for $form_key in this request (null if it did not).
+     *
+     * @return array{reason: string, detail: string, http_code: int, backend_url: string}|null
+     *         reason: 'unreachable' | 'unauthorized' | 'not_found' | 'error'
+     */
+    public static function failure(string $form_key): ?array
+    {
+        return FormConfigLoader::failure($form_key);
+    }
+
+    /**
      * Make sure the config for $form_key is loaded into FormConfig.
      *
      * @return bool True if the form exists for the tenant and is loaded,

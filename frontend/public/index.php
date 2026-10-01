@@ -14,8 +14,8 @@ use Frontend\Utils\CsrfProtection;
 // Get form key from request
 $formKey = $_REQUEST['form'] ?? '';
 
-// Basic validation: form key must not be empty
-if (empty($formKey)) {
+// 404 page for a missing or unknown form
+$renderNotFound = static function (): never {
     http_response_code(404);
     ?>
     <!DOCTYPE html>
@@ -38,13 +38,23 @@ if (empty($formKey)) {
     </html>
     <?php
     exit;
+};
+
+// Basic validation: form key must not be empty
+if (empty($formKey)) {
+    $renderNotFound();
 }
 
 // Fetch the form configuration from the backend API (tenant = TENANT_SLUG in .env,
 // 'default' for single-tenant deployments) and load it into FormConfig.
-// If the backend is unreachable or the form does not exist for this tenant, render a
-// 503 maintenance page.
+// A form the backend does not know for this tenant is a plain 404. If the backend is unreachable or
+// rejects the tenant (wrong BACKEND_API_URL, TENANT_SLUG ...), render a 503 maintenance page; the reason
+// is written to the PHP error log by FormConfigLoader.
 if (!FormConfigLoader::ensure($formKey)) {
+    if ((FormConfigLoader::failure($formKey)['reason'] ?? null) === \Frontend\Services\BackendApiClient::FAIL_NOT_FOUND) {
+        $renderNotFound();
+    }
+
     http_response_code(503);
     $pageTitle   = M::get('maintenance.unavailable_title');
     $heading     = M::get('maintenance.unavailable_heading');
