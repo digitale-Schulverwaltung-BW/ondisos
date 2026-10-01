@@ -133,9 +133,9 @@ nano .env  # DB-Passwörter anpassen, Secrets überprüfen
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 # Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
-cp frontend/config/forms-config-dist.php backend/config/forms-config.php
-nano backend/config/forms-config.php
-docker compose exec backend php seed-forms.php
+cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # eigene Datei anlegen
+nano frontend/config/forms-config.php        # Formulare/Empfänger anpassen (die Vorlage hat Beispieladressen)
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 
 # Admin-Zugang: Pflicht mit dem Prod-Overlay, das AUTH_ENABLED=true setzt (sonst ist das Backend nicht bedienbar)
 docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
@@ -473,8 +473,8 @@ nano .env  # DB-Credentials, Secrets
 docker compose --profile dev up -d  # Backend + MySQL + Frontend (+ phpMyAdmin)
 
 # Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
-cp frontend/config/forms-config-dist.php backend/config/forms-config.php
-docker compose exec backend php seed-forms.php
+cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # anpassen
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 
 # Oder: Manuelles Setup
 cd backend

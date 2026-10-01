@@ -50,8 +50,9 @@ PDF_TOKEN_SECRET=<your-generated-secret-key>
 
 The form configuration (including the `pdf` block) is stored in the database (table `form_configs`, one
 row per tenant and form; the frontend fetches it from the backend). To create it, copy
-`frontend/config/forms-config-dist.php` to `forms-config.php` (frontend) or `backend/config/forms-config.php`
-(Docker), edit it and run `php seed-forms.php` (tenant 1 only; adds new forms, never overwrites existing rows).
+`frontend/config/forms-config-dist.php` to `frontend/config/forms-config.php`, edit it and import it:
+`php seed-forms.php` (manual install) or, with Docker, `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`
+(tenant 1 only; adds new forms, never overwrites existing rows).
 Later changes are made in `form_configs.config_json` (SQL) — see [../MIGRATION-3.0.md § 6](../MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
 The entry looks like this (shown as PHP; it is stored as JSON):
 

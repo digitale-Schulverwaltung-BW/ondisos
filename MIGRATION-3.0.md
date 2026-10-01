@@ -199,11 +199,16 @@ cd backend && php seed-forms.php
 ```
 
 ```bash
-# Docker: das Backend-Image sieht das Frontend-Verzeichnis nicht. Lege die Datei dort ab,
-# wo seed-forms.php als Fallback sucht (backend/config/forms-config.php):
-cp frontend/config/forms-config.php backend/config/forms-config.php
-docker compose exec backend php seed-forms.php
+# Docker: der Backend-Container sieht das Frontend-Verzeichnis nicht — die Datei per STDIN hineinreichen
+# (exec -T ist nötig; keine Kopie ins Backend):
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
 ```
+
+Liegt die `forms-config.php` auf einem anderen Server (öffentliches Frontend), kopiere sie auf den Backend-Host und gib sie dort auf dieselbe Weise
+herein; alternativ `php seed-forms.php /pfad/zur/forms-config.php` (nur manuelle Installation bzw. im Container erreichbare Pfade).
+
+> Das Skript führt die Datei als PHP aus (`return [...]`, wie bisher das Frontend). Verwende nur Dateien, denen du vertraust. Es warnt, wenn Einträge noch
+> Platzhalter-Adressen aus der Vorlage (`…@example.com`) tragen.
 
 Ausgabe: `Seeded: bs`, `Seeded: bk`, … Das Skript schreibt für **Tenant 1** und verwendet
 `INSERT IGNORE`: neue Formular-Keys werden hinzugefügt, bereits vorhandene Einträge **nie** überschrieben
@@ -216,8 +221,7 @@ docker compose exec mysql mysql -u "$DB_USER" -p"$DB_PASS" "$DB_NAME" \
   -e "SELECT tenant_id, form_key FROM form_configs"
 ```
 
-Erst wenn alle Formulare auftauchen, können `frontend/config/forms-config.php` und
-`backend/config/forms-config.php` gelöscht werden.
+Erst wenn alle Formulare auftauchen, kann die `forms-config.php` gelöscht werden (das Frontend liest sie nicht mehr; ein erneuter Lauf ist ohnehin harmlos).
 
 ### 3.5 Frontend aktualisieren
 
