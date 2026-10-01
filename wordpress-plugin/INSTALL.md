@@ -105,12 +105,28 @@ WordPress-Admin → *Plugins* → **„ondisos - Onboarding Digital Souverän + 
 
 | Feld | Bedeutung |
 |---|---|
-| **Backend API URL** | URL der Backend-API, z. B. `http://intranet.example.com:9080/api` |
+| **Backend API URL** | URL der Backend-API, z. B. `http://intranet.example.com:9080/api` — **bei WordPress in Docker siehe unten** |
 | **Tenant-Slug** | Kennung der Schule im Backend; leer = `default` (Tenant 1) |
 | **Tenant-API-Secret** | Secret des Tenants; signiert alle Anfragen ans Backend. Wird **nie wieder angezeigt**; leer lassen bedeutet „unverändert" |
 | **Von E-Mail-Adresse** | Absender der Benachrichtigungs-E-Mails |
 
-Die Seite zeigt außerdem den aktuell wirksamen Tenant-Slug und ob ein Secret gesetzt ist.
+Die Seite zeigt oben einen **Verbindungsstatus** (wird beim Öffnen geprüft): ob das Backend unter der eingetragenen URL antwortet, ob der Tenant
+vom Backend akzeptiert wird und ob ein Secret gesetzt ist. Beim **Speichern** einer URL, unter der das Backend nicht antwortet, erscheint eine Warnung
+(die URL wird trotzdem gespeichert). Ob das Secret zum Tenant passt, lässt sich erst beim ersten Absenden feststellen.
+
+### Backend-URL, wenn WordPress in Docker läuft
+
+Das Plugin ruft das Backend **vom WordPress-Container aus** auf. In einem Container ist `localhost` der Container selbst, nicht dein Rechner — mit
+`http://localhost:9080/api` findet WordPress das Backend deshalb nicht. Je nach Aufbau:
+
+| Aufbau | Backend API URL |
+|---|---|
+| Backend läuft auf demselben Docker-Host und ist über einen Port veröffentlicht (Docker Desktop: Mac/Windows) | `http://host.docker.internal:9080/api` |
+| Dasselbe unter Linux | im WordPress-Dienst `extra_hosts: ["host.docker.internal:host-gateway"]` eintragen, dann wie oben |
+| WordPress und Backend teilen ein Docker-Netzwerk | `http://<dienstname>/api`, z. B. `http://backend/api` (ohne Port, wenn der Container auf 80 lauscht) |
+| Backend auf einem anderen Server | dessen Adresse, z. B. `https://backend.example.org/api` |
+
+Das Plugin warnt, wenn in einem Container `localhost`/`127.0.0.1` eingetragen wird.
 
 **Woher das Secret kommt:** Tenant 1 verwendet den `API_SECRET_KEY` aus der Backend-`.env`; weitere Tenants
 zeigen ihr Secret einmalig nach dem Anlegen in `tenants.php` (siehe [../MULTI-TENANT.md](../MULTI-TENANT.md)).
@@ -168,7 +184,8 @@ Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](.
 | Symptom | Ursache / Lösung |
 |---|---|
 | Plugin erscheint nicht in der Liste | Symlink prüfen: `ls -la wp-content/plugins/ondisos`, `readlink -f …`; Plugin-Header in `ondisos.php` vorhanden? |
-| `Error: Unknown form "bs" (or backend unavailable)` | Backend nicht erreichbar oder Formular nicht für den Tenant konfiguriert. Testen: `curl "<Backend-URL>/form-config.php?form=bs&tenant=<slug>"`. Liefert das `success:false`/404: `seed-forms.php` ausführen bzw. Tenant-Slug prüfen. Vom **WordPress-Server** aus testen |
+| Seite zeigt `Error: The form is currently unavailable` (Besucher) bzw. `Error (shown to administrators only): …` (angemeldete Administratoren) | Backend nicht erreichbar, Tenant abgelehnt oder unerwartete Antwort. **Als Administrator die Seite ansehen:** die Meldung nennt Ursache und Adresse. Zusätzlich zeigt *Einstellungen → Ondisos* den Verbindungsstatus. Vom **WordPress-Server** aus testen: `curl "<Backend-URL>/health.php"` |
+| `Error: Unknown form "bs"` | Das Backend ist erreichbar, kennt das Formular aber nicht für den Tenant (Administratoren sehen den Tenant in der Meldung). `seed-forms.php` ausführen, Formular-Key im Shortcode und Tenant-Slug prüfen: `curl "<Backend-URL>/form-config.php?form=bs&tenant=<slug>"` |
 | Absenden: „Unauthorized" | Tenant-API-Secret fehlt oder passt nicht zum Backend; Backend-Log prüfen (`tenant api_secret is a known placeholder/default` ⇒ echtes Secret setzen) |
 | Absenden: „Backend-Zugang nicht konfiguriert" | Kein Tenant-API-Secret gesetzt (weder in den Einstellungen noch in der `.env`) |
 | 403 Forbidden auf Plugin-Dateien | Variante A: `Options +FollowSymLinks`; Dateirechte und Besitzer prüfen |

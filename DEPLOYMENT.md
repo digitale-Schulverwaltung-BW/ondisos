@@ -308,8 +308,8 @@ Eine `forms-config.php` ist im Frontend **nicht mehr nötig**: Die Formular-Konf
 dem Backend (siehe oben). Die Survey-Definitionen liegen weiter in `frontend/surveys/`.
 
 **Prüfen:** `https://anmeldung.example.com/index.php?form=bs` lädt das Formular. Erscheint die
-Wartungsseite (503), ist das Backend nicht erreichbar oder die Formular-Konfiguration fehlt
-(Tenant-Slug/`seed-forms.php` prüfen).
+Wartungsseite (503), ist das Backend nicht erreichbar oder lehnt den Tenant ab (Ursache im PHP-Log, `BACKEND_API_URL`/`TENANT_SLUG` prüfen); ein 404
+„Formular nicht gefunden" heißt, dass die Formular-Konfiguration fehlt (`seed-forms.php`).
 
 **Apache VirtualHost:**
 

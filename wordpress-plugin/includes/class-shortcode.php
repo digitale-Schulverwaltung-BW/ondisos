@@ -52,7 +52,22 @@ class Shortcode
 
         // Check if form exists
         if (!Form_Config_Loader::ensure($form_key)) {
-            return $this->render_error('Error: Unknown form "' . esc_html($form_key) . '" (or backend unavailable)');
+            return $this->render_error($this->load_failure_message($form_key));
+        }
+
+        // A form that stores nothing (db=false) and mails nobody (no valid notify_email) would discard submissions
+        if (FormConfig::discardsSubmissions($form_key)) {
+            error_log("Form '{$form_key}' not shown: db is false and no valid notify_email is configured, submissions would be discarded");
+
+            return $this->render_error(
+                current_user_can('manage_options')
+                    ? sprintf(
+                        'Error (shown to administrators only): form "%s" has db=false and no valid notify_email, so submissions would be discarded. '
+                        . 'Set db to true or a notify_email in the form configuration (backend, table form_configs).',
+                        $form_key
+                    )
+                    : 'Error: The form is currently unavailable. Please try again later.'
+            );
         }
 
         // Load survey and theme JSON
@@ -234,6 +249,52 @@ class Shortcode
      * @param string $message Error message
      * @return string HTML
      */
+    /**
+     * Message for a form that could not be loaded.
+     *
+     * Visitors get a neutral text (no internal addresses); administrators see what is actually wrong
+     * and where to fix it. The technical reason is also in the PHP error log.
+     */
+    private function load_failure_message(string $form_key): string
+    {
+        $failure  = Form_Config_Loader::failure($form_key);
+        $reason   = $failure['reason'] ?? 'not_found';
+        $is_admin = current_user_can('manage_options');
+
+        if ($reason === 'not_found') {
+            return $is_admin
+                ? sprintf(
+                    'Error: Unknown form "%s" for tenant "%s". Check the form key in the shortcode and the form configuration in the backend.',
+                    $form_key,
+                    Form_Config_Loader::tenant_slug()
+                )
+                : sprintf('Error: Unknown form "%s".', $form_key);
+        }
+
+        if (!$is_admin) {
+            return 'Error: The form is currently unavailable. Please try again later.';
+        }
+
+        $prefix = 'Error (shown to administrators only): ';
+        $url    = $failure['backend_url'] ?? '';
+
+        return match ($reason) {
+            'unreachable' => sprintf(
+                '%sthe ondisos backend is not reachable at %s (%s). Check "Backend API URL" under Settings → Ondisos. '
+                . 'Inside a Docker container "localhost" is the container itself.',
+                $prefix, $url, $failure['detail'] ?? ''
+            ),
+            'unauthorized' => sprintf(
+                '%sthe backend rejected tenant "%s" (unknown or inactive). Check "Tenant-Slug" under Settings → Ondisos and the tenant in the backend.',
+                $prefix, Form_Config_Loader::tenant_slug()
+            ),
+            default => sprintf(
+                '%sthe backend at %s answered unexpectedly (%s). Check that "Backend API URL" points at the ondisos API (…/api).',
+                $prefix, $url, $failure['detail'] ?? ''
+            ),
+        };
+    }
+
     private function render_error(string $message): string
     {
         return sprintf(

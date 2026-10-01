@@ -3,7 +3,7 @@
  * Plugin Name: ondisos - Onboarding Digital Souverän + Open Source
  * Plugin URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos
  * Description: SurveyJS-based Schulanmeldungs-System with secure backend submission
- * Version: 2.1.0
+ * Version: 2.1.1
  * Requires at least: 5.8
  * Requires PHP: 8.1
  * Author: Joerg Seyfried
@@ -22,7 +22,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Plugin version
-define('ONDISOS_PLUGIN_VERSION', '2.1.0');
+define('ONDISOS_PLUGIN_VERSION', '2.1.1');
 
 // Plugin paths
 define('ONDISOS_PLUGIN_FILE', __FILE__);
