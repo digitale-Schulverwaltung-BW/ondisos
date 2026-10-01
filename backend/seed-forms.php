@@ -234,8 +234,8 @@ if ($discardingForms !== []) {
 
 WARNING: these forms store nothing (db: false) and have no valid notify_email, so their submissions would be DISCARDED.
          The frontend therefore refuses to show/accept them until this is fixed: {$list}
-         Either store them:   UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = {\$tenantId} AND form_key = '<form>';
-         or add a recipient:  UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@your-school.example') WHERE tenant_id = {\$tenantId} AND form_key = '<form>';
+         Either store them:   UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = {$tenantId} AND form_key = '<form>';
+         or add a recipient:  UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@your-school.example') WHERE tenant_id = {$tenantId} AND form_key = '<form>';
          (Re-seeding never overwrites existing entries.)
 
 EOT;
