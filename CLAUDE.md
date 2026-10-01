@@ -962,7 +962,6 @@ http://intranet.example.com/backend/dashboard.php
 - ⚠️ Die Vorschau im Backend trägt eigene Kopien der SurveyJS-Dateien (`backend/public/assets/preview/`); nach SurveyJS-Updates `backend/tools/sync-preview-assets.sh` ausführen
 - ⚠️ Der Docker-Apache sendet `X-Frame-Options: SAMEORIGIN` (statt `DENY`), damit der Vorschau-Frame einbettbar ist
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
-- ⚠️ Die Backend-Oberfläche lädt Bootstrap und DataTables von `cdn.jsdelivr.net` (unversioniert, ohne Integritätsprüfung, `backend/inc/header.php`, `footer.php`, `login.php`): Admin-Browser kontaktieren einen externen CDN, und in einem Intranet ohne Internetzugang bleibt die Oberfläche ungestylt. Frontend und WordPress-Plugin sind frei von externen Quellen
 - ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)
 
 ### TODOs
