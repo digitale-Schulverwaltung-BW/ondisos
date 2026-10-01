@@ -25,6 +25,7 @@ return [
         'try_again_or_contact' => 'Bitte versuchen Sie es erneut oder kontaktieren Sie uns direkt.',
         'unknown_form' => 'Unbekanntes Formular',
         'form_not_configured' => 'Formular ist nicht konfiguriert',
+        'form_unavailable' => 'Dieses Formular ist derzeit nicht verfügbar. {{contact}}',
         'invalid_data' => 'Ungültige Daten übermittelt',
         'required_field_missing' => 'Erforderliches Feld fehlt: {{field}}',
 

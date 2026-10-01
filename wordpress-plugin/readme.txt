@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 2.1.0
+Stable tag: 2.1.1
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -93,6 +93,10 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 
 == Changelog ==
 
+= 2.1.1 =
+* Fehlermeldungen unterscheiden „Backend nicht erreichbar", „Tenant abgelehnt" und „Formular unbekannt" (Administratoren sehen die Ursache, Besucher eine neutrale Meldung)
+* Einstellungsseite: Verbindungsstatus (Backend, Tenant, Secret) und Warnung beim Speichern einer nicht erreichbaren Backend-URL; Hinweis auf „localhost" im Docker-Container
+
 = 2.1.0 =
 * Formular-Konfiguration wird vom Backend geladen (pro Tenant)
 * Anfragen ans Backend werden mit dem Tenant-Secret signiert
@@ -100,6 +104,9 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
+
+= 2.1.1 =
+Nur Diagnose-Verbesserungen, keine Konfigurationsänderung nötig.
 
 = 2.1.0 =
 Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe MIGRATION-3.0.md).

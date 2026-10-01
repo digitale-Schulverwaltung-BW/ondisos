@@ -186,6 +186,26 @@ try {
     exit(1);
 }
 
+// Forms in the database (not only those just read) that would throw submissions away: db=false and no
+// valid notify_email. The frontend refuses such forms (see Frontend\Config\FormConfig::discardsSubmissions()).
+$discardingForms = [];
+$rows = $db->query('SELECT form_key, config_json FROM form_configs WHERE tenant_id = 1 ORDER BY form_key');
+while ($rows && ($row = $rows->fetch_assoc())) {
+    $entry = json_decode((string) $row['config_json'], true);
+    if (!is_array($entry)) {
+        continue;
+    }
+
+    $storesInDb = (bool) ($entry['db'] ?? true);
+    $recipients = $entry['notify_email'] ?? '';
+    $recipients = array_filter(array_map('trim', is_array($recipients) ? $recipients : explode(',', (string) $recipients)));
+    $hasValidMail = $recipients !== [] && count(array_filter($recipients, static fn ($r) => filter_var($r, FILTER_VALIDATE_EMAIL))) === count($recipients);
+
+    if (!$storesInDb && !$hasValidMail) {
+        $discardingForms[] = $row['form_key'];
+    }
+}
+
 if ($readSources === 0) {
     echo "\nNo config files found — skipping. The form_configs table may already be populated.\n";
     echo "Pass a file or STDIN explicitly: php seed-forms.php <file>   |   php seed-forms.php - < forms-config.php\n";
@@ -201,6 +221,19 @@ if ($exampleForms !== []) {
 WARNING: these forms still use a placeholder notify_email (…@example.com/.org/.net): {$list}
          forms-config-dist.php is a TEMPLATE with example forms and addresses. Use your own forms-config.php, or fix the
          entries in the database (UPDATE form_configs SET config_json = … WHERE tenant_id = {$tenantId} AND form_key = '…').
+
+EOT;
+}
+
+if ($discardingForms !== []) {
+    $list = implode(', ', $discardingForms);
+    echo <<<EOT
+
+WARNING: these forms store nothing (db: false) and have no valid notify_email, so their submissions would be DISCARDED.
+         The frontend therefore refuses to show/accept them until this is fixed: {$list}
+         Either store them:   UPDATE form_configs SET config_json = JSON_SET(config_json, '$.db', true) WHERE tenant_id = 1 AND form_key = '<form>';
+         or add a recipient:  UPDATE form_configs SET config_json = JSON_SET(config_json, '$.notify_email', 'sekretariat@your-school.example') WHERE tenant_id = 1 AND form_key = '<form>';
+         (Re-seeding never overwrites existing entries.)
 
 EOT;
 }

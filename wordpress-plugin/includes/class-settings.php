@@ -13,6 +13,8 @@ declare(strict_types=1);
 namespace Ondisos;
 
 use Frontend\Config\FormConfig;
+use Frontend\Config\FormConfigLoader;
+use Frontend\Services\BackendApiClient;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -68,7 +70,7 @@ class Settings
             'ondisos_backend_url',
             [
                 'type' => 'string',
-                'sanitize_callback' => 'esc_url_raw',
+                'sanitize_callback' => [$this, 'sanitize_backend_url'],
                 'default' => ''
             ]
         );
@@ -288,6 +290,8 @@ class Settings
 
             <?php settings_errors(); ?>
 
+            <?php $this->render_connection_status(); ?>
+
             <form method="post" action="options.php">
                 <?php
                 settings_fields(self::OPTION_GROUP);
@@ -323,6 +327,106 @@ class Settings
     /**
      * Render system information
      */
+    /**
+     * Sanitize the Backend API URL and check right away whether the backend answers there.
+     *
+     * The URL is saved either way (the backend may be started later); an unreachable backend or a
+     * "localhost" inside a Docker container is reported as a warning so typos do not stay hidden.
+     */
+    public function sanitize_backend_url($value): string
+    {
+        $url = rtrim(esc_url_raw(trim((string) $value)), '/');
+
+        if ($url === '') {
+            return '';
+        }
+
+        $shown = FormConfigLoader::redactUrl($url);
+        $host  = strtolower((string) wp_parse_url($url, PHP_URL_HOST));
+
+        if (self::in_docker() && in_array($host, ['localhost', '127.0.0.1', '::1', '[::1]'], true)) {
+            add_settings_error(
+                'ondisos_backend_url',
+                'ondisos_backend_localhost',
+                'Hinweis: In einem Docker-Container ist „' . $host . '" der Container selbst, nicht Ihr Rechner. '
+                . 'Verwenden Sie z. B. host.docker.internal (Docker Desktop) oder den Namen des Backend-Dienstes im gemeinsamen Docker-Netz.',
+                'warning'
+            );
+        }
+
+        $health = (new BackendApiClient($url))->healthCheck();
+        if ($health['status'] !== 'ok') {
+            add_settings_error(
+                'ondisos_backend_url',
+                'ondisos_backend_unreachable',
+                sprintf(
+                    'Das Backend antwortet unter %s nicht (%s). Die URL wurde trotzdem gespeichert — bitte prüfen (Tippfehler, Port, Netzwerk).',
+                    $shown,
+                    $health['reason'] ?: 'keine Antwort'
+                ),
+                'warning'
+            );
+        }
+
+        return $url;
+    }
+
+    /**
+     * Connection status shown at the top of the settings page: backend, tenant, secret.
+     */
+    private function render_connection_status(): void
+    {
+        $client = new BackendApiClient();
+        $url    = FormConfigLoader::redactUrl($client->baseUrl());
+        $slug   = Form_Config_Loader::tenant_slug();
+        $health = $client->healthCheck();
+        $reachable = $health['status'] === 'ok';
+
+        $rows = [];
+
+        $rows[] = $reachable
+            ? ['ok', sprintf('Backend erreichbar: %s', $url)]
+            : ['error', sprintf(
+                'Backend NICHT erreichbar: %s — %s. Prüfen Sie „Backend API URL" (Tippfehler, Port, Netzwerk).',
+                $url,
+                $health['reason'] ?: 'keine Antwort'
+            )];
+
+        if (!$reachable && self::in_docker() && preg_match('#//(localhost|127\.0\.0\.1)([:/]|$)#i', $url)) {
+            $rows[] = ['error', 'In einem Docker-Container ist „localhost" der Container selbst. Nutzen Sie host.docker.internal oder den Dienstnamen im gemeinsamen Docker-Netz.'];
+        }
+
+        if ($reachable) {
+            $tenant = $client->checkTenant($slug);
+            $rows[] = $tenant['ok']
+                ? ['ok', sprintf('Tenant „%s": vom Backend akzeptiert', $slug)]
+                : ['error', sprintf('Tenant „%s": %s', $slug, $tenant['reason'] === 'unauthorized'
+                    ? 'unbekannt oder inaktiv — „Tenant-Slug" prüfen.'
+                    : 'nicht prüfbar (' . $tenant['detail'] . ')')];
+        } else {
+            $rows[] = ['info', sprintf('Tenant „%s": nicht geprüft (Backend nicht erreichbar)', $slug)];
+        }
+
+        $has_secret = (string) (getenv('TENANT_API_SECRET') ?: '') !== '';
+        $rows[] = $has_secret
+            ? ['info', 'Tenant-API-Secret: gesetzt (ob es zum Tenant passt, zeigt sich erst beim ersten Absenden)']
+            : ['error', 'Tenant-API-Secret: NICHT gesetzt — Formulare lassen sich nicht absenden.'];
+
+        echo '<h2>Verbindungsstatus</h2>';
+        foreach ($rows as [$type, $text]) {
+            printf('<div class="notice notice-%s inline"><p>%s</p></div>', esc_attr($type === 'ok' ? 'success' : $type), esc_html($text));
+        }
+        echo '<p class="description">Der Status wird beim Öffnen dieser Seite geprüft. Nach dem Speichern erneut laden.</p>';
+    }
+
+    /**
+     * True inside a Docker container (where "localhost" is the container, not the host).
+     */
+    private static function in_docker(): bool
+    {
+        return file_exists('/.dockerenv');
+    }
+
     private function render_system_info(): void
     {
         ?>

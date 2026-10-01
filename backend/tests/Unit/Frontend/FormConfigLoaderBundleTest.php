@@ -164,6 +164,37 @@ class FormConfigLoaderBundleTest extends TestCase
         $this->assertFalse(\Frontend\Config\FormConfigLoader::ensureWithSurvey('bs', $this->client([['status' => 'error']]), 't', $this->cache()), 'and not resurrected when the backend goes down later');
     }
 
+    /** @return array<string,array{0:array<string,mixed>,1:string}> */
+    public static function failureAnswers(): array
+    {
+        return [
+            'unreachable' => [['status' => 'error', 'reason' => 'unreachable', 'http_code' => 0, 'detail' => 'Connection refused'], 'unreachable'],
+            'not found'   => [['status' => 'not_found', 'reason' => 'not_found', 'http_code' => 404, 'detail' => 'form does not exist'], 'not_found'],
+            'denied'      => [['status' => 'denied', 'reason' => 'unauthorized', 'http_code' => 401, 'detail' => 'tenant unknown'], 'unauthorized'],
+            'http error'  => [['status' => 'error', 'reason' => 'error', 'http_code' => 500, 'detail' => 'HTTP 500'], 'error'],
+        ];
+    }
+
+    /** @param array<string,mixed> $answer */
+    #[\PHPUnit\Framework\Attributes\DataProvider('failureAnswers')]
+    public function testFailureReasonIsRecordedSoThePagesCanTellNotFoundFromBackendTrouble(array $answer, string $reason): void
+    {
+        $this->assertFalse(\Frontend\Config\FormConfigLoader::ensureWithSurvey('bs', $this->client([$answer]), 't', $this->cache()));
+
+        $failure = \Frontend\Config\FormConfigLoader::failure('bs');
+        $this->assertSame($reason, $failure['reason']);
+        $this->assertSame('http://x', $failure['backend_url']);
+    }
+
+    public function testServingTheCachedCopyIsNotAFailure(): void
+    {
+        \Frontend\Config\FormConfigLoader::ensureWithSurvey('bs', $this->client([$this->ok('e1')]), 't', $this->cache());
+        $this->newRequest();
+
+        $this->assertTrue(\Frontend\Config\FormConfigLoader::ensureWithSurvey('bs', $this->client([['status' => 'error', 'reason' => 'unreachable', 'http_code' => 0, 'detail' => 'x']]), 't', $this->cache()));
+        $this->assertNull(\Frontend\Config\FormConfigLoader::failure('bs'));
+    }
+
     public function testBackendWithoutSurveyDeliversNullSoTheFileIsUsed(): void
     {
         $answer = ['status' => 'ok', 'config' => ['form' => 'bs.json'], 'survey_json' => null, 'theme_json' => null, 'etag' => null];

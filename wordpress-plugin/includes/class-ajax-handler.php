@@ -58,6 +58,11 @@ class Ajax_Handler
             $form_key = sanitize_key($_POST['form_key'] ?? '');
 
             if (!Form_Config_Loader::ensure($form_key)) {
+                // Backend unreachable / tenant rejected is a service problem, not a client error (details: PHP error log)
+                if ((Form_Config_Loader::failure($form_key)['reason'] ?? 'not_found') !== 'not_found') {
+                    throw new \RuntimeException('Backend-Server nicht erreichbar. Bitte versuchen Sie es später erneut.', 503);
+                }
+
                 throw new \RuntimeException('Unbekanntes Formular', 400);
             }
 
@@ -165,6 +170,11 @@ class Ajax_Handler
         $form_key = sanitize_key($_GET['form'] ?? '');
 
         if (!Form_Config_Loader::ensure($form_key)) {
+            if ((Form_Config_Loader::failure($form_key)['reason'] ?? 'not_found') !== 'not_found') {
+                status_header(503);
+                exit('Dienst vorübergehend nicht verfügbar.');
+            }
+
             status_header(404);
             exit('Formular nicht gefunden.');
         }
