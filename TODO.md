@@ -2,7 +2,7 @@
 
 ## Test Coverage Roadmap
 
-**Aktueller Stand:** die Line-Coverage wurde nicht neu gemessen (`composer test:coverage`); die Zahlen in diesem Dokument stammen aus einer früheren Messung. Die Suite umfasst inzwischen ~500 Unit-Tests.
+**Aktueller Stand:** 55,7 % Line-Coverage (1059 / 1902 Zeilen, Unit-Suite, 513 Tests); die Einzelzahlen weiter unten stammen aus einer früheren Messung.
 **Ziel:** >80% Coverage
 
 ### v3.0.0 — Stand der Abnahme

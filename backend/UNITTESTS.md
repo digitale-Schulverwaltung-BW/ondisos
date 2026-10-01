@@ -8,7 +8,7 @@ Das Backend verfügt über eine PHPUnit 10.5 Test-Suite. Tests laufen via Docker
 |---|---|
 | Tests | 513 (Unit) |
 | Assertions | 1144 |
-| Line Coverage | **nicht neu gemessen** (`make coverage`); frühere Messung: ~56 % |
+| Line Coverage | **55,7 %** (1059 / 1902 Zeilen, Unit-Suite; gemessen mit `composer test:coverage -- --testsuite=Unit --coverage-text`) |
 
 Die Tests brauchen die PHP-Extension `mysqli` (Klassen wie `AnmeldungRepository` erben von bzw. nutzen `mysqli`); das
 Test-Image (`docker/test/Dockerfile`) bringt sie mit.
