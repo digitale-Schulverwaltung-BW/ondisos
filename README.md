@@ -528,7 +528,7 @@ Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondi
 - ✅ **Platform-Admin** mit Tenant-Switcher und Tenant-Verwaltung
 - ✅ **Signierte API** — pro Tenant HMAC-SHA256 für Submit und Upload; Upload-Isolierung pro Tenant
 - ✅ **Formular-Konfiguration in der Datenbank** statt `forms-config.php` (Migration + `seed-forms.php`)
-- ✅ **WordPress-Plugin 2.1** — lädt die Konfiguration vom Backend, Tenant-Einstellungen
+- ✅ **WordPress-Plugin** (ab 3.1.0 mit derselben Versionsnummer wie Backend und Frontend; frühere Versionen 2.1.x) — lädt die Konfiguration vom Backend, Tenant-Einstellungen
 - ✅ **Härtung** — bekannte Platzhalter-/Standard-Secrets authentifizieren nichts
 
 **Upgrade von 2.x:** [MIGRATION-3.0.md](docs/MIGRATION-3.0.md). Release-Historie: [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie).

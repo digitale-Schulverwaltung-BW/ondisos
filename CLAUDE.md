@@ -1267,7 +1267,7 @@ php -l backend/config/messages.local.php
 **Frontend / WordPress**
 - ✅ `FormConfigLoader`: gemeinsamer Weg, die Config eines Formulars vom Backend zu laden (Standalone `index/save/ical`, WordPress)
 - ✅ `BackendApiClient` signiert Requests und hängt den Tenant an
-- ✅ WordPress-Plugin 2.1: Config vom Backend, Einstellungen *Tenant-Slug* und *Tenant-API-Secret* (write-only)
+- ✅ WordPress-Plugin (damals 2.1, seit 3.1.0 gleiche Versionsnummer wie das Gesamtprojekt): Config vom Backend, Einstellungen *Tenant-Slug* und *Tenant-API-Secret* (write-only)
 - ✅ Gemeinsame JS-Basis `survey-handler-base.js`, Prefill über einfache Query-Parameter, `placeholderExpression`
 
 **Härtung**

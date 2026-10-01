@@ -19,7 +19,7 @@ Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELE
 - [ ] WordPress-Plugin: Statusseite *Einstellungen → Ondisos* mit „Secret passt" / „0 Formulare".
 - [ ] Vorschau: Breitenumschalter (Handy/Tablet) in einem echten Browser.
 - [ ] Docker: Backend-Image neu bauen und die Vorschau gegen das frische Image prüfen.
-- [ ] Datenschutz/Betrieb: Wer pflegt `docs/ASV.md` — ändert 3.1 etwas an der Auftragsverarbeitung? (Neu gespeichert werden Verlauf und Entwürfe von Formularen; keine personenbezogenen Daten der Besucher.)
+- [ ] Datenschutz/Betrieb (liegt bei dir): Wer pflegt `docs/ASV.md` — ändert 3.1 etwas an der Auftragsverarbeitung? (Neu gespeichert werden Verlauf und Entwürfe von Formularen; keine personenbezogenen Daten der Besucher.)
 
 ## 2. Merge-Reihenfolge
 
@@ -46,7 +46,7 @@ Hinweis: `docs/plans/PLAN-3.1.1.md` ist ein Entwurf aus einer anderen Session, d
 4. Rauchtest: Formular im Frontend öffnen und absenden; im Backend *Formulare* öffnen, ein Formular bearbeiten, Survey-Vorschau ansehen; Plugin-Statusseite prüfen.
 5. Release Notes ([RELEASE-NOTES-3.1.0.md](RELEASE-NOTES-3.1.0.md)) in die GitLab-Release-Beschreibung übernehmen.
 
-Plugin-Version: `ONDISOS_PLUGIN_VERSION` steht auf `2.1.1`; das Plugin wurde in 3.1 geändert (Bundle-Abruf, Cache, Statuszeilen). Entscheidung vor dem Tag: auf `2.2.0` erhöhen (Vorschlag) oder bewusst lassen.
+Plugin-Version: entschieden und umgesetzt — das Plugin springt von `2.1.1` auf **`3.1.0`** (`wordpress-plugin/ondisos.php` Header und `ONDISOS_PLUGIN_VERSION`, `readme.txt` mit Changelog und Upgrade-Hinweis); ab jetzt tragen Backend, Frontend und Plugin dieselbe Versionsnummer. Die Versionsnummer ist Teil der Asset-URLs, Browser laden die JavaScript-Dateien also neu.
 
 ## 4. Rückfall
 

@@ -5,6 +5,8 @@ SurveyJS-Creator, mit Prüfung, Vorschau und Verlauf. Neue Schulen starten mit d
 
 ## Neu
 
+**Versionsnummern:** Das WordPress-Plugin springt von 2.1.1 auf 3.1.0; Backend, Frontend und Plugin tragen ab jetzt dieselbe Nummer.
+
 **Formular-Editor** (Menü *Formulare*)
 - Konfiguration eines Formulars als HTML-Formular statt SQL oder JSON: Version, Speichern im Backend, Empfänger, Vorausfüll-Felder, PDF-Bestätigung, Kalender-Download, E-Mail-Text.
   Fehler erscheinen am Feld, eine gleichzeitige Änderung wird erkannt, jeder Stand ist im Verlauf wiederherstellbar.

@@ -7,7 +7,7 @@ und signiert an das Ondisos-Backend übertragen — WordPress speichert keine An
 [ondisos form="bs"]
 ```
 
-**Version 2.1.0** · benötigt Ondisos-Backend **3.0+** · WordPress 5.8+ · PHP 8.1+
+**Version 3.1.0** · benötigt Ondisos-Backend **3.0+** (Funktionen von 3.1 ab Backend 3.1) · WordPress 5.8+ · PHP 8.1+
 
 ## Schnellstart
 

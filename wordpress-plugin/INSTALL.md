@@ -9,7 +9,7 @@ Das Plugin **ondisos** bindet die Anmeldeformulare per Shortcode in WordPress-Se
 Die Formulardaten werden **nicht** in WordPress gespeichert: Das Plugin leitet sie serverseitig an das
 Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet laufen sollte.
 
-- Plugin-Version: **2.1.0** — benötigt ein **Ondisos-Backend ab 3.0**
+- Plugin-Version: **3.1.0** — benötigt ein **Ondisos-Backend ab 3.0** (Surveys aus dem Backend und der erweiterte Verbindungsstatus ab Backend 3.1)
 - Upgrade von einer älteren Installation: [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md)
 - Mehrere Schulen / Tenants: [../MULTI-TENANT.md](../docs/MULTI-TENANT.md)
 

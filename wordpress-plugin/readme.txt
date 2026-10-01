@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 2.1.1
+Stable tag: 3.1.0
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -93,6 +93,13 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 
 == Changelog ==
 
+= 3.1.0 =
+* Die Versionsnummer folgt ab jetzt dem Ondisos-Release (Backend, Frontend und Plugin sind 3.1.0); frühere Plugin-Versionen waren 2.1.x
+* Surveys und Themes kommen mit der Formular-Konfiguration vom Backend (ein Aufruf, ETag); Datei im Frontend bleibt Fallback
+* Das Plugin merkt sich die letzte Fassung eines Formulars (wp-content/uploads/ondisos-cache) und zeigt sie weiter an, wenn das Backend kurz nicht erreichbar ist
+* Verbindungsstatus: prüft per signierter Anfrage, ob das Tenant-API-Secret zum Tenant passt, und zeigt die Zahl der Formulare (bei 0 ein Hinweis)
+* Survey und Theme werden sicher in die Seite eingebettet (kein Ausbrechen aus dem script-Element)
+
 = 2.1.1 =
 * Fehlermeldungen unterscheiden „Backend nicht erreichbar", „Tenant abgelehnt" und „Formular unbekannt" (Administratoren sehen die Ursache, Besucher eine neutrale Meldung)
 * Einstellungsseite: Verbindungsstatus (Backend, Tenant, Secret) und Warnung beim Speichern einer nicht erreichbaren Backend-URL; Hinweis auf „localhost" im Docker-Container
@@ -104,6 +111,9 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
+
+= 3.1.0 =
+Läuft mit Backend 3.0 und 3.1; die neuen Funktionen (Surveys aus dem Backend, Statuszeilen) brauchen Backend 3.1. Der Cache liegt in wp-content/uploads und muss beschreibbar sein (ohne Schreibrecht arbeitet das Plugin ohne Cache). Siehe docs/MIGRATION-3.1.md im Ondisos-Repository.
 
 = 2.1.1 =
 Nur Diagnose-Verbesserungen, keine Konfigurationsänderung nötig.
