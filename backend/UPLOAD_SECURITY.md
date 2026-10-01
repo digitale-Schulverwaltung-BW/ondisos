@@ -98,7 +98,7 @@ composer test:filter UploadCleanupServiceTest  # Dateien beim endgültigen Lösc
 
 Der Endpoint `upload.php` selbst ist ein Script ohne Unit-Tests; Signatur, Zuordnung, Ablehnung getarnter Dateien und
 der Erfolgsfall wurden live gegen ein laufendes Backend geprüft (Protokoll der Signatur:
-[../MIGRATION-3.0.md § 7](../MIGRATION-3.0.md#7-eigene-api-clients)).
+[../MIGRATION-3.0.md § 7](../docs/MIGRATION-3.0.md#7-eigene-api-clients)).
 
 ## Konfiguration
 
@@ -110,7 +110,7 @@ VIRUS_SCAN_STRICT=false         # true = Upload ablehnen, wenn der Scanner nicht
 ```
 
 PHP (`php.ini`): `upload_max_filesize` und `post_max_size` mindestens so groß wie `UPLOAD_MAX_SIZE`.
-Webserver-Limits (`client_max_body_size` bei Nginx): [../DEPLOYMENT.md](../DEPLOYMENT.md).
+Webserver-Limits (`client_max_body_size` bei Nginx): [../DEPLOYMENT.md](../docs/DEPLOYMENT.md).
 
 ## Empfehlungen
 

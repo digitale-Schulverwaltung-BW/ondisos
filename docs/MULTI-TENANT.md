@@ -5,7 +5,7 @@ Datenisolierung pro Schule (*Tenant*). Dieses Dokument ist die Betriebsanleitung
 
 - **Upgrade von 2.x:** → [MIGRATION-3.0.md](MIGRATION-3.0.md)
 - **Architektur-Hintergründe** (Design-Entscheidungen, Datenbankschema, Impact Assessment):
-  → [`backend/MULTI-TENANT.md`](backend/MULTI-TENANT.md)
+  → [`backend/MULTI-TENANT.md`](../backend/MULTI-TENANT.md)
 - **Betrieb/Deployment allgemein:** → [DEPLOYMENT.md](DEPLOYMENT.md)
 
 ---
@@ -100,10 +100,29 @@ Der Platform-Admin sieht alle Tenants und kann zwischen ihnen wechseln.
    - **Name**, z. B. `Berufliches Schulzentrum Karlsruhe`
    - **Slug**, z. B. `bsz-karlsruhe` (Kleinbuchstaben, Ziffern, Bindestriche; wird aus dem Namen vorgeschlagen)
    - **CORS Origin:** URL des zugehörigen Frontends, z. B. `https://anmeldung.bsz-karlsruhe.de` (optional)
+   - **Formulare übernehmen von:** ein neuer Tenant hat **keine Formulare** („Formular nicht gefunden", sobald das Frontend läuft).
+     Hier lassen sich die Formulare eines bestehenden Tenants übernehmen (3.1); „leer starten" legt keine an.
 3. Nach dem Speichern erscheint der **API-Schlüssel** (das Tenant-Secret) —
    **jetzt sichern, er wird nur einmal angezeigt.** Er geht als `TENANT_API_SECRET` in die
    Frontend-Konfiguration. Verloren? Auf der Tenant-Seite *„Secret neu generieren"* — das alte
    Secret ist danach ungültig, das Frontend muss angepasst werden.
+
+### Neuen Tenant einrichten (Checkliste)
+
+1. Tenant anlegen (siehe oben), **Formulare übernehmen** (oder später auf der Tenant-Seite bzw. unter *Formulare*, *Formulare von einem
+   anderen Tenant übernehmen*; auf der Kommandozeile `php copy-forms.php --from=<quelle> --to=<neu>`).
+2. **Empfänger eintragen:** Beim Kopieren werden `notify_email` und das PDF-Logo **bewusst nicht** übernommen (sonst gingen die
+   Anmeldungen der neuen Schule per Mail an das Sekretariat der alten). Unter *Formulare → Bearbeiten* trägt die Schule ihre Adresse ein.
+   Ein kopiertes Formular ohne Speichern im Backend (`db: false`) und ohne Empfänger wird vom Frontend **nicht angezeigt**, bis
+   ein Empfänger eingetragen ist — es gehen keine Anmeldungen verloren.
+3. Texte prüfen: Titel, PDF-Texte, Kalendereintrag und Mail-Einleitung werden kopiert und im Bericht aufgelistet (nennen sie noch die alte Schule?).
+   Enthält die Survey E-Mail-Adressen oder Telefonnummern, steht das ebenfalls im Bericht.
+4. Tenant-Admin anlegen, Secret und Slug ins Frontend bzw. WordPress-Plugin eintragen. Der Verbindungsstatus des Plugins zeigt dann
+   „Tenant-API-Secret: passt zum Tenant" und die Zahl der Formulare (bei 0: Hinweis).
+
+Nur **Plattform-Admins** dürfen kopieren (es werden Formulare eines anderen Tenants gelesen). Kopiert werden Konfiguration, Survey und Theme;
+**nie** Anmeldungen, Uploads, Entwürfe, Verlauf oder das API-Secret. Vorhandene Formulare des Ziels bleiben unverändert (außer mit
+„Vorhandene Formulare ersetzen" / `--overwrite`; der alte Stand bleibt dann im Verlauf). Das Kopieren geschieht ganz oder gar nicht.
 
 ### Tenant-Admin anlegen
 
@@ -147,7 +166,7 @@ Der Tenant gehört zur **Installation**, nicht zur einzelnen Seite — der Short
 Slug und Secret stehen unter *Einstellungen → Ondisos* (Felder **Tenant-Slug** und
 **Tenant-API-Secret**; das Secret wird nie wieder angezeigt, leer lassen = unverändert) oder
 alternativ in `plugins/ondisos-frontend/.env`. Die WordPress-Einstellungen haben Vorrang.
-Siehe [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
+Siehe [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md).
 
 ---
 
@@ -156,9 +175,10 @@ Siehe [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
 Jeder Tenant hat seine eigene Formular-Konfiguration in `form_configs` (Schlüssel: Tenant +
 Formular-Key). Das Frontend holt sie bei jedem Aufruf über `/api/form-config.php?form=…&tenant=…`.
 
-- `seed-forms.php` übernimmt eine vorhandene `forms-config.php` **nur für Tenant 1**
-  (`INSERT IGNORE`, überschreibt nichts).
-- Für weitere Tenants fügst du die Konfiguration per SQL ein. Eine Admin-Oberfläche ist für 3.1 geplant.
+- `seed-forms.php [--tenant=<slug>]` übernimmt eine vorhandene `forms-config.php` (überschreibt nichts, prüft jeden Eintrag).
+- Ab 3.1 pflegen Schul-Admins ihre Formulare im Backend (*Formulare*); neue Tenants starten mit den Formularen eines anderen Tenants
+  (`copy-forms.php` bzw. Tenant-Seite, siehe „Neuen Tenant einrichten").
+- Per SQL geht es weiterhin:
 
 ```sql
 INSERT INTO form_configs (tenant_id, form_key, config_json)
@@ -217,7 +237,7 @@ Der aktive Kontext wird in der Session gespeichert und in der Navigation angezei
 - **Keine bekannten Secrets:** Platzhalter (`CHANGE_ME_IN_PRODUCTION`, leer) authentifizieren
   nie; der mitgelieferte Dev-Standardwert (`dev-api-key-replace-in-production`) wird in
   Production (`APP_ENV=production`) abgelehnt. `migrate.php` bricht dort ab, wenn
-  `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](backend/src/Services/SecretPolicy.php).
+  `API_SECRET_KEY` so ein Wert ist. Siehe [SecretPolicy](../backend/src/Services/SecretPolicy.php).
 - **Upload-Isolierung:** Dateien liegen in `uploads/tenant-<id>/`. Ein Upload wird nur
   angenommen, wenn der Zieleintrag zum authentifizierten Tenant gehört (sonst `404` +
   `idor_attempt`).
@@ -240,6 +260,7 @@ Der aktive Kontext wird in der Session gespeichert und in der Navigation angezei
 | Feature | Version | Status |
 |---------|---------|--------|
 | Mehrere Frontends → ein Backend | 3.0 | ✅ implementiert |
-| Managed Multi-Frontend (ein Frontend, mehrere Tenants) | 3.0.5 | geplant |
-| Form-Config-Admin-UI (CRUD im Browser) | 3.1 | geplant |
-| Survey-JSON-Upload vom Backend-Admin | 3.1 | geplant |
+| Form-Config-Admin-UI (HTML-Formular im Backend) | 3.1 | ✅ implementiert |
+| Surveys im Backend pflegen (Einfügen, Vorschau, Verlauf), Frontend zieht sie per API | 3.1 | ✅ implementiert |
+| Neue Tenants: Formulare von einem anderen Tenant übernehmen | 3.1 | ✅ implementiert |
+| Managed Multi-Frontend (ein Frontend, mehrere Tenants); Datei-Fallback für Surveys abschaffen | 3.2 | geplant |

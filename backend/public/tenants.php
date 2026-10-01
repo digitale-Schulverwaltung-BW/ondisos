@@ -7,6 +7,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
+require_once __DIR__ . '/../inc/form_copy.php';
 
 use App\Repositories\TenantRepository;
 use App\Repositories\TenantAdminRepository;
@@ -76,6 +77,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'api_secret' => $apiSecret,
                 ]);
                 $_SESSION['flash'] = ['new_api_secret' => $apiSecret];
+                // Optional: start with the forms of an existing tenant (recipients are not copied).
+                $copyFrom = (int)($_POST['copy_from'] ?? 0);
+                if ($copyFrom > 0) {
+                    form_copy_run($copyFrom, $newId, false);
+                }
                 header('Location: tenants.php?id=' . $newId . '&created=1');
                 exit;
             } catch (\InvalidArgumentException $e) {
@@ -158,6 +164,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminId = (int)($_POST['admin_id'] ?? 0);
         $active  = (bool)(int)($_POST['active'] ?? 0);
         $adminRepo->toggleActive($adminId, $active);
+        header('Location: tenants.php?id=' . $id);
+        exit;
+    }
+
+    // ------------------------------------------------------------------
+    // 5b. Copy the forms of another tenant into this one
+    // ------------------------------------------------------------------
+    elseif ($action === 'copy_forms' && $id !== null) {
+        form_copy_run((int)($_POST['copy_from'] ?? 0), $id, !empty($_POST['overwrite']));
         header('Location: tenants.php?id=' . $id);
         exit;
     }
@@ -251,6 +266,51 @@ if ($id !== null && $id > 0):
                 <code class="user-select-all fs-6"><?= htmlspecialchars($flash['new_password']) ?></code>
             </div>
         </div>
+    <?php endif; ?>
+
+    <?php
+    [$copyReport, $copyFlash] = form_copy_take();
+    $tenantForms = \App\Config\TenantContext::runAs($id, static fn (): array => (new \App\Repositories\FormConfigRepository())->listKeys());
+    $copySources = array_values(array_filter($tenantRepo->findAll(), static fn (array $t): bool => (int)$t['id'] !== $id));
+    ?>
+    <?php if ($copyFlash !== null): ?><div class="alert alert-<?= htmlspecialchars($copyFlash[0]) ?>"><?= htmlspecialchars($copyFlash[1]) ?></div><?php endif; ?>
+    <?php if ($copyReport !== null): echo form_copy_report_html($copyReport); endif; ?>
+    <?php if ($tenantForms === []): ?>
+        <div class="alert alert-warning">
+            <strong>0 Formulare.</strong> Dieser Tenant hat noch kein Formular: Besucher sehen „Formular nicht gefunden".
+            Formulare lassen sich unten von einem anderen Tenant übernehmen oder unter <em>Formulare</em> (Tenant wählen) anlegen.
+        </div>
+    <?php endif; ?>
+    <?php if ($copySources !== []): ?>
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Formulare übernehmen</h5></div>
+        <div class="card-body">
+            <form method="POST" action="tenants.php?id=<?= $id ?>" class="row g-3 align-items-end">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="copy_forms">
+                <div class="col-md-5">
+                    <label for="copy_from" class="form-label">Von Tenant</label>
+                    <select id="copy_from" name="copy_from" class="form-select" required>
+                        <option value="">– wählen –</option>
+                        <?php foreach ($copySources as $t): ?>
+                            <option value="<?= (int)$t['id'] ?>"><?= htmlspecialchars($t['name']) ?> (<?= htmlspecialchars((string)$t['slug']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="overwrite" name="overwrite" value="1">
+                        <label class="form-check-label" for="overwrite">Vorhandene Formulare ersetzen</label>
+                    </div>
+                </div>
+                <div class="col-md-3"><button type="submit" class="btn btn-primary">Übernehmen</button></div>
+                <div class="col-12 form-text">
+                    Kopiert Konfiguration, Survey und Theme. <strong>Nicht</strong> kopiert werden Empfänger-Adressen, das PDF-Logo, Anmeldungen, Entwürfe, Verlauf
+                    und der API-Schlüssel. Ohne Haken bleiben vorhandene Formulare unverändert.
+                </div>
+            </form>
+        </div>
+    </div>
     <?php endif; ?>
 
     <!-- ------------------------------------------------------------------ -->
@@ -495,6 +555,20 @@ else:
                            value="<?= htmlspecialchars($_POST['origin'] ?? '') ?>">
                     <div class="form-text">Optional. Erlaubte Origin für CORS-Anfragen.</div>
                 </div>
+
+                <?php $copyOptions = $tenantRepo->findAll(); if ($copyOptions !== []): ?>
+                <div class="mb-3">
+                    <label for="copy_from_new" class="form-label">Formulare übernehmen von</label>
+                    <select id="copy_from_new" name="copy_from" class="form-select">
+                        <option value="0">– leer starten –</option>
+                        <?php foreach ($copyOptions as $t): ?>
+                            <option value="<?= (int)$t['id'] ?>"><?= htmlspecialchars($t['name']) ?> (<?= htmlspecialchars((string)$t['slug']) ?>)</option>
+                        <?php endforeach; ?>
+                    </select>
+                    <div class="form-text">Ein neuer Tenant hat sonst keine Formulare. Kopiert werden Konfiguration, Survey und Theme; Empfänger-Adressen und das PDF-Logo
+                        bewusst nicht (die neue Schule trägt ihre eigenen ein).</div>
+                </div>
+                <?php endif; ?>
 
                 <button type="submit" class="btn btn-primary">Tenant erstellen</button>
             </form>

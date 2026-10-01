@@ -7,7 +7,7 @@
 > **Von 2.x kommend?** Lies zuerst **[MIGRATION-3.0.md](MIGRATION-3.0.md)** — das Upgrade betrifft
 > Datenbank, Frontend-Konfiguration und die Frontend↔Backend-Kommunikation.
 > **Mehrere Schulen auf einem Backend?** → **[MULTI-TENANT.md](MULTI-TENANT.md)**.
-> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)**.
+> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md)**.
 
 Das System besteht aus zwei Servern:
 
@@ -304,6 +304,12 @@ mkdir -p cache
 chmod 755 cache
 ```
 
+**Formular-Cache (ab 3.1):** Das Frontend legt die vom Backend gelieferte Formular-Fassung unter `frontend/cache/forms/`
+ab (anderer Ort: `FORM_CACHE_DIR` in der `.env`). Der Webserver-Benutzer muss dort schreiben dürfen (`chown www-data:www-data cache`).
+Damit holt das Frontend bei jedem Aufruf nur noch ein „304 Not Modified" und liefert das Formular weiter aus, wenn das Backend
+kurz nicht erreichbar ist (bis zu 7 Tage alte Fassung). Ist das Verzeichnis nicht beschreibbar, funktioniert alles weiter,
+nur ohne Cache und ohne diesen Ausfallschutz. Die Dateien beginnen mit einer PHP-Schutzzeile und sind nicht als Text abrufbar.
+
 Eine `forms-config.php` ist im Frontend **nicht mehr nötig**: Die Formular-Konfiguration kommt aus
 dem Backend (siehe oben). Die Survey-Definitionen liegen weiter in `frontend/surveys/`.
 
@@ -474,6 +480,35 @@ docker compose exec backend composer test
 ```
 
 ---
+
+### Backend für externe WordPress-Hostings erreichbar machen
+
+Betreibt eine Schule WordPress bei einem **externen** Hosting (und das Backend steht zentral, z. B. im Intranet des Schulträgers), muss das Backend
+von dort aus **nur die API** erreichen, nicht den Admin-Bereich. Das Plugin ruft diese Pfade serverseitig auf:
+
+| Pfad | Zweck | Öffentlich erreichbar? |
+|---|---|---|
+| `/api/form-config.php` | Konfiguration, Survey und Theme eines Formulars (`?with=survey`, ETag) | ja |
+| `/api/submit.php` | Anmeldung speichern (HMAC) | ja |
+| `/api/upload.php` | Datei-Upload (HMAC, Virenscan) | ja |
+| `/api/forms.php` | Formularliste des eigenen Tenants für den Verbindungsstatus (HMAC über `forms:<slug>`, 3.1) | ja |
+| `/api/health.php` | Erreichbarkeit | ja |
+| `/pdf/download.php` | PDF-Download per Token | ja |
+| alles andere (`index.php`, `forms.php`, `form_edit.php`, `form_survey.php`, `form_preview*.php`, `tenants.php`, `login.php`, `assets/`, …) | Admin-Oberfläche | **nein, nur intern** |
+
+Achtung beim Namen: `/api/forms.php` (öffentlich, signiert) ist nicht `/forms.php` im Wurzelverzeichnis (Admin-Seite, intern).
+
+Beispiel Nginx (Reverse Proxy vor dem Backend):
+
+```nginx
+location /api/            { proxy_pass http://backend_intern; }
+location = /pdf/download.php { proxy_pass http://backend_intern; }
+location /                { allow 10.0.0.0/8; deny all; proxy_pass http://backend_intern; }   # Admin nur aus dem Intranet
+```
+
+- **HTTPS ist Pflicht** zwischen Frontend/Plugin und Backend: die Signaturen enthalten keinen Zeitstempel und bieten allein keinen Replay-Schutz.
+- Die Antworten von `form-config.php` sind ohne Signatur per Tenant-Slug lesbar (Konfiguration, veröffentlichte Surveys): keine Geheimnisse hineinschreiben.
+- Das Ganze muss stehen, **bevor** der erste externe Tenant angebunden wird.
 
 ### PDF Logo konfigurieren
 
@@ -956,6 +991,17 @@ curl -F "file=@test.bin" https://anmeldung.example.com/api/upload.php
 - [ ] **Firewall:** Unnötige Ports geschlossen (nur 80, 443, ggf. 22)
 - [ ] **Git:** `.env` nicht committed, `.gitignore` geprüft
 - [ ] **Upload-Limits:** Nginx `client_max_body_size` (10M+), PHP `upload_max_filesize` (10M+), `post_max_size` (12M+) konfiguriert
+
+#### Ab 3.1 (Formular-Editor)
+
+- [ ] **Migration** gelaufen (neue Tabellen `form_resources`, `form_drafts`, `form_revisions`); Details: [MIGRATION-3.1.md](MIGRATION-3.1.md)
+- [ ] **Frontend-Cache:** `frontend/cache/` (bzw. `FORM_CACHE_DIR`; WordPress: `wp-content/uploads`) für den Webserver-Benutzer beschreibbar
+- [ ] **Backend-Image neu gebaut** (`docker compose build backend`): Apache sendet `X-Frame-Options: SAMEORIGIN`, sonst bleibt die Vorschau leer. Eigene Apache/Nginx-Konfiguration: ebenfalls `SAMEORIGIN` (fremdes Einbetten bleibt verboten)
+- [ ] **Surveys** ins Backend übernommen (`import-surveys.php`) oder bewusst als Dateien im Frontend belassen
+- [ ] **Neue Schulen:** Tenant anlegen → Formulare übernehmen (`copy-forms.php` oder Oberfläche) → Empfänger eintragen ([MULTI-TENANT.md](MULTI-TENANT.md))
+- [ ] **Rate-Limit** für Schreibaktionen passt (`EDITOR_RATE_LIMIT_MAX`/`_WINDOW`, Standard 60/min)
+- [ ] **Backup** umfasst die neuen Tabellen (Verlauf und Entwürfe liegen in der Datenbank; ein DB-Dump enthält sie)
+- [ ] **WordPress-Plugin:** Verbindungsstatus unter *Einstellungen → Ondisos* zeigt „Secret passt zum Tenant" und die Formularzahl
 
 #### Docker-spezifisch (Option 1 & 3)
 

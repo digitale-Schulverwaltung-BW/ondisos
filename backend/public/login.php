@@ -115,7 +115,7 @@ $csrfToken = $_SESSION['csrf_token'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Login - Anmeldungssystem</title>
+    <title>ondisos – Anmeldung zum Admin-Bereich</title>
     <link href="assets/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -156,8 +156,8 @@ $csrfToken = $_SESSION['csrf_token'];
     <div class="login-card">
         <div class="card">
             <div class="card-header text-center">
-                <h4 class="mb-0">Anmeldungssystem</h4>
-                <small>Admin-Bereich</small>
+                <h1 class="mb-0 fw-bold" style="font-size: 2.2rem; letter-spacing: .03em;">ondisos</h1>
+                <small>Anmeldungssystem · Admin-Bereich</small>
             </div>
             <div class="card-body p-4">
                 <?php if ($error): ?>
@@ -208,7 +208,7 @@ $csrfToken = $_SESSION['csrf_token'];
                 </form>
             </div>
             <div class="card-footer text-center text-muted">
-                <small>Anmeldungssystem v3.0</small>
+                <small>ondisos – Anmeldungssystem</small>
             </div>
         </div>
     </div>

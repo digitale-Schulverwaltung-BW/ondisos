@@ -8,6 +8,7 @@ require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;
 use Frontend\Config\FormConfigLoader;
+use Frontend\Config\SurveySource;
 use Frontend\Services\MessageService as M;
 use Frontend\Utils\CsrfProtection;
 
@@ -45,12 +46,15 @@ if (empty($formKey)) {
     $renderNotFound();
 }
 
-// Fetch the form configuration from the backend API (tenant = TENANT_SLUG in .env,
-// 'default' for single-tenant deployments) and load it into FormConfig.
-// A form the backend does not know for this tenant is a plain 404. If the backend is unreachable or
-// rejects the tenant (wrong BACKEND_API_URL, TENANT_SLUG ...), render a 503 maintenance page; the reason
-// is written to the PHP error log by FormConfigLoader.
-if (!FormConfigLoader::ensure($formKey)) {
+// Fetch the form configuration, survey and theme from the backend API (tenant = TENANT_SLUG in .env,
+// 'default' for single-tenant deployments) and load them. A cached copy is used while the backend
+// says "not modified" or is unreachable. A form the backend does not know for this tenant is a plain 404.
+// If there is neither a reachable backend nor a cached copy, or the backend rejects the tenant
+// (wrong BACKEND_API_URL, TENANT_SLUG ...), render a 503 maintenance page; the reason is written to the
+// PHP error log by FormConfigLoader.
+$tenantSlug = FormConfigLoader::tenantSlug();
+
+if (!FormConfigLoader::ensureWithSurvey($formKey)) {
     if ((FormConfigLoader::failure($formKey)['reason'] ?? null) === \Frontend\Services\BackendApiClient::FAIL_NOT_FOUND) {
         $renderNotFound();
     }
@@ -122,21 +126,15 @@ if (FormConfig::discardsSubmissions($formKey)) {
 
 $formConfig = FormConfig::get($formKey);
 
-$formPath = FormConfig::getFormPath($formKey);
-$themePath = FormConfig::getThemePath($formKey);
-
-// Load survey JSON
-if (!file_exists($formPath)) {
+// Survey and theme: from the backend if it delivers them, else the files in frontend/surveys/.
+// Both are re-encoded for safe use inside a <script> element (see JsonEmbed).
+try {
+    $surveyJson = SurveySource::survey($formKey);
+    $themeJson  = SurveySource::theme($formKey);
+} catch (\RuntimeException $e) {
+    error_log('Survey unavailable for form ' . $formKey . ': ' . $e->getMessage());
     http_response_code(500);
-    die('Survey definition not found: ' . htmlspecialchars($formConfig['form']));
-}
-
-$surveyJson = file_get_contents($formPath);
-
-// Load theme JSON (optional)
-$themeJson = '{}';
-if (file_exists($themePath)) {
-    $themeJson = file_get_contents($themePath);
+    die('Survey definition not found: ' . htmlspecialchars((string)($formConfig['form'] ?? $formKey)));
 }
 
 // Generate CSRF token
@@ -217,10 +215,9 @@ $csrfToken = CsrfProtection::getToken();
     
     <script>
         // Configure survey
-        console.log('Theme JSON:', <?= $themeJson ?>);
         window.surveyConfig = {
-            formKey: <?= json_encode($formKey) ?>,
-            tenantSlug: <?= json_encode($tenantSlug) ?>,
+            formKey: <?= json_encode($formKey, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
+            tenantSlug: <?= json_encode($tenantSlug, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             version: '2026-01-v3',
             containerId: 'surveyContainer',
             surveyJson: <?= $surveyJson ?>,

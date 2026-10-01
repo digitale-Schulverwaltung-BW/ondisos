@@ -4,10 +4,10 @@ Since **3.0**, one ondisos backend can serve several schools (*tenants*) with fu
 running with the same footprint as before (single-tenant mode, no extra administration).
 
 > This document records the **architecture and the decisions behind it**. For operating a multi-tenant installation see
-> [../MULTI-TENANT.md](../MULTI-TENANT.md); for upgrading from 2.x see [../MIGRATION-3.0.md](../MIGRATION-3.0.md).
+> [../MULTI-TENANT.md](../docs/MULTI-TENANT.md); for upgrading from 2.x see [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md).
 
 Two deployment settings are possible. **Scenario A (implemented in 3.0):** several frontend servers — one per school — feed a single
-multi-tenant backend. **Scenario B (planned, 3.0.5):** a managed multi-tenant frontend for several schools, e.g. in one municipality.
+multi-tenant backend. **Scenario B (planned, 3.2):** a managed multi-tenant frontend for several schools, e.g. in one municipality.
 
 ## Architectural decisions
 
@@ -59,7 +59,7 @@ CREATE TABLE form_configs (
 
 3.0 targets Scenario A. Each frontend belongs to exactly one tenant: it knows the tenant **slug** and the tenant **secret**
 (`TENANT_SLUG`, `TENANT_API_SECRET`), sends the slug with every API call and signs requests with the secret. No tenant switching is
-needed in the frontend. Scenario B is deferred to 3.0.5 (see below).
+needed in the frontend. Scenario B is deferred to 3.2 (see below).
 
 ### API security: per-tenant HMAC
 
@@ -75,7 +75,7 @@ The signature carries no timestamp, so HTTPS between frontend and backend is req
 
 Form configurations live in `form_configs`. In 3.0 they are created by `seed-forms.php` (tenant 1; adds new forms, never overwrites) or by SQL.
 The frontend **fetches the config from the backend on every form request** (`GET /api/form-config.php?form=…&tenant=…`, via
-`FormConfigLoader`). The alternative considered — pushing survey files/config to the frontend — was deferred to 3.1 because the survey JSON files
+`FormConfigLoader`). The alternative considered — pushing survey files/config to the frontend — was dropped in favour of pulling from the backend in 3.1; the survey JSON files
 still live on the frontend. The endpoint is reachable per slug without a signature, so a form config must not contain secrets.
 
 ### Tenant admin management: backend UI
@@ -152,15 +152,20 @@ Entry points that use form config (`index.php`, `save.php`, `ical.php`, the Word
 
 ## Deferred items
 
-### 3.0.5 — Managed multi-tenant frontend (Scenario B)
+### 3.1 — Form config admin UI and survey management (implemented)
+
+Done in 3.1, see [../docs/plans/PLAN-3.1.md](../docs/plans/PLAN-3.1.md) and [../docs/MIGRATION-3.1.md](../docs/MIGRATION-3.1.md):
+
+- form configurations are edited through an HTML form in the backend (no JSON for school admins), saved with a revision history
+- surveys and themes are stored in the backend per tenant (`form_resources`), pasted/uploaded by the admin, validated, previewed and published with draft/rollback;
+  the frontend **pulls** them together with the config (ETag, file cache, stale-if-error; files in `frontend/surveys/` remain a fallback)
+- new tenants start with the forms of another tenant (`FormCopyService`; recipients and logo are never copied)
+
+### 3.2 — Managed multi-tenant frontend (Scenario B) and end of the file fallback
 
 One frontend instance serves several tenants. Requires tenant selection/routing in the UI and a shared secret between that frontend and the backend
-(per-tenant secrets offer no additional protection when the frontend is shared).
-
-### 3.1 — Form config admin UI and survey upload
-
-- CRUD UI for form configurations in the backend
-- Upload/pull of survey JSON files from the backend to the frontend (frontend becomes maintenance-free for tenant admins)
+(per-tenant secrets offer no additional protection when the frontend is shared). The file fallback for surveys (`frontend/surveys/`) is dropped; the files
+remain an import source only. (Formerly planned as 3.0.5.)
 
 ## Impact summary (what changed in the code base)
 

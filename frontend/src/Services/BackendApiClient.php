@@ -301,18 +301,85 @@ class BackendApiClient
     }
 
     /**
+     * Which forms does the tenant have? Signed request (HMAC over "forms:<slug>" with the tenant secret), so it also
+     * proves that the configured secret matches the tenant. Used by the WordPress plugin's connection status.
+     *
+     * reason: null on success; FAIL_UNAUTHORIZED = signature rejected (wrong secret, unknown/inactive tenant),
+     * FAIL_UNREACHABLE, FAIL_NOT_FOUND = backend older than 3.1 (no such endpoint), FAIL_ERROR otherwise.
+     *
+     * @return array{ok: bool, reason: ?string, detail: string, forms: list<string>}
+     */
+    public function fetchTenantForms(string $tenantSlug): array
+    {
+        $url = $this->baseUrl . '/forms.php?tenant=' . urlencode($tenantSlug);
+
+        if ($this->apiSecret === '') {
+            return ['ok' => false, 'reason' => self::FAIL_UNAUTHORIZED, 'detail' => 'no tenant API secret configured', 'forms' => []];
+        }
+
+        $response = $this->httpRequest($url, 5, [
+            'Accept: application/json',
+            'X-Signature: ' . $this->sign('forms:' . $tenantSlug),
+        ]);
+        $code = $response['code'];
+
+        if ($response['error'] !== '' || $code === 0) {
+            return ['ok' => false, 'reason' => self::FAIL_UNREACHABLE, 'detail' => $response['error'] !== '' ? $response['error'] : 'no response', 'forms' => []];
+        }
+        if ($code === 401 || $code === 403) {
+            return ['ok' => false, 'reason' => self::FAIL_UNAUTHORIZED, 'detail' => 'signature rejected: the tenant API secret does not match the tenant, or the tenant is unknown/inactive', 'forms' => []];
+        }
+        if ($code === 404) {
+            return ['ok' => false, 'reason' => self::FAIL_NOT_FOUND, 'detail' => 'the backend has no forms.php (older than 3.1)', 'forms' => []];
+        }
+        if ($code !== 200) {
+            return ['ok' => false, 'reason' => self::FAIL_ERROR, 'detail' => 'HTTP ' . $code, 'forms' => []];
+        }
+
+        $data = json_decode($response['body'], true);
+        if (!is_array($data) || ($data['success'] ?? false) !== true || !is_array($data['forms'] ?? null)) {
+            return ['ok' => false, 'reason' => self::FAIL_ERROR, 'detail' => 'unexpected response', 'forms' => []];
+        }
+
+        return ['ok' => true, 'reason' => null, 'detail' => '', 'forms' => array_values(array_filter($data['forms'], 'is_string'))];
+    }
+
+    /**
      * Perform a GET request. Isolated so tests can replace the network.
      *
      * @return array{body: string, code: int, error: string} code 0 and a non-empty error when no HTTP response arrived
      */
     protected function httpGet(string $url, int $timeoutSeconds): array
     {
+        $r = $this->httpRequest($url, $timeoutSeconds, ['Accept: application/json']);
+
+        return ['body' => $r['body'], 'code' => $r['code'], 'error' => $r['error']];
+    }
+
+    /**
+     * One GET request with custom request headers; also returns the response headers (names lower-cased).
+     * The only place that talks curl; tests replace httpGet() or this method.
+     *
+     * @param list<string> $headers
+     * @return array{body: string, code: int, error: string, headers: array<string,string>}
+     */
+    protected function httpRequest(string $url, int $timeoutSeconds, array $headers): array
+    {
+        $responseHeaders = [];
+
         $ch = curl_init($url);
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => $timeoutSeconds,
             CURLOPT_CONNECTTIMEOUT => $timeoutSeconds,
-            CURLOPT_HTTPHEADER     => ['Accept: application/json'],
+            CURLOPT_HTTPHEADER     => $headers,
+            CURLOPT_HEADERFUNCTION => static function ($ch, string $line) use (&$responseHeaders): int {
+                $parts = explode(':', $line, 2);
+                if (count($parts) === 2) {
+                    $responseHeaders[strtolower(trim($parts[0]))] = trim($parts[1]);
+                }
+                return strlen($line);
+            },
         ]);
 
         $body  = curl_exec($ch);
@@ -320,7 +387,78 @@ class BackendApiClient
         $error = curl_error($ch);
         curl_close($ch);
 
-        return ['body' => is_string($body) ? $body : '', 'code' => $code, 'error' => $error];
+        return ['body' => is_string($body) ? $body : '', 'code' => $code, 'error' => $error, 'headers' => $responseHeaders];
+    }
+
+    /**
+     * Fetch config, survey and theme of a form in one request (3.1).
+     *
+     * Calls GET {baseUrl}/form-config.php?form=…&tenant=…&with=survey and sends $etag (from an earlier
+     * response) as If-None-Match, so the backend answers 304 while nothing changed.
+     *
+     * Status values:
+     *   ok           → config, survey_json, theme_json (null = the backend has none, use the file), etag
+     *   not_modified → the cached copy is still current
+     *   not_found    → the form does not exist for this tenant (HTTP 404)
+     *   denied       → unknown or inactive tenant (HTTP 401/403)
+     *   error        → anything else: backend unreachable, 5xx, unreadable answer
+     *
+     * A backend from before 3.1 ignores "with=survey" and answers with the config only: that is "ok" with
+     * survey_json/theme_json = null and no etag.
+     *
+     * Failures also carry reason (one of the FAIL_* constants), http_code and detail, like fetchFormConfigResult().
+     *
+     * @return array{status:string, config?:array<string,mixed>, survey_json?:?string, theme_json?:?string, etag?:?string, reason?:string, http_code?:int, detail?:string}
+     */
+    public function fetchFormBundle(string $formKey, string $tenantSlug, ?string $etag = null): array
+    {
+        $url = $this->baseUrl . '/form-config.php?form=' . urlencode($formKey)
+             . '&tenant=' . urlencode($tenantSlug) . '&with=survey';
+
+        $headers = ['Accept: application/json'];
+        if ($etag !== null && $etag !== '') {
+            $headers[] = 'If-None-Match: "' . $etag . '"';
+        }
+
+        $response = $this->httpRequest($url, 5, $headers);
+        $code     = $response['code'];
+
+        if ($response['error'] !== '' || $code === 0) {
+            $detail = $response['error'] !== '' ? $response['error'] : 'no response';
+            error_log('fetchFormBundle curl error: ' . $detail);
+            return ['status' => 'error', 'reason' => self::FAIL_UNREACHABLE, 'http_code' => 0, 'detail' => $detail];
+        }
+        if ($code === 304) {
+            return ['status' => 'not_modified'];
+        }
+        if ($code === 404) {
+            return ['status' => 'not_found', 'reason' => self::FAIL_NOT_FOUND, 'http_code' => $code,
+                    'detail' => 'form "' . $formKey . '" does not exist for tenant "' . $tenantSlug . '"'];
+        }
+        if ($code === 401 || $code === 403) {
+            return ['status' => 'denied', 'reason' => self::FAIL_UNAUTHORIZED, 'http_code' => $code,
+                    'detail' => 'tenant "' . $tenantSlug . '" is unknown or inactive'];
+        }
+        if ($code !== 200) {
+            return ['status' => 'error', 'reason' => self::FAIL_ERROR, 'http_code' => $code, 'detail' => 'HTTP ' . $code];
+        }
+
+        $result = json_decode($response['body'], true);
+        if (!is_array($result) || ($result['success'] ?? false) !== true || !is_array($result['config'] ?? null)) {
+            return ['status' => 'error', 'reason' => self::FAIL_ERROR, 'http_code' => $code,
+                    'detail' => 'unexpected response (is the Backend API URL pointing at the ondisos API?)'];
+        }
+
+        $text = static fn (mixed $v): ?string => is_string($v) && $v !== '' ? $v : null;
+        $etagHeader = isset($response['headers']['etag']) ? trim($response['headers']['etag'], " \t\"") : '';
+
+        return [
+            'status'      => 'ok',
+            'config'      => $result['config'],
+            'survey_json' => $text($result['survey_json'] ?? null),
+            'theme_json'  => $text($result['theme_json'] ?? null),
+            'etag'        => $etagHeader !== '' ? $etagHeader : null,
+        ];
     }
 
     /**

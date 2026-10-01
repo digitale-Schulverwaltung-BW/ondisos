@@ -75,6 +75,31 @@ class TenantContext
         return self::$tenantId;
     }
 
+    /**
+     * Run $fn as another tenant, then restore the previous context exactly (including "all tenants" and "not initialized").
+     *
+     * For the few operations that must read one tenant and write another (copying forms). Everything inside $fn still goes
+     * through the tenant-filtered repositories; this only changes which tenant they see.
+     *
+     * @template T
+     * @param callable(): T $fn
+     * @return T
+     */
+    public static function runAs(int $tenantId, callable $fn): mixed
+    {
+        $previousTenant = self::$tenantId;
+        $previousAll    = self::$allTenants;
+
+        self::$tenantId   = $tenantId;
+        self::$allTenants = false;
+        try {
+            return $fn();
+        } finally {
+            self::$tenantId   = $previousTenant;
+            self::$allTenants = $previousAll;
+        }
+    }
+
     public static function reset(): void
     {
         self::$tenantId = null;

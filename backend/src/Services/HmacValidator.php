@@ -12,6 +12,7 @@ namespace App\Services;
  *
  * submit.php:   sign over raw request body (php://input)
  * upload.php:   sign over canonical string "{anmeldung_id}:{fieldname}:{filename}"
+ * forms.php:    sign over "forms:{tenant slug}"
  */
 class HmacValidator
 {
@@ -33,6 +34,19 @@ class HmacValidator
         $expected = hash_hmac('sha256', $body, $this->secret);
 
         return hash_equals($expected, $providedSig);
+    }
+
+    /**
+     * Validate a signature over a short canonical message (used by forms.php: "forms:<tenant slug>").
+     * Binding the message to the endpoint and the slug means a signature made for one purpose is useless for another.
+     */
+    public function validateMessage(string $message, string $providedSig): bool
+    {
+        if ($providedSig === '' || !$this->secretIsUsable()) {
+            return false;
+        }
+
+        return hash_equals(hash_hmac('sha256', $message, $this->secret), $providedSig);
     }
 
     /**

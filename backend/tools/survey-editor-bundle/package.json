@@ -1,0 +1,20 @@
+{
+  "name": "ondisos-survey-editor-bundle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Builds backend/public/assets/codemirror/survey-editor-cm.js (CodeMirror 6, JSON mode) for the survey editor",
+  "scripts": {
+    "build": "esbuild src/main.js --bundle --minify --format=iife --target=es2019 --legal-comments=none --outfile=dist/survey-editor-cm.js"
+  },
+  "dependencies": {
+    "@codemirror/commands": "6.11.1",
+    "@codemirror/lang-json": "6.0.2",
+    "@codemirror/language": "6.12.4",
+    "@codemirror/lint": "6.9.7",
+    "@codemirror/state": "6.7.6",
+    "@codemirror/view": "6.43.13"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

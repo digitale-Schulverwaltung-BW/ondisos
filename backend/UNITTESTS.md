@@ -157,3 +157,22 @@ class MeinServiceTest extends TestCase
 | Endpoint-Skripte testbar machen (Logik aus den Scripts in Services ziehen) | offen |
 | AnmeldungRepository (Integration, Test-Datenbank) | Langfristig |
 | Coverage neu messen und Ziel >80 % | Langfristig |
+
+## Formular-Editor (3.1)
+
+- `tests/Unit/Forms/`: Survey-/Theme-/Config-Validierung, HTML-Allowlist, Linter, Namensregeln; prüfen u. a. alle echten Surveys
+  in `frontend/surveys/` und `frontend/config/forms-config-dist.php` (die Regeln dürfen reale Formulare nicht ablehnen).
+  `FormEditorSchemaDriftTest` hält `schema.sql`, `migrations/add_form_editor_tables.sql` und `migrate.php` deckungsgleich.
+- `tests/Integration/Forms/`: Repositories (Tenant-Isolierung, IDOR-Protokoll, Konflikterkennung), `FormPublishService`
+  (Entwurf → Veröffentlichen → Wiederherstellen, Atomarität) und `SurveyImportService` gegen eine echte Datenbank.
+
+Integration-Tests lokal mit einer Wegwerf-Datenbank:
+
+```bash
+docker run -d --name ondisos-it-mysql -e MYSQL_ROOT_PASSWORD=test -e MYSQL_DATABASE=anmeldung_test mysql:8.0
+docker exec -i ondisos-it-mysql mysql -uroot -ptest anmeldung_test < database/schema.sql
+docker run --rm --network container:ondisos-it-mysql -v "$PWD":/app -w /app/backend php:8.2-cli bash -c \
+  'docker-php-ext-install mysqli >/dev/null 2>&1; ./vendor/bin/phpunit --testsuite=Integration'
+```
+
+(`--network container:…` lässt PHP die Datenbank unter `127.0.0.1` erreichen, wie `.env.test` es erwartet.)

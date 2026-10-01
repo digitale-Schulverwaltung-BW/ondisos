@@ -9,9 +9,9 @@ Das Plugin **ondisos** bindet die Anmeldeformulare per Shortcode in WordPress-Se
 Die Formulardaten werden **nicht** in WordPress gespeichert: Das Plugin leitet sie serverseitig an das
 Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet laufen sollte.
 
-- Plugin-Version: **2.1.0** — benötigt ein **Ondisos-Backend ab 3.0**
-- Upgrade von einer älteren Installation: [../MIGRATION-3.0.md](../MIGRATION-3.0.md)
-- Mehrere Schulen / Tenants: [../MULTI-TENANT.md](../MULTI-TENANT.md)
+- Plugin-Version: **3.1.0** — benötigt ein **Ondisos-Backend ab 3.0** (Surveys aus dem Backend und der erweiterte Verbindungsstatus ab Backend 3.1)
+- Upgrade von einer älteren Installation: [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md)
+- Mehrere Schulen / Tenants: [../MULTI-TENANT.md](../docs/MULTI-TENANT.md)
 
 ## Inhalt
 
@@ -32,7 +32,7 @@ Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet la
 - Ein laufendes Ondisos-Backend (3.0+), das **vom WordPress-Server aus** erreichbar ist
   (die Anfragen kommen serverseitig von WordPress, nicht aus dem Browser)
 - Im Backend: ein Tenant (für eine Schule genügt Tenant 1, Slug `default`) mit **API-Secret** und
-  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [../DEPLOYMENT.md](../DEPLOYMENT.md)
+  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [../DEPLOYMENT.md](../docs/DEPLOYMENT.md)
 - Der Webserver muss Symlinks folgen, falls Variante A (Symlinks) benutzt wird
 
 ## Installation
@@ -95,6 +95,10 @@ Das Verzeichnis `ondisos-frontend` ist **kein** eigenes Plugin und wird nicht ak
 Das WordPress-Benutzerkonto (z. B. `www-data`) muss beide Verzeichnisse lesen können
 (Verzeichnisse 755, Dateien 644).
 
+WordPress legt den Formular-Cache unter `wp-content/uploads/ondisos-cache/` an (ab 3.1; beschreibbar wie der Rest von `uploads`).
+Er enthält die zuletzt vom Backend gelieferte Fassung eines Formulars und hält das Formular verfügbar, wenn das Backend
+kurz nicht erreichbar ist. Ohne Schreibrecht arbeitet das Plugin ohne Cache.
+
 ### Plugin aktivieren
 
 WordPress-Admin → *Plugins* → **„ondisos - Onboarding Digital Souverän + Open Source"** → *Aktivieren*.
@@ -129,7 +133,7 @@ Das Plugin ruft das Backend **vom WordPress-Container aus** auf. In einem Contai
 Das Plugin warnt, wenn in einem Container `localhost`/`127.0.0.1` eingetragen wird.
 
 **Woher das Secret kommt:** Tenant 1 verwendet den `API_SECRET_KEY` aus der Backend-`.env`; weitere Tenants
-zeigen ihr Secret einmalig nach dem Anlegen in `tenants.php` (siehe [../MULTI-TENANT.md](../MULTI-TENANT.md)).
+zeigen ihr Secret einmalig nach dem Anlegen in `tenants.php` (siehe [../MULTI-TENANT.md](../docs/MULTI-TENANT.md)).
 
 **Alternative `.env`:** Dieselben Werte können in `.env` im Frontend-Verzeichnis stehen
 (`BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`, `FROM_EMAIL`). **Die WordPress-Einstellungen haben Vorrang.**
@@ -176,7 +180,7 @@ git pull               # bzw. git checkout <neues-Tag>
 Die Änderungen sind sofort in WordPress wirksam (kein Neustart). Bei aktiven Cache-Plugins den Cache leeren;
 die Plugin-Version ist an die Asset-URLs gekoppelt, sodass Browser geänderte JavaScript-Dateien neu laden.
 
-Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](../MIGRATION-3.0.md) ausführen
+Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md) ausführen
 (Tenant-Slug und Tenant-API-Secret eintragen).
 
 ## Fehlersuche
@@ -191,6 +195,7 @@ Beim Wechsel von 2.x auf 3.0 zusätzlich die Schritte in [../MIGRATION-3.0.md](.
 | 403 Forbidden auf Plugin-Dateien | Variante A: `Options +FollowSymLinks`; Dateirechte und Besitzer prüfen |
 | Assets (SurveyJS/Fonts) 404 | Variante A: Existiert `wordpress-plugin/frontend-assets` (Symlink → `../frontend/public`)? Variante B: `plugins/ondisos-frontend/public/assets/` vorhanden? |
 | Formular lädt, PDF-Link schlägt fehl | Backend-URL und Erreichbarkeit vom WordPress-Server aus prüfen; Plugin-Proxy: `admin-ajax.php?action=ondisos_pdf_download` |
+| Formular zeigt eine alte Fassung | Der Cache wird bei jedem Aufruf beim Backend per ETag geprüft; eine alte Fassung erscheint nur, wenn das Backend nicht erreichbar ist (dann bis zu 7 Tage). Backend-Erreichbarkeit prüfen; im Zweifel `wp-content/uploads/ondisos-cache/` leeren |
 | Permission denied | `sudo chown -R www-data:www-data <ondisos>/wordpress-plugin <ondisos>/frontend` |
 
 Debug-Log: `define('WP_DEBUG', true); define('WP_DEBUG_LOG', true);` → `wp-content/debug.log`.
