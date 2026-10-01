@@ -99,6 +99,9 @@ return [
         // 'pdf' => ['enabled' => false],
     ],
 
+    // 'db' => false means: this form is NOT stored in the backend database - the submission is only sent by e-mail
+    // to 'notify_email'. A form with db=false and without a valid notify_email would discard every submission, so the
+    // frontend refuses to show it (and seed-forms.php warns about it). Use db=false only together with notify_email.
     'ausbildernachmittag' => [
         'db' => false,
         'form'  => 'ausbildernachmittag.json',
@@ -124,6 +127,7 @@ return [
         'form'  => 'prefill.json',
         'theme' => 'survey_theme.json',
         'version' => '2026-01-v2',
+        'notify_email' => 'prefill-demo@example.com',   // db=false needs a recipient, see the note above
         'prefill_fields' => [
             'Name',      // Gleiche Anmeldung mit dem selben Namen
             'Telefon'    // und der selben Telefonnummer (aber anderer Mail-Adresse. Sinnfreies Beispiel zu Demo-Zwecken)

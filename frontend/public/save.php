@@ -33,6 +33,12 @@ try {
     $formKey = $_REQUEST['form'] ?? '';
 
     if (empty($formKey) || !FormConfigLoader::ensure($formKey)) {
+        // Unknown form = client error; backend unreachable / tenant rejected = service problem (details are in the log)
+        $reason = FormConfigLoader::failure((string) $formKey)['reason'] ?? 'not_found';
+        if ($reason !== 'not_found') {
+            throw new RuntimeException(M::withContact('errors.backend_unreachable'), 503);
+        }
+
         throw new RuntimeException(M::get('errors.unknown_form'), 400);
     }
 

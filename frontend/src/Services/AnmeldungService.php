@@ -33,6 +33,17 @@ class AnmeldungService
             ];
         }
 
+        // Fail closed: a form that is neither stored (db=false) nor mailed (no valid notify_email) would
+        // discard the data and still report success. Refuse it and say so in the log.
+        if (FormConfig::discardsSubmissions($formKey)) {
+            error_log("Submission refused for form '{$formKey}': db is false and no valid notify_email is configured, the data would be discarded");
+
+            return [
+                'success' => false,
+                'error'   => MessageService::withContact('errors.form_unavailable'),
+            ];
+        }
+
         // Clean consent fields (don't save them)
         $surveyData = $this->cleanConsentFields($surveyData);
 

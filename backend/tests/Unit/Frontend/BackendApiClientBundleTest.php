@@ -6,7 +6,7 @@ namespace Tests\Unit\Frontend;
 use PHPUnit\Framework\TestCase;
 
 /**
- * BackendApiClient::fetchFormBundle() with the network replaced (httpGet() overridden).
+ * BackendApiClient::fetchFormBundle() with the network replaced (httpRequest() overridden).
  */
 class BackendApiClientBundleTest extends TestCase
 {
@@ -32,11 +32,17 @@ class BackendApiClientBundleTest extends TestCase
                 parent::__construct($u, $t, $s);
             }
 
-            protected function httpGet(string $url, array $headers): array
+            protected function httpRequest(string $url, int $timeoutSeconds, array $headers): array
             {
                 $this->url = $url;
                 $this->sentHeaders = $headers;
-                return $this->response + ['headers' => [], 'body' => '', 'error' => null];
+                $r = $this->response;
+                return [
+                    'code'    => $r['status'],
+                    'body'    => $r['body'] ?? '',
+                    'error'   => $r['error'] ?? '',
+                    'headers' => $r['headers'] ?? [],
+                ];
             }
         };
     }
@@ -108,6 +114,7 @@ class BackendApiClientBundleTest extends TestCase
             '500'            => [['status' => 500, 'body' => 'oops'], 'error'],
             '503'            => [['status' => 503], 'error'],
             'curl error'     => [['status' => 0, 'error' => 'Connection refused'], 'error'],
+            'no response'    => [['status' => 0], 'error'],
             'not json'       => [['status' => 200, 'body' => '<html>'], 'error'],
             'success false'  => [['status' => 200, 'body' => '{"success":false}'], 'error'],
             'no config'      => [['status' => 200, 'body' => '{"success":true}'], 'error'],

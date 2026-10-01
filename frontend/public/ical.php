@@ -12,9 +12,10 @@ use Frontend\Config\FormConfigLoader;
 $formKey = $_GET['form'] ?? '';
 
 if (empty($formKey) || !FormConfigLoader::ensure($formKey)) {
-    http_response_code(404);
+    $backendProblem = (FormConfigLoader::failure((string) $formKey)['reason'] ?? 'not_found') !== 'not_found';
+    http_response_code($backendProblem ? 503 : 404);
     header('Content-Type: text/plain; charset=utf-8');
-    exit('Formular nicht gefunden.');
+    exit($backendProblem ? 'Dienst vorübergehend nicht verfügbar.' : 'Formular nicht gefunden.');
 }
 
 $icalConfig = FormConfig::get($formKey)['ical'] ?? null;

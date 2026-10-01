@@ -80,7 +80,7 @@ Für jedes Formular lassen sich konfigurieren:
 - Empfänger einer Benachrichtungs-Mail
 - sollen die Daten in der Datenbank abgespeichert werden (es ist auch denbar, Anmeldungen
 nur per interner E-Mail entgegenzunehmen, ohne diese abzuspeichern. *Nicht* empfohlen, da
-E-Mail Benachrichtungen nicht so zuverlässig sind wie ein Abspeichern)
+E-Mail Benachrichtungen nicht so zuverlässig sind wie ein Abspeichern. Mit `db: false` ist eine gültige `notify_email` **Pflicht**: Ohne Empfänger gingen die Daten verloren, deshalb zeigt das Frontend so ein Formular nicht an)
 - Ob ein PDF-Download nach dem Absenden angezeigt werden soll
 - Ob Teile des Formulars vor-ausgefüllt als Bookmark beim Benutzer abgespeichert werden sollen
 (für Firmen, die regelmäßig Auszubildende anmelden)
