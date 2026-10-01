@@ -17,6 +17,31 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
 2. `form-config.php` kennt den neuen Parameter `with=survey`. Ohne ihn antwortet der Endpoint wie in 3.0, ein
    3.0-Frontend funktioniert also gegen ein 3.1-Backend.
 
+3. **Surveys und Themes in die Datenbank übernehmen** (optional, ab 3.1.0): Das Backend kann die Survey-Dateien ausliefern,
+   das Frontend braucht sie dann nicht mehr lokal. Das Skript prüft jede Datei mit denselben Regeln wie der spätere Editor
+   (HTML-Allowlist, doppelte Feldnamen, …); ungültige Dateien werden gemeldet und übersprungen, die übrigen trotzdem importiert.
+
+   ```bash
+   # manuelle Installation
+   php backend/import-surveys.php --dry-run frontend/surveys    # nur prüfen
+   php backend/import-surveys.php frontend/surveys              # importieren
+
+   # Docker: das Backend-Image sieht frontend/ nicht, das Verzeichnis zuerst hineinkopieren
+   docker compose cp frontend/surveys backend:/tmp/surveys
+   docker compose exec backend php import-surveys.php /tmp/surveys
+   ```
+
+   Weitere Optionen: `--tenant=<slug>` (Standard `default`) und `--overwrite` (ersetzt abweichende Inhalte; die alte Fassung
+   landet im Verlauf der Formulare, die diese Datei nutzen — ohne `--overwrite` werden abweichende Dateien übersprungen). Der Import ist
+   wiederholbar (`unchanged`). Themes erkennt das Skript an der Formular-Konfiguration, am Namen `survey_theme.json` oder am Inhalt.
+   Ein neuer Tenant: erst `seed-forms.php --tenant=<slug>`, dann `import-surveys.php --tenant=<slug>`.
+
+   Sobald eine Survey in der Datenbank liegt, hat sie Vorrang vor der Datei; die Dateien bleiben als Fallback (bis 3.2).
+
+4. `seed-forms.php` kennt jetzt `--tenant=<slug>` (bisher nur Tenant 1) und prüft jeden Eintrag: ungültige Einträge
+   (fehlendes `form`/`theme`, kaputte E-Mail-Adresse, unzulässiger Formular-Schlüssel, …) werden gemeldet und nicht gespeichert,
+   der Exit-Code ist dann 1. Vorhandene Formulare werden weiterhin nie überschrieben.
+
 ## Frontend / WordPress
 
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).

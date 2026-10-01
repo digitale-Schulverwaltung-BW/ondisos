@@ -70,7 +70,8 @@ projekt/
 │
 └── backend/                       # Intranet-Admin
     ├── migrate.php               # Schema-Migration auf 3.0 (idempotent)
-    ├── seed-forms.php            # forms-config.php → Tabelle form_configs (Tenant 1); `[<datei>|-]` für Pfad bzw. STDIN
+    ├── seed-forms.php            # forms-config.php → Tabelle form_configs; `[--tenant=<slug>] [<datei>|-]` (Pfad bzw. STDIN), validiert jeden Eintrag
+    ├── import-surveys.php        # Survey-/Theme-Dateien → Datenbank (3.1): `[--tenant=<slug>] [--overwrite] [--dry-run] <verzeichnis>`
     ├── public/
     │   ├── index.php · detail.php · trash.php · dashboard.php
     │   ├── excel_export.php · bulk_actions.php · change_status.php
@@ -98,7 +99,8 @@ projekt/
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService
     │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger · UploadCleanupService
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
-    │   │                  FormPublishService · SurveyImportService  (3.1: Formular-Editor, Veröffentlichen, Wiederherstellen, Import)
+    │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService  (3.1)
+    │   ├── Cli/           CliArgs · ImportSurveysCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
     ├── inc/               bootstrap · auth · csrf · header · footer
@@ -329,7 +331,7 @@ WordPress: `Tenant-Slug` und `Tenant-API-Secret` unter *Einstellungen → Ondiso
 
 Die Konfiguration eines Formulars ist ein JSON-Objekt in `form_configs.config_json` (Tenant + `form_key`).
 `frontend/config/forms-config-dist.php` dokumentiert die möglichen Schlüssel und dient als Quelle für
-`backend/seed-forms.php` (nur Tenant 1, `INSERT IGNORE`: neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben; Quelle ohne Argument `../frontend/config/forms-config.php` bzw. `config/forms-config.php`, sonst eine Datei oder `-` für STDIN — im Docker-Betrieb `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`; das Skript warnt vor `@example.com`-Platzhaltern). Änderungen an bestehenden Formularen per SQL;
+`backend/seed-forms.php` (`--tenant=<slug>`, Standard Tenant 1; neue Formular-Keys werden hinzugefügt, vorhandene nie überschrieben, ungültige Einträge übersprungen; Quelle ohne Argument `../frontend/config/forms-config.php` bzw. `config/forms-config.php`, sonst eine Datei oder `-` für STDIN — im Docker-Betrieb `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`; das Skript warnt vor `@example.com`-Platzhaltern). Änderungen an bestehenden Formularen per SQL;
 eine Admin-Oberfläche ist für 3.1 geplant.
 
 ```php
@@ -729,7 +731,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 703 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 72 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 709 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 92 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 
@@ -940,7 +942,7 @@ http://intranet.example.com/backend/dashboard.php
 
 ### Known Issues
 - ⚠️ Email-Service nutzt PHP `mail()` → ggf. auf SMTP umstellen
-- ⚠️ Formular-Konfiguration ist nur per SQL änderbar (Admin-UI geplant, 3.1); `seed-forms.php` schreibt nur Tenant 1 und überschreibt vorhandene Einträge nie
+- ⚠️ Formular-Konfiguration ist nur per SQL änderbar (Admin-UI geplant, 3.1); `seed-forms.php` überschreibt vorhandene Einträge nie (Tenant per `--tenant=<slug>`)
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
 - ⚠️ Die Backend-Oberfläche lädt Bootstrap und DataTables von `cdn.jsdelivr.net` (unversioniert, ohne Integritätsprüfung, `backend/inc/header.php`, `footer.php`, `login.php`): Admin-Browser kontaktieren einen externen CDN, und in einem Intranet ohne Internetzugang bleibt die Oberfläche ungestylt. Frontend und WordPress-Plugin sind frei von externen Quellen
 - ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)

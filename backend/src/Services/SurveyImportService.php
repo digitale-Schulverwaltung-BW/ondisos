@@ -38,9 +38,10 @@ class SurveyImportService
     }
 
     /**
+     * @param bool $dryRun validate and report what would happen, write nothing
      * @return array{status: string, validation: ValidationResult}
      */
-    public function importResource(string $kind, string $name, string $json, ?string $user, bool $overwrite = false): array
+    public function importResource(string $kind, string $name, string $json, ?string $user, bool $overwrite = false, bool $dryRun = false): array
     {
         $validation = new ValidationResult();
 
@@ -64,23 +65,26 @@ class SurveyImportService
             if (!$overwrite) {
                 return ['status' => self::STATUS_SKIPPED, 'validation' => $validation];
             }
-            if ($kind === FormResourceRepository::KIND_SURVEY) {
+            if ($kind === FormResourceRepository::KIND_SURVEY && !$dryRun) {
                 $this->keepPreviousState($name, $existing['content'], $user);
             }
         }
 
-        $this->resources->save($kind, $name, $json, $user);
+        if (!$dryRun) {
+            $this->resources->save($kind, $name, $json, $user);
+        }
 
         return ['status' => self::STATUS_IMPORTED, 'validation' => $validation];
     }
 
     /**
-     * Import every *.json file of a directory (not recursive). Files that are the theme of any form of this
-     * tenant (or named survey_theme.json) are imported as themes, all others as surveys.
+     * Import every *.json file of a directory (not recursive). A file is a theme if it is the theme of any form of
+     * this tenant, is named survey_theme.json, or looks like one (theme keys, no pages/elements); everything else
+     * is a survey.
      *
-     * @return array<string, array{status: string, validation: ValidationResult}> file name => outcome
+     * @return array<string, array{status: string, validation: ValidationResult, kind?: string}> file name => outcome
      */
-    public function importDirectory(string $dir, ?string $user, bool $overwrite = false): array
+    public function importDirectory(string $dir, ?string $user, bool $overwrite = false, bool $dryRun = false): array
     {
         $files = glob(rtrim($dir, '/') . '/*.json') ?: [];
         sort($files);
@@ -108,11 +112,21 @@ class SurveyImportService
                 continue;
             }
 
-            $kind = in_array($name, $themes, true) ? FormResourceRepository::KIND_THEME : FormResourceRepository::KIND_SURVEY;
-            $out[$name] = $this->importResource($kind, $name, $json, $user, $overwrite);
+            $isTheme = in_array($name, $themes, true) || self::looksLikeTheme($json);
+            $kind    = $isTheme ? FormResourceRepository::KIND_THEME : FormResourceRepository::KIND_SURVEY;
+            $out[$name] = $this->importResource($kind, $name, $json, $user, $overwrite, $dryRun) + ['kind' => $kind];
         }
 
         return $out;
+    }
+
+    /** A SurveyJS theme has theme keys but no questions. */
+    private static function looksLikeTheme(string $json): bool
+    {
+        $data = json_decode($json, true);
+        return is_array($data)
+            && !isset($data['pages']) && !isset($data['elements'])
+            && (isset($data['cssVariables']) || isset($data['themeName']));
     }
 
     /** @return list<string> theme file names used by this tenant's forms, plus the shared default */
