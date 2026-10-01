@@ -301,4 +301,65 @@ class LoginTest extends TestCase
         $this->assertFalse($tenantSession['is_platform_admin'], 'is_platform_admin must be false for tenant admin');
         $this->assertSame(42, $tenantSession['tenant_id'], 'tenant_id must be set for tenant admin');
     }
+
+    // =========================================================================
+    // ADMIN_PASSWORD_HASH sanity (mangled hash from an unquoted root .env)
+    // =========================================================================
+
+    public function testMangledAdminHashIsRejectedAndExplainedInTheLog(): void
+    {
+        $log = tempnam(sys_get_temp_dir(), 'loginlog');
+        $previous = ini_set('error_log', $log);
+
+        try {
+            // What Docker Compose leaves of an unquoted '$2y$10$...' hash: far shorter than 60 characters
+            $_ENV['ADMIN_USERNAME'] = 'admin';
+            $_ENV['ADMIN_PASSWORD_HASH'] = 'y$10$truncated.hash';
+
+            $result = (new LoginService())->attemptPlatformAdminLogin('admin', 'whatever');
+        } finally {
+            ini_set('error_log', $previous === false ? '' : $previous);
+        }
+
+        $logged = (string) file_get_contents($log);
+        unlink($log);
+
+        $this->assertFalse($result);
+        $this->assertStringContainsString('ADMIN_PASSWORD_HASH is not a valid password hash', $logged);
+        $this->assertStringContainsString('single quotes', $logged);
+        $this->assertStringNotContainsString('truncated.hash', $logged, 'the hash itself must not be logged');
+    }
+
+    public function testValidAdminHashDoesNotLogAWarning(): void
+    {
+        $log = tempnam(sys_get_temp_dir(), 'loginlog');
+        $previous = ini_set('error_log', $log);
+
+        try {
+            $_ENV['ADMIN_USERNAME'] = 'admin';
+            $_ENV['ADMIN_PASSWORD_HASH'] = password_hash('pa#ss\'w$rd', PASSWORD_DEFAULT);
+
+            $ok = (new LoginService())->attemptPlatformAdminLogin('admin', 'pa#ss\'w$rd');
+        } finally {
+            ini_set('error_log', $previous === false ? '' : $previous);
+        }
+
+        $logged = (string) file_get_contents($log);
+        unlink($log);
+
+        $this->assertTrue($ok, 'special characters in the password must work');
+        $this->assertSame('', $logged);
+    }
+
+    public function testHashScriptPrintsAQuotedEnvLineThatVerifies(): void
+    {
+        $password = 'pa#ss\'w$rd "x" !';
+        $script = __DIR__ . '/../../../scripts/generate-password-hash.php';
+
+        $output = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script) . ' ' . escapeshellarg($password));
+
+        $this->assertSame(1, preg_match("/^ADMIN_PASSWORD_HASH='(\\\$2y\\\$10\\\$[.\\/A-Za-z0-9]{53})'$/m", $output, $m), 'the .env line must be single-quoted');
+        $this->assertTrue(password_verify($password, $m[1]));
+        $this->assertStringContainsString('docker compose up -d backend', $output);
+    }
 }

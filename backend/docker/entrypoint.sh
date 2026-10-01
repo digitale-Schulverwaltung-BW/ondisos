@@ -93,6 +93,15 @@ else
     echo "ℹ️  Using hand-written .env (no generated marker) — container environment changes do not apply to it."
 fi
 
+# Warn about a mangled ADMIN_PASSWORD_HASH (the usual cause: an unquoted value in the root .env, where
+# Docker Compose expands the "$..." parts). A valid bcrypt/argon2 hash looks like $2y$10$<53 chars>.
+if [ -n "${ADMIN_PASSWORD_HASH:-}" ] \
+   && ! printf '%s' "$ADMIN_PASSWORD_HASH" | grep -Eq '^\$2[abxy]\$[0-9]{2}\$[./A-Za-z0-9]{53}$|^\$argon2(id|i|d)\$'; then
+    echo "⚠️  ADMIN_PASSWORD_HASH looks damaged (length ${#ADMIN_PASSWORD_HASH}, a bcrypt hash has 60)."
+    echo "    Wrap it in single quotes in the root .env: ADMIN_PASSWORD_HASH='\$2y\$10\$...'"
+    echo "    then run: docker compose up -d backend"
+fi
+
 # Install/update Composer dependencies
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     echo "📦 Installing Composer dependencies..."

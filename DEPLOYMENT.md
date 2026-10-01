@@ -232,7 +232,16 @@ ADMIN_PASSWORD_HASH='$2y$10$abc123...'
 
 # 4. Container NEU ERSTELLEN (ein bloßes `restart` übernimmt geänderte Compose-Variablen nicht)
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend
+
+# 5. Prüfen, ob der Hash vollständig angekommen ist (erwartet: 60)
+docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'
 ```
+
+> **Login wird abgelehnt, obwohl das Passwort stimmt?** Fast immer ist der Hash beschädigt: In der Root-`.env` expandiert Docker Compose jedes
+> `$…` eines **unquotierten** Wertes und schneidet den Hash dabei zusammen (aus 60 Zeichen werden etwa 35). Sonderzeichen im *Passwort* (`#`, `'`, `$`, …)
+> sind unkritisch — sie stecken nur im Hash. Prüfung wie in Schritt 5; bei einem Wert ≠ 60 den Hash in einfache Anführungszeichen setzen und
+> `up -d backend` wiederholen. Das Backend meldet den Fall beim Start (`⚠️ ADMIN_PASSWORD_HASH looks damaged`, `docker compose logs backend`) und beim
+> Login-Versuch im PHP-Log.
 
 ---
 

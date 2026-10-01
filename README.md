@@ -144,6 +144,8 @@ docker compose exec backend php scripts/generate-password-hash.php "dein-passwor
 #        ADMIN_PASSWORD_HASH='$2y$10$...'
 #   → Container neu erstellen, damit die Werte ankommen:
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend
+#   → Prüfen: der Hash muss vollständig angekommen sein (erwartet: 60; sonst fehlen die Quotes)
+docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'
 ```
 
 **Credentials-Struktur:**

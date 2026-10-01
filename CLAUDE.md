@@ -1143,6 +1143,11 @@ php -l backend/config/messages.local.php
 → Backend .env: ALLOWED_ORIGINS anpassen
 → Check api/submit.php CORS Headers
 
+### Admin-Login abgelehnt, obwohl das Passwort stimmt
+→ Meist ein beschädigter `ADMIN_PASSWORD_HASH`: In der Root-`.env` MUSS der Hash in einfachen Anführungszeichen stehen, sonst expandiert Docker Compose die `$…`-Teile (Länge im Container ≠ 60: `docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'`)
+→ Danach `docker compose up -d backend` (nicht `restart`); Backend-Log: `⚠️ ADMIN_PASSWORD_HASH looks damaged`
+→ Sonderzeichen im Passwort (`#` u. a.) sind nicht die Ursache
+
 ### Absenden: "Unauthorized" / HTTP 401 vom Backend
 → `TENANT_API_SECRET` im Frontend (bzw. WP-Einstellung) muss dem `tenants.api_secret` des Tenants entsprechen
 → Backend-Log: `tenant api_secret is a known placeholder/default` ⇒ echtes Secret setzen (`openssl rand -hex 32`) und `php migrate.php`
