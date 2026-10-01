@@ -924,7 +924,6 @@ http://intranet.example.com/backend/dashboard.php
 - ⚠️ Email-Service nutzt PHP `mail()` → ggf. auf SMTP umstellen
 - ⚠️ Formular-Konfiguration ist nur per SQL änderbar (Admin-UI geplant, 3.1); `seed-forms.php` schreibt nur Tenant 1 und überschreibt vorhandene Einträge nie
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
-- ⚠️ Die Backend-Oberfläche lädt Bootstrap und DataTables von `cdn.jsdelivr.net` (unversioniert, ohne Integritätsprüfung, `backend/inc/header.php`, `footer.php`, `login.php`): Admin-Browser kontaktieren einen externen CDN, und in einem Intranet ohne Internetzugang bleibt die Oberfläche ungestylt. Frontend und WordPress-Plugin sind frei von externen Quellen
 - ⚠️ Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale/i18n-Bundle eingebunden)
 - ⚠️ Unbekanntes Formular und nicht erreichbares Backend führen im Standalone-Frontend beide zur Wartungsseite (503)
 
