@@ -42,6 +42,18 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    (fehlendes `form`/`theme`, kaputte E-Mail-Adresse, unzulässiger Formular-Schlüssel, …) werden gemeldet und nicht gespeichert,
    der Exit-Code ist dann 1. Vorhandene Formulare werden weiterhin nie überschrieben.
 
+5. **Formular-Editor** (neu in der Oberfläche, Menüpunkt *Formulare*): Die Konfiguration eines Formulars lässt sich im Backend
+   als HTML-Formular ändern; JSON sehen Schul-Admins nie. Jede Änderung wird geprüft und mit Verlauf gespeichert (Wiederherstellen
+   möglich), gleichzeitige Änderungen werden erkannt.
+   - **Rollen:** *Plattform-Admin* (und der Betreiber einer Einzel-Installation) darf alles; *Tenant-Admins* ändern die Formulare
+     ihrer Schule, aber nicht die Datei-Namen (`form`, `theme`) und nicht das PDF-Logo (`pdf.logo`, ein Dateipfad auf dem Server).
+     Ein Formular einer anderen Schule ist für sie schlicht „nicht vorhanden".
+   - Formulare mit Anmeldungen lassen sich nicht löschen; der Schlüssel (`?form=…`) kann nach dem Anlegen nicht geändert werden.
+   - Beim Speichern wird die Konfiguration einheitlich geschrieben: Benachrichtigungs-Adressen als Liste, leere Angaben und
+     „kein Logo" (`false`) als fehlender Schlüssel. Das Verhalten ist dasselbe; nur die gespeicherte Form ändert sich.
+   - Unbekannte Schlüssel, die jemand per SQL gesetzt hat, bleiben beim Speichern erhalten.
+   - Die Survey selbst (Fragen) wird in einem späteren Schritt im Editor bearbeitbar; bis dahin gilt der Import (Abschnitt 3).
+
 ## Frontend / WordPress
 
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).

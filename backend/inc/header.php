@@ -63,6 +63,16 @@
                 <li class="nav-item">
                     <a class="nav-link" href="dashboard.php">Dashboard</a>
                 </li>
+                <?php
+                $navMultiTenant = filter_var(\App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
+                if (\App\Forms\EditorAccess::roleFor($_SESSION, $navMultiTenant) !== null):
+                    $navPage = basename($_SERVER['PHP_SELF'] ?? '');
+                ?>
+                <li class="nav-item">
+                    <a class="nav-link<?= in_array($navPage, ['forms.php', 'form_edit.php'], true) ? ' active' : '' ?>"
+                       href="forms.php"><?= htmlspecialchars(\App\Services\MessageService::get('forms.title', 'Formulare')) ?></a>
+                </li>
+                <?php endif; ?>
                 <?php if (!empty($_SESSION['is_platform_admin'])): ?>
                 <li class="nav-item">
                     <a class="nav-link<?= (basename($_SERVER['PHP_SELF'] ?? '') === 'tenants.php') ? ' active' : '' ?>"
