@@ -738,7 +738,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 839 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 168 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand: 909 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 178 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 

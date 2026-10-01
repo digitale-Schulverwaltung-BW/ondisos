@@ -87,6 +87,24 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
       `backend/tools/sync-preview-assets.sh` ausführen (ein Test schlägt sonst an).
     - Das Theme wird angezeigt, wenn es im Backend liegt (Import); liegt es nur als Datei im Frontend, fehlt es in der Vorschau (mit Hinweis).
 
+11. **Sicherheit des Formular-Editors** (Überblick, was 3.1 absichert):
+    - **Inhalte:** HTML in Surveys nur aus einer Allowlist (Tags, Attribute, URL-Schemata); Kommentare und Sonderkonstrukte sind verboten, jeder
+      Tag-Name im Rohtext wird geprüft (nicht nur der geparste DOM). `javascript:`-URLs, `on*`-Attribute, `style`, `script`, `iframe`, `svg`, … werden abgelehnt.
+      Größenlimits: Survey 512 KB, Theme 256 KB, Konfiguration 64 KB, höchstens 100 Formulare je Tenant.
+    - **Auslieferung:** Das Backend liefert dem Frontend nur Surveys/Themes, die die Validatoren *heute* bestehen (auch Altbestand und per SQL
+      Gespeichertes). Sonst bleibt `survey_json` leer, das Frontend nimmt seine Datei oder zeigt „nicht gefunden", und es gibt einen Audit-Eintrag
+      `form_delivery_rejected`. Die Einbettung ins Frontend kodiert JSON zusätzlich (`\u003C`).
+    - **Zugriff:** CSRF-Token bei jeder Änderung, Rollen (Tenant-Admins ändern keine Dateinamen/Logo, kopieren nicht), Mandanten-Isolierung in jeder
+      Abfrage; öffentliche Endpunkte kennen weder Entwürfe noch Verlauf (ein Test prüft das). Die Vorschau läuft in einem Sandbox-Frame.
+    - **Missbrauchsschutz:** Schreibende Aktionen sind je Benutzer und Adresse begrenzt (Standard 60 pro Minute; `EDITOR_RATE_LIMIT_MAX`,
+      `EDITOR_RATE_LIMIT_WINDOW`, `RATE_LIMIT_ENABLED`); danach HTTP 429 mit `Retry-After`.
+    - **Audit** (`logs/audit.log`, ohne Inhalte): `form_created`, `form_config_saved`, `form_draft_saved`, `form_draft_discarded`, `form_published`,
+      `form_rolled_back`, `form_deleted`, `form_copied`, `form_copy_denied`, `survey_imported`, plus die Sicherheitssignale `form_survey_rejected`
+      (jemand wollte unzulässige Inhalte speichern: Zahl und Pfade der Fehler), `survey_import_rejected` und `form_delivery_rejected`.
+    - **Bekannte Grenzen:** `choicesByUrl` in einer Survey lässt den Browser der Besucher einen fremden Server kontaktieren (Warnung im Editor, kein Verbot);
+      Revisionen belegen Speicher (höchstens 50 je Formular und Art, je bis 512 KB); die Validatoren kennen keine Inhalte, die SurveyJS künftig neu
+      als HTML rendert — bei einem SurveyJS-Update die Allowlist prüfen.
+
 ## Frontend / WordPress
 
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).
