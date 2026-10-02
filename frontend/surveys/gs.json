@@ -1,0 +1,1426 @@
+{
+  "title": "Schüleranmeldung",
+  "description": "zur Einschulung im September 2026",
+  "logoPosition": "right",
+  "autoFocusFirstQuestion": true,
+  "completedHtml": {
+    "de": "<h3>Vielen Dank für die Anmeldung. Ihre Daten wurden erfolgreich gespeichert.</h3>"
+  },
+  "loadingHtml": "Lade Formular...",
+  "pages": [
+    {
+      "name": "page0",
+      "elements": [
+        {
+          "type": "html",
+          "name": "question17",
+          "html": "Ich habe die <a href=\"https://www.example.com/datenschutz/\">Datenschutzerklärung</a> der Schule gelesen und stimme der elektronischen Erfassung und Verarbeitung meiner Daten zu."
+        },
+        {
+          "type": "checkbox",
+          "name": "consent_DatenschutzOk",
+          "title": "ich stimme zu",
+          "titleLocation": "left",
+          "isRequired": true,
+          "startWithNewLine": false,
+          "choices": [
+            {
+              "value": "Item 1",
+              "text": "ja"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "page1",
+      "title": "Angaben zum Kind",
+      "elements": [
+        {
+          "type": "panel",
+          "name": "panel_kind",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Name",
+              "title": "Familienname",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Vorname",
+              "title": "Vorname",
+              "startWithNewLine": false,
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Rufname",
+              "title": "Rufname",
+              "description": "Bei mehreren Vornamen bitte den Rufnamen angeben."
+            },
+            {
+              "type": "text",
+              "name": "Geburtstag",
+              "title": "Geboren am",
+              "inputType": "date",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Geburtsort",
+              "title": "Geboren in",
+              "startWithNewLine": false,
+              "isRequired": true
+            },
+            {
+              "type": "dropdown",
+              "name": "Geburtsland",
+              "title": "Geburtsland",
+              "choices": [
+                "Afghanistan",
+                "Ägypten",
+                "Albanien",
+                "Algerien",
+                "Andorra",
+                "Angola",
+                "Antarktis",
+                "Antigua und Barbuda",
+                "Äquatorialguinea",
+                "Argentinien",
+                "Armenien",
+                "Aserbaidschan",
+                "Äthiopien",
+                "Australien",
+                "Bahamas",
+                "Bahrain",
+                "Bangladesch",
+                "Barbados",
+                "Belgien",
+                "Belize",
+                "Benin",
+                "Bhutan",
+                "Bolivien",
+                "Bosnien und Herzegowina",
+                "Botsuana",
+                "Brasilien",
+                "Brunei",
+                "Bulgarien",
+                "Burkina Faso",
+                "Birma",
+                "Burundi",
+                "Chile",
+                "China",
+                "Cookinseln",
+                "Costa Rica (cta)",
+                "Dänemark",
+                "Deutschland",
+                "Dominica",
+                "Dominikanische Republik",
+                "Dschibuti",
+                "Ecuador",
+                "Elfenbeinküste",
+                "El Salvador",
+                "Eritrea",
+                "Estland",
+                "Falklandinseln",
+                "Fidschi",
+                "Finnland",
+                "Föderierte Staaten von Mikronesien",
+                "Frankreich",
+                "Französisch Guayana",
+                "Gabun",
+                "Gambia",
+                "Georgien",
+                "Ghana",
+                "Grenada",
+                "Griechenland",
+                "Großbritannien",
+                "Guatemala",
+                "Guinea",
+                "Guinea-Bissau",
+                "Guyana",
+                "Haiti",
+                "Honduras",
+                "Indien",
+                "Indonesien",
+                "Irak",
+                "Iran",
+                "Irland",
+                "Island",
+                "Israel",
+                "Italien",
+                "Jamaika",
+                "Japan",
+                "Jemen",
+                "Jordanien",
+                "Kambodscha",
+                "Kamerun",
+                "Kanada",
+                "Kap Verde",
+                "Kasachstan",
+                "Katar",
+                "Kenia",
+                "Kirgisistan",
+                "Kiribati",
+                "Kolumbien",
+                "Komoren",
+                "Kongo",
+                "Kongo (Demokratische Republik)",
+                "Kosovo",
+                "Kroatien",
+                "Kuba",
+                "Kuwait",
+                "Laos",
+                "Lesotho",
+                "Lettland",
+                "Libanon",
+                "Liberia",
+                "Libyen",
+                "Liechtenstein",
+                "Litauen",
+                "Luxemburg",
+                "Madagaskar",
+                "Malawi",
+                "Malaysia",
+                "Malediven",
+                "Mali",
+                "Malta",
+                "Marokko",
+                "Marshallinseln",
+                "Mauretanien",
+                "Mauritius",
+                "Mazedonien",
+                "Mexiko",
+                "Moldawien",
+                "Monaco",
+                "Mongolei",
+                "Montenegro",
+                "Mosambik",
+                "Myanmar",
+                "Namibia",
+                "Nauru",
+                "Nepal",
+                "Neuseeland",
+                "Nicaragua",
+                "Niederlande",
+                "Niger",
+                "Nigeria",
+                "Nordkorea",
+                "Nordzypern",
+                "Norwegen",
+                "Oman",
+                "Österreich",
+                "Pakistan",
+                "Palau",
+                "Palästina",
+                "Panama",
+                "Papua-Neuguinea",
+                "Paraguay",
+                "Peru",
+                "Philippinen",
+                "Polen",
+                "Portugal",
+                "Ruanda",
+                "Rumänien",
+                "Russland",
+                "Saint Kitts und Nevis",
+                "Saint Lucia",
+                "Saint Vincent und die Grenadinen",
+                "Salomonen",
+                "Sambia",
+                "Samoa",
+                "San Marino",
+                "São Tomé und Príncipe",
+                "Saudi-Arabien",
+                "Senegal",
+                "Serbien",
+                "Seychellen",
+                "Sierra Leone",
+                "Singapur",
+                "Simbabwe",
+                "Slowakei",
+                "Slowenien",
+                "Somalia",
+                "Spanien",
+                "Sri Lanka",
+                "Südafrika",
+                "Sudan",
+                "Südsudan",
+                "Südkorea",
+                "Surinam",
+                "Svalbard",
+                "Swasiland",
+                "Schweden",
+                "Schweiz",
+                "Syrien",
+                "Tadschikistan",
+                "Taiwan",
+                "Tansania",
+                "Thailand",
+                "Timor-Leste",
+                "Togo",
+                "Tonga",
+                "Trinidad und Tobago",
+                "Tschad",
+                "Tschechien",
+                "Tunesien",
+                "Türkei",
+                "Turkmenistan",
+                "Tuvalu",
+                "Uganda",
+                "Ukraine",
+                "Ungarn",
+                "Uruguay",
+                "Usbekistan",
+                "Vanuatu",
+                "Vatikan",
+                "Venezuela",
+                "Vereinigte Arabische Emirate",
+                "Vereinigtes Königreich",
+                "Vereinigte Staaten von Amerika",
+                "Vietnam",
+                "Weißrussland",
+                "Westsahara",
+                "Zentralafrikanische Republik",
+                "Zypern"
+              ],
+              "placeholder": "auswählen...",
+              "isRequired": true,
+              "defaultValue": "Deutschland"
+            },
+            {
+              "type": "radiogroup",
+              "name": "GeschlechtKind",
+              "title": "Geschlecht",
+              "choices": [
+                "weiblich",
+                "männlich"
+              ],
+              "colCount": 2,
+              "startWithNewLine": false,
+              "isRequired": true
+            }
+          ],
+          "title": "Schülerin / Schüler"
+        },
+        {
+          "type": "panel",
+          "name": "panel_wohnort",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Strasse",
+              "title": "Straße",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "HausNr",
+              "title": "Hausnummer",
+              "startWithNewLine": false,
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "PLZ",
+              "title": "PLZ",
+              "isRequired": true,
+              "inputSize": 7
+            },
+            {
+              "type": "text",
+              "name": "Ort",
+              "title": "Wohnort",
+              "startWithNewLine": false,
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Teilort",
+              "title": "Teilort"
+            },
+            {
+              "type": "text",
+              "name": "Telefon_1",
+              "title": "Telefon",
+              "inputType": "tel",
+              "startWithNewLine": false
+            }
+          ],
+          "title": "Wohnort"
+        },
+        {
+          "type": "panel",
+          "name": "panel_herkunft",
+          "elements": [
+            {
+              "type": "dropdown",
+              "name": "Land",
+              "title": "Staatsangehörigkeit",
+              "choices": [
+                "Afghanistan",
+                "Ägypten",
+                "Albanien",
+                "Algerien",
+                "Andorra",
+                "Angola",
+                "Antarktis",
+                "Antigua und Barbuda",
+                "Äquatorialguinea",
+                "Argentinien",
+                "Armenien",
+                "Aserbaidschan",
+                "Äthiopien",
+                "Australien",
+                "Bahamas",
+                "Bahrain",
+                "Bangladesch",
+                "Barbados",
+                "Belgien",
+                "Belize",
+                "Benin",
+                "Bhutan",
+                "Bolivien",
+                "Bosnien und Herzegowina",
+                "Botsuana",
+                "Brasilien",
+                "Brunei",
+                "Bulgarien",
+                "Burkina Faso",
+                "Birma",
+                "Burundi",
+                "Chile",
+                "China",
+                "Cookinseln",
+                "Costa Rica (cta)",
+                "Dänemark",
+                "Deutschland",
+                "Dominica",
+                "Dominikanische Republik",
+                "Dschibuti",
+                "Ecuador",
+                "Elfenbeinküste",
+                "El Salvador",
+                "Eritrea",
+                "Estland",
+                "Falklandinseln",
+                "Fidschi",
+                "Finnland",
+                "Föderierte Staaten von Mikronesien",
+                "Frankreich",
+                "Französisch Guayana",
+                "Gabun",
+                "Gambia",
+                "Georgien",
+                "Ghana",
+                "Grenada",
+                "Griechenland",
+                "Großbritannien",
+                "Guatemala",
+                "Guinea",
+                "Guinea-Bissau",
+                "Guyana",
+                "Haiti",
+                "Honduras",
+                "Indien",
+                "Indonesien",
+                "Irak",
+                "Iran",
+                "Irland",
+                "Island",
+                "Israel",
+                "Italien",
+                "Jamaika",
+                "Japan",
+                "Jemen",
+                "Jordanien",
+                "Kambodscha",
+                "Kamerun",
+                "Kanada",
+                "Kap Verde",
+                "Kasachstan",
+                "Katar",
+                "Kenia",
+                "Kirgisistan",
+                "Kiribati",
+                "Kolumbien",
+                "Komoren",
+                "Kongo",
+                "Kongo (Demokratische Republik)",
+                "Kosovo",
+                "Kroatien",
+                "Kuba",
+                "Kuwait",
+                "Laos",
+                "Lesotho",
+                "Lettland",
+                "Libanon",
+                "Liberia",
+                "Libyen",
+                "Liechtenstein",
+                "Litauen",
+                "Luxemburg",
+                "Madagaskar",
+                "Malawi",
+                "Malaysia",
+                "Malediven",
+                "Mali",
+                "Malta",
+                "Marokko",
+                "Marshallinseln",
+                "Mauretanien",
+                "Mauritius",
+                "Mazedonien",
+                "Mexiko",
+                "Moldawien",
+                "Monaco",
+                "Mongolei",
+                "Montenegro",
+                "Mosambik",
+                "Myanmar",
+                "Namibia",
+                "Nauru",
+                "Nepal",
+                "Neuseeland",
+                "Nicaragua",
+                "Niederlande",
+                "Niger",
+                "Nigeria",
+                "Nordkorea",
+                "Nordzypern",
+                "Norwegen",
+                "Oman",
+                "Österreich",
+                "Pakistan",
+                "Palau",
+                "Palästina",
+                "Panama",
+                "Papua-Neuguinea",
+                "Paraguay",
+                "Peru",
+                "Philippinen",
+                "Polen",
+                "Portugal",
+                "Ruanda",
+                "Rumänien",
+                "Russland",
+                "Saint Kitts und Nevis",
+                "Saint Lucia",
+                "Saint Vincent und die Grenadinen",
+                "Salomonen",
+                "Sambia",
+                "Samoa",
+                "San Marino",
+                "São Tomé und Príncipe",
+                "Saudi-Arabien",
+                "Senegal",
+                "Serbien",
+                "Seychellen",
+                "Sierra Leone",
+                "Singapur",
+                "Simbabwe",
+                "Slowakei",
+                "Slowenien",
+                "Somalia",
+                "Spanien",
+                "Sri Lanka",
+                "Südafrika",
+                "Sudan",
+                "Südsudan",
+                "Südkorea",
+                "Surinam",
+                "Svalbard",
+                "Swasiland",
+                "Schweden",
+                "Schweiz",
+                "Syrien",
+                "Tadschikistan",
+                "Taiwan",
+                "Tansania",
+                "Thailand",
+                "Timor-Leste",
+                "Togo",
+                "Tonga",
+                "Trinidad und Tobago",
+                "Tschad",
+                "Tschechien",
+                "Tunesien",
+                "Türkei",
+                "Turkmenistan",
+                "Tuvalu",
+                "Uganda",
+                "Ukraine",
+                "Ungarn",
+                "Uruguay",
+                "Usbekistan",
+                "Vanuatu",
+                "Vatikan",
+                "Venezuela",
+                "Vereinigte Arabische Emirate",
+                "Vereinigtes Königreich",
+                "Vereinigte Staaten von Amerika",
+                "Vietnam",
+                "Weißrussland",
+                "Westsahara",
+                "Zentralafrikanische Republik",
+                "Zypern"
+              ],
+              "placeholder": "auswählen...",
+              "isRequired": true,
+              "defaultValue": "Deutschland"
+            },
+            {
+              "type": "dropdown",
+              "name": "Land2",
+              "title": "2. Staatsangehörigkeit (falls vorhanden)",
+              "choices": [
+                "Afghanistan",
+                "Ägypten",
+                "Albanien",
+                "Algerien",
+                "Andorra",
+                "Angola",
+                "Antarktis",
+                "Antigua und Barbuda",
+                "Äquatorialguinea",
+                "Argentinien",
+                "Armenien",
+                "Aserbaidschan",
+                "Äthiopien",
+                "Australien",
+                "Bahamas",
+                "Bahrain",
+                "Bangladesch",
+                "Barbados",
+                "Belgien",
+                "Belize",
+                "Benin",
+                "Bhutan",
+                "Bolivien",
+                "Bosnien und Herzegowina",
+                "Botsuana",
+                "Brasilien",
+                "Brunei",
+                "Bulgarien",
+                "Burkina Faso",
+                "Birma",
+                "Burundi",
+                "Chile",
+                "China",
+                "Cookinseln",
+                "Costa Rica (cta)",
+                "Dänemark",
+                "Deutschland",
+                "Dominica",
+                "Dominikanische Republik",
+                "Dschibuti",
+                "Ecuador",
+                "Elfenbeinküste",
+                "El Salvador",
+                "Eritrea",
+                "Estland",
+                "Falklandinseln",
+                "Fidschi",
+                "Finnland",
+                "Föderierte Staaten von Mikronesien",
+                "Frankreich",
+                "Französisch Guayana",
+                "Gabun",
+                "Gambia",
+                "Georgien",
+                "Ghana",
+                "Grenada",
+                "Griechenland",
+                "Großbritannien",
+                "Guatemala",
+                "Guinea",
+                "Guinea-Bissau",
+                "Guyana",
+                "Haiti",
+                "Honduras",
+                "Indien",
+                "Indonesien",
+                "Irak",
+                "Iran",
+                "Irland",
+                "Island",
+                "Israel",
+                "Italien",
+                "Jamaika",
+                "Japan",
+                "Jemen",
+                "Jordanien",
+                "Kambodscha",
+                "Kamerun",
+                "Kanada",
+                "Kap Verde",
+                "Kasachstan",
+                "Katar",
+                "Kenia",
+                "Kirgisistan",
+                "Kiribati",
+                "Kolumbien",
+                "Komoren",
+                "Kongo",
+                "Kongo (Demokratische Republik)",
+                "Kosovo",
+                "Kroatien",
+                "Kuba",
+                "Kuwait",
+                "Laos",
+                "Lesotho",
+                "Lettland",
+                "Libanon",
+                "Liberia",
+                "Libyen",
+                "Liechtenstein",
+                "Litauen",
+                "Luxemburg",
+                "Madagaskar",
+                "Malawi",
+                "Malaysia",
+                "Malediven",
+                "Mali",
+                "Malta",
+                "Marokko",
+                "Marshallinseln",
+                "Mauretanien",
+                "Mauritius",
+                "Mazedonien",
+                "Mexiko",
+                "Moldawien",
+                "Monaco",
+                "Mongolei",
+                "Montenegro",
+                "Mosambik",
+                "Myanmar",
+                "Namibia",
+                "Nauru",
+                "Nepal",
+                "Neuseeland",
+                "Nicaragua",
+                "Niederlande",
+                "Niger",
+                "Nigeria",
+                "Nordkorea",
+                "Nordzypern",
+                "Norwegen",
+                "Oman",
+                "Österreich",
+                "Pakistan",
+                "Palau",
+                "Palästina",
+                "Panama",
+                "Papua-Neuguinea",
+                "Paraguay",
+                "Peru",
+                "Philippinen",
+                "Polen",
+                "Portugal",
+                "Ruanda",
+                "Rumänien",
+                "Russland",
+                "Saint Kitts und Nevis",
+                "Saint Lucia",
+                "Saint Vincent und die Grenadinen",
+                "Salomonen",
+                "Sambia",
+                "Samoa",
+                "San Marino",
+                "São Tomé und Príncipe",
+                "Saudi-Arabien",
+                "Senegal",
+                "Serbien",
+                "Seychellen",
+                "Sierra Leone",
+                "Singapur",
+                "Simbabwe",
+                "Slowakei",
+                "Slowenien",
+                "Somalia",
+                "Spanien",
+                "Sri Lanka",
+                "Südafrika",
+                "Sudan",
+                "Südsudan",
+                "Südkorea",
+                "Surinam",
+                "Svalbard",
+                "Swasiland",
+                "Schweden",
+                "Schweiz",
+                "Syrien",
+                "Tadschikistan",
+                "Taiwan",
+                "Tansania",
+                "Thailand",
+                "Timor-Leste",
+                "Togo",
+                "Tonga",
+                "Trinidad und Tobago",
+                "Tschad",
+                "Tschechien",
+                "Tunesien",
+                "Türkei",
+                "Turkmenistan",
+                "Tuvalu",
+                "Uganda",
+                "Ukraine",
+                "Ungarn",
+                "Uruguay",
+                "Usbekistan",
+                "Vanuatu",
+                "Vatikan",
+                "Venezuela",
+                "Vereinigte Arabische Emirate",
+                "Vereinigtes Königreich",
+                "Vereinigte Staaten von Amerika",
+                "Vietnam",
+                "Weißrussland",
+                "Westsahara",
+                "Zentralafrikanische Republik",
+                "Zypern"
+              ],
+              "placeholder": "auswählen...",
+              "allowClear": true,
+              "startWithNewLine": false
+            },
+            {
+              "type": "dropdown",
+              "name": "Muttersprache",
+              "title": "Muttersprache",
+              "choices": [
+                {
+                  "value": "ALB",
+                  "text": "albanisch"
+                },
+                {
+                  "value": "ARA",
+                  "text": "arabisch"
+                },
+                {
+                  "value": "BOS",
+                  "text": "bosnisch"
+                },
+                {
+                  "value": "BUL",
+                  "text": "bulgarisch"
+                },
+                {
+                  "value": "CHIN",
+                  "text": "chinesisch"
+                },
+                {
+                  "value": "D",
+                  "text": "deutsch"
+                },
+                {
+                  "value": "E",
+                  "text": "englisch"
+                },
+                {
+                  "value": "F",
+                  "text": "französisch"
+                },
+                {
+                  "value": "GR-N",
+                  "text": "griechisch"
+                },
+                {
+                  "value": "I",
+                  "text": "italienisch"
+                },
+                {
+                  "value": "JAP",
+                  "text": "japanisch"
+                },
+                {
+                  "value": "KAS",
+                  "text": "kasachisch"
+                },
+                {
+                  "value": "KRO",
+                  "text": "kroatisch"
+                },
+                {
+                  "value": "KUR",
+                  "text": "kurdisch"
+                },
+                {
+                  "value": "MAZ",
+                  "text": "mazedonisch"
+                },
+                {
+                  "value": "POL",
+                  "text": "polnisch"
+                },
+                {
+                  "value": "POR",
+                  "text": "portugiesisch"
+                },
+                {
+                  "value": "RUM",
+                  "text": "rumänisch"
+                },
+                {
+                  "value": "RU",
+                  "text": "russisch"
+                },
+                {
+                  "value": "SER",
+                  "text": "serbisch"
+                },
+                {
+                  "value": "SP",
+                  "text": "spanisch"
+                },
+                {
+                  "value": "TÜ",
+                  "text": "türkisch"
+                },
+                {
+                  "value": "UKR",
+                  "text": "ukrainisch"
+                },
+                {
+                  "value": "SOF",
+                  "text": "sonstige Sprache (bitte unter \"Anmerkungen\" auf der letzten Seite erläutern)"
+                }
+              ],
+              "placeholder": "auswählen...",
+              "isRequired": true
+            },
+            {
+              "type": "tagbox",
+              "name": "Verkehrssprache",
+              "title": "Verkehrssprache(n) in der Familie",
+              "description": "Umgangssprache(n), die zu Hause gesprochen werden",
+              "choices": [
+                {
+                  "value": "ALB",
+                  "text": "albanisch"
+                },
+                {
+                  "value": "ARA",
+                  "text": "arabisch"
+                },
+                {
+                  "value": "BOS",
+                  "text": "bosnisch"
+                },
+                {
+                  "value": "BUL",
+                  "text": "bulgarisch"
+                },
+                {
+                  "value": "CHIN",
+                  "text": "chinesisch"
+                },
+                {
+                  "value": "D",
+                  "text": "deutsch"
+                },
+                {
+                  "value": "E",
+                  "text": "englisch"
+                },
+                {
+                  "value": "F",
+                  "text": "französisch"
+                },
+                {
+                  "value": "GR-N",
+                  "text": "griechisch"
+                },
+                {
+                  "value": "I",
+                  "text": "italienisch"
+                },
+                {
+                  "value": "JAP",
+                  "text": "japanisch"
+                },
+                {
+                  "value": "KAS",
+                  "text": "kasachisch"
+                },
+                {
+                  "value": "KRO",
+                  "text": "kroatisch"
+                },
+                {
+                  "value": "KUR",
+                  "text": "kurdisch"
+                },
+                {
+                  "value": "MAZ",
+                  "text": "mazedonisch"
+                },
+                {
+                  "value": "POL",
+                  "text": "polnisch"
+                },
+                {
+                  "value": "POR",
+                  "text": "portugiesisch"
+                },
+                {
+                  "value": "RUM",
+                  "text": "rumänisch"
+                },
+                {
+                  "value": "RU",
+                  "text": "russisch"
+                },
+                {
+                  "value": "SER",
+                  "text": "serbisch"
+                },
+                {
+                  "value": "SP",
+                  "text": "spanisch"
+                },
+                {
+                  "value": "TÜ",
+                  "text": "türkisch"
+                },
+                {
+                  "value": "UKR",
+                  "text": "ukrainisch"
+                },
+                {
+                  "value": "SOF",
+                  "text": "sonstige Sprache (bitte unter \"Anmerkungen\" auf der letzten Seite erläutern)"
+                }
+              ],
+              "placeholder": "auswählen...",
+              "startWithNewLine": false,
+              "closeOnSelect": true
+            },
+            {
+              "type": "dropdown",
+              "name": "Religion",
+              "title": "Konfession / Religionszugehörigkeit",
+              "choices": [
+                {
+                  "value": "EV",
+                  "text": "evangelisch"
+                },
+                {
+                  "value": "RK",
+                  "text": "römisch-katholisch"
+                },
+                {
+                  "value": "AK",
+                  "text": "alt-katholisch"
+                },
+                {
+                  "value": "SYR",
+                  "text": "syrisch-orthodox"
+                },
+                {
+                  "value": "OTX",
+                  "text": "orthodox (außer syrisch-orth.)"
+                },
+                {
+                  "value": "JÜD",
+                  "text": "jüdisch"
+                },
+                {
+                  "value": "ALE",
+                  "text": "alevitisch"
+                },
+                {
+                  "value": "ISL",
+                  "text": "islamisch-sunnitisch"
+                },
+                {
+                  "value": "SON-KEIN",
+                  "text": "sonstige oder keine Religionszugehörigkeit"
+                },
+                {
+                  "value": "K_A",
+                  "text": "keine Angabe"
+                }
+              ],
+              "placeholder": "auswählen...",
+              "isRequired": true
+            }
+          ],
+          "title": "Staatsangehörigkeit, Sprache, Konfession"
+        }
+      ]
+    },
+    {
+      "name": "page3",
+      "title": "Erziehungsberechtigte",
+      "elements": [
+        {
+          "type": "html",
+          "name": "hinweis_sorgerecht",
+          "html": "Bei nur einem Erziehungsberechtigten ist das alleinige Sorgerecht durch den Eintrag im Familienbuch oder durch den amtlichen Sorgerechtsentzug nachzuweisen."
+        },
+        {
+          "type": "panel",
+          "name": "panel_erz1",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Erz1Name",
+              "title": "Familienname",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Erz1Vorname",
+              "title": "Vorname",
+              "startWithNewLine": false,
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "Erz1Geschlecht",
+              "title": "Geschlecht",
+              "choices": [
+                "weiblich",
+                "männlich",
+                "divers"
+              ],
+              "colCount": 3,
+              "isRequired": true
+            },
+            {
+              "type": "boolean",
+              "name": "Erz1AnschriftWieKind",
+              "title": "Anschrift wie die des Kindes",
+              "defaultValue": true,
+              "labelTrue": "ja",
+              "labelFalse": "nein, abweichende Anschrift"
+            },
+            {
+              "type": "text",
+              "name": "Erz1Strasse",
+              "title": "Straße",
+              "visibleIf": "{Erz1AnschriftWieKind} = false",
+              "requiredIf": "{Erz1AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "Erz1HausNr",
+              "title": "Hausnummer",
+              "visibleIf": "{Erz1AnschriftWieKind} = false",
+              "startWithNewLine": false,
+              "requiredIf": "{Erz1AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "Erz1PLZ",
+              "title": "PLZ",
+              "visibleIf": "{Erz1AnschriftWieKind} = false",
+              "requiredIf": "{Erz1AnschriftWieKind} = false",
+              "inputSize": 7
+            },
+            {
+              "type": "text",
+              "name": "Erz1Ort",
+              "title": "Wohnort",
+              "visibleIf": "{Erz1AnschriftWieKind} = false",
+              "startWithNewLine": false,
+              "requiredIf": "{Erz1AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "email1",
+              "title": "E-Mail",
+              "inputType": "email",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Erz1Telefon",
+              "title": "Telefon",
+              "inputType": "tel",
+              "isRequired": true
+            }
+          ],
+          "title": "1. Erziehungsberechtigte(r) – Mutter"
+        },
+        {
+          "type": "panel",
+          "name": "panel_erz2",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Erz2Name",
+              "title": "Familienname",
+              "requiredIf": "{Erz2Vorname} notempty"
+            },
+            {
+              "type": "text",
+              "name": "Erz2Vorname",
+              "title": "Vorname",
+              "startWithNewLine": false,
+              "requiredIf": "{Erz2Name} notempty"
+            },
+            {
+              "type": "radiogroup",
+              "name": "Erz2Geschlecht",
+              "title": "Geschlecht",
+              "choices": [
+                "weiblich",
+                "männlich",
+                "divers"
+              ],
+              "colCount": 3
+            },
+            {
+              "type": "boolean",
+              "name": "Erz2AnschriftWieKind",
+              "title": "Anschrift wie die des Kindes",
+              "defaultValue": true,
+              "labelTrue": "ja",
+              "labelFalse": "nein, abweichende Anschrift"
+            },
+            {
+              "type": "text",
+              "name": "Erz2Strasse",
+              "title": "Straße",
+              "visibleIf": "{Erz2AnschriftWieKind} = false",
+              "requiredIf": "{Erz2AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "Erz2HausNr",
+              "title": "Hausnummer",
+              "visibleIf": "{Erz2AnschriftWieKind} = false",
+              "startWithNewLine": false,
+              "requiredIf": "{Erz2AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "Erz2PLZ",
+              "title": "PLZ",
+              "visibleIf": "{Erz2AnschriftWieKind} = false",
+              "requiredIf": "{Erz2AnschriftWieKind} = false",
+              "inputSize": 7
+            },
+            {
+              "type": "text",
+              "name": "Erz2Ort",
+              "title": "Wohnort",
+              "visibleIf": "{Erz2AnschriftWieKind} = false",
+              "startWithNewLine": false,
+              "requiredIf": "{Erz2AnschriftWieKind} = false"
+            },
+            {
+              "type": "text",
+              "name": "Erz2Email",
+              "title": "E-Mail",
+              "inputType": "email"
+            },
+            {
+              "type": "text",
+              "name": "Erz2Telefon",
+              "title": "Telefon",
+              "inputType": "tel"
+            }
+          ],
+          "title": "2. Erziehungsberechtigte(r) – Vater"
+        }
+      ]
+    },
+    {
+      "name": "page4",
+      "title": "Schulbesuch und Betreuung",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Schulart",
+          "title": "Wir benötigen eine",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "GT",
+              "text": "Ganztagesschule (Mo–Do 08:00–15:45 Uhr, Fr 08:00–14:00 Uhr)"
+            },
+            {
+              "value": "HT",
+              "text": "Halbtagesschule (Mo–Fr 08:00–12:40 Uhr)"
+            }
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "Betreuung",
+          "title": "Folgende Betreuungen werden angemeldet",
+          "choices": [
+            {
+              "value": "Modul 4",
+              "text": "Modul 4 (für GT-Kinder, Mo–Do 16:00–16:30 Uhr und Fr 14:00–16:30 Uhr)",
+              "visibleIf": "{Schulart} = 'GT'"
+            },
+            {
+              "value": "Modul 1",
+              "text": "Modul 1 (für HT-Kinder, 07:30–08:00 Uhr)",
+              "visibleIf": "{Schulart} = 'HT'"
+            },
+            {
+              "value": "Modul 2",
+              "text": "Modul 2 (für HT-Kinder, 12:40–14:00 Uhr)",
+              "visibleIf": "{Schulart} = 'HT'"
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "name": "hinweis_module",
+          "html": "<b>Alle Module müssen im Online-Portal gebucht werden.</b> Den Link finden Sie unter <a href=\"https://www.karlsruhe.de/ganztagsfoerderung\">www.karlsruhe.de/ganztagsfoerderung</a>."
+        },
+        {
+          "type": "text",
+          "name": "Kindergarten",
+          "title": "Besuchter Kindergarten"
+        },
+        {
+          "type": "boolean",
+          "name": "Austausch_Kindergarten",
+          "title": "Einwilligungserklärung: Die Schloss-Schule Durlach darf sich mit dem oben genannten Kindergarten über den Lern- und Entwicklungsstand meines/unseres Kindes austauschen.",
+          "labelTrue": "ja, einverstanden",
+          "labelFalse": "nein",
+          "visibleIf": "{Kindergarten} notempty"
+        },
+        {
+          "type": "comment",
+          "name": "Anmerkungen",
+          "title": "Anmerkungen",
+          "description": "Max. 1 Wunsch, mit welchem anderen Neueinschulungskind Ihr Kind zusammen in die Klasse kommen soll.",
+          "rows": 3
+        }
+      ]
+    },
+    {
+      "name": "page5",
+      "title": "Erklärung zur Ausübung des Sorgerechts",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Sorgerecht",
+          "title": "Sorgerecht",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "gemeinsam_Familie",
+              "text": "Das gemeinsame Sorgerecht wird von den Eltern in der Familie ausgeübt (bei einer Änderung muss die Schulleitung informiert werden)."
+            },
+            {
+              "value": "gemeinsam_getrennt",
+              "text": "Das gemeinsame Sorgerecht wird von getrennt lebenden Eltern ausgeübt."
+            },
+            {
+              "value": "alleinig",
+              "text": "Das alleinige Sorgerecht wird ausgeübt von einem Elternteil."
+            }
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "AufenthaltKind",
+          "title": "Das Kind hält sich gewöhnlich auf bei",
+          "visibleIf": "{Sorgerecht} = 'gemeinsam_getrennt'",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Mutter",
+              "text": "der Mutter"
+            },
+            {
+              "value": "Vater",
+              "text": "dem Vater"
+            }
+          ],
+          "colCount": 2
+        },
+        {
+          "type": "html",
+          "name": "hinweis_getrennt",
+          "html": "<p><b><i>Dieser Elternteil verpflichtet sich, den jeweils anderen Elternteil über alle schulischen Angelegenheiten zu informieren.</i></b></p>",
+          "visibleIf": "{Sorgerecht} = 'gemeinsam_getrennt'"
+        },
+        {
+          "type": "radiogroup",
+          "name": "AlleinigSorgerecht",
+          "title": "Das alleinige Sorgerecht wird ausgeübt von",
+          "visibleIf": "{Sorgerecht} = 'alleinig'",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "Mutter",
+              "text": "der Mutter"
+            },
+            {
+              "value": "Vater",
+              "text": "dem Vater"
+            }
+          ],
+          "colCount": 2
+        },
+        {
+          "type": "html",
+          "name": "hinweis_alleinig",
+          "html": "Bitte weisen Sie das alleinige Sorgerecht durch den Eintrag im Familienbuch oder durch den amtlichen Sorgerechtsentzug nach (Vorlage im Sekretariat).",
+          "visibleIf": "{Sorgerecht} = 'alleinig'"
+        },
+        {
+          "type": "radiogroup",
+          "name": "Religionsunterricht",
+          "title": "Teilnahme am Religionsunterricht",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "kooperativ",
+              "text": "Unser Kind soll am konfessionell kooperativen Religionsunterricht von Klasse 1 bis 4 teilnehmen. (Es wird also im Klassenverband abwechselnd ein Jahr evangelischer Religionsunterricht und ein Jahr katholischer Religionsunterricht durchgeführt.)"
+            },
+            {
+              "value": "keiner",
+              "text": "Unser Kind soll keinen Religionsunterricht besuchen."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "page2",
+      "title": "Absenden",
+      "elements": [
+        {
+          "type": "boolean",
+          "name": "Bestaetigung_Erziehungsberechtigte",
+          "title": "Verbindliche Anmeldung",
+          "description": "Ich bestätige – bei gemeinsamem Sorgerecht im Einvernehmen beider Erziehungsberechtigter – die Richtigkeit und Vollständigkeit der Angaben und melde mein Kind verbindlich an.",
+          "labelTrue": "ja, bestätigt",
+          "labelFalse": "nein",
+          "isRequired": true,
+          "validators": [
+            {
+              "type": "expression",
+              "expression": "{Bestaetigung_Erziehungsberechtigte} = true",
+              "text": "Bitte bestätigen Sie die verbindliche Anmeldung."
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "name": "question18",
+          "html": "Nach dem Absenden können Sie auf der nächsten Seite eine <b>PDF-Bestätigung über die Anmeldung</b> herunterladen."
+        }
+      ]
+    }
+  ],
+  "clearInvisibleValues": "onHidden",
+  "pagePrevText": "Zurück",
+  "pageNextText": "Weiter",
+  "completeText": "Absenden",
+  "firstPageIsStartPage": true,
+  "widthMode": "responsive"
+}
