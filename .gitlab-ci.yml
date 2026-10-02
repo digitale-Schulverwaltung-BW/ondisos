@@ -1,7 +1,7 @@
 # ============================================================================
 # GitLab CI/CD Pipeline for Ondisos School Registration System
 # ============================================================================
-# Stages: install → test → coverage → security → build → deploy-staging → deploy-production
+# Stages: install → test → coverage → security → build → release → deploy-staging → deploy-production
 # ============================================================================
 
 # Default Docker image (PHP 8.2 with extensions)
@@ -14,6 +14,7 @@ stages:
   - coverage
   - security
   - build
+  - release
   - deploy-staging
   - deploy-production
 
@@ -195,6 +196,27 @@ lint_php:
     - find frontend/src -name "*.php" -print0 | xargs -0 -n1 php -l
     - find frontend/public -name "*.php" -print0 | xargs -0 -n1 php -l
     - echo "All PHP files are syntactically valid"
+
+# ============================================================================
+# Release: WordPress plugin ZIP (tags vX.Y.Z only)
+# ============================================================================
+# Builds ondisos-<version>.zip (+ SHA-256), publishes both in the Generic Package Registry and creates a GitLab release.
+# The tag must equal the plugin version (wordpress-plugin/ondisos.php). Details: wordpress-plugin/publish-release.sh,
+# docs/plans/PLAN-3.1.1.md. The files are readable without login when the project is public.
+release:plugin_zip:
+  stage: release
+  dependencies: []
+  before_script: []  # Override global before_script (no PHP extensions or Composer needed)
+  script:
+    - apt-get update -qq && apt-get install -y -qq git zip curl jq
+    - git config --global --add safe.directory "$CI_PROJECT_DIR"
+    - ./wordpress-plugin/publish-release.sh
+  artifacts:
+    paths:
+      - dist/
+    expire_in: 30 days
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v[0-9]+\.[0-9]+\.[0-9]+$/'
 
 # Job: Secret Detection (GitLab Security Scanning)
 #secret_detection:

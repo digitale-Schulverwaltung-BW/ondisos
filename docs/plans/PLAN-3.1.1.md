@@ -37,7 +37,7 @@ PDF-Download erreichen, nicht aber den Admin-Bereich.
 
 ### AP1 – Release-Build der Plugin-ZIP
 
-**Stand: umgesetzt** (`wordpress-plugin/build-zip.sh`, `make plugin-zip`, Layout-Erkennung `ONDISOS_LAYOUT` in `ondisos.php`; geprüft mit einer frischen WordPress-Instanz ohne Frontend-Verzeichnis). Die ZIP enthält nur versionierte Dateien, ist reproduzierbar (feste Zeitstempel) und trägt die SHA-256-Prüfsumme. Offen aus diesem AP: Release-Job in der CI.
+**Stand: umgesetzt** (`wordpress-plugin/build-zip.sh`, `make plugin-zip`, Layout-Erkennung `ONDISOS_LAYOUT` in `ondisos.php`; geprüft mit einer frischen WordPress-Instanz ohne Frontend-Verzeichnis). Die ZIP enthält nur versionierte Dateien, ist reproduzierbar (feste Zeitstempel) und trägt die SHA-256-Prüfsumme. Der Release-Job steht in `.gitlab-ci.yml` (`release:plugin_zip`, nur bei Tags `vX.Y.Z`, Tag muss zur Plugin-Version passen): Er baut die ZIP, lädt ZIP und Prüfsumme in die Generic Package Registry (`…/packages/generic/ondisos-plugin/<version>/`) und legt ein GitLab-Release an (Logik in `wordpress-plugin/publish-release.sh`, lokal mit `DRY_RUN=1 TAG=v3.1.0` prüfbar). Release: `git tag -a v3.1.1 -m "Änderungen…" && git push origin v3.1.1`; die Tag-Nachricht wird zur Release-Beschreibung. Voraussetzung: Projekt (bzw. Package Registry und Releases) öffentlich lesbar. Die Download-URL ist stabil: `<GitLab>/api/v4/projects/<id>/packages/generic/ondisos-plugin/<version>/ondisos-<version>.zip`.
 
 - Build-Schritt (Make-Target und/oder CI-Job) erzeugt `ondisos-<version>.zip` aus `wordpress-plugin/` **und den benötigten Teilen des Frontends**.
   Eine ZIP nur aus `wordpress-plugin/` liefe ohne Shell nicht (siehe Ausgangslage). Dafür braucht es ein **drittes Layout C (selbsttragend)**: Der Build legt
