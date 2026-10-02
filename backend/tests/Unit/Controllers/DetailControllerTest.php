@@ -516,6 +516,30 @@ class DetailControllerTest extends TestCase
         $this->assertTrue($this->callIsFileField('image_data', 'x'));
     }
 
+    public function testIsFileFieldFalseForGermanWordsContainingBild(): void
+    {
+        $this->assertFalse($this->callIsFileField('Ausbildungsbetrieb', 'Beispiel GmbH'));
+        $this->assertFalse($this->callIsFileField('Ausbilder', 'Max Muster'));
+        $this->assertFalse($this->callIsFileField('Vorbildung', 'Realschule'));
+        $this->assertFalse($this->callIsFileField('Ausbildungsberuf', 'Fachinformatiker'));
+        $this->assertFalse($this->callIsFileField('Profile', 'x'));
+    }
+
+    public function testIsFileFieldTrueForKeywordsAsWordParts(): void
+    {
+        $this->assertTrue($this->callIsFileField('upload_zeugnis', 'zeugnis'));
+        $this->assertTrue($this->callIsFileField('zeugnisUpload', 'x'));
+        $this->assertTrue($this->callIsFileField('Bilder', 'x'));
+        $this->assertTrue($this->callIsFileField('Bild', 'x'));
+        $this->assertTrue($this->callIsFileField('Foto-Schueler', 'x'));
+    }
+
+    public function testIsFileFieldTrueForFilenameValueOrStoredTypeDespiteKey(): void
+    {
+        $this->assertTrue($this->callIsFileField('Ausbildungsbetrieb', 'zeugnis.pdf'));
+        $this->assertTrue($this->callIsFileField('Vertrag', 'x', ['type' => 'file']));
+    }
+
     public function testIsFileFieldTrueForFileExtension(): void
     {
         $this->assertTrue($this->callIsFileField('field', 'document.pdf'));

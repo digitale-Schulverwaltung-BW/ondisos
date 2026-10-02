@@ -193,13 +193,8 @@ class DetailController
             return false;
         }
 
-        // Check common file field names
-        $fileKeywords = ['file', 'upload', 'document', 'attachment', 'foto', 'bild', 'image'];
-
-        foreach ($fileKeywords as $keyword) {
-            if (stripos($key, $keyword) !== false) {
-                return true;
-            }
+        if ($this->keyLooksLikeFileField($key)) {
+            return true;
         }
 
         // Check file extensions
@@ -208,6 +203,44 @@ class DetailController
         foreach ($extensions as $ext) {
             if (str_ends_with(strtolower($value), ".$ext")) {
                 return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Heuristic on the field key (legacy submissions without stored SurveyJS type).
+     *
+     * The key is split into words (camelCase, "_", "-", spaces). A plain substring match
+     * is wrong: 'bild' would hit "Ausbildungsbetrieb", "Ausbilder" or "Vorbildung".
+     * - 'bild'/'bilder' count only as a whole word ("mein_bild", "Bilder")
+     * - 'file', 'foto', 'image', ... count at the start of a word ("file_upload", "Fotografie")
+     * - 'upload', 'attachment', 'document' also at the end of a word ("zeugnisUpload");
+     *   'file' does not, otherwise "Profile" would match
+     */
+    private function keyLooksLikeFileField(string $key): bool
+    {
+        $spaced = preg_replace('/(?<=\p{Ll})(?=\p{Lu})/u', ' ', $key) ?? $key;
+        $words = preg_split('/[^\p{L}\p{N}]+/u', mb_strtolower($spaced), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $wholeWords = ['bild', 'bilder'];
+        $prefixes = ['file', 'upload', 'document', 'attachment', 'foto', 'image'];
+        $suffixes = ['upload', 'attachment', 'document'];
+
+        foreach ($words as $word) {
+            if (in_array($word, $wholeWords, true)) {
+                return true;
+            }
+            foreach ($prefixes as $prefix) {
+                if (str_starts_with($word, $prefix)) {
+                    return true;
+                }
+            }
+            foreach ($suffixes as $suffix) {
+                if (str_ends_with($word, $suffix)) {
+                    return true;
+                }
             }
         }
 
