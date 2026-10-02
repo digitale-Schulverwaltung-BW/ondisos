@@ -12,12 +12,15 @@ namespace App\Services;
  *
  * The school's accent colour travels the same way: 'accent_color' is "#rrggbb" or null (= the default of the template).
  * It is taken from the tenant only; a value in the form config is ignored.
+ *
+ * 'attachment_path' is the PDF the school attached to the form (FormPdfAttachmentService) or null; the generator appends it.
  */
 final class PdfLogoResolver
 {
     public function __construct(
         private readonly TenantLogoService $tenantLogos = new TenantLogoService(),
         private readonly TenantAccentColor $accentColors = new TenantAccentColor(),
+        private readonly FormPdfAttachmentService $attachments = new FormPdfAttachmentService(),
     ) {
     }
 
@@ -29,6 +32,7 @@ final class PdfLogoResolver
     {
         $logo = $pdfConfig['logo'] ?? null;
         $pdfConfig['accent_color'] = $tenantId !== null ? $this->accentColors->get($tenantId) : null;
+        $pdfConfig['attachment_path'] = $tenantId !== null ? $this->attachments->path($tenantId, $formKey) : null;
 
         if ($logo === false) {
             $pdfConfig['logo'] = null;

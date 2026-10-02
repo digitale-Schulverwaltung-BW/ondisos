@@ -12,9 +12,12 @@ require_once __DIR__ . '/../inc/form_fields.php';
 
 use App\Forms\FormConfigFormMapper;
 use App\Forms\FormConfigSchema;
+use App\Services\AuditLogger;
+use App\Services\FormPdfAttachmentService;
 use App\Services\MessageService as M;
 
 $formKey = is_string($_GET['form'] ?? null) ? $_GET['form'] : '';
+$attachments = new FormPdfAttachmentService();
 
 if ($editorNoTenant) {
     editor_flash('info', M::get('forms.choose_tenant', 'Bitte oben rechts einen Tenant wählen: Formulare gehören immer zu genau einer Schule.'));
@@ -62,9 +65,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $warnings = ff_group_by_path($outcome['result']->warnings());
                 $posted   = $outcome['submitted'];
         }
+    } elseif ($action === 'attachment_upload' || $action === 'attachment_delete') {
+        // The PDF a school attaches to the confirmation of this form (only for forms that exist in the current tenant).
+        $tenantId = \App\Config\TenantContext::getTenantId();
+        if ($editor->load($formKey) === null) {
+            http_response_code(404);
+        } else {
+            if ($action === 'attachment_upload') {
+                $problem = $attachments->saveUpload($tenantId, $formKey, is_array($_FILES['attachment'] ?? null) ? $_FILES['attachment'] : []);
+                if ($problem === null) {
+                    AuditLogger::formEvent('form_pdf_attachment_saved', $formKey, ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+                    editor_flash('success', M::get('forms.attachment.saved', 'Das PDF wurde gespeichert. Es wird ab sofort an die PDF-Bestätigung angehängt.'));
+                } else {
+                    editor_flash('danger', $problem);
+                }
+            } else {
+                $attachments->delete($tenantId, $formKey);
+                AuditLogger::formEvent('form_pdf_attachment_deleted', $formKey, ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+                editor_flash('success', M::get('forms.attachment.removed', 'Das angehängte PDF wurde entfernt.'));
+            }
+            header('Location: form_edit.php?form=' . urlencode($formKey) . '&tab=pdf');
+            exit;
+        }
     } elseif ($action === 'delete') {
         $outcome = $editor->delete($formKey);
         if ($outcome['status'] === 'deleted') {
+            $attachments->delete(\App\Config\TenantContext::getTenantId(), $formKey);
             editor_flash('success', M::format('forms.deleted', ['form' => $formKey], 'Formular „{{form}}" wurde gelöscht.'));
             header('Location: forms.php');
             exit;
@@ -103,6 +129,7 @@ if ($form === null) {
 
 // After a failed save show what the admin typed, not the stored values.
 $logoInfo = (new \App\Services\TenantLogoService())->info(\App\Config\TenantContext::getTenantId());
+$attachmentInfo = $attachments->info(\App\Config\TenantContext::getTenantId(), $formKey);
 
 $values = $posted !== null
     ? FormConfigFormMapper::formValues(FormConfigFormMapper::overlay($form['config'], $posted))
@@ -156,7 +183,7 @@ require __DIR__ . '/../inc/header.php';
             }
         }
     }
-    $activeTab = 'general';
+    $activeTab = isset($_GET['tab']) && is_string($_GET['tab']) && isset($tabs[$_GET['tab']]) ? $_GET['tab'] : 'general';
     foreach ($tabErrors as $tab => $n) {
         if ($n > 0) { $activeTab = $tab; break; }
     }
@@ -205,6 +232,31 @@ require __DIR__ . '/../inc/header.php';
                         <div class="card-footer text-muted small"><?= ff_e(M::get('forms.pdf_preview.help', 'Zeigt die PDF-Bestätigung mit Beispielangaben (Feldname, 1.1.2000, 1) und Ihren aktuellen, noch nicht gespeicherten Eingaben.')) ?></div>
                     </div>
                 <?php endif; ?>
+                <?php if ($tab === 'pdf'): ?>
+                    <div class="card mb-4" id="attachment">
+                        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.attachment.title', 'Zusätzliches PDF anhängen')) ?></h5></div>
+                        <div class="card-body">
+                            <p class="text-muted"><?= ff_e(M::get('forms.attachment.help', 'Dieses PDF wird automatisch hinter die PDF-Bestätigung dieses Formulars gesetzt (zum Beispiel ein Informationsblatt). Höchstens 5 MB und 20 Seiten. Es gilt sofort auch für bereits eingegangene Anmeldungen.')) ?></p>
+                            <?php // The upload forms sit outside the config form (forms cannot be nested); the controls here point to them with form="…". ?>
+                            <?php if ($attachmentInfo !== null): ?>
+                                <p class="mb-2"><span class="badge text-bg-success"><?= ff_e(M::get('forms.attachment.present', 'PDF hinterlegt')) ?></span>
+                                    <strong><?= ff_e($attachmentInfo['name']) ?></strong>
+                                    <span class="text-muted small">(<?= $attachmentInfo['pages'] > 0 ? (int)$attachmentInfo['pages'] . ' ' . ff_e(M::get('forms.attachment.pages', 'Seiten')) . ', ' : '' ?><?= ff_e(number_format($attachmentInfo['bytes'] / 1024, 0, ',', '.')) ?> KB)</span></p>
+                            <?php else: ?>
+                                <p class="mb-2"><span class="badge text-bg-secondary"><?= ff_e(M::get('forms.attachment.none', 'Kein PDF angehängt')) ?></span></p>
+                            <?php endif; ?>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <input type="file" class="form-control" style="max-width: 24rem;" name="attachment" form="attachment-form" accept="application/pdf,.pdf" required
+                                       aria-label="<?= ff_e(M::get('forms.attachment.file', 'PDF-Datei')) ?>">
+                                <button type="submit" form="attachment-form" class="btn btn-primary"><?= ff_e($attachmentInfo !== null ? M::get('forms.attachment.replace', 'PDF ersetzen') : M::get('forms.attachment.upload', 'PDF hochladen')) ?></button>
+                                <?php if ($attachmentInfo !== null): ?>
+                                    <button type="submit" form="attachment-delete-form" class="btn btn-outline-danger"><?= ff_e(M::get('forms.attachment.remove', 'Entfernen')) ?></button>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="card-footer text-muted small"><?= ff_e(M::get('forms.attachment.preview_note', 'Die PDF-Vorschau zeigt das angehängte PDF ebenfalls.')) ?></div>
+                    </div>
+                <?php endif; ?>
                 <?php foreach ($tabGroups as $group): $fields = ff_group_fields($group); if ($fields === []) { continue; } ?>
                     <div class="card mb-4">
                         <?php if (count($tabGroups) > 1): ?>
@@ -221,6 +273,16 @@ require __DIR__ . '/../inc/header.php';
                 <?php endforeach; ?>
             </div>
         <?php endforeach; ?>
+    </form>
+
+    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" enctype="multipart/form-data" id="attachment-form">
+        <?php csrf_field(); ?>
+        <input type="hidden" name="action" value="attachment_upload">
+    </form>
+    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="attachment-delete-form"
+          onsubmit="return confirm('<?= ff_e(M::get('forms.attachment.confirm_remove', 'Das angehängte PDF wirklich entfernen?')) ?>');">
+        <?php csrf_field(); ?>
+        <input type="hidden" name="action" value="attachment_delete">
     </form>
 
     <div class="tab-content">

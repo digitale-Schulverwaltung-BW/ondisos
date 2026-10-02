@@ -46,6 +46,7 @@ class PdfGeneratorService
 
         // Write HTML to PDF
         $mpdf->WriteHTML($html);
+        FormPdfAttachmentService::appendTo($mpdf, $this->attachmentPath($pdfConfig));
 
         // Output as download
         $mpdf->Output($filename, \Mpdf\Output\Destination::DOWNLOAD);
@@ -77,9 +78,17 @@ class PdfGeneratorService
 
         // Write HTML to PDF
         $mpdf->WriteHTML($html);
+        FormPdfAttachmentService::appendTo($mpdf, $this->attachmentPath($pdfConfig));
 
         // Return as string
         return $mpdf->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+    }
+
+    /** @param array<string,mixed> $pdfConfig */
+    private function attachmentPath(array $pdfConfig): ?string
+    {
+        $path = $pdfConfig['attachment_path'] ?? null;
+        return is_string($path) && $path !== '' ? $path : null;
     }
 
     /**

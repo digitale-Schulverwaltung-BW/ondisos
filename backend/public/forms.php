@@ -269,7 +269,7 @@ require __DIR__ . '/../inc/header.php';
                     <label class="form-check-label" for="overwrite"><?= ff_e(M::get('forms.copy.overwrite', 'Vorhandene Formulare ersetzen')) ?></label>
                 </div></div>
                 <div class="col-md-3"><button type="submit" class="btn btn-outline-primary"><?= ff_e(M::get('forms.copy.submit', 'Übernehmen')) ?></button></div>
-                <div class="col-12 form-text"><?= ff_e(M::get('forms.copy.help', 'Kopiert Konfiguration, Survey und Theme. Nicht kopiert werden Empfänger-Adressen, das PDF-Logo, Anmeldungen, Entwürfe, Verlauf und Schlüssel.')) ?></div>
+                <div class="col-12 form-text"><?= ff_e(M::get('forms.copy.help', 'Kopiert Konfiguration, Survey und Theme. Nicht kopiert werden Empfänger-Adressen, das PDF-Logo, ein angehängtes PDF, Anmeldungen, Entwürfe, Verlauf und Schlüssel.')) ?></div>
             </form>
         </div>
     </div>
