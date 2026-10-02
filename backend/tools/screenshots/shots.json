@@ -1,0 +1,14 @@
+[
+ {"name":"backend-uebersicht","url":"/index.php?switch_tenant=1&form=bs","height":720},
+ {"name":"backend-dashboard","url":"/dashboard.php","height":680},
+ {"name":"backend-detail","url":"/detail.php?id=12","height":900},
+ {"name":"backend-formulare","url":"/forms.php","full":true,"maxHeight":1300},
+ {"name":"backend-formular-editor","url":"/form_edit.php?form=bs","height":900},
+ {"name":"backend-formular-pdf","url":"/form_edit.php?form=bs&tab=pdf","height":1000},
+ {"name":"backend-survey-editor","url":"/form_survey.php?form=bs","height":900},
+ {"name":"backend-vorschau","url":"/form_preview.php?form=bs","height":900,"wait":2500},
+ {"name":"backend-tenants","url":"/tenants.php","full":true,"maxHeight":940},
+ {"name":"pdf-bestaetigung","url":"real.pdf#toolbar=0&navpanes=0&scrollbar=0&view=Fit","base":"${PDF_DIR}","width":820,"height":1160,"wait":3000},
+ {"name":"pdf-vorschau","url":"/form_pdf_preview.php?form=bs#toolbar=0&navpanes=0&scrollbar=0&view=Fit","width":820,"height":1160,"wait":3000},
+ {"name":"frontend-formular","url":"/index.php?form=bs","base":"http://localhost:8091","height":660,"wait":2500}
+]
