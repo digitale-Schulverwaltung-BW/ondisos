@@ -298,7 +298,6 @@ class Settings
                 do_settings_sections(self::PAGE_SLUG);
                 ?>
 
-                <h2>Verfügbare Formulare</h2>
                 <?php $this->render_forms_list(); ?>
 
                 <?php submit_button('Einstellungen speichern'); ?>
