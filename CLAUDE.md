@@ -1248,6 +1248,7 @@ php -l backend/config/messages.local.php
 **Nachträge aus der ersten Praxis**
 - ✅ Formular-Editor in Tabs (Allgemein · Benachrichtigungs-E-Mail · PDF-Bestätigung · Kalender-Download · Info), Speichern/Abbrechen neben den Tabs; Tab mit Fehlern wird geöffnet und markiert
 - ✅ Ein Logo pro Schule: Upload auf *Formulare* (`forms.php`) durch Tenant-Admins, gespeichert unter `uploads/tenant-<id>/branding/logo.png|jpg` (nur PNG/JPEG, max. 2 MB, per GD neu kodiert). Reihenfolge im PDF: `logo: false` (keins) → Pfad in der Config (Plattform-Admin) → Schul-Logo → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`
+- ✅ PDF: Abschnitte ohne Titel und Text werden nicht ausgegeben (keine leeren Kästen)
 - ✅ PDF-Vorschau (`form_pdf_preview.php`): Beispielangaben aus der Survey (Feldname, 1.1.2000, 1, erste Auswahl), nutzt die ungespeicherten Formularwerte, Wasserzeichen „VORSCHAU"
 - ✅ Docker-Image: GD mit JPEG-Unterstützung (`libjpeg-dev`, vorher konnten JPEG-Logos nicht verarbeitet werden)
 

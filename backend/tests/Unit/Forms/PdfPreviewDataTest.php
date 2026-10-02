@@ -54,4 +54,14 @@ class PdfPreviewDataTest extends TestCase
         $this->assertSame([['title' => 'T', 'content' => 'C']], $config['pre_sections']);
         $this->assertArrayNotHasKey('logo', $config);
     }
+
+    public function testConfigDropsEmptySections(): void
+    {
+        $config = PdfPreviewData::config([
+            'pre_sections' => [['title' => '', 'content' => ''], ['title' => '  ', 'content' => "\n"], ['title' => 'Hinweis', 'content' => '']],
+            'post_sections' => [['title' => '', 'content' => '']],
+        ]);
+        $this->assertSame([['title' => 'Hinweis', 'content' => '']], $config['pre_sections']);
+        $this->assertSame([], $config['post_sections']);
+    }
 }

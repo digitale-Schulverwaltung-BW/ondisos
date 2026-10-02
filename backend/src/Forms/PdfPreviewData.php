@@ -36,8 +36,13 @@ final class PdfPreviewData
         foreach (['pre_sections', 'post_sections'] as $key) {
             $out[$key] = [];
             foreach (is_array($pdf[$key] ?? null) ? $pdf[$key] : [] as $row) {
-                if (is_array($row)) {
-                    $out[$key][] = ['title' => is_string($row['title'] ?? null) ? $row['title'] : '', 'content' => is_string($row['content'] ?? null) ? $row['content'] : ''];
+                if (!is_array($row)) {
+                    continue;
+                }
+                $title = is_string($row['title'] ?? null) ? $row['title'] : '';
+                $content = is_string($row['content'] ?? null) ? $row['content'] : '';
+                if (trim($title) !== '' || trim($content) !== '') { // an empty row of the admin form would render as an empty box
+                    $out[$key][] = ['title' => $title, 'content' => $content];
                 }
             }
         }
