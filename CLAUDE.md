@@ -84,6 +84,7 @@ projekt/
     ├── public/
     │   ├── index.php · detail.php · trash.php · dashboard.php
     │   ├── forms.php · form_edit.php   # Formular-Editor (3.1): Liste, anlegen, Konfiguration als HTML-Formular, Verlauf, löschen
+    │   ├── form_pdf_preview.php · tenant_logo.php   # PDF-Vorschau mit Beispielangaben (GET gespeichert / POST aktuelle Formularwerte); Logo-Thumbnail
     │   ├── form_preview.php · form_preview_frame.php   # Vorschau (3.1): Entwurf/veröffentlichte Survey wie für Besucher, in einem per CSP sandboxed Frame
     │   ├── form_survey.php             # Survey-Editor (3.1): JSON einfügen/laden, prüfen (mit Zeilen), Diff, Entwurf, veröffentlichen, wiederherstellen
     │   ├── assets/                     # preview/ (SurveyJS-Laufzeit, Kopie des Frontends; tools/sync-preview-assets.sh), survey-editor.js; codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
@@ -114,6 +115,7 @@ projekt/
     │   │                  HmacValidator · SecretPolicy · RateLimiter · VirusScanService · AuditLogger · UploadCleanupService
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
     │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService · FormCopyService  (3.1)
+    │   │                  TenantLogoService · PdfLogoResolver  (Schul-Logo: Upload durch Tenant-Admins, Reihenfolge der Logo-Quellen)
     │   ├── Cli/           CliArgs · ImportSurveysCommand · CopyFormsCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
@@ -1242,6 +1244,12 @@ php -l backend/config/messages.local.php
 ## 🔄 Änderungshistorie
 
 ### 3.1
+
+**Nachträge aus der ersten Praxis**
+- ✅ Formular-Editor in Tabs (Allgemein · Benachrichtigungs-E-Mail · PDF-Bestätigung · Kalender-Download · Info), Speichern/Abbrechen neben den Tabs; Tab mit Fehlern wird geöffnet und markiert
+- ✅ Ein Logo pro Schule: Upload auf *Formulare* (`forms.php`) durch Tenant-Admins, gespeichert unter `uploads/tenant-<id>/branding/logo.png|jpg` (nur PNG/JPEG, max. 2 MB, per GD neu kodiert). Reihenfolge im PDF: `logo: false` (keins) → Pfad in der Config (Plattform-Admin) → Schul-Logo → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`
+- ✅ PDF-Vorschau (`form_pdf_preview.php`): Beispielangaben aus der Survey (Feldname, 1.1.2000, 1, erste Auswahl), nutzt die ungespeicherten Formularwerte, Wasserzeichen „VORSCHAU"
+- ✅ Docker-Image: GD mit JPEG-Unterstützung (`libjpeg-dev`, vorher konnten JPEG-Logos nicht verarbeitet werden)
 
 **Formulare im Backend pflegen** (Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md), Upgrade: [MIGRATION-3.1.md](docs/MIGRATION-3.1.md))
 - ✅ Neue Tabellen `form_resources` (veröffentlichte Surveys/Themes), `form_drafts` (ein Entwurf je Formular), `form_revisions` (Verlauf); `migrate.php` (Schritte 8–10)

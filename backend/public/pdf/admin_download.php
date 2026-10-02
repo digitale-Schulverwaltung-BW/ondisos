@@ -12,6 +12,7 @@ require_once __DIR__ . '/../../inc/bootstrap.php';
 require_once __DIR__ . '/../../inc/auth.php';
 
 use App\Services\PdfGeneratorService;
+use App\Services\PdfLogoResolver;
 use App\Services\PdfTemplateRenderer;
 use App\Repositories\AnmeldungRepository;
 
@@ -36,19 +37,8 @@ try {
     // Admin download always generates PDF regardless of enabled flag
     $pdfConfig['enabled'] = true;
 
-    // Inject logo from backend env — same logic as token-based download.php
-    // Use false in forms-config to explicitly suppress the logo.
-    $logoConfigured = array_key_exists('logo', $pdfConfig);
-    $logoExplicitlyDisabled = $logoConfigured && $pdfConfig['logo'] === false;
-
-    if (!$logoExplicitlyDisabled && empty($pdfConfig['logo'])) {
-        $logoEnvKey = 'PDF_LOGO_' . strtoupper($anmeldung->formular);
-        $pdfConfig['logo'] = getenv($logoEnvKey) ?: getenv('PDF_LOGO_PATH') ?: null;
-    }
-
-    if ($pdfConfig['logo'] === false) {
-        $pdfConfig['logo'] = null;
-    }
+    // Same logo order as the token download (PdfLogoResolver)
+    $pdfConfig = (new PdfLogoResolver())->resolve($pdfConfig, $anmeldung->formular, $repository->findTenantIdById($id));
 
     $renderer = new PdfTemplateRenderer();
     $generator = new PdfGeneratorService($renderer);

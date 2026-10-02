@@ -295,6 +295,29 @@ return [
      * Labels and help texts of the config options are looked up as forms.fields.<path>.label / .help.
      */
     'forms' => [
+        'pdf_preview' => [
+            'button' => 'PDF-Vorschau',
+            'help' => 'Zeigt die PDF-Bestätigung mit Beispielangaben (Feldname, 1.1.2000, 1) und Ihren aktuellen, noch nicht gespeicherten Eingaben.',
+            'no_survey' => 'Für die PDF-Vorschau braucht das Formular eine Survey im Backend. Bitte zuerst im Survey-Editor eine Survey einfügen.',
+            'failed' => 'Die PDF-Vorschau konnte nicht erstellt werden.',
+        ],
+        'back_to_form' => '← Zurück zum Formular',
+        'logo' => [
+            'title' => 'Logo der Schule',
+            'help' => 'Das Logo erscheint oben in den PDF-Bestätigungen aller Formulare dieser Schule. PNG oder JPEG, höchstens 2 MB; ein transparenter Hintergrund bleibt bei PNG erhalten.',
+            'none' => 'Noch kein Logo hochgeladen',
+            'file' => 'Logo-Datei',
+            'upload' => 'Logo hochladen',
+            'replace' => 'Logo ersetzen',
+            'remove' => 'Logo entfernen',
+            'confirm_remove' => 'Das Logo wirklich entfernen?',
+            'saved' => 'Das Logo wurde gespeichert. Es erscheint ab sofort in den PDF-Bestätigungen.',
+            'removed' => 'Das Logo wurde entfernt.',
+            'in_form' => 'Logo der Schule',
+            'in_form_help' => 'Wird für alle Formulare der Schule verwendet und auf der Seite „Formulare" geändert.',
+            'in_form_none' => 'Noch kein Logo hochgeladen.',
+            'in_form_link' => 'Logo ändern',
+        ],
         'title' => 'Formulare',
         'choose_tenant' => 'Bitte oben rechts einen Tenant wählen: Formulare gehören immer zu genau einer Schule.',
         'none_yet' => 'Es gibt noch kein Formular.',
@@ -392,6 +415,7 @@ return [
             'pdf' => 'PDF-Bestätigung',
             'ical' => 'Kalender-Download (iCal)',
             'files' => 'Dateien',
+            'info' => 'Info',
         ],
         'fields' => [
             'version' => ['label' => 'Version', 'help' => 'Wird bei jeder Anmeldung mitgespeichert, um spätere Änderungen am Formular nachvollziehen zu können.'],

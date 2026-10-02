@@ -14,6 +14,7 @@ define('SKIP_AUTH_CHECK', true);
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use App\Services\PdfGeneratorService;
+use App\Services\PdfLogoResolver;
 use App\Services\PdfTokenService;
 use App\Services\PdfTemplateRenderer;
 use App\Config\TenantContext;
@@ -64,24 +65,9 @@ try {
         throw new RuntimeException(M::get('pdf.errors.not_enabled', 'PDF nicht aktiviert für dieses Formular'), 403);
     }
 
-    // Inject logo from backend env if none was provided by the frontend config.
-    // Logo files live on the backend server, so the path cannot come from the frontend.
-    // Priority: PDF_LOGO_{FORMKEY} > PDF_LOGO_PATH
-    //
-    // Use false (not null) in forms-config to explicitly suppress the logo even when
-    // an env fallback is configured: 'logo' => false
-    $logoConfigured = array_key_exists('logo', $pdfConfig);
-    $logoExplicitlyDisabled = $logoConfigured && $pdfConfig['logo'] === false;
-
-    if (!$logoExplicitlyDisabled && empty($pdfConfig['logo'])) {
-        $logoEnvKey = 'PDF_LOGO_' . strtoupper($anmeldung->formular);
-        $pdfConfig['logo'] = getenv($logoEnvKey) ?: getenv('PDF_LOGO_PATH') ?: null;
-    }
-
-    // Normalize false → null so downstream code only needs to check for null/empty
-    if ($pdfConfig['logo'] === false) {
-        $pdfConfig['logo'] = null;
-    }
+    // Logo: the files live on the backend, so the path never comes from the frontend.
+    // Order: logo=false (none) > path in the config > the school's uploaded logo > PDF_LOGO_<FORM> > PDF_LOGO_PATH
+    $pdfConfig = (new PdfLogoResolver())->resolve($pdfConfig, $anmeldung->formular, $tenantId);
 
     // Generate and download PDF
     $renderer = new PdfTemplateRenderer();

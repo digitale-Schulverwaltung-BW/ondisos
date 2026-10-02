@@ -102,11 +102,11 @@ if ($form === null) {
 }
 
 // After a failed save show what the admin typed, not the stored values.
+$logoInfo = (new \App\Services\TenantLogoService())->info(\App\Config\TenantContext::getTenantId());
+
 $values = $posted !== null
     ? FormConfigFormMapper::formValues(FormConfigFormMapper::overlay($form['config'], $posted))
     : $form['values'];
-
-$groups = ['general', 'email', 'pdf', 'ical'];
 
 require __DIR__ . '/../inc/header.php';
 ?>
@@ -144,36 +144,87 @@ require __DIR__ . '/../inc/header.php';
         <?php endforeach; endforeach; ?>
     <?php endif; ?>
 
-    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="config-form">
+    <?php
+    // One tab per config group ("Allgemein" also carries the system files); a tab with validation errors is flagged and opened first.
+    $tabs = ['general' => ['general', 'files'], 'email' => ['email'], 'pdf' => ['pdf'], 'ical' => ['ical']];
+    $tabErrors = [];
+    foreach ($tabs as $tab => $tabGroups) {
+        $tabErrors[$tab] = 0;
+        foreach ($tabGroups as $g) {
+            foreach (array_keys(ff_group_fields($g)) as $path) {
+                $tabErrors[$tab] += count($errors[$path] ?? []);
+            }
+        }
+    }
+    $activeTab = 'general';
+    foreach ($tabErrors as $tab => $n) {
+        if ($n > 0) { $activeTab = $tab; break; }
+    }
+    $tabNames = [...array_keys($tabs), 'info'];
+    ?>
+    <div class="d-flex flex-wrap justify-content-between align-items-end gap-2 border-bottom mb-3">
+        <ul class="nav nav-tabs border-0" id="form-tabs" role="tablist">
+            <?php foreach ($tabNames as $tab): ?>
+                <li class="nav-item" role="presentation">
+                    <button type="button" class="nav-link<?= $tab === $activeTab ? ' active' : '' ?>" id="tab-btn-<?= ff_e($tab) ?>" data-bs-toggle="tab"
+                            data-bs-target="#tab-<?= ff_e($tab) ?>" role="tab" aria-controls="tab-<?= ff_e($tab) ?>" aria-selected="<?= $tab === $activeTab ? 'true' : 'false' ?>">
+                        <?= ff_e(M::get('forms.groups.' . $tab, $tab)) ?>
+                        <?php if (($tabErrors[$tab] ?? 0) > 0): ?><span class="badge text-bg-danger ms-1"><?= (int)$tabErrors[$tab] ?></span><?php endif; ?>
+                    </button>
+                </li>
+            <?php endforeach; ?>
+        </ul>
+        <div class="d-flex gap-2 pb-2">
+            <button type="submit" form="config-form" class="btn btn-primary"><?= ff_e(M::get('forms.save', 'Speichern')) ?></button>
+            <a href="forms.php" class="btn btn-outline-secondary"><?= ff_e(M::get('forms.cancel', 'Abbrechen')) ?></a>
+        </div>
+    </div>
+
+    <?php // The config form is itself a .tab-content, so the Info tab (with forms of its own) can sit outside of it. ?>
+    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="config-form" class="tab-content">
         <?php csrf_field(); ?>
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="sha256" value="<?= ff_e($form['sha256']) ?>">
 
-        <?php foreach ($groups as $group): $fields = ff_group_fields($group); if ($fields === []) { continue; } ?>
-            <div class="card mb-4">
-                <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.groups.' . $group, $group)) ?></h5></div>
-                <div class="card-body">
-                    <?php foreach ($fields as $path => $field):
-                        echo ff_render($path, $field, $values[$path] ?? null, $errors, $editor->canEdit($path), $form['survey_fields']);
-                    endforeach; ?>
-                </div>
+        <?php foreach ($tabs as $tab => $tabGroups): ?>
+            <div class="tab-pane fade<?= $tab === $activeTab ? ' show active' : '' ?>" id="tab-<?= ff_e($tab) ?>" role="tabpanel" aria-labelledby="tab-btn-<?= ff_e($tab) ?>" tabindex="0">
+                <?php if ($tab === 'pdf'): ?>
+                    <div class="card mb-4">
+                        <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                            <?php if ($logoInfo !== null): ?>
+                                <img src="tenant_logo.php?v=<?= (int)$logoInfo['bytes'] ?>" alt="" class="border rounded p-1 bg-white" style="max-height: 56px; max-width: 160px;">
+                            <?php endif; ?>
+                            <div class="flex-grow-1">
+                                <strong><?= ff_e(M::get('forms.logo.in_form', 'Logo der Schule')) ?></strong><br>
+                                <span class="text-muted small"><?= ff_e($logoInfo !== null ? M::get('forms.logo.in_form_help', 'Wird für alle Formulare der Schule verwendet und auf der Seite „Formulare" geändert.') : M::get('forms.logo.in_form_none', 'Noch kein Logo hochgeladen.')) ?></span>
+                                <a class="small ms-1" href="forms.php#logo"><?= ff_e(M::get('forms.logo.in_form_link', 'Logo ändern')) ?></a>
+                            </div>
+                            <button type="submit" form="config-form" formaction="form_pdf_preview.php?form=<?= urlencode($formKey) ?>" formtarget="_blank"
+                                    class="btn btn-outline-primary"><?= ff_e(M::get('forms.pdf_preview.button', 'PDF-Vorschau')) ?></button>
+                        </div>
+                        <div class="card-footer text-muted small"><?= ff_e(M::get('forms.pdf_preview.help', 'Zeigt die PDF-Bestätigung mit Beispielangaben (Feldname, 1.1.2000, 1) und Ihren aktuellen, noch nicht gespeicherten Eingaben.')) ?></div>
+                    </div>
+                <?php endif; ?>
+                <?php foreach ($tabGroups as $group): $fields = ff_group_fields($group); if ($fields === []) { continue; } ?>
+                    <div class="card mb-4">
+                        <?php if (count($tabGroups) > 1): ?>
+                            <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.groups.' . $group, $group)) ?></h5></div>
+                        <?php endif; ?>
+                        <div class="card-body">
+                            <?php foreach ($fields as $path => $field):
+                                // The logo of a school is uploaded on the form list; the file-path field is for platform admins only.
+                                if ($path === 'pdf.logo' && $form['role'] !== FormConfigSchema::ROLE_PLATFORM) { continue; }
+                                echo ff_render($path, $field, $values[$path] ?? null, $errors, $editor->canEdit($path), $group === 'files' ? null : $form['survey_fields']);
+                            endforeach; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
             </div>
         <?php endforeach; ?>
-
-        <div class="card mb-4">
-            <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.groups.files', 'Dateien')) ?></h5></div>
-            <div class="card-body">
-                <?php foreach (ff_group_fields('files') as $path => $field):
-                    echo ff_render($path, $field, $values[$path] ?? null, $errors, $editor->canEdit($path), null);
-                endforeach; ?>
-            </div>
-        </div>
-
-        <div class="d-flex gap-2 mb-4">
-            <button type="submit" class="btn btn-primary"><?= ff_e(M::get('forms.save', 'Speichern')) ?></button>
-            <a href="forms.php" class="btn btn-outline-secondary"><?= ff_e(M::get('forms.cancel', 'Abbrechen')) ?></a>
-        </div>
     </form>
+
+    <div class="tab-content">
+    <div class="tab-pane fade" id="tab-info" role="tabpanel" aria-labelledby="tab-btn-info" tabindex="0">
 
     <div class="card mb-4">
         <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.survey.title', 'Survey (Fragen des Formulars)')) ?></h5></div>
@@ -255,6 +306,8 @@ require __DIR__ . '/../inc/header.php';
         <pre class="bg-light border rounded p-3 mt-2 small user-select-all"><?= ff_e(json_encode($form['config'], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)) ?></pre>
     </details>
     <?php endif; ?>
+    </div>
+    </div>
 </div>
 
 <?php require __DIR__ . '/../inc/footer.php'; ?>

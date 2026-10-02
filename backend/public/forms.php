@@ -11,7 +11,9 @@ require_once __DIR__ . '/../inc/form_editor.php';
 require_once __DIR__ . '/../inc/form_fields.php';
 require_once __DIR__ . '/../inc/form_copy.php';
 
+use App\Services\AuditLogger;
 use App\Services\MessageService as M;
+use App\Services\TenantLogoService;
 
 $createErrors = [];
 $createKey    = '';
@@ -48,6 +50,32 @@ if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFO
     exit;
 }
 
+// PDF logo of the school: upload or remove (tenant admins and platform admins alike).
+$tenantLogos = new TenantLogoService();
+if (!$editorNoTenant && $_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['logo_upload', 'logo_delete'], true)) {
+    try {
+        csrf_validate();
+        $logoTenant = \App\Config\TenantContext::getTenantId();
+        if ($_POST['action'] === 'logo_upload') {
+            $problem = $tenantLogos->saveUpload($logoTenant, is_array($_FILES['logo'] ?? null) ? $_FILES['logo'] : []);
+            if ($problem === null) {
+                AuditLogger::formEvent('tenant_logo_saved', '', ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+                editor_flash('success', M::get('forms.logo.saved', 'Das Logo wurde gespeichert. Es erscheint ab sofort in den PDF-Bestätigungen.'));
+            } else {
+                editor_flash('danger', $problem);
+            }
+        } else {
+            $tenantLogos->delete($logoTenant);
+            AuditLogger::formEvent('tenant_logo_deleted', '', ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+            editor_flash('success', M::get('forms.logo.removed', 'Das Logo wurde entfernt.'));
+        }
+    } catch (\InvalidArgumentException $e) {
+        editor_flash('danger', M::get('forms.csrf_failed', 'Die Sitzung ist abgelaufen. Bitte die Seite neu laden und erneut versuchen.'));
+    }
+    header('Location: forms.php#logo');
+    exit;
+}
+
 $forms = $editorNoTenant ? [] : $editor->listForms();
 $copySources = [];
 if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFORM) {
@@ -55,6 +83,7 @@ if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFO
     $copySources = array_values(array_filter((new \App\Repositories\TenantRepository())->findAll(), static fn (array $t): bool => (int)$t['id'] !== $currentId));
 }
 [$copyReport, $copyFlash] = form_copy_take();
+$logoInfo = $editorNoTenant ? null : $tenantLogos->info(\App\Config\TenantContext::getTenantId());
 
 require __DIR__ . '/../inc/header.php';
 ?>
@@ -113,6 +142,40 @@ require __DIR__ . '/../inc/header.php';
         </div>
     <?php endif; ?>
 
+
+    <div class="card mt-4" id="logo">
+        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.logo.title', 'Logo der Schule')) ?></h5></div>
+        <div class="card-body">
+            <p class="text-muted"><?= ff_e(M::get('forms.logo.help', 'Das Logo erscheint oben in den PDF-Bestätigungen aller Formulare dieser Schule. PNG oder JPEG, höchstens 2 MB; ein transparenter Hintergrund bleibt bei PNG erhalten.')) ?></p>
+            <div class="row g-3 align-items-center">
+                <?php if ($logoInfo !== null): ?>
+                    <div class="col-auto">
+                        <img src="tenant_logo.php?v=<?= (int)$logoInfo['bytes'] ?>" alt="<?= ff_e(M::get('forms.logo.title', 'Logo der Schule')) ?>"
+                             class="border rounded p-2 bg-white" style="max-width: 220px; max-height: 120px;">
+                    </div>
+                <?php else: ?>
+                    <div class="col-12"><span class="badge text-bg-secondary"><?= ff_e(M::get('forms.logo.none', 'Noch kein Logo hochgeladen')) ?></span></div>
+                <?php endif; ?>
+                <div class="col">
+                    <form method="post" action="forms.php" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-center">
+                        <?php csrf_field(); ?>
+                        <input type="hidden" name="action" value="logo_upload">
+                        <input type="file" class="form-control" style="max-width: 24rem;" name="logo" accept="image/png,image/jpeg" required
+                               aria-label="<?= ff_e(M::get('forms.logo.file', 'Logo-Datei')) ?>">
+                        <button type="submit" class="btn btn-primary"><?= ff_e($logoInfo !== null ? M::get('forms.logo.replace', 'Logo ersetzen') : M::get('forms.logo.upload', 'Logo hochladen')) ?></button>
+                    </form>
+                    <?php if ($logoInfo !== null): ?>
+                        <form method="post" action="forms.php" class="mt-2" onsubmit="return confirm('<?= ff_e(M::get('forms.logo.confirm_remove', 'Das Logo wirklich entfernen?')) ?>');">
+                            <?php csrf_field(); ?>
+                            <input type="hidden" name="action" value="logo_delete">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><?= ff_e(M::get('forms.logo.remove', 'Logo entfernen')) ?></button>
+                        </form>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <?php if ($copySources !== []): ?>
     <div class="card mt-4">
         <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.copy.title', 'Formulare von einem anderen Tenant übernehmen')) ?></h5></div>
@@ -146,8 +209,8 @@ require __DIR__ . '/../inc/header.php';
             <form method="post" action="forms.php" class="row g-3 align-items-start">
                 <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="create">
-                <div class="col-md-6">
-                    <label class="form-label" for="form_key"><?= ff_e(M::get('forms.new.key', 'Schlüssel')) ?></label>
+                <div class="col-12 pb-0"><label class="form-label mb-0" for="form_key"><?= ff_e(M::get('forms.new.key', 'Schlüssel')) ?></label></div>
+                <div class="col-md-6 mt-2">
                     <input type="text" id="form_key" name="form_key" class="form-control<?= isset($createErrors['form_key']) ? ' is-invalid' : '' ?>"
                            value="<?= ff_e($createKey) ?>" maxlength="64" pattern="[a-z0-9][a-z0-9_\-]*" required>
                     <div class="form-text"><?= ff_e(M::get('forms.new.key_help', 'Kleinbuchstaben, Ziffern, _ und -. Der Schlüssel steht in der Adresse (?form=…) und im WordPress-Shortcode [ondisos form="…"] und lässt sich später nicht mehr ändern.')) ?></div>
@@ -156,7 +219,7 @@ require __DIR__ . '/../inc/header.php';
                         <div class="invalid-feedback d-block"><?= ff_e($path . ': ' . $m) ?></div>
                     <?php endforeach; endforeach; ?>
                 </div>
-                <div class="col-md-6 pt-md-4">
+                <div class="col-md-6 mt-2">
                     <button type="submit" class="btn btn-primary"><?= ff_e(M::get('forms.new.submit', 'Anlegen')) ?></button>
                 </div>
             </form>

@@ -58,13 +58,19 @@ class PdfGeneratorService
      *
      * @param Anmeldung $anmeldung The anmeldung data
      * @param array $pdfConfig PDF configuration from forms-config
+     * @param string|null $watermark diagonal text over every page (the editor's preview)
      * @return string PDF binary data
      * @throws MpdfException If PDF generation fails
      */
-    public function generate(Anmeldung $anmeldung, array $pdfConfig): string
+    public function generate(Anmeldung $anmeldung, array $pdfConfig, ?string $watermark = null): string
     {
         // Create mPDF instance
         $mpdf = $this->createMpdf();
+
+        if ($watermark !== null) {
+            $mpdf->SetWatermarkText($watermark, 0.08);
+            $mpdf->showWatermarkText = true;
+        }
 
         // Render HTML
         $html = $this->renderer->render($anmeldung, $pdfConfig);
