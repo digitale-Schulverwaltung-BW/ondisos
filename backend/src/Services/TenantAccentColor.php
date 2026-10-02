@@ -36,7 +36,8 @@ class TenantAccentColor
     /** The tenant's colour, or null if it has none (or the file is unusable). */
     public function get(int $tenantId): ?string
     {
-        $raw = @file_get_contents($this->file($tenantId));
+        $file = $this->file($tenantId);
+        $raw  = is_file($file) ? @file_get_contents($file) : false; // the error handler logs even "@"-suppressed warnings
         return $raw === false ? null : self::normalize($raw);
     }
 
