@@ -566,26 +566,26 @@ class DetailControllerTest extends TestCase
 
     public function testShowReturnsUploadedFilesMatchingId(): void
     {
-        // Resolve uploads dir relative to the source file (same as in the controller)
+        // Files live in uploads/tenant-<owner of the Anmeldung>/ (same layout as the controller reads)
         $ref = new ReflectionClass(DetailController::class);
-        $sourceDir = dirname($ref->getFileName());
-        $uploadDir = $sourceDir . '/../../uploads';
+        $uploadDir = dirname($ref->getFileName()) . '/../../uploads/tenant-7';
 
-        // Ensure uploads dir exists
-        if (!is_dir($uploadDir)) {
+        $createdDir = !is_dir($uploadDir);
+        if ($createdDir) {
             mkdir($uploadDir, 0755, true);
-            $createdDir = true;
         }
 
-        // Create test files for id=42
         $testFile1 = $uploadDir . '/42_test_doc.pdf';
         $testFile2 = $uploadDir . '/42_test_image.jpg';
+        $otherFile = $uploadDir . '/43_other.pdf';
         file_put_contents($testFile1, 'dummy pdf content');
         file_put_contents($testFile2, 'dummy jpg content');
+        file_put_contents($otherFile, 'belongs to another Anmeldung');
 
         try {
             $anmeldung = $this->makeAnmeldung(42, ['field' => 'value']);
             $this->mockRepository->method('findById')->willReturn($anmeldung);
+            $this->mockRepository->method('findTenantIdById')->with(42)->willReturn(7);
 
             $result = $this->controller->show(42);
             $files = $result['uploadedFiles'];
@@ -604,39 +604,57 @@ class DetailControllerTest extends TestCase
             $this->assertArrayHasKey('extension', $file);
             $this->assertArrayHasKey('downloadUrl', $file);
         } finally {
-            // Cleanup
             @unlink($testFile1);
             @unlink($testFile2);
-            if (!empty($createdDir)) {
+            @unlink($otherFile);
+            if ($createdDir) {
                 @rmdir($uploadDir);
+            }
+        }
+    }
+
+    public function testShowIgnoresFilesOfOtherTenantsAndFlatLayout(): void
+    {
+        $ref = new ReflectionClass(DetailController::class);
+        $uploadsBase = dirname($ref->getFileName()) . '/../../uploads';
+        $foreignDir  = $uploadsBase . '/tenant-8';
+
+        $createdBase    = !is_dir($uploadsBase);
+        $createdForeign = !is_dir($foreignDir);
+        if ($createdForeign) {
+            mkdir($foreignDir, 0755, true);
+        }
+
+        $foreignFile = $foreignDir . '/42_foreign.pdf';
+        $flatFile    = $uploadsBase . '/42_flat.pdf';
+        file_put_contents($foreignFile, 'tenant 8');
+        file_put_contents($flatFile, 'legacy flat layout');
+
+        try {
+            $anmeldung = $this->makeAnmeldung(42, ['field' => 'value']);
+            $this->mockRepository->method('findById')->willReturn($anmeldung);
+            $this->mockRepository->method('findTenantIdById')->willReturn(7);
+
+            $this->assertSame([], $this->controller->show(42)['uploadedFiles']);
+        } finally {
+            @unlink($foreignFile);
+            @unlink($flatFile);
+            if ($createdForeign) {
+                @rmdir($foreignDir);
+            }
+            if ($createdBase) {
+                @rmdir($uploadsBase);
             }
         }
     }
 
     public function testShowReturnsEmptyUploadedFilesWhenNoneMatch(): void
     {
-        $ref = new ReflectionClass(DetailController::class);
-        $sourceDir = dirname($ref->getFileName());
-        $uploadDir = $sourceDir . '/../../uploads';
+        $anmeldung = $this->makeAnmeldung(999, ['field' => 'value']);
+        $this->mockRepository->method('findById')->willReturn($anmeldung);
+        $this->mockRepository->method('findTenantIdById')->willReturn(7);
 
-        // Ensure uploads dir exists but has no files for id=999
-        if (!is_dir($uploadDir)) {
-            mkdir($uploadDir, 0755, true);
-            $createdDir = true;
-        }
-
-        try {
-            $anmeldung = $this->makeAnmeldung(999, ['field' => 'value']);
-            $this->mockRepository->method('findById')->willReturn($anmeldung);
-
-            $result = $this->controller->show(999);
-
-            $this->assertSame([], $result['uploadedFiles']);
-        } finally {
-            if (!empty($createdDir)) {
-                @rmdir($uploadDir);
-            }
-        }
+        $this->assertSame([], $this->controller->show(999)['uploadedFiles']);
     }
 
     /**

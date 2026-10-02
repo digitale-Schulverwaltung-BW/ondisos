@@ -216,19 +216,28 @@ class DetailController
 
     /**
      * Find uploaded files for this Anmeldung
+     *
+     * Files live in uploads/tenant-<id>/ (the tenant that owns the Anmeldung, which is
+     * not necessarily the active context: platform admins can view "all tenants").
      */
     private function findUploadedFiles(Anmeldung $anmeldung): array
     {
-        $uploadDir = __DIR__ . '/../../uploads';
         $files = [];
 
+        // The Anmeldung was already loaded through the tenant-scoped findById(), so reading its tenant is safe.
+        $tenantId = $this->repository->findTenantIdById($anmeldung->id);
+        if ($tenantId === null) {
+            return $files;
+        }
+
+        $uploadDir = __DIR__ . '/../../uploads/tenant-' . $tenantId;
         if (!is_dir($uploadDir)) {
             return $files;
         }
 
         // Look for files matching this submission ID
         $pattern = $uploadDir . '/' . $anmeldung->id . '_*';
-        $foundFiles = glob($pattern);
+        $foundFiles = glob($pattern) ?: [];
 
         foreach ($foundFiles as $filePath) {
             $fileName = basename($filePath);
