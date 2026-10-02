@@ -45,7 +45,7 @@ class PdfTemplateRenderer
         $logoData = $this->loadLogoData($pdfConfig['logo'] ?? null);
 
         // Load CSS
-        $styles = $this->loadStyles();
+        $styles = $this->loadStyles(TenantAccentColor::normalize($pdfConfig['accent_color'] ?? null));
 
         // Prepare template variables
         $variables = [
@@ -266,9 +266,10 @@ class PdfTemplateRenderer
     /**
      * Load CSS styles for PDF
      *
+     * @param string|null $accent "#rrggbb" replaces the default accent colour of the stylesheet
      * @return string CSS content
      */
-    private function loadStyles(): string
+    private function loadStyles(?string $accent = null): string
     {
         $cssFile = $this->templatePath . '/styles.css';
 
@@ -277,7 +278,8 @@ class PdfTemplateRenderer
             return '';
         }
 
-        return file_get_contents($cssFile);
+        $css = (string)file_get_contents($cssFile);
+        return $accent !== null ? str_ireplace(TenantAccentColor::DEFAULT, $accent, $css) : $css;
     }
 
     /**

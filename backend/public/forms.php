@@ -13,6 +13,7 @@ require_once __DIR__ . '/../inc/form_copy.php';
 
 use App\Services\AuditLogger;
 use App\Services\MessageService as M;
+use App\Services\TenantAccentColor;
 use App\Services\TenantLogoService;
 
 $createErrors = [];
@@ -76,6 +77,32 @@ if (!$editorNoTenant && $_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST
     exit;
 }
 
+// Accent colour of the school's PDFs: save or reset to the default (tenant admins and platform admins alike).
+$tenantAccent = new TenantAccentColor();
+if (!$editorNoTenant && $_SERVER['REQUEST_METHOD'] === 'POST' && in_array($_POST['action'] ?? '', ['accent_save', 'accent_reset'], true)) {
+    try {
+        csrf_validate();
+        $accentTenant = \App\Config\TenantContext::getTenantId();
+        if ($_POST['action'] === 'accent_save') {
+            $problem = $tenantAccent->save($accentTenant, (string)($_POST['accent_color'] ?? ''));
+            if ($problem === null) {
+                AuditLogger::formEvent('tenant_accent_saved', '', ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+                editor_flash('success', M::get('forms.accent.saved', 'Die Farbe wurde gespeichert. Sie gilt ab sofort in den PDF-Bestätigungen.'));
+            } else {
+                editor_flash('danger', $problem);
+            }
+        } else {
+            $tenantAccent->delete($accentTenant);
+            AuditLogger::formEvent('tenant_accent_reset', '', ['user' => (string)($_SESSION['admin_username'] ?? '')]);
+            editor_flash('success', M::get('forms.accent.reset_done', 'Die Farbe wurde zurückgesetzt.'));
+        }
+    } catch (\InvalidArgumentException $e) {
+        editor_flash('danger', M::get('forms.csrf_failed', 'Die Sitzung ist abgelaufen. Bitte die Seite neu laden und erneut versuchen.'));
+    }
+    header('Location: forms.php#farbe');
+    exit;
+}
+
 $forms = $editorNoTenant ? [] : $editor->listForms();
 $copySources = [];
 if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFORM) {
@@ -84,6 +111,8 @@ if (!$editorNoTenant && $editorRole === \App\Forms\FormConfigSchema::ROLE_PLATFO
 }
 [$copyReport, $copyFlash] = form_copy_take();
 $logoInfo = $editorNoTenant ? null : $tenantLogos->info(\App\Config\TenantContext::getTenantId());
+$accentSaved = $editorNoTenant ? null : $tenantAccent->get(\App\Config\TenantContext::getTenantId());
+$accentShown = $accentSaved ?? TenantAccentColor::DEFAULT;
 
 require __DIR__ . '/../inc/header.php';
 ?>
@@ -175,6 +204,49 @@ require __DIR__ . '/../inc/header.php';
             </div>
         </div>
     </div>
+
+    <div class="card mt-4" id="farbe">
+        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.accent.title', 'Farbe der PDF-Bestätigungen')) ?></h5></div>
+        <div class="card-body">
+            <p class="text-muted"><?= ff_e(M::get('forms.accent.help', 'Die Farbe der Balken am linken Rand von Einleitung und Abschnitten in den PDF-Bestätigungen aller Formulare dieser Schule. Auswahl per Farbfeld oder als Hex-Wert (#RRGGBB).')) ?></p>
+            <form method="post" action="forms.php" class="d-flex flex-wrap gap-2 align-items-center" id="accent-form">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="accent_save">
+                <input type="color" class="form-control form-control-color" id="accent-picker" value="<?= ff_e($accentShown) ?>"
+                       title="<?= ff_e(M::get('forms.accent.pick', 'Farbe wählen')) ?>" aria-label="<?= ff_e(M::get('forms.accent.pick', 'Farbe wählen')) ?>">
+                <input type="text" class="form-control font-monospace" style="max-width: 9rem;" id="accent-hex" name="accent_color" value="<?= ff_e($accentShown) ?>"
+                       maxlength="7" pattern="#?[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?" placeholder="#3498db" spellcheck="false" autocomplete="off"
+                       aria-label="<?= ff_e(M::get('forms.accent.hex', 'Hex-Wert')) ?>">
+                <span class="border rounded p-2 bg-light small" style="border-left: 4px solid <?= ff_e($accentShown) ?> !important;" id="accent-sample">
+                    <?= ff_e(M::get('forms.accent.sample', 'So sieht der Balken aus')) ?>
+                </span>
+                <button type="submit" class="btn btn-primary"><?= ff_e(M::get('forms.accent.save', 'Farbe speichern')) ?></button>
+            </form>
+            <?php if ($accentSaved !== null): ?>
+                <form method="post" action="forms.php" class="mt-2">
+                    <?php csrf_field(); ?>
+                    <input type="hidden" name="action" value="accent_reset">
+                    <button type="submit" class="btn btn-sm btn-outline-secondary"><?= ff_e(M::get('forms.accent.reset', 'Auf Standardfarbe zurücksetzen')) ?></button>
+                </form>
+            <?php endif; ?>
+        </div>
+    </div>
+    <script>
+    (function () {
+        var picker = document.getElementById('accent-picker'), hex = document.getElementById('accent-hex'), sample = document.getElementById('accent-sample');
+        if (!picker || !hex) { return; }
+        function normalize(v) {
+            v = v.trim().replace(/^#/, '');
+            if (/^[0-9a-fA-F]{3}$/.test(v)) { v = v[0] + v[0] + v[1] + v[1] + v[2] + v[2]; }
+            return /^[0-9a-fA-F]{6}$/.test(v) ? '#' + v.toLowerCase() : null;
+        }
+        picker.addEventListener('input', function () { hex.value = picker.value; sample.style.setProperty('border-left-color', picker.value, 'important'); });
+        hex.addEventListener('input', function () {
+            var c = normalize(hex.value);
+            if (c) { picker.value = c; sample.style.setProperty('border-left-color', c, 'important'); }
+        });
+    })();
+    </script>
 
     <?php if ($copySources !== []): ?>
     <div class="card mt-4">
