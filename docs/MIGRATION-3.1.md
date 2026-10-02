@@ -36,7 +36,7 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
    wiederholbar (`unchanged`). Themes erkennt das Skript an der Formular-Konfiguration, am Namen `survey_theme.json` oder am Inhalt.
    Ein neuer Tenant: erst `seed-forms.php --tenant=<slug>`, dann `import-surveys.php --tenant=<slug>`.
 
-   Sobald eine Survey in der Datenbank liegt, hat sie Vorrang vor der Datei; die Dateien bleiben als Fallback (bis 3.2).
+   Sobald eine Survey in der Datenbank liegt, hat sie Vorrang vor der Datei; die Dateien bleiben als Fallback (Abschaffung ohne Termin).
 
 4. `seed-forms.php` kennt jetzt `--tenant=<slug>` (bisher nur Tenant 1) und prüft jeden Eintrag: ungültige Einträge
    (fehlendes `form`/`theme`, kaputte E-Mail-Adresse, unzulässiger Formular-Schlüssel, …) werden gemeldet und nicht gespeichert,

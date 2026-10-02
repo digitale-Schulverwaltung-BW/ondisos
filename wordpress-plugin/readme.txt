@@ -50,7 +50,11 @@ Unter Einstellungen → Ondisos können Sie:
 
 == Installation ==
 
-**Wichtig:** Das Plugin benötigt neben sich den Frontend-Code des Ondisos-Repositories und ein Ondisos-Backend ab Version 3.0.
+**Wichtig:** Das Plugin benötigt ein Ondisos-Backend ab Version 3.0.
+
+**Ohne Shell (empfohlen):** Die Release-ZIP `ondisos-<version>.zip` enthält Plugin und Frontend-Code. Unter Plugins → Installieren → Plugin hochladen auswählen, installieren, aktivieren, danach die Zugangsdaten unter Einstellungen → Ondisos eintragen.
+
+**Mit Shell (Git-Clone):** Das Plugin braucht dann den Frontend-Code des Ondisos-Repositories neben sich.
 
 1. Repository klonen: `git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git /opt/ondisos`
 2. Symlink im WordPress Plugins-Verzeichnis anlegen:

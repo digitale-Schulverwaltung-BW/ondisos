@@ -7,7 +7,7 @@ running with the same footprint as before (single-tenant mode, no extra administ
 > [../MULTI-TENANT.md](../docs/MULTI-TENANT.md); for upgrading from 2.x see [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md).
 
 Two deployment settings are possible. **Scenario A (implemented in 3.0):** several frontend servers — one per school — feed a single
-multi-tenant backend. **Scenario B (planned, 3.2):** a managed multi-tenant frontend for several schools, e.g. in one municipality.
+multi-tenant backend. **Scenario B (dropped, kept as an option):** a managed multi-tenant frontend for several schools, e.g. in one municipality.
 
 ## Architectural decisions
 
@@ -59,7 +59,7 @@ CREATE TABLE form_configs (
 
 3.0 targets Scenario A. Each frontend belongs to exactly one tenant: it knows the tenant **slug** and the tenant **secret**
 (`TENANT_SLUG`, `TENANT_API_SECRET`), sends the slug with every API call and signs requests with the secret. No tenant switching is
-needed in the frontend. Scenario B is deferred to 3.2 (see below).
+needed in the frontend. Scenario B is not planned (see below).
 
 ### API security: per-tenant HMAC
 
@@ -161,11 +161,12 @@ Done in 3.1, see [../docs/plans/PLAN-3.1.md](../docs/plans/PLAN-3.1.md) and [../
   the frontend **pulls** them together with the config (ETag, file cache, stale-if-error; files in `frontend/surveys/` remain a fallback)
 - new tenants start with the forms of another tenant (`FormCopyService`; recipients and logo are never copied)
 
-### 3.2 — Managed multi-tenant frontend (Scenario B) and end of the file fallback
+### Managed multi-tenant frontend (Scenario B) — dropped, kept as an option
 
-One frontend instance serves several tenants. Requires tenant selection/routing in the UI and a shared secret between that frontend and the backend
-(per-tenant secrets offer no additional protection when the frontend is shared). The file fallback for surveys (`frontend/surveys/`) is dropped; the files
-remain an import source only. (Formerly planned as 3.0.5.)
+Decision (2026-10): not pursued. The standalone frontend and the self-contained WordPress plugin ZIP let schools run their own frontend, so a managed one is only worth it if schools should operate nothing at all. Kept here for the case it comes back. One frontend instance serves several tenants. Requires tenant selection/routing in the UI and a shared secret between that frontend and the backend
+(per-tenant secrets offer no additional protection when the frontend is shared). (Formerly planned as 3.0.5, then 3.2.)
+
+Separately, the file fallback for surveys (`frontend/surveys/`) is to be dropped at some point; the files then remain an import source only (no date).
 
 ## Impact summary (what changed in the code base)
 

@@ -748,7 +748,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand: 924 Unit-Tests (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 182 Integration-Tests (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand 2026-10-02: 951 Unit-Tests (Zählung von PHPUnit; bei 3.1.0 waren es 924) (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 182 Integration-Tests bei 3.1.0, seitdem nicht neu gezählt (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 #### Tests lokal ausführen
 
@@ -960,7 +960,7 @@ http://intranet.example.com/backend/dashboard.php
 ### Known Issues
 - ⚠️ Email-Service nutzt PHP `mail()` → ggf. auf SMTP umstellen
 - ⚠️ `seed-forms.php` überschreibt vorhandene Einträge nie (Tenant per `--tenant=<slug>`); Änderungen bestehender Formulare laufen über den Editor im Backend
-- ⚠️ Surveys liegen entweder im Backend (`form_resources`) oder als Datei im Frontend (Fallback bis 3.2); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien
+- ⚠️ Surveys liegen entweder im Backend (`form_resources`) oder als Datei im Frontend (Fallback; Abschaffung ohne Termin); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien
 - ⚠️ Die Vorschau im Backend trägt eigene Kopien der SurveyJS-Dateien (`backend/public/assets/preview/`); nach SurveyJS-Updates `backend/tools/sync-preview-assets.sh` ausführen
 - ⚠️ Der Docker-Apache sendet `X-Frame-Options: SAMEORIGIN` (statt `DENY`), damit der Vorschau-Frame einbettbar ist
 - ⚠️ `database/schema.sql` legt Tenant 1 mit dem Platzhalter-Secret an — erst `migrate.php` (oder ein manuell gesetztes Secret) macht ihn nutzbar
@@ -972,11 +972,11 @@ http://intranet.example.com/backend/dashboard.php
 3. **Monitoring** Setup (z.B. Sentry, Prometheus)
 4. **API Documentation** (OpenAPI/Swagger)
 5. ~~Form-Config Admin-UI und Survey-Pflege im Backend~~ (3.1 ✅, Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md))
-6. **Managed Multi-Frontend** (ein Frontend für mehrere Tenants, 3.2)
-7. **WordPress-Plugin ohne Shell** (ZIP, Verbindungscode, Update-Prüfung; Entwurf: [PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md))
-8. **Datei-Fallback abschaffen** (`frontend/surveys/` nur noch als Importquelle, 3.2)
-9. **Logo-Upload** für PDFs statt Dateipfad (bisher nur Plattform-Admin)
-10. **Deutsche Locale** für SurveyJS
+6. **WordPress-Plugin ohne Shell**, Rest: Verbindungscode und Update-Prüfung (ZIP-Build ist umgesetzt; Entwurf: [PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md))
+7. **Datei-Fallback abschaffen** (`frontend/surveys/` nur noch als Importquelle, ohne Termin)
+8. **SMTP-Versand** statt PHP `mail()`
+9. **Deutsche Locale** für SurveyJS
+10. *Option, nicht geplant:* **Managed Multi-Frontend** (ein Frontend für mehrere Tenants; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen)
 
 ---
 

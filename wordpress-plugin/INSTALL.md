@@ -118,7 +118,9 @@ WordPress-Admin → *Plugins* → **„ondisos - Onboarding Digital Souverän + 
 
 ## Konfiguration
 
-*Einstellungen → Ondisos*:
+*Einstellungen → Ondisos*. Oben steht der Verbindungsstatus (Backend erreichbar, Tenant akzeptiert, Secret passt, Zahl der Formulare):
+
+![Einstellungsseite des Plugins mit Verbindungsstatus](../docs/img/wordpress-einstellungen.png)
 
 | Feld | Bedeutung |
 |---|---|

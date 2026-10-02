@@ -1,6 +1,6 @@
 # PLAN 3.1.1 – WordPress-Plugin ohne Shell: ZIP, Verbindungscode, Update-Prüfung
 
-**Status:** Entwurf, nicht dringend. Ergebnis einer Beratung, noch nicht umgesetzt. Für ein eigenes Release **3.1.1** vorgesehen (bewusst nicht in 3.1; siehe [PLAN-3.1.md](PLAN-3.1.md)).
+**Status:** AP1 (ZIP) umgesetzt, AP2 (Verbindungscode) und AP3 (Update-Prüfung) offen. Für ein eigenes Release **3.1.1** vorgesehen (bewusst nicht in 3.1; siehe [PLAN-3.1.md](PLAN-3.1.md)).
 
 **Stand der Voraussetzungen (nach 3.1):** Die Pfad-Whitelist für externe Hostings ist in [../DEPLOYMENT.md](../DEPLOYMENT.md) beschrieben. Der signierte Endpunkt
 `GET /api/forms.php` und die Statuszeilen im Plugin („Secret passt zum Tenant", Formularzahl) existieren bereits und sind die Grundlage für „Verbindung testen" (AP2).
@@ -43,7 +43,7 @@ PDF-Download erreichen, nicht aber den Admin-Bereich.
   Eine ZIP nur aus `wordpress-plugin/` liefe ohne Shell nicht (siehe Ausgangslage). Dafür braucht es ein **drittes Layout C (selbsttragend)**: Der Build legt
   `frontend/src/`, `frontend/public/assets/` (SurveyJS, Schriften), `frontend/public/js/` und `frontend/config/messages.php` *in* das Plugin-Verzeichnis;
   `ONDISOS_FRONTEND_DIR` und die Asset-URL (`frontend-assets`, heute ein Symlink) zeigen dann dorthin. Nicht gebraucht werden `frontend/surveys/`
-  (kommen aus dem Backend; der Datei-Fallback entfällt ohnehin in 3.2), `frontend/public/index.php` und die Standalone-Skripte.
+  (kommen aus dem Backend; der Datei-Fallback entfällt ohnehin später), `frontend/public/index.php` und die Standalone-Skripte.
 - Das Cache-Verzeichnis des Plugins liegt in `wp-content/uploads` (3.1) und ist von diesem Layout unabhängig.
 - Ohne Entwicklungsdateien (Tests, `.git*`, Doku außer `INSTALL.md`); Ordnername im ZIP = Plugin-Slug,
   damit WordPress beim Update dasselbe Verzeichnis überschreibt.

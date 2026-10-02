@@ -95,6 +95,8 @@ Der Platform-Admin sieht alle Tenants und kann zwischen ihnen wechseln.
 
 ### Über die Backend-Oberfläche
 
+![Tenant-Verwaltung mit Liste der Schulen und Formular zum Anlegen](img/backend-tenants.png)
+
 1. `http://backend.example.com/tenants.php` öffnen.
 2. **„Neuen Tenant erstellen"**:
    - **Name**, z. B. `Berufliches Schulzentrum Karlsruhe`
@@ -263,4 +265,8 @@ Der aktive Kontext wird in der Session gespeichert und in der Navigation angezei
 | Form-Config-Admin-UI (HTML-Formular im Backend) | 3.1 | ✅ implementiert |
 | Surveys im Backend pflegen (Einfügen, Vorschau, Verlauf), Frontend zieht sie per API | 3.1 | ✅ implementiert |
 | Neue Tenants: Formulare von einem anderen Tenant übernehmen | 3.1 | ✅ implementiert |
-| Managed Multi-Frontend (ein Frontend, mehrere Tenants); Datei-Fallback für Surveys abschaffen | 3.2 | geplant |
+| WordPress-Plugin als ZIP (ohne Shell installierbar) | 3.1 | ✅ implementiert |
+| Schul-Branding der PDFs (Logo-Upload, Akzentfarbe, Anhang pro Formular) | 3.1 | ✅ implementiert |
+| Verbindungscode und Update-Prüfung für das Plugin | 3.1.x | geplant ([PLAN-3.1.1.md](plans/PLAN-3.1.1.md)) |
+| Datei-Fallback für Surveys abschaffen | offen | ohne Termin |
+| Managed Multi-Frontend (ein Frontend, mehrere Tenants) | – | gestrichen, bleibt als Option |

@@ -510,9 +510,25 @@ location /                { allow 10.0.0.0/8; deny all; proxy_pass http://backen
 - Die Antworten von `form-config.php` sind ohne Signatur per Tenant-Slug lesbar (Konfiguration, veröffentlichte Surveys): keine Geheimnisse hineinschreiben.
 - Das Ganze muss stehen, **bevor** der erste externe Tenant angebunden wird.
 
-### PDF Logo konfigurieren
+### PDF Logo und Akzentfarbe konfigurieren
 
-Das Backend generiert PDF-Bestätigungen mit einem Schullogo. Die Logo-Datei liegt auf dem **Backend-Server** (nicht im Frontend), da nur das Backend PDFs erzeugt.
+Das Backend generiert PDF-Bestätigungen mit einem Schullogo und einer Akzentfarbe. Beides liegt auf dem **Backend-Server** (nicht im Frontend), da nur das Backend PDFs erzeugt.
+
+#### Empfohlen: Upload im Backend (pro Schule)
+
+Tenant-Admins laden das Logo selbst hoch und stellen die Akzentfarbe ein: *Formulare* (`forms.php`) → Abschnitt Schul-Branding.
+
+- Logo: nur PNG oder JPEG, höchstens 2 MB; es wird per GD neu kodiert und unter `uploads/tenant-<id>/branding/logo.png|jpg` gespeichert.
+- Akzentfarbe: Farbfeld oder Hex-Eingabe (`#rrggbb`, Standard `#3498db`), gespeichert unter `uploads/tenant-<id>/branding/accent.txt`. Sie färbt den Balken links an Einleitung und Abschnitten.
+- Je Formular lässt sich im PDF-Tab des Formular-Editors zusätzlich ein PDF anhängen (höchstens 5 MB / 20 Seiten); es wird hinter jede Bestätigung gesetzt.
+
+![Formulare: Logo der Schule und Farbe der PDF-Bestätigungen](img/backend-formulare.png)
+
+![PDF-Bestätigung mit Schul-Logo](img/pdf-bestaetigung.png)
+
+Reihenfolge der Logo-Quellen: `logo: false` in der Formular-Konfiguration (kein Logo) → Pfad in der Formular-Konfiguration (nur Plattform-Admin) → Schul-Logo (Upload) → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`.
+
+Die folgenden Varianten (Datei und `.env`) sind der Fallback für Installationen ohne Upload, z. B. ein Logo für alle Schulen.
 
 #### Ablage
 

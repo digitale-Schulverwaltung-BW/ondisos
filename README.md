@@ -38,7 +38,7 @@ Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-B
 - **CSRF-Protection** für sichere Übermittlung
 - **PDF-Bestätigung** nach Anmeldung (optional)
 - **File-Upload** Support (mit Virenscan)
-- **WordPress-Plugin** — Formulare per Shortcode `[ondisos form="…"]` in bestehende Seiten einbetten ([Anleitung](wordpress-plugin/INSTALL.md))
+- **WordPress-Plugin** — Formulare per Shortcode `[ondisos form="…"]` in bestehende Seiten einbetten; als fertige ZIP ohne Shell installierbar ([Anleitung](wordpress-plugin/INSTALL.md))
 - **DSGVO-konformer Betrieb** möglich (lokale Fonts, keine Google-CDN, saubere Trennung des Backends auf einen Server, der nicht über das Internet erreichbar ist)
 
 ### 👩‍💼 Backend (Admin-Bereich)
@@ -52,6 +52,8 @@ Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-B
 - **Optionale Authentifizierung** (session-basiert)
 - **Multi-Tenant** — mehrere Schulen auf einer Backend-Instanz, mit Platform-Admin, Tenant-Admins und vollständiger Datenisolierung ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
 - **Auto-Expunge** (automatisches Löschen archivierter Einträge)
+- **Formulare im Backend pflegen** — Konfiguration als HTML-Formular, Survey-Editor mit Prüfung, Entwurf, Vorschau, Verlauf und Wiederherstellen; neue Schulen übernehmen die Formulare einer anderen Schule ([SURVEYJS.md](docs/SURVEYJS.md))
+- **Schul-Branding der PDF-Bestätigung** — Logo-Upload und Akzentfarbe pro Schule, PDF-Vorschau mit Beispielangaben, optional ein zusätzliches PDF (z. B. Merkblatt) als Anhang
 
 ### ⚙️ Technische Features
 - **Clean Architecture** (MVC + Service Layer)
@@ -69,24 +71,46 @@ Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-B
 
 ## 📸 Screenshots
 
+Alle Bilder zeigen fiktive Beispieldaten (Demo-Umgebung); sie liegen unter [docs/img/](docs/img/).
+
 ### Frontend - Anmeldeformular
-![SurveyJS-Formular](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/b32a146edec9929f742809cd87546c7c/Formular.png){width=900 height=563}
+![Anmeldeformular im Frontend](docs/img/frontend-formular.png)
 
 > Modernes, interaktives Formular mit Validierung und File-Upload
 
 ### Backend - Übersicht
-![Screenshot der Admin-Übersicht mit DataTables](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/6834d5b418cda1b8c5635958d6eaee58/Backend.png){width=900 height=422}
+![Übersicht der Anmeldungen](docs/img/backend-uebersicht.png)
+
 > Übersichtliche Verwaltung aller Anmeldungen mit Filterung und Status
 
+### Backend - Detailansicht
+![Detailansicht einer Anmeldung](docs/img/backend-detail.png)
+
+> Alle Angaben einer Anmeldung, PDF-Bestätigung, Excel-Export und Statuswechsel
+
 ### Backend - Dashboard
-![Screenshot des Dashboards mit Statistiken](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/c5689efe4273b33d30ccd1cd9ec70d09/Dashboard.png){width=861 height=600}
+![Dashboard mit Statistiken](docs/img/backend-dashboard.png)
 
 > Statistiken und Übersicht über alle Anmeldungen
 
-### PDF-Bestätigung
-![Screenshot einer generierten PDF-Bestätigung](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/wikis/uploads/510cb1e6bff83f66fdc9b72acbff8e28/PDF.png){width=490 height=600}
+### Backend - Formulare pflegen
+![Liste der Formulare mit Logo und Farbe der Schule](docs/img/backend-formulare.png)
 
-> Automatisch generierte PDF-Bestätigung mit Schul-Logo
+> Formulare, Schul-Logo und Farbe der PDF-Bestätigungen pro Schule
+
+![Survey-Editor](docs/img/backend-survey-editor.png)
+
+> Survey-Editor: JSON aus dem SurveyJS-Creator einfügen, prüfen, als Entwurf speichern, in der Vorschau ansehen und veröffentlichen ([Anleitung](docs/SURVEYJS.md))
+
+### Backend - Mehrere Schulen
+![Tenant-Verwaltung](docs/img/backend-tenants.png)
+
+> Platform-Admins legen Schulen an und können dabei Formulare einer anderen Schule übernehmen ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
+
+### PDF-Bestätigung
+![Generierte PDF-Bestätigung](docs/img/pdf-bestaetigung.png)
+
+> Automatisch generierte PDF-Bestätigung mit Schul-Logo; im Formular-Editor lässt sich vorab eine Vorschau erzeugen
 
 ---
 
@@ -538,7 +562,7 @@ Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondi
 ## 📞 Support & Kontakt
 
 **Entwicklung:** Open Source Community
-**Issue Tracker:** GitHub/Codeberg Issues
+**Issue Tracker:** GitHub Issues
 **Dokumentation:** [CLAUDE.md](CLAUDE.md)
 
 ---
@@ -560,17 +584,21 @@ Siehe **[MULTI-TENANT.md](docs/MULTI-TENANT.md)** und **[MIGRATION-3.0.md](docs/
 - [ ] Logging verbessern (strukturiertes Logging)
 - [ ] Monitoring Setup (z.B. Sentry, Prometheus)
 - [ ] API Documentation (OpenAPI/Swagger)
-- [ ] SMTP-Support für Email-Service
 
 ### Umgesetzt in 3.1
-- [x] Formulare im Backend pflegen: Konfiguration als HTML-Formular, Survey-Editor (Creator-JSON einfügen, prüfen, Entwurf, Vorschau, veröffentlichen, Verlauf)
+- [x] Formulare im Backend pflegen: Konfiguration als HTML-Formular (in Tabs), Survey-Editor (Creator-JSON einfügen, prüfen, Entwurf, Vorschau, veröffentlichen, Verlauf)
 - [x] Neue Schulen: Formulare von einem anderen Tenant übernehmen (Empfänger und Logo bleiben leer)
 - [x] Frontend holt Surveys vom Backend (ETag, Cache, Ausfallschutz); Backend ohne externe CDN-Abhängigkeit
+- [x] Schul-Branding für PDF-Bestätigungen: Logo-Upload und Akzentfarbe pro Schule, PDF-Vorschau mit Beispielangaben, zusätzliches PDF als Anhang pro Formular
+- [x] WordPress-Plugin als fertige ZIP (ohne Shell installierbar, ohne Zugangsdaten; Tag `vX.Y.Z` baut Release in GitLab)
 
 ### Geplant
-- [ ] **3.2:** Managed Multi-Frontend (Szenario B: ein Frontend, mehrere Tenants), Datei-Fallback für Surveys abschaffen
-- [ ] **3.1.1:** WordPress-Plugin ohne Shell (ZIP, Verbindungscode, Update-Prüfung) — Entwurf: [docs/plans/PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md)
-- [ ] Logo-Upload für PDFs
+- [ ] **3.1.1 / 3.1.2:** WordPress-Plugin ohne Shell, Rest: Verbindungscode und Update-Prüfung (AP2/AP3) — Entwurf: [docs/plans/PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md)
+- [ ] Datei-Fallback für Surveys (`frontend/surveys/`) abschaffen; die Dateien bleiben nur Importquelle (ohne festen Termin)
+- [ ] SMTP-Support für den E-Mail-Versand (statt PHP `mail()`)
+
+### Option (nicht geplant)
+- **Managed Multi-Frontend** (ein zentral gehostetes Frontend für mehrere Tenants, früher „3.2"): gestrichen. Mit Standalone-Frontend und WordPress-Plugin (ZIP) betreiben Schulen ihr Frontend selbst. Wird nur wieder aufgenommen, wenn Schulen gar nichts betreiben sollen.
 
 ### Ideen
 - [ ] Workflow-System (z.B. Freigabe-Prozess)

@@ -39,7 +39,7 @@ Die Projekt-Übersicht steht in [../README.md](../README.md), Architektur, Daten
 | Dokument | Inhalt |
 |---|---|
 | [plans/PLAN-3.1.md](plans/PLAN-3.1.md) | Plan und Umsetzungsstand von 3.1 |
-| [plans/PLAN-3.1.1.md](plans/PLAN-3.1.1.md) | Entwurf: WordPress-Plugin ohne Shell |
+| [plans/PLAN-3.1.1.md](plans/PLAN-3.1.1.md) | WordPress-Plugin ohne Shell (ZIP umgesetzt; Verbindungscode, Update-Prüfung offen) |
 | [TODO.md](TODO.md) | Testabdeckung, Abnahmelisten (3.0.0, 3.1.0), offene Punkte |
 
 ## Bei den Komponenten

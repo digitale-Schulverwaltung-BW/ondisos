@@ -101,9 +101,15 @@ The entry looks like this (shown as PHP; it is stored as JSON):
 ],
 ```
 
-### 4. Optional: Add Logo
+### 4. Optional: Add Logo and accent colour
 
-Place your logo in `backend/templates/pdf/`:
+![PDF tab of the form editor](../docs/img/backend-formular-pdf.png)
+
+Recommended: tenant admins upload the school logo (PNG/JPEG, max 2 MB) and pick the accent colour under *Formulare* in the backend; both are stored per school
+(`uploads/tenant-<id>/branding/`). The *PDF* tab of the form editor can also attach an extra PDF (max 5 MB / 20 Seiten) behind every confirmation and offers a
+preview with sample data. Logo order: `logo: false` → path in the form config → school logo → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`.
+
+File-based alternative: place your logo in `backend/templates/pdf/`:
 
 ```bash
 cp your-logo.png backend/templates/pdf/logo.png

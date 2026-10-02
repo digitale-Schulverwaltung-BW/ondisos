@@ -59,8 +59,8 @@ Ohne diese Schritte laufen alle Formulare wie unter 3.0 weiter; ein 3.1-Frontend
 
 ## Bekannte Grenzen
 
-- Surveys liegen im Backend **oder** als Datei im Frontend (Fallback bis 3.2); wer beides pflegt, sieht die Datenbank-Fassung.
+- Surveys liegen im Backend **oder** als Datei im Frontend (Fallback; Abschaffung ohne Termin); wer beides pflegt, sieht die Datenbank-Fassung.
 - Das Theme fehlt in der Vorschau, solange es nur als Datei im Frontend liegt.
 - `choicesByUrl` in einer Survey lässt den Browser der Besucher einen fremden Server kontaktieren (Warnung im Editor, kein Verbot).
 - Die Vorschau trägt eigene Kopien der SurveyJS-Dateien (`backend/tools/sync-preview-assets.sh` nach SurveyJS-Updates).
-- Ausblick: 3.2 Managed Multi-Frontend; 3.1.1 WordPress-Plugin ohne Shell ([plans/PLAN-3.1.1.md](plans/PLAN-3.1.1.md)).
+- Ausblick: 3.1.1 WordPress-Plugin ohne Shell (ZIP ist fertig; Verbindungscode und Update-Prüfung offen) ([plans/PLAN-3.1.1.md](plans/PLAN-3.1.1.md)).
