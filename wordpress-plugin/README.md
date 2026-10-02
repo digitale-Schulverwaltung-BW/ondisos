@@ -51,6 +51,7 @@ wordpress-plugin/
 ├── readme.txt                   # WordPress-Format
 ├── INSTALL.md · README.md
 ├── SYMLINK-SETUP.sh             # Hilfsskript für die Symlink-Installation
+├── build-zip.sh                 # baut die Release-ZIP (Layout C: Plugin + Frontend-Teile), `make plugin-zip`
 ├── frontend-assets -> ../frontend/public   # Symlink auf die Frontend-Assets (Layout A)
 ├── includes/
 │   ├── class-plugin.php         # Orchestrierung, lädt .env und WordPress-Optionen in die Umgebung

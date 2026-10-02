@@ -470,6 +470,10 @@ class Settings
                     <td><code><?php echo esc_html(ONDISOS_FRONTEND_DIR); ?></code></td>
                 </tr>
                 <tr>
+                    <th>Layout</th>
+                    <td><code><?php echo esc_html(ONDISOS_LAYOUT); ?></code></td>
+                </tr>
+                <tr>
                     <th>Frontend Directory Exists</th>
                     <td><?php echo is_dir(ONDISOS_FRONTEND_DIR) ? '✅ Ja' : '❌ Nein'; ?></td>
                 </tr>

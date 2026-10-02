@@ -33,20 +33,33 @@ Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet la
   (die Anfragen kommen serverseitig von WordPress, nicht aus dem Browser)
 - Im Backend: ein Tenant (für eine Schule genügt Tenant 1, Slug `default`) mit **API-Secret** und
   eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [../DEPLOYMENT.md](../docs/DEPLOYMENT.md)
-- Der Webserver muss Symlinks folgen, falls Variante A (Symlinks) benutzt wird
+- Der Webserver muss Symlinks folgen, falls Variante A (Symlinks) benutzt wird (Variante C braucht das nicht)
 
 ## Installation
 
-Das Plugin erwartet den Frontend-Code (SurveyJS-Bibliotheken, Survey-Definitionen, PHP-Klassen) **neben**
-sich. Zwei Layouts werden unterstützt:
+### Variante C — fertige ZIP (ohne Shell, empfohlen für Schulen)
+
+Die Release-ZIP `ondisos-<version>.zip` enthält das Plugin **und** den benötigten Frontend-Code (PHP-Klassen, SurveyJS, Schriften). Es ist nichts weiter zu kopieren:
+
+1. WordPress-Admin → *Plugins → Installieren → Plugin hochladen* → ZIP wählen → *Installieren* → *Aktivieren*.
+2. *Einstellungen → Ondisos*: Backend-URL, Tenant-Slug und Secret eintragen (siehe unten).
+
+Die Prüfsumme steht in `ondisos-<version>.zip.sha256` (`shasum -a 256 -c ondisos-<version>.zip.sha256`). Die ZIP ist für alle Schulen gleich und enthält keine Zugangsdaten.
+Erzeugen (im Repository): `make plugin-zip` bzw. `wordpress-plugin/build-zip.sh` → `dist/`. Es werden nur versionierte Dateien aufgenommen.
+
+Wer von Variante A oder B auf C wechselt: Plugin-Ordner (bzw. Symlink) `ondisos` und `ondisos-frontend` entfernen, dann die ZIP installieren. Die Einstellungen bleiben erhalten (sie liegen in der WordPress-Datenbank).
+Eine `.env` im Frontend-Verzeichnis gibt es in dieser Variante nicht; alles wird unter *Einstellungen → Ondisos* gesetzt.
+
+### Varianten A und B — Code aus dem Repository
+
+Hier erwartet das Plugin den Frontend-Code **neben** sich. Zwei Layouts werden unterstützt:
 
 | Layout | Verzeichnisse | Typischer Einsatz |
 |---|---|---|
 | **A — Git-Clone auf dem Server** | `…/ondisos/wordpress-plugin/` und `…/ondisos/frontend/` (ein Repository) | Server mit Git-Checkout; Updates per `git pull` |
 | **B — Docker / getrennte Verzeichnisse** | `wp-content/plugins/ondisos/` **und** `wp-content/plugins/ondisos-frontend/` | Docker-Volumes oder Symlinks |
 
-Der Code wählt automatisch: Existiert `plugins/ondisos-frontend/`, wird Layout B verwendet, sonst das
-Verzeichnis `frontend/` neben dem Plugin (Layout A).
+Der Code wählt automatisch (Konstante `ONDISOS_LAYOUT`, sichtbar unter *Einstellungen → Ondisos → Systeminfo*): Gibt es `ondisos/frontend/src/`, gilt Layout C; sonst, wenn `plugins/ondisos-frontend/` existiert, Layout B; sonst das Verzeichnis `frontend/` neben dem Plugin (Layout A).
 
 ### Variante A — Git-Clone mit Symlink
 

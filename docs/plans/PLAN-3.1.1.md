@@ -37,6 +37,8 @@ PDF-Download erreichen, nicht aber den Admin-Bereich.
 
 ### AP1 – Release-Build der Plugin-ZIP
 
+**Stand: umgesetzt** (`wordpress-plugin/build-zip.sh`, `make plugin-zip`, Layout-Erkennung `ONDISOS_LAYOUT` in `ondisos.php`; geprüft mit einer frischen WordPress-Instanz ohne Frontend-Verzeichnis). Die ZIP enthält nur versionierte Dateien, ist reproduzierbar (feste Zeitstempel) und trägt die SHA-256-Prüfsumme. Offen aus diesem AP: Release-Job in der CI.
+
 - Build-Schritt (Make-Target und/oder CI-Job) erzeugt `ondisos-<version>.zip` aus `wordpress-plugin/` **und den benötigten Teilen des Frontends**.
   Eine ZIP nur aus `wordpress-plugin/` liefe ohne Shell nicht (siehe Ausgangslage). Dafür braucht es ein **drittes Layout C (selbsttragend)**: Der Build legt
   `frontend/src/`, `frontend/public/assets/` (SurveyJS, Schriften), `frontend/public/js/` und `frontend/config/messages.php` *in* das Plugin-Verzeichnis;

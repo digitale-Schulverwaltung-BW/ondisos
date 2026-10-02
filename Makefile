@@ -1,4 +1,4 @@
-.PHONY: help build up down restart logs shell test test-unit test-coverage clean
+.PHONY: help build up down restart logs shell test test-unit test-coverage clean plugin-zip
 
 COMPOSE = docker compose
 
@@ -138,3 +138,6 @@ install: build up composer-install ## Complete installation
 	@echo "  1. Visit http://localhost:8080 (Backend Admin)"
 	@echo "  2. Visit http://localhost:8081/?form=bs (Frontend Form)"
 	@echo "  3. Run 'make test' to verify setup"
+
+plugin-zip: ## Build the WordPress plugin ZIP (dist/ondisos-<version>.zip + SHA-256)
+	./wordpress-plugin/build-zip.sh

@@ -37,15 +37,19 @@ class Assets
      */
     public function __construct()
     {
-        // Calculate frontend assets URL — two supported layouts:
-        //   1. WP-native / Docker: plugins/ondisos-frontend/ symlink exists
-        //   2. Git-clone on server: frontend-assets/ symlink inside plugin dir → ../frontend/public
-        if (file_exists(WP_PLUGIN_DIR . '/ondisos-frontend/')) {
-            $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
-            $this->frontend_js_url     = plugins_url('ondisos-frontend/public/js/');
-        } else {
-            $this->frontend_assets_url = ONDISOS_PLUGIN_URL . 'frontend-assets/assets/';
-            $this->frontend_js_url     = ONDISOS_PLUGIN_URL . 'frontend-assets/js/';
+        // Frontend assets URL by layout (see ONDISOS_LAYOUT in ondisos.php)
+        switch (ONDISOS_LAYOUT) {
+            case 'bundled': // release ZIP: frontend/ lives inside the plugin
+                $this->frontend_assets_url = ONDISOS_PLUGIN_URL . 'frontend/public/assets/';
+                $this->frontend_js_url     = ONDISOS_PLUGIN_URL . 'frontend/public/js/';
+                break;
+            case 'sibling': // plugins/ondisos-frontend/ (symlink or volume)
+                $this->frontend_assets_url = plugins_url('ondisos-frontend/public/assets/');
+                $this->frontend_js_url     = plugins_url('ondisos-frontend/public/js/');
+                break;
+            default: // git clone: frontend-assets/ symlink inside the plugin dir → ../frontend/public
+                $this->frontend_assets_url = ONDISOS_PLUGIN_URL . 'frontend-assets/assets/';
+                $this->frontend_js_url     = ONDISOS_PLUGIN_URL . 'frontend-assets/js/';
         }
 
         // Enqueue assets on frontend

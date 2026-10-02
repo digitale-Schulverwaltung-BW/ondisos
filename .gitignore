@@ -57,3 +57,6 @@ frontend/composer.lock
 
 # Local planning/notes (not for the repo)
 maintenance-mode.md
+
+# Release ZIPs (wordpress-plugin/build-zip.sh)
+/dist/

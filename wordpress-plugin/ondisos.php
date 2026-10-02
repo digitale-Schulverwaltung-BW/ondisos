@@ -29,15 +29,21 @@ define('ONDISOS_PLUGIN_FILE', __FILE__);
 define('ONDISOS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('ONDISOS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Frontend directory: two supported layouts:
-//   1. WP-native / Docker:   plugins/ondisos/ + plugins/ondisos-frontend/  (symlink or volume)
-//   2. Git-clone on server:  ondisos/wordpress-plugin/ + ondisos/frontend/
+// Frontend code: three supported layouts (ONDISOS_LAYOUT):
+//   'bundled'  C: release ZIP, self-contained: plugins/ondisos/frontend/{src,config,public}   (no shell needed)
+//   'sibling'  B: WP-native / Docker: plugins/ondisos/ + plugins/ondisos-frontend/ (symlink or volume)
+//   'git'      A: Git-clone on server: ondisos/wordpress-plugin/ + ondisos/frontend/
 $_ondisos_parent = dirname(ONDISOS_PLUGIN_DIR);
-define('ONDISOS_FRONTEND_DIR',
-    file_exists($_ondisos_parent . '/ondisos-frontend/')
-        ? $_ondisos_parent . '/ondisos-frontend/'
-        : $_ondisos_parent . '/frontend/'
-);
+if (is_dir(ONDISOS_PLUGIN_DIR . 'frontend/src')) {
+    define('ONDISOS_LAYOUT', 'bundled');
+    define('ONDISOS_FRONTEND_DIR', ONDISOS_PLUGIN_DIR . 'frontend/');
+} elseif (file_exists($_ondisos_parent . '/ondisos-frontend/')) {
+    define('ONDISOS_LAYOUT', 'sibling');
+    define('ONDISOS_FRONTEND_DIR', $_ondisos_parent . '/ondisos-frontend/');
+} else {
+    define('ONDISOS_LAYOUT', 'git');
+    define('ONDISOS_FRONTEND_DIR', $_ondisos_parent . '/frontend/');
+}
 unset($_ondisos_parent);
 
 // Minimum PHP version
