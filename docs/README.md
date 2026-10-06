@@ -49,7 +49,10 @@ Das Backend installieren, Schulen einrichten, sichern und aktualisieren.
 | Dokument | Inhalt |
 |---|---|
 | [Betriebsmodell](betreiber/betriebsmodell.md) | Backend beim Schulträger, Frontend an der Schule: Aufgaben, Netzwerk, neue Schule anbinden |
-| [DEPLOYMENT.md](betreiber/DEPLOYMENT.md) | Installation (Docker, manuell), HTTPS, Admin-Zugang, Production-Checkliste |
+| [installation.md](betreiber/installation.md) | Backend mit Docker installieren: Konfiguration, Start, Admin-Zugang, Formulare, Virenscan, Fehlersuche |
+| [installation-ohne-docker.md](betreiber/installation-ohne-docker.md) | Backend auf Apache/PHP ohne Docker |
+| [betrieb.md](betreiber/betrieb.md) | Updates, Sicherung und Wiederherstellung, HTTPS, Upload-Limits, Überwachung, Checkliste |
+| [DEPLOYMENT.md](betreiber/DEPLOYMENT.md) | *(wird abgelöst)* Alte Gesamtanleitung: HTTPS, Upload-Limits, Updates, Backup, Checkliste |
 | [DOCKER.md](betreiber/DOCKER.md) | Docker-Umgebung im Detail |
 | [SERVER_SETUP.md](betreiber/SERVER_SETUP.md) | Server vorbereiten, Updates |
 | [MULTI-TENANT.md](betreiber/MULTI-TENANT.md) | Mehrere Schulen betreiben, neuen Tenant einrichten |
