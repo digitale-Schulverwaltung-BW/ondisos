@@ -53,4 +53,4 @@ Plugin-Version: entschieden und umgesetzt — das Plugin springt von `2.1.1` auf
 - **Code:** Vorheriges Release (`v3.0.0`) auschecken. Die neuen Tabellen stören 3.0 nicht (rein additiv); sie können stehen bleiben.
 - **Formulare:** Gelieferte Surveys kommen nur noch aus dem Backend, wenn dort eine liegt. Ein 3.0-Frontend ignoriert `survey_json` und nimmt seine Dateien.
 - **Einzelnes Formular:** Im Editor einen früheren Stand wiederherstellen (Verlauf), nicht per SQL.
-- **Backup:** Vor dem Upgrade einen Datenbank-Dump ziehen ([DISASTER_RECOVERY.md](../../betreiber/DISASTER_RECOVERY.md)); er enthält die neuen Tabellen mit.
+- **Backup:** Vor dem Upgrade einen Datenbank-Dump ziehen ([DISASTER_RECOVERY.md](../../betreiber/notfall.md)); er enthält die neuen Tabellen mit.

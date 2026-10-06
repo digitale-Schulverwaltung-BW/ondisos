@@ -1,7 +1,7 @@
 # Migration auf Version 3.0
 
 Diese Anleitung beschreibt das Upgrade einer bestehenden 2.x-Installation auf 3.0.
-Neuinstallationen brauchen sie nicht — dafür genügt [DEPLOYMENT.md](DEPLOYMENT.md).
+Neuinstallationen brauchen sie nicht — dafür genügt [installation.md](installation.md).
 
 **Was sich mit 3.0 ändert — in einem Satz:** Backend und Frontend sprechen jetzt
 mandantenfähig (Multi-Tenant) miteinander: Jede Schule ist ein *Tenant*, Anfragen des
@@ -80,7 +80,7 @@ docker run --rm -v backend_backend-uploads:/data -v "$(pwd)":/backup \
 
 Manuelle Installation: `mysqldump` wie gewohnt und `tar czf uploads-vor-3.0.tar.gz backend/uploads`.
 
-Weitere Hinweise zu Backups: [DEPLOYMENT.md § Backup](DEPLOYMENT.md) und [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md).
+Weitere Hinweise zu Backups: [betrieb.md § Sicherung](betrieb.md#sicherung-und-wiederherstellung) und [notfall.md](notfall.md).
 
 ### 2.2 Voraussetzungen prüfen
 
@@ -399,7 +399,7 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | `index.php?form=…` zeigt 404 „Formular nicht gefunden" | Backend erreichbar, Formular für den Tenant nicht vorhanden | `form_configs` seeden, Formular-Key prüfen |
 | WordPress: `The form is currently unavailable` / als Administrator `Error (shown to administrators only): …` | Backend nicht erreichbar oder Tenant abgelehnt; in Docker meist `localhost` als Backend-URL | Als Administrator die Seite ansehen (die Meldung nennt die Ursache), *Einstellungen → Ondisos* (Verbindungsstatus); in Docker `host.docker.internal` bzw. Dienstname ([INSTALL.md](../../wordpress-plugin/INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft)) |
 | WordPress: `Unknown form "bs"` | Backend erreichbar, Formular nicht für den Tenant (oder Plugin < 2.1.0 mit unklarer Meldung) | `seed-forms.php`, Formular-Key und Tenant-Slug prüfen; Plugin aktualisieren |
-| `Access denied for user 'anmeldung'` / `Unknown database` bei der Migration | Das MySQL-Volume wurde mit anderen Zugangsdaten angelegt; `DB_PASS` & Co. in der `.env` wirken nur beim ersten Start | Alte Werte wiederherstellen oder Passwort in MySQL nachziehen; sonst nur das MySQL-Volume neu anlegen (Datenverlust) — siehe [DEPLOYMENT.md](DEPLOYMENT.md#datenbank-zugriff-verweigert) |
+| `Access denied for user 'anmeldung'` / `Unknown database` bei der Migration | Das MySQL-Volume wurde mit anderen Zugangsdaten angelegt; `DB_PASS` & Co. in der `.env` wirken nur beim ersten Start | Alte Werte wiederherstellen oder Passwort in MySQL nachziehen; sonst nur das MySQL-Volume neu anlegen (Datenverlust) — siehe [installation.md](installation.md#datenbank-zugriff-verweigert) |
 | `Unknown column 'tenant_id'` im Backend-Log | Migration nicht gelaufen (manuelle Installation) | `php migrate.php` |
 | PDF-Link liefert „TenantContext not initialized" | Backend älter als die Fix-Version | Backend auf aktuellen 3.0-Stand bringen |
 | Alte Uploads im Backend nicht zu öffnen | Dateien nicht nach `uploads/tenant-1/` verschoben | `php migrate.php` erneut (Step 4d); Schreibrechte auf `uploads/` prüfen |
@@ -409,4 +409,4 @@ vorher (Excel-Export) oder sichere sie zusätzlich.
 | `env file …/backend/.env not found` | Compose < 2.24 | Compose-Plugin aktualisieren, oder `touch backend/.env` |
 
 Weitere Hilfe: [MULTI-TENANT.md](MULTI-TENANT.md) (Mehrschul-Betrieb),
-[DEPLOYMENT.md](DEPLOYMENT.md) (Betrieb), [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) (Notfälle).
+[installation.md](installation.md) und [betrieb.md](betrieb.md) (Betrieb), [notfall.md](notfall.md) (Notfälle).

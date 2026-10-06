@@ -6,7 +6,7 @@ Datenisolierung pro Schule (*Tenant*). Dieses Dokument ist die Betriebsanleitung
 - **Upgrade von 2.x:** → [MIGRATION-3.0.md](MIGRATION-3.0.md)
 - **Architektur-Hintergründe** (Design-Entscheidungen, Datenbankschema, Impact Assessment):
   → [`backend/MULTI-TENANT.md`](../entwicklung/MULTI-TENANT-DESIGN.md)
-- **Betrieb/Deployment allgemein:** → [DEPLOYMENT.md](DEPLOYMENT.md)
+- **Betrieb/Deployment allgemein:** → [installation.md](installation.md), [betrieb.md](betrieb.md), [Betriebsmodell](betriebsmodell.md)
 
 ---
 

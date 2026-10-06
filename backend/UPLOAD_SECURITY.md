@@ -110,7 +110,7 @@ VIRUS_SCAN_STRICT=false         # true = Upload ablehnen, wenn der Scanner nicht
 ```
 
 PHP (`php.ini`): `upload_max_filesize` und `post_max_size` mindestens so groß wie `UPLOAD_MAX_SIZE`.
-Webserver-Limits (`client_max_body_size` bei Nginx): [../DEPLOYMENT.md](../docs/betreiber/DEPLOYMENT.md).
+Webserver-Limits (`client_max_body_size` bei Nginx): [betrieb.md](../docs/betreiber/betrieb.md#upload-limits).
 
 ## Empfehlungen
 

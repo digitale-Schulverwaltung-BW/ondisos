@@ -78,7 +78,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), die **Formulare** (`seed-forms.php`) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
 Diese Schritte, Prüfungen und Stolperfallen (Hash in einfachen Anführungszeichen!) stehen vollständig in der
-**[Installationsanleitung](docs/betreiber/DEPLOYMENT.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md).
+**[Installationsanleitung](docs/betreiber/installation.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md).
 
 **Voraussetzungen im Überblick:** Backend: Docker – oder PHP 8.2+, MySQL 8.0+/MariaDB 10.5+, Composer, Erweiterungen `pdo_mysql`, `mbstring`, `gd`.
 Frontend: PHP 8.0+ und Apache/Nginx – oder ein WordPress.
@@ -101,7 +101,7 @@ Konventionen, Tests und Struktur: [CLAUDE.md](CLAUDE.md) · [backend/UNITTESTS.m
 
 Prepared Statements, Escaping, CSRF-Schutz, Rate Limiting, Mandantentrennung bei jeder Abfrage, signierte API, geprüfte Uploads mit Virenscan,
 zeitlich begrenzte PDF-Links und ein Audit-Log.
-Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte Einschränkungen: [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md) · [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit).
+Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte Einschränkungen: [betrieb.md](docs/betreiber/betrieb.md) · [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit).
 
 ## Status und Ausblick
 

@@ -2,7 +2,7 @@
 
 **Status:** AP1 (ZIP) umgesetzt, AP2 (Verbindungscode) und AP3 (Update-Prüfung) offen. Für ein eigenes Release **3.1.1** vorgesehen (bewusst nicht in 3.1; siehe [PLAN-3.1.md](PLAN-3.1.md)).
 
-**Stand der Voraussetzungen (nach 3.1):** Die Pfad-Whitelist für externe Hostings ist in [../DEPLOYMENT.md](../../betreiber/DEPLOYMENT.md) beschrieben. Der signierte Endpunkt
+**Stand der Voraussetzungen (nach 3.1):** Die Pfad-Whitelist für externe Hostings ist in [../DEPLOYMENT.md](../../betreiber/installation.md) beschrieben. Der signierte Endpunkt
 `GET /api/forms.php` und die Statuszeilen im Plugin („Secret passt zum Tenant", Formularzahl) existieren bereits und sind die Grundlage für „Verbindung testen" (AP2).
 
 ## Ausgangslage
@@ -31,7 +31,7 @@ PDF-Download erreichen, nicht aber den Admin-Bereich.
 
 - Reverse Proxy mit Pfad-Whitelist: `/api/*` und `/pdf/download.php` öffentlich, alles andere nur intern.
 - HTTPS verpflichtend (Signaturen haben keinen Replay-Schutz).
-- Muss vor dem ersten externen Tenant stehen. Kein Code; dokumentiert in [../DEPLOYMENT.md](../../betreiber/DEPLOYMENT.md) („Backend für externe WordPress-Hostings erreichbar machen", inklusive `/api/forms.php`).
+- Muss vor dem ersten externen Tenant stehen. Kein Code; dokumentiert in [../DEPLOYMENT.md](../../betreiber/installation.md) („Backend für externe WordPress-Hostings erreichbar machen", inklusive `/api/forms.php`).
 
 ## Arbeitspakete
 

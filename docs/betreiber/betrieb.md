@@ -1,7 +1,7 @@
 # Betrieb: Updates, Sicherung, HTTPS, Überwachung
 
 Dieses Dokument gilt für ein laufendes Backend. Die Befehle gehen vom Docker-Stack aus ([installation.md](installation.md)) und stehen im Projektverzeichnis
-(`export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml` spart die `-f`-Optionen). Notfälle: [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md).
+(`export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml` spart die `-f`-Optionen). Notfälle: [notfall.md](notfall.md).
 
 ## Updates
 

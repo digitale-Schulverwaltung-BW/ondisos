@@ -32,7 +32,7 @@ Ondisos-Backend weiter (signiert mit dem Secret des Tenants), das im Intranet la
 - Ein laufendes Ondisos-Backend (3.0+), das **vom WordPress-Server aus** erreichbar ist
   (die Anfragen kommen serverseitig von WordPress, nicht aus dem Browser)
 - Im Backend: ein Tenant (für eine Schule genügt Tenant 1, Slug `default`) mit **API-Secret** und
-  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [DEPLOYMENT.md](../docs/betreiber/DEPLOYMENT.md)
+  eingespielter Formular-Konfiguration (`seed-forms.php`) — siehe [installation.md](../docs/betreiber/installation.md)
 - Der Webserver muss Symlinks folgen, falls Variante A (Symlinks) benutzt wird (Variante C braucht das nicht)
 
 ## Installation

@@ -43,7 +43,7 @@ Ausführlich: [../UPLOAD_SECURITY.md](../UPLOAD_SECURITY.md).
 - **Authentifizierung:** Upload nur mit gültiger Tenant-Signatur (`X-Signature`); Download nur für angemeldete Admins
   des Tenants.
 - **Zuordnung:** Ein Upload wird nur angenommen, wenn die Anmeldung existiert **und** zum Tenant gehört.
-- **Virenscan:** ClamAV (optional, `VIRUS_SCAN_ENABLED=true`), siehe [../../DOCKER.md](../../docs/betreiber/DOCKER.md).
+- **Virenscan:** ClamAV (optional, `VIRUS_SCAN_ENABLED=true`), siehe [installation.md](../../docs/betreiber/installation.md#virenscan-optional).
 
 ## File Upload API
 

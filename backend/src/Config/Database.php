@@ -40,7 +40,7 @@ If you changed them afterwards, either
   - or start from scratch (DELETES ALL DATA of that database): stop backend and mysql, remove ONLY the MySQL volume
     (find it with: docker volume ls | grep mysql-data), then start again - never use "docker compose down -v" here, it
     also deletes uploads and other volumes.
-Details: docs/betreiber/DEPLOYMENT.md, section "Datenbank-Zugriff verweigert".
+Details: docs/betreiber/installation.md, section "Datenbank-Zugriff verweigert".
 TXT;
     }
 

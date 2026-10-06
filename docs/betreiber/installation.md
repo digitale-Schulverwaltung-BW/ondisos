@@ -15,7 +15,13 @@ Ohne Docker: [installation-ohne-docker.md](installation-ohne-docker.md).
 | **Netz** | Port 9080 (Backend) für das Frontend bzw. den vorgeschalteten Reverse-Proxy; MySQL wird **nicht** nach außen veröffentlicht |
 | **Trennung** | Backend und Frontend nicht auf derselben Maschine betreiben: Die Docker-Volumes sind auf dem Host lesbar, bei einem Einbruch wären die Daten offen |
 
-Docker selbst installieren: [Docker-Dokumentation](https://docs.docker.com/engine/install/). Benutzer in die Gruppe `docker` aufnehmen, falls kein `sudo` gewünscht ist.
+Docker installieren (Ubuntu/Debian, Skript vorher ansehen; Alternativen: [Docker-Dokumentation](https://docs.docker.com/engine/install/)):
+
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh
+sudo usermod -aG docker $USER              # optional: Docker ohne sudo; danach neu anmelden
+docker compose version                     # Compose-Plugin ≥ 2.24 (sonst: sudo apt-get install docker-compose-plugin)
+```
 
 ## 1. Code holen
 
@@ -76,8 +82,8 @@ Mit `AUTH_ENABLED=true` (Standard in Produktion) ist ohne Zugang keine Anmeldung
 docker compose exec backend php scripts/generate-password-hash.php "Ihr-Passwort"
 ```
 
-Die Ausgabe enthält eine Zeile `$2y$10$…` – das ist der Hash. Tragen Sie ihn mit dem Benutzernamen in die **Root-`.env`** ein,
-**in einfachen Anführungszeichen** (sonst deutet Docker Compose das `$` als Variable und beschädigt den Hash):
+Die Ausgabe enthält den Hash und die fertige Zeile `ADMIN_PASSWORD_HASH='…'`. Tragen Sie sie mit dem Benutzernamen in die **Root-`.env`** ein,
+**mit den einfachen Anführungszeichen** (sonst deutet Docker Compose das `$` als Variable und beschädigt den Hash):
 
 ```bash
 ADMIN_USERNAME=admin
@@ -104,7 +110,17 @@ docker compose exec -T backend php seed-forms.php - < frontend/config/forms-conf
 ```
 
 Der Container sieht das Verzeichnis `frontend/` nicht, deshalb wird die Datei über STDIN hineingereicht (`-T` ist nötig). Das Skript fügt neue Formulare hinzu
-und **überschreibt nie** Vorhandenes. Danach lässt sich `forms-config.php` löschen. Bestehende Formulare pflegen die Schulen im Backend unter **Formulare**
+und **überschreibt nie** Vorhandenes. Danach lässt sich `forms-config.php` löschen.
+
+**Surveys übernehmen.** Die Formulare selbst (Fragen, Seiten) liegen zunächst als Dateien in `frontend/surveys/`. Damit Schulen sie im Backend bearbeiten können und die Frontends
+sie von dort beziehen, importieren Sie sie einmal in die Datenbank (der Container braucht dafür eine Kopie des Verzeichnisses):
+
+```bash
+docker compose cp frontend/surveys backend:/tmp/surveys
+docker compose exec backend php import-surveys.php /tmp/surveys        # Option --dry-run prüft nur
+```
+
+Danach steht in der Spalte *Survey* unter *Formulare* statt „Datei im Frontend" der Wert „Backend“, und die Datenbank-Fassung hat Vorrang vor der Datei. Formulare ohne passende Datei im Verzeichnis (hier z. B. `bk`) bleiben bei „Datei im Frontend“. Der Import ist wiederholbar. Bestehende Formulare pflegen die Schulen im Backend unter **Formulare**
 ([Redaktion](../redaktion/SURVEYJS.md)). Neue Schulen starten mit den Formularen einer anderen Schule ([MULTI-TENANT.md](MULTI-TENANT.md)).
 
 ## 6. Prüfen

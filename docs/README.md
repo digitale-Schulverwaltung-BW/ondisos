@@ -30,6 +30,7 @@ Formulare einer Schule anlegen, ändern und veröffentlichen; Logo und PDF-Best�
 
 | Dokument | Inhalt |
 |---|---|
+| [PDF-Bestätigung gestalten](redaktion/pdf-bestaetigung.md) | Schul-Logo, Farbe, Texte, Felder und angehängtes PDF; Hinweise zum Fallback-Logo für Betreiber |
 | [SURVEYJS.md](redaktion/SURVEYJS.md) | Formulare mit SurveyJS entwerfen, im Backend einfügen, prüfen, veröffentlichen; Zusammenhang Konfiguration ↔ Survey; Lizenzhinweis zum Creator |
 
 ## Schul-IT
@@ -52,11 +53,8 @@ Das Backend installieren, Schulen einrichten, sichern und aktualisieren.
 | [installation.md](betreiber/installation.md) | Backend mit Docker installieren: Konfiguration, Start, Admin-Zugang, Formulare, Virenscan, Fehlersuche |
 | [installation-ohne-docker.md](betreiber/installation-ohne-docker.md) | Backend auf Apache/PHP ohne Docker |
 | [betrieb.md](betreiber/betrieb.md) | Updates, Sicherung und Wiederherstellung, HTTPS, Upload-Limits, Überwachung, Checkliste |
-| [DEPLOYMENT.md](betreiber/DEPLOYMENT.md) | *(wird abgelöst)* Alte Gesamtanleitung: HTTPS, Upload-Limits, Updates, Backup, Checkliste |
-| [DOCKER.md](betreiber/DOCKER.md) | Docker-Umgebung im Detail |
-| [SERVER_SETUP.md](betreiber/SERVER_SETUP.md) | Server vorbereiten, Updates |
+| [notfall.md](betreiber/notfall.md) | Notfall-Handbuch: Ausfall, Datenbank, Datenverlust, Sicherheitsvorfall, Speicher, Update-Rückfall |
 | [MULTI-TENANT.md](betreiber/MULTI-TENANT.md) | Mehrere Schulen betreiben, neuen Tenant einrichten |
-| [DISASTER_RECOVERY.md](betreiber/DISASTER_RECOVERY.md) | Backup und Wiederherstellung, Notfall-Szenarien |
 | [MIGRATION-3.1.md](betreiber/MIGRATION-3.1.md) | Upgrade 3.0 → 3.1: Formular-Editor, Cache, CLI |
 | [MIGRATION-3.0.md](betreiber/MIGRATION-3.0.md) | Upgrade 2.x → 3.0: Mehrmandantenfähigkeit |
 | [../backend/PDF_SETUP.md](../backend/PDF_SETUP.md) | PDF-System einrichten und testen |
@@ -70,6 +68,7 @@ Architektur, Tests, Pipeline, Planung.
 |---|---|
 | [../CLAUDE.md](../CLAUDE.md) | Architektur, Datenfluss, Schema, Konfiguration, Konventionen, Änderungshistorie |
 | [MULTI-TENANT-DESIGN.md](entwicklung/MULTI-TENANT-DESIGN.md) | Architekturentscheidungen zur Mandantenfähigkeit (englisch) |
+| [docker-entwicklung.md](entwicklung/docker-entwicklung.md) | Docker-Entwicklungsstack: Start, Code ändern, Tests, Fehlersuche |
 | [../backend/UNITTESTS.md](../backend/UNITTESTS.md) | Tests ausführen und schreiben |
 | [../backend/src/UPLOADS.md](../backend/src/UPLOADS.md) | Upload-Verarbeitung im Code |
 | [../backend/tools/survey-editor-bundle/README.md](../backend/tools/survey-editor-bundle/README.md) | Code-Editor (CodeMirror) neu bauen |

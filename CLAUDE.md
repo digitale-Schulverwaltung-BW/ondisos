@@ -23,7 +23,7 @@
   Neue Tenants starten mit den Formularen eines anderen Tenants (`FormCopyService`; Empfänger und Logo werden nie kopiert).
   Der Creator selbst ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md).
 
-**Weiterführende Dokumente:** [docs/README.md](docs/README.md) (Index) · [MIGRATION-3.1.md](docs/betreiber/MIGRATION-3.1.md) (Upgrade 3.0 → 3.1) · [MIGRATION-3.0.md](docs/betreiber/MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
+**Weiterführende Dokumente:** [docs/README.md](docs/README.md) (Index) · [MIGRATION-3.1.md](docs/betreiber/MIGRATION-3.1.md) (Upgrade 3.0 → 3.1) · [MIGRATION-3.0.md](docs/betreiber/MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [installation.md](docs/betreiber/installation.md) · [betrieb.md](docs/betreiber/betrieb.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
 
 ---
 
@@ -645,7 +645,7 @@ archiviert
 
 ## 🚀 Deployment
 
-> **📖 Vollständige Deployment-Dokumentation:** Siehe **[DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md)**
+> **📖 Vollständige Deployment-Dokumentation:** Siehe **[installation.md](docs/betreiber/installation.md)** und **[betrieb.md](docs/betreiber/betrieb.md)**
 
 ### Quick Overview
 
@@ -689,7 +689,7 @@ curl http://your-server:9080/api/health.php
 
 ### Weitere Themen
 
-Siehe **[DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md)** für Details zu:
+Siehe **[installation.md](docs/betreiber/installation.md)** und **[betrieb.md](docs/betreiber/betrieb.md)** für Details zu:
 
 - **Option 1**: Docker Backend + Manuelles Frontend (empfohlen)
   - Docker-Setup mit vorkonfigurierten Compose-Files
@@ -704,7 +704,7 @@ Siehe **[DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md)** für Details zu:
 
 - **Option 3**: Komplett Docker
   - Dev/Testing Environment
-  - Referenz: [DOCKER.md](docs/betreiber/DOCKER.md)
+  - Referenz: [docker-entwicklung.md](docs/entwicklung/docker-entwicklung.md)
 
 - **Wartung & Updates**
   - Docker-Updates & Rollbacks
@@ -1187,7 +1187,7 @@ php -l backend/config/messages.local.php
 
 ### `Access denied for user 'anmeldung'` beim Start (Migration)
 → Das MySQL-Volume behält die Zugangsdaten vom **ersten** Start; spätere Änderungen von `DB_PASS`/`MYSQL_ROOT_PASSWORD` in der `.env` kommen nicht an
-→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md#datenbank-zugriff-verweigert)
+→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [installation.md](docs/betreiber/installation.md#datenbank-zugriff-verweigert)
 
 ### Admin-Login abgelehnt, obwohl das Passwort stimmt
 → Meist ein beschädigter `ADMIN_PASSWORD_HASH`: In der Root-`.env` MUSS der Hash in einfachen Anführungszeichen stehen, sonst expandiert Docker Compose die `$…`-Teile (Länge im Container ≠ 60: `docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'`)

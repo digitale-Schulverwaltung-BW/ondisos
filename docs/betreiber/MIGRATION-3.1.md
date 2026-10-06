@@ -111,7 +111,7 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
 1. Code aktualisieren. Das Frontend fragt jetzt Config, Survey und Theme in **einer** Anfrage ab (`with=survey`).
    Enthält die Backend-Datenbank keine Survey für ein Formular, wird wie bisher `frontend/surveys/<form>.json` gelesen.
 2. **Cache-Verzeichnis:** der Webserver-Benutzer braucht Schreibrecht auf `frontend/cache/` (Standalone) bzw. `wp-content/uploads`
-   (WordPress). Siehe [DEPLOYMENT.md](DEPLOYMENT.md), „Formular-Cache". Optional: `FORM_CACHE_DIR` in der `.env`.
+   (WordPress). Siehe [Standalone-Frontend](../schul-it/standalone-frontend.md#installation), „Cache-Verzeichnis". Optional: `FORM_CACHE_DIR` in der `.env`.
 3. Ein 3.1-Frontend gegen ein **3.0-Backend** läuft ebenfalls (die Survey kommt dann aus den Dateien); der Cache hält dann
    nur die Config.
 

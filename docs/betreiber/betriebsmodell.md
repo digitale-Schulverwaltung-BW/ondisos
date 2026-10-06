@@ -46,23 +46,39 @@ Damit gilt:
 
 Das Frontend benötigt vom Backend nur diese Pfade:
 
-| Pfad | Zweck |
-|---|---|
-| `/api/form-config.php` | Formular-Konfiguration und veröffentlichte Surveys abrufen |
-| `/api/submit.php` | Anmeldung übergeben (signiert) |
-| `/api/upload.php` | Datei-Uploads übergeben (signiert) |
-| `/pdf/download.php` | PDF-Bestätigung abholen (Token, 30 Minuten gültig) |
-| `/api/forms.php`, `/api/health.php` | Verbindungsstatus des Plugins, Gesundheitsprüfung |
+| Pfad | Zweck | Von außen erreichbar? |
+|---|---|---|
+| `/api/form-config.php` | Konfiguration, Survey und Theme eines Formulars (`?with=survey`, ETag) | ja |
+| `/api/submit.php` | Anmeldung übergeben (signiert) | ja |
+| `/api/upload.php` | Datei-Upload übergeben (signiert, Virenscan) | ja |
+| `/api/forms.php` | Formularliste der eigenen Schule für den Verbindungsstatus des Plugins (signiert über `forms:<slug>`) | ja |
+| `/api/health.php` | Erreichbarkeit | ja |
+| `/pdf/download.php` | PDF-Download per Token (30 Minuten gültig) | ja |
+| alles andere (`index.php`, `forms.php`, `form_edit.php`, `form_survey.php`, `form_preview*.php`, `tenants.php`, `login.php`, `assets/` …) | Verwaltungsoberfläche | **nein, nur intern** |
+
+Achtung beim Namen: `/api/forms.php` (öffentlich, signiert) ist nicht `/forms.php` im Wurzelverzeichnis (Admin-Seite, intern).
 
 Liegen Frontend und Backend nicht im selben Netz, gibt es drei übliche Wege. Welcher passt, entscheiden Netzwerk und Datenschutzvorgaben des Betreibers:
 
 1. **Gemeinsames Netz oder VPN** zwischen Schulserver und Backend: keine Veröffentlichung nötig.
-2. **Reverse-Proxy** des Betreibers, der nur die oben genannten Pfade ins Internet weiterreicht; die Oberfläche (`/index.php`, `/login.php` usw.) bleibt gesperrt.
+2. **Reverse-Proxy** des Betreibers, der nur die oben genannten Pfade ins Internet weiterreicht; die Oberfläche bleibt gesperrt.
 3. **IP-Freigabe** (Firewall oder Webserver) für die Adressen der Schulserver.
 
-Ob ein Weg die Verwaltungsoberfläche wirklich nicht preisgibt, sollte der Betreiber testen (`curl -I https://<backend>/login.php` von außen).
-Zwei Hinweise aus dem Betrieb: Die Signatur enthält keinen Zeitstempel, daher **immer HTTPS** zwischen Frontend und Backend. Und: Steht WordPress selbst in Docker,
-ist `localhost` der Container selbst (siehe [INSTALL.md](../../wordpress-plugin/INSTALL.md)).
+Beispiel Nginx für Weg 2 (Reverse-Proxy vor dem Backend; TLS-Teil siehe [betrieb.md](betrieb.md#https)):
+
+```nginx
+location /api/               { proxy_pass http://backend_intern; }
+location = /pdf/download.php { proxy_pass http://backend_intern; }
+location /                   { allow 10.0.0.0/8; deny all; proxy_pass http://backend_intern; }   # Oberfläche nur aus dem Intranet
+```
+
+Das muss stehen, **bevor** die erste externe Schule angebunden wird. Prüfen Sie von außen, dass die Oberfläche nicht erreichbar ist (`curl -I https://<backend>/login.php` muss abgewiesen werden).
+
+Weitere Hinweise:
+
+- **HTTPS ist Pflicht** zwischen Frontend und Backend: Die Signatur enthält keinen Zeitstempel und bietet allein keinen Replay-Schutz.
+- Die Antworten von `form-config.php` sind per Schul-Slug **ohne Signatur** lesbar (Konfiguration, veröffentlichte Surveys, auch `notify_email`): keine Geheimnisse in Formular-Konfigurationen ablegen.
+- Steht WordPress selbst in Docker, ist `localhost` der Container selbst ([INSTALL.md](../../wordpress-plugin/INSTALL.md)).
 
 ## Eine neue Schule anbinden
 
@@ -70,7 +86,7 @@ ist `localhost` der Container selbst (siehe [INSTALL.md](../../wordpress-plugin/
 
 1. Unter **Tenants** die Schule anlegen: Name, Slug, optional die Adresse des Frontends. Dabei **Formulare übernehmen von** einer bestehenden Schule wählen
    (ein neuer Tenant hat sonst keine Formulare).
-2. Das angezeigte **Secret sofort sichern** – es erscheint nur einmal. (Verloren? *Secret neu generieren*; das alte wird ungültig.)
+2. Das angezeigte **Secret sofort sichern** – es erscheint nur einmal. (Verloren? *API-Schlüssel erneuern*; das alte wird ungültig.)
 3. Auf der Tenant-Seite einen **Tenant-Admin** für die Schule anlegen (Benutzername, Passwort).
 4. Der Schule **Backend-URL, Slug und Secret** auf einem sicheren Weg übermitteln (nicht unverschlüsselt per E-Mail) sowie die Zugangsdaten des Tenant-Admins
    getrennt davon.
@@ -91,7 +107,7 @@ ist `localhost` der Container selbst (siehe [INSTALL.md](../../wordpress-plugin/
 
 - **Backend nicht erreichbar:** Das Frontend liefert das Formular aus seinem Cache weiter (höchstens 7 Tage alte Fassung). **Absenden braucht das Backend**;
   ohne Verbindung erhalten Besucher eine Fehlermeldung. Ohne Cache erscheint eine Wartungsseite.
-- **Secret erneuern** (z. B. nach Personalwechsel): im Backend *Secret neu generieren*, neuen Wert an die Schul-IT geben, dort eintragen. Bis dahin lehnt das Backend Anmeldungen ab.
+- **Secret erneuern** (z. B. nach Personalwechsel): im Backend *API-Schlüssel erneuern*, neuen Wert an die Schul-IT geben, dort eintragen. Bis dahin lehnt das Backend Anmeldungen ab.
 - **Updates:** Backend und Frontend lassen sich getrennt aktualisieren. Das Plugin 3.1 arbeitet mit Backend 3.0 und 3.1 zusammen; Funktionen wie Surveys aus dem Backend brauchen Backend 3.1
   ([MIGRATION-3.1.md](MIGRATION-3.1.md)). Das Backend zuerst, dann die Frontends.
 - **E-Mail-Benachrichtigung:** Sie wird vom **Server der Schule** versendet (PHP `mail()`) und enthält die Angaben der Anmeldung. Personenbezogene Daten laufen also
@@ -104,7 +120,7 @@ Wer Backend und Frontend an verschiedene Stellen gibt, sollte vorab klären und 
 - Wer erreicht wen im Netz, und über welchen der drei Wege (siehe oben)?
 - Wer verwaltet die Zugänge im Backend (Tenant-Admins), wer das Secret je Schule?
 - Wer informiert wen bei Updates, Wartungsfenstern und Störungen?
-- Wer sichert die Daten, und wie lange werden Anmeldungen aufbewahrt (`AUTO_EXPUNGE_DAYS`, siehe [DEPLOYMENT.md](DEPLOYMENT.md))?
+- Wer sichert die Daten, und wie lange werden Anmeldungen aufbewahrt (`AUTO_EXPUNGE_DAYS`, siehe [betrieb.md](betrieb.md#überwachung-und-protokolle))?
 - Wer ist verantwortlich für Datenschutz-Dokumentation und Auftragsverarbeitung zwischen Schule und Betreiber?
 
-Technische Voraussetzungen zum Installieren: [DEPLOYMENT.md](DEPLOYMENT.md). Notfälle: [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md).
+Installation: [installation.md](installation.md). Betrieb: [betrieb.md](betrieb.md). Notfälle: [notfall.md](notfall.md).

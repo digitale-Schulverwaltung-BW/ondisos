@@ -14,7 +14,21 @@ auf einem eigenen Webserver anzeigt (z. B. `anmeldung.meineschule.de`). Es speic
 ## Installation
 
 1. Repository bzw. Release auf den Server bringen. Nur der Ordner `frontend/` wird benötigt; er enthält `public/` (Webroot), `src/`, `config/`, `surveys/`.
-2. Webserver auf `frontend/public` zeigen lassen (Beispiel-VirtualHost und HTTPS: [DEPLOYMENT.md](../betreiber/DEPLOYMENT.md#2-frontend-auf-apachenginx-manuell)).
+2. Webserver auf `frontend/public` zeigen lassen, Beispiel Apache:
+
+   ```apache
+   <VirtualHost *:80>
+       ServerName anmeldung.example.com
+       DocumentRoot /var/www/ondisos/frontend/public
+       <Directory /var/www/ondisos/frontend/public>
+           AllowOverride All
+           Require all granted
+       </Directory>
+   </VirtualHost>
+   ```
+
+   HTTPS einrichten (z. B. `sudo certbot --apache -d anmeldung.example.com`); den Redirect und die Security-Header liefert `public/.htaccess.example`
+   (kopieren nach `.htaccess` und die auskommentierten Zeilen aktivieren). Hinweise: [betrieb.md](../betreiber/betrieb.md#https).
 3. Konfiguration anlegen:
 
    ```bash
