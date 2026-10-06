@@ -1,620 +1,125 @@
-# 🎓 Ondisos - Digital Souveräne Schulanmeldung
+<h1 align="center">Ondisos</h1>
 
-> **On**boarding - **Di**gital **S**ouverän und **O**pen **S**ource
+<p align="center">
+  <strong>Digital souveräne Schulanmeldung</strong><br>
+  <sub><b>On</b>boarding – <b>Di</b>gital <b>S</b>ouverän und <b>O</b>pen <b>S</b>ource</sub>
+</p>
 
-Eine moderne, Open Source Lösung für digitale (Schul-)anmeldungen mit professionellem Admin-Backend.
+<p align="center">
+  <a href="https://php.net"><img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4"></a>
+  <a href="LICENSE"><img alt="Lizenz MIT" src="https://img.shields.io/badge/Lizenz-MIT-green"></a>
+  <img alt="Version 3.1" src="https://img.shields.io/badge/Version-3.1-blue">
+  <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Pipeline" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg"></a>
+  <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Coverage" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg"></a>
+</p>
 
-Download der eingegangenen Anmeldungen als Excel-Datei für den Import in [ASV-BW](docs/ASV.md) möglich.
+<p align="center">
+  <img src="docs/img/frontend-formular.png" alt="Anmeldeformular im Frontend" width="720">
+</p>
 
-[![PHP Version](https://img.shields.io/badge/PHP-8.2%2B-blue)](https://php.net)
-[![License](https://img.shields.io/badge/license-open_source-green)](LICENSE)
-[![Status](https://img.shields.io/badge/status-production_ready-brightgreen)](https://github.com)
-[![Pipeline Status](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg)](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main)
-[![Coverage](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg)](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main)
----
+Ondisos nimmt Schulanmeldungen online entgegen und bringt sie ohne Abtippen in die Schulverwaltung:
+Eltern und Betriebe füllen ein Formular auf der Schulwebsite aus, das Sekretariat findet die Anmeldung
+im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter und importiert sie in
+[ASV-BW](docs/ASV.md). Die Daten bleiben auf Servern, die Sie selbst betreiben.
 
-## 📋 Inhaltsverzeichnis
+## Was Ondisos kann
 
-- [Features](#-features)
-- [Screenshots](#-screenshots)
-- [Formulare anpassen/erstellen](#-formulare-erstellenanpassen)
-- [Quick Start](#-quick-start)
-- [Architektur](#-architektur)
-- [Systemvoraussetzungen](#-systemvoraussetzungen)
-- [Installation](#-installation)
-- [Dokumentation](#-dokumentation)
-- [Sicherheit](#-sicherheit)
-- [Beitragen](#-beitragen)
-- [Lizenz](#-lizenz)
+- **Formulare ohne Programmierung.** Entwurf im SurveyJS-Creator, Pflege direkt im Backend – mit Prüfung, Vorschau, Verlauf und Wiederherstellen.
+- **Eine Installation, mehrere Schulen.** Ein Backend bedient viele Schulen (*Mandanten*), strikt voneinander getrennt – etwa für einen Schulträger oder ein Medienzentrum.
+- **Öffentliches Frontend, geschütztes Backend.** Das Formular läuft auf der Schulwebsite (WordPress-Plugin oder eigenständig), die Daten liegen im Intranet. Beide sind per signierter API verbunden.
+- **Bestätigung für die Anmeldenden.** PDF mit Schul-Logo und Farbe, optional mit angehängtem Merkblatt.
+- **Datenschutz im Blick.** Lokale Schriften, keine externen CDNs, Virenscan der Uploads im eigenen Netz, Audit-Log, automatisches Löschen archivierter Einträge.
 
----
+<table>
+  <tr>
+    <td width="50%"><img src="docs/img/backend-uebersicht.png" alt="Übersicht der Anmeldungen"><br><sub>Anmeldungen im Backend: filtern, Status setzen, exportieren</sub></td>
+    <td width="50%"><img src="docs/img/backend-survey-editor.png" alt="Survey-Editor"><br><sub>Formular-Editor: einfügen, prüfen, Vorschau, veröffentlichen</sub></td>
+  </tr>
+  <tr>
+    <td><img src="docs/img/pdf-bestaetigung.png" alt="PDF-Bestätigung"><br><sub>PDF-Bestätigung mit Schul-Logo</sub></td>
+    <td><img src="docs/img/backend-tenants.png" alt="Tenant-Verwaltung"><br><sub>Mehrere Schulen pro Backend</sub></td>
+  </tr>
+</table>
 
-## ✨ Features
+## Wo fange ich an?
 
-### 👨‍💻 Frontend (Öffentlich)
-- **Interaktive Formulare** mit SurveyJS
-- **Modernes UI** mit Bootstrap 5
-- **Mobile-responsive** Design
-- **CSRF-Protection** für sichere Übermittlung
-- **PDF-Bestätigung** nach Anmeldung (optional)
-- **File-Upload** Support (mit Virenscan)
-- **WordPress-Plugin** — Formulare per Shortcode `[ondisos form="…"]` in bestehende Seiten einbetten; als fertige ZIP ohne Shell installierbar ([Anleitung](wordpress-plugin/INSTALL.md))
-- **DSGVO-konformer Betrieb** möglich (lokale Fonts, keine Google-CDN, saubere Trennung des Backends auf einen Server, der nicht über das Internet erreichbar ist)
+| Ich bin … | Ich möchte … | Los geht's |
+|---|---|---|
+| **Sekretariat** | Anmeldungen ansehen, ausdrucken, als Excel exportieren und in ASV importieren | [Handreichung für Sekretariate](docs/README.md#sekretariat) |
+| **Redaktion / Schul-Admin** | Formulare anlegen und ändern, Logo und PDF-Bestätigung pflegen | [Formulare pflegen](docs/README.md#redaktion) |
+| **Schul-IT / WordPress-Admin** | das Formular auf der Schulwebsite einbinden | [WordPress-Plugin](wordpress-plugin/INSTALL.md) · [Standalone-Frontend](docs/README.md#schul-it) |
+| **Betreiber (Medienzentrum, Schulträger)** | das Backend installieren, Schulen einrichten, betreiben | [Betreiber-Dokumentation](docs/README.md#betreiber) |
+| **Entwickler\*in** | Architektur verstehen, Tests ausführen, mitarbeiten | [Entwicklung](docs/README.md#entwicklung) · [CLAUDE.md](CLAUDE.md) |
 
-### 👩‍💼 Backend (Admin-Bereich)
-- **Übersichtliche Verwaltung** aller Anmeldungen
-- **Filterung & Suche** mit DataTables
-- **Excel-Export** mit Auto-Formatierung. Bei geeigneten Feld-Bezeichnern ist ein direkter Import in [ASV](docs/ASV.md) möglich.
-- **Dashboard** mit Statistiken
-- **Status-System** (neu, exportiert, in Bearbeitung, akzeptiert, abgelehnt, archiviert)
-- **Soft-Delete** mit Papierkorb
-- **Bulk-Actions** (Archivieren, Löschen, Wiederherstellen)
-- **Optionale Authentifizierung** (session-basiert)
-- **Multi-Tenant** — mehrere Schulen auf einer Backend-Instanz, mit Platform-Admin, Tenant-Admins und vollständiger Datenisolierung ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
-- **Auto-Expunge** (automatisches Löschen archivierter Einträge)
-- **Formulare im Backend pflegen** — Konfiguration als HTML-Formular, Survey-Editor mit Prüfung, Entwurf, Vorschau, Verlauf und Wiederherstellen; neue Schulen übernehmen die Formulare einer anderen Schule ([SURVEYJS.md](docs/SURVEYJS.md))
-- **Schul-Branding der PDF-Bestätigung** — Logo-Upload und Akzentfarbe pro Schule, PDF-Vorschau mit Beispielangaben, optional ein zusätzliches PDF (z. B. Merkblatt) als Anhang
+Das vollständige Verzeichnis aller Dokumente steht in **[docs/README.md](docs/README.md)**.
 
-### ⚙️ Technische Features
-- **Clean Architecture** (MVC + Service Layer)
-- **Security First** (Prepared Statements, XSS-Protection, Input Validation)
-- **PDF-System** mit Token-Authentifizierung
-- **Rate Limiting** gegen API-Abuse
-- **Signierte API** — Frontend→Backend-Anfragen sind pro Tenant per HMAC-SHA256 authentifiziert
-- **Formular-Konfiguration in der Datenbank** — pro Tenant, vom Frontend per API abgerufen
-- **Mehrere Formulare** pro Installation
-- **Email-Benachrichtigungen** bei neuen Anmeldungen
-- **Anpassbare Messages** (zentrale Message-Verwaltung)
-- **Konfigurierbar** via `.env`
+## Architektur in Kürze
 
----
-
-## 📸 Screenshots
-
-Alle Bilder zeigen fiktive Beispieldaten (Demo-Umgebung); sie liegen unter [docs/img/](docs/img/).
-
-### Frontend - Anmeldeformular
-![Anmeldeformular im Frontend](docs/img/frontend-formular.png)
-
-> Modernes, interaktives Formular mit Validierung und File-Upload
-
-### Backend - Übersicht
-![Übersicht der Anmeldungen](docs/img/backend-uebersicht.png)
-
-> Übersichtliche Verwaltung aller Anmeldungen mit Filterung und Status
-
-### Backend - Detailansicht
-![Detailansicht einer Anmeldung](docs/img/backend-detail.png)
-
-> Alle Angaben einer Anmeldung, PDF-Bestätigung, Excel-Export und Statuswechsel
-
-### Backend - Dashboard
-![Dashboard mit Statistiken](docs/img/backend-dashboard.png)
-
-> Statistiken und Übersicht über alle Anmeldungen
-
-### Backend - Formulare pflegen
-![Liste der Formulare mit Logo und Farbe der Schule](docs/img/backend-formulare.png)
-
-> Formulare, Schul-Logo und Farbe der PDF-Bestätigungen pro Schule
-
-![Survey-Editor](docs/img/backend-survey-editor.png)
-
-> Survey-Editor: JSON aus dem SurveyJS-Creator einfügen, prüfen, als Entwurf speichern, in der Vorschau ansehen und veröffentlichen ([Anleitung](docs/SURVEYJS.md))
-
-### Backend - Mehrere Schulen
-![Tenant-Verwaltung](docs/img/backend-tenants.png)
-
-> Platform-Admins legen Schulen an und können dabei Formulare einer anderen Schule übernehmen ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
-
-### PDF-Bestätigung
-![Generierte PDF-Bestätigung](docs/img/pdf-bestaetigung.png)
-
-> Automatisch generierte PDF-Bestätigung mit Schul-Logo; im Formular-Editor lässt sich vorab eine Vorschau erzeugen
-
----
-
-## 📋 Formulare erstellen/anpassen
-
-Die Formulare, welche ondisos verwalten kann, lassen sich (fast) komplett frei entwerfen und anpassen. 
-Die einzigen Einschränkungen sind: jedes Formular **muss** eine E-Mail-Adresse und einen Namen erfassen.
-
-### Formular-Designer
-SurveyJS, die Engine, welche die Frontend-Formulare bereitstellt, beinhaltet einen Drag-and-Drop-Formular-
-Designer. Dieser ist nicht Bestandteil von ondisos, kann aber einfach über die Projektseite unter
-https://surveyjs.io/create-free-survey erreicht werden. 
-
-Eine ausführliche Anleitung findet sich in **[SURVEYJS.md](docs/SURVEYJS.md)**.
-
----
-
-## 🚀 Quick Start
-
-### 1. Repository klonen
-Dies muss auf dem Frontend- und dem Backend-System erfolgen!
-
-```bash
-git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git
-cd ondisos
+```
+ Internet                              Intranet (Medienzentrum / Schulträger)
+┌───────────────────────────┐   HMAC   ┌──────────────────────────────────────┐
+│ Frontend (Schulwebsite)   │ ───────▶ │ Backend (PHP, Docker)                │
+│ WordPress-Plugin oder     │  signed  │  Admin-Oberfläche · API · PDF · Excel│
+│ Standalone-PHP + SurveyJS │   API    │  MySQL/MariaDB · ClamAV (Virenscan)  │
+└───────────────────────────┘          └──────────────────────────────────────┘
 ```
 
-### 2. Backend: Docker Setup (Empfohlen)
+Das Frontend zeigt die Formulare und nimmt Eingaben entgegen, das Backend speichert, prüft und verwaltet.
+Jede Anfrage nennt die Schule (`?tenant=<slug>`) und ist mit deren Secret signiert; das Secret bleibt auf dem Server.
+Details: [CLAUDE.md](CLAUDE.md) (Abschnitt Architektur) · [docs/MULTI-TENANT.md](docs/MULTI-TENANT.md)
+
+## Schnellstart (Backend mit Docker)
+
+Voraussetzungen: Docker mit Compose-Plugin, `openssl`, ein Server im Intranet. Eine Schule, ein Server – so sieht der kürzeste Weg aus:
 
 ```bash
-# Root .env konfigurieren (Single Source of Truth)
+git clone https://github.com/digitale-Schulverwaltung-BW/ondisos.git && cd ondisos
 cp .env.example .env
-
-# Secrets generieren (direkt in .env eintragen)
 sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
 sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/" .env
-
-nano .env  # DB-Passwörter anpassen, Secrets überprüfen — VOR dem ersten Start: DB_PASS & Co. wirken nur beim Anlegen der Datenbank
-
-# backend/.env ist optional und wird im Docker-Betrieb beim Start erzeugt (siehe unten);
-# Backend-spezifische Overrides (Rate Limits, Virenscan, ...) einfach an sie anhängen.
-
-# Container starten (Backend + MySQL + ClamAV) — die Datenbank-Migration läuft automatisch
+nano .env    # DB-Passwörter setzen, bevor der erste Start die Datenbank anlegt
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
-cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # eigene Datei anlegen
-nano frontend/config/forms-config.php        # Formulare/Empfänger anpassen (die Vorlage hat Beispieladressen)
-docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
-
-# Admin-Zugang: Pflicht mit dem Prod-Overlay, das AUTH_ENABLED=true setzt (sonst ist das Backend nicht bedienbar)
-docker compose exec backend php scripts/generate-password-hash.php "dein-passwort"
-#   → Benutzername und Hash in die Root-.env eintragen (den Hash in EINFACHE Anführungszeichen):
-#        ADMIN_USERNAME=admin
-#        ADMIN_PASSWORD_HASH='$2y$10$...'
-#   → Container neu erstellen, damit die Werte ankommen:
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d backend
-#   → Prüfen: der Hash muss vollständig angekommen sein (erwartet: 60; sonst fehlen die Quotes)
-docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'
 ```
 
-**Credentials-Struktur:**
-- ✅ `/.env` - Alle Core-Credentials (DB_USER, DB_PASS, Secrets)
-- ✅ `/backend/.env` - Optional; im Docker-Betrieb vom Entrypoint erzeugt, eigene Zusatz-Einstellungen bleiben erhalten ([DEPLOYMENT.md](docs/DEPLOYMENT.md#backendenv-im-docker-betrieb))
-- ✅ `API_SECRET_KEY` ist das Secret des ersten Tenants; das Frontend signiert damit seine Anfragen
+Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), die **Formulare** (`seed-forms.php`) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
+Diese Schritte, Prüfungen und Stolperfallen (Hash in einfachen Anführungszeichen!) stehen vollständig in der
+**[Installationsanleitung](docs/DEPLOYMENT.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/MIGRATION-3.1.md).
 
-### 3. Frontend Setup
+**Voraussetzungen im Überblick:** Backend: Docker – oder PHP 8.2+, MySQL 8.0+/MariaDB 10.5+, Composer, Erweiterungen `pdo_mysql`, `mbstring`, `gd`.
+Frontend: PHP 8.0+ und Apache/Nginx – oder ein WordPress.
 
-Das Frontend läuft auf dem öffentlichen Server (Apache/Nginx + PHP). Für WordPress: siehe
-[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md).
+## Entwickeln und mitmachen
+
+Beiträge sind willkommen: Fehler melden, Ideen einbringen, Code oder Dokumentation verbessern –
+am besten über **[GitHub](https://github.com/digitale-Schulverwaltung-BW/ondisos)** ([Issues](https://github.com/digitale-Schulverwaltung-BW/ondisos/issues), Pull Requests).
+Das GitLab der Entwicklung (`gitlab.hhs.karlsruhe.de`) nimmt keine Registrierungen an.
 
 ```bash
-cd frontend
-
-# Environment konfigurieren
-cp .env.example .env
-chmod 600 .env
-nano .env
-#   BACKEND_API_URL=http://backend.example.com:9080/api
-#   TENANT_SLUG=default                       # Slug des Tenants
-#   TENANT_API_SECRET=<API_SECRET_KEY des Backends>
+cp .env.example .env && nano .env
+docker compose --profile dev up -d          # Backend + MySQL + Frontend (+ phpMyAdmin)
+docker compose exec backend composer test   # oder: make test
 ```
 
-Eine `forms-config.php` im Frontend ist nicht nötig: Die Formular-Konfiguration kommt aus dem Backend.
+Konventionen, Tests und Struktur: [CLAUDE.md](CLAUDE.md) · [backend/UNITTESTS.md](backend/UNITTESTS.md).
 
-### 4. Backend ohne Docker
+## Sicherheit
 
-```bash
-mysql -u root -p < database/schema.sql       # Schema
-cd backend
-composer install --no-dev --optimize-autoloader
-cp .env.example .env                          # dann Secrets anhängen, siehe docs/DEPLOYMENT.md
-php migrate.php                               # Pflicht: setzt das Secret von Tenant 1
-cp ../frontend/config/forms-config-dist.php ../frontend/config/forms-config.php
-php seed-forms.php                            # Formular-Konfiguration übernehmen
-```
+Prepared Statements, Escaping, CSRF-Schutz, Rate Limiting, Mandantentrennung bei jeder Abfrage, signierte API, geprüfte Uploads mit Virenscan,
+zeitlich begrenzte PDF-Links und ein Audit-Log.
+Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte Einschränkungen: [DEPLOYMENT.md](docs/DEPLOYMENT.md) · [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit).
 
-**Von 2.x?** Nicht diese Anleitung, sondern [MIGRATION-3.0.md](docs/MIGRATION-3.0.md) verwenden.
+## Status und Ausblick
 
-### 5. Fertig! 🎉
+**Version 3.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
+([Release Notes](docs/RELEASE-NOTES-3.1.0.md)).
 
-- **Frontend:** http://anmeldung.example.com
-- **Backend:** http://backend.example.com (nur Intranet)
+Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
+Weitere Ideen: Freigabe-Workflow, Import aus Schulverwaltungssoftware, REST-API.
 
-**Detaillierte Anleitung:** Siehe [DEPLOYMENT.md](docs/DEPLOYMENT.md)
+## Danksagung und Lizenz
 
----
+Ondisos baut auf [SurveyJS](https://surveyjs.io/), [Bootstrap 5](https://getbootstrap.com/), [DataTables](https://datatables.net/),
+[PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet), [mPDF](https://mpdf.github.io/) und [CodeMirror](https://codemirror.net/).
+Der SurveyJS-Creator ist nicht Teil von Ondisos (eigene Lizenz, siehe [SURVEYJS.md](docs/SURVEYJS.md)).
 
-## 🏗️ Architektur
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Internet (Öffentlich)                    │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Frontend (SurveyJS + Vanilla JS)                      │ │
-│  │  • Formulare anzeigen                                  │ │
-│  │  • Daten sammeln                                       │ │
-│  │  • PDF-Download-Proxy                                  │ │
-│  └─────────────────┬──────────────────────────────────────┘ │
-└────────────────────┼────────────────────────────────────────┘
-                     │ HTTP POST /api/submit.php?tenant=<slug>
-                     │ (HMAC-signiert, Rate Limited)
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Intranet (Nur für Admins/Verwaltung)           │
-│                                                             │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │  Backend (PHP 8.2+ MVC) [🐳 Docker-Container]          │  │
-│  │  • API-Endpoint (submit.php)                           │ │
-│  │  • Admin-Interface (optional Login)                    │ │
-│  │  • PDF-Generator (Token-basiert)                       │ │
-│  │  • Excel-Export                                        │ │
-│  │  • Audit Trail (logs/audit.log)                        │ │
-│  └──────┬──────────────────────────────────┬──────────────┘ │
-│         │                                  │ TCP :3310      │
-│         │                                  ▼                │
-│  ┌──────▼──────────────────┐  ┌────────────────────────┐    │
-│  │  MySQL/MariaDB          │  │  ClamAV Daemon         │    │
-│  │  [🐳 Docker-Container]  │  │  [🐳 Docker-Container] │    │
-│  │  • Anmeldungen          │  │  • Virus-Signaturen    │    │
-│  │  • Tenants, Formular-   │  │  • freshclam (auto 2h) │    │
-│  │    Konfiguration        │  │                        │    │
-│  └─────────────────────────┘  └────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-**Zwei-Server-Architektur:**
-- **Frontend-Server:** Öffentlich zugänglich (Internet) — Apache/Nginx, PHP
-- **Backend-Server:** Nur im Intranet erreichbar — empfohlen als Docker-Stack
-- **Kommunikation:** Frontend → Backend API (`submit.php`, `upload.php`, `form-config.php`); Anfragen tragen den Tenant-Slug und sind mit dem Tenant-Secret signiert
-
-**Intranet-Docker-Stack (empfohlen):**
-- **Backend-Container:** PHP 8.2+, MVC, Admin-Interface, Audit-Logging
-- **MySQL-Container:** Persistente Datenbank mit automatischem Schema-Import
-- **ClamAV-Container:** Virus-Scanner mit täglichen Signatur-Updates (freshclam)
-
-**Vorteile:**
-- ✅ Backend nicht direkt aus dem Internet erreichbar
-- ✅ Datenbank komplett geschützt im Intranet
-- ✅ API mit Rate Limiting, CORS-Protection und Tenant-Signatur (HMAC)
-- ✅ Admins greifen nur intern auf Daten zu
-- ✅ ClamAV scannt Uploads lokal — keine Schülerdaten an externe APIs
-
----
-
-## 💻 Systemvoraussetzungen
-
-### Backend
-- **Docker**
-
-oder:
-- **PHP:** 8.2 oder höher
-- **Webserver:** Apache/Nginx
-- **Datenbank:** MySQL 8.0+ / MariaDB 10.5+
-- **Composer:** Für Dependency Management
-- **Extensions:**
-  - `pdo_mysql`
-  - `mbstring`
-  - `gd` (für Logo-Optimierung)
-  - `json`
-
-### Frontend
-- **Webserver:** Apache/Nginx
-- **PHP:** 8.0+ (für Proxy-Scripts)
-
-### Optional
-- **Redis/Memcached:** Für besseres Rate Limiting (aktuell file-based)
-
----
-
-## 📦 Installation
-
-Siehe [Quick Start](#-quick-start) für eine Schnellanleitung oder [CLAUDE.md § Deployment](CLAUDE.md#-deployment) für die ausführliche Dokumentation.
-
-### Apache Virtual Host Beispiel
-
-**Frontend (öffentlich):**
-```apache
-<VirtualHost *:80>
-    ServerName anmeldung.example.com
-    DocumentRoot /var/www/ondisos/frontend/public
-
-    <Directory /var/www/ondisos/frontend/public>
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
-```
-
-**Backend (Intranet):**
-```apache
-<VirtualHost *:80>
-    ServerName backend.example.com
-    DocumentRoot /var/www/ondisos/backend/public
-
-    <Directory /var/www/ondisos/backend/public>
-        AllowOverride All
-        Require ip 192.168.0.0/16  # Nur Intranet
-    </Directory>
-</VirtualHost>
-```
-
----
-
-## 📚 Dokumentation
-
-### Haupt-Dokumentation
-- **[CLAUDE.md](CLAUDE.md)** - 📖 Komplette Projekt-Dokumentation
-  - Architektur-Details
-  - Feature-Liste
-  - Konfiguration
-  - API-Dokumentation
-  - Deployment-Guide (3 Optionen!)
-  - Code-Konventionen
-  - Troubleshooting
-
-### Upgrade & Mehrschul-Betrieb
-- **[MIGRATION-3.0.md](docs/MIGRATION-3.0.md)** - ⬆️ Upgrade von 2.x auf 3.0 (Schritte, Rollback, Fehlersuche)
-- **[MULTI-TENANT.md](docs/MULTI-TENANT.md)** - 🏫 Mehrere Schulen auf einem Backend (Betrieb, Tenants, Sicherheit)
-
-### Deployment & Operations
-- **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** - 🚀 Production Deployment Guide
-  - 3 Deployment-Optionen (Docker Backend ✅, Komplett Manuell, Komplett Docker)
-  - Quick Start für Docker Production
-  - Credentials & Secrets (Root .env, API-Secret)
-  - Wartung & Updates
-  - Backup-Strategien
-  - HTTPS Enforcement
-  - Production Checkliste
-- **[DOCKER.md](docs/DOCKER.md)** - 🐳 Docker Deep Dive (Dev/Testing)
-  - Development Environment
-  - Docker Compose Details
-  - Volume Management
-  - Monitoring & Logging
-- **[CI_CD.md](docs/CI_CD.md)** - 🚀 Automated Deployment Pipeline
-  - GitLab CI/CD Setup
-  - Automated Tests & Deployments
-  - Staging & Production Workflows
-  - Rollback-Strategien
-- **[DISASTER_RECOVERY.md](docs/DISASTER_RECOVERY.md)** - 🆘 Notfall-Playbook
-  - 8 Notfall-Szenarien mit Recovery-Steps
-  - Complete Outage, Data Loss, Security Breach, etc.
-  - Schritt-für-Schritt Anleitungen
-  - Prevention Best Practices
-
-### Spezial-Dokumentation
-- **[wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)** - 🔌 WordPress-Plugin installieren & konfigurieren
-- **[backend/MULTI-TENANT.md](backend/MULTI-TENANT.md)** - 🏗️ Multi-Tenant-Architektur (Design, Schema)
-- **[SURVEYJS.md](docs/SURVEYJS.md)** - 📝 Formulardefinitionen (SurveyJS) erstellen
-- **[PDF_SETUP.md](backend/PDF_SETUP.md)** - 📄 PDF-System Setup & Testing
-- **[UPLOADS.md](backend/src/UPLOADS.md)** - 📎 File-Upload Dokumentation
-
-### Configuration Files
-- **[docker-compose.yml](docker-compose.yml)** - Dev/Testing Docker Setup
-- **[docker-compose.prod.yml](docker-compose.prod.yml)** - Production Docker Overrides
-- **[.env.example](.env.example)** - Root Environment Template (Core Credentials)
-- **[backend/.env.example](backend/.env.example)** - Backend-Specific Overrides (Optional)
-- **[frontend/.env.example](frontend/.env.example)** - Frontend Environment Template
-
-### Code-Übersicht
-
-```
-ondisos/
-├── frontend/              # Öffentliches Frontend
-│   ├── public/           # Web-Root
-│   │   ├── index.php    # Formular-Anzeige
-│   │   ├── save.php     # Submit-Handler
-│   │   └── pdf/         # PDF-Download-Proxy
-│   ├── src/             # PHP Klassen (BackendApiClient, FormConfigLoader, ...)
-│   ├── surveys/         # SurveyJS JSON-Definitionen
-│   └── config/          # Vorlagen (forms-config-dist.php = Quelle für seed-forms.php)
-│
-├── wordpress-plugin/     # WordPress-Plugin (Shortcode [ondisos form="…"])
-│
-├── backend/              # Admin-Backend (Intranet)
-│   ├── public/          # Web-Root
-│   │   ├── index.php   # Übersicht
-│   │   ├── detail.php  # Detail-Ansicht
-│   │   ├── login.php   # Login (optional; bei Multi-Tenant Pflicht)
-│   │   ├── tenants.php # Tenant-Verwaltung (Platform-Admin)
-│   │   ├── forms.php · form_edit.php · form_survey.php · form_preview.php  # Formular-Editor (3.1)
-│   │   ├── api/        # API-Endpoints (submit, upload, form-config, forms, health)
-│   │   └── pdf/        # PDF-Generator
-│   ├── src/            # MVC Struktur
-│   │   ├── Models/
-│   │   ├── Controllers/
-│   │   ├── Services/
-│   │   ├── Repositories/
-│   │   └── Validators/
-│   ├── templates/      # PDF-Templates
-│   ├── config/         # Konfiguration
-│   ├── migrate.php     # Datenbank-Migration (idempotent)
-│   ├── seed-forms.php · import-surveys.php · copy-forms.php  # CLI: Formulare/Surveys einspielen, zwischen Tenants kopieren
-│   └── scripts/        # Helper-Scripts
-│
-├── database/           # SQL Schemas & Migrationen
-├── docs/              # Betriebs-/Projektdokumentation (Index: docs/README.md)
-├── CLAUDE.md          # Haupt-Dokumentation (Architektur, Konventionen)
-└── README.md          # Diese Datei
-```
-
----
-
-## 🔐 Sicherheit
-
-### Implementierte Security Features
-
-✅ **Input Validation** - Alle Eingaben werden validiert
-✅ **SQL Injection Prevention** - Prepared Statements überall
-✅ **XSS Protection** - HTML-Escaping mit `htmlspecialchars()`
-✅ **CSRF Protection** - Token-basiert für Formulare
-✅ **Rate Limiting** - API-Schutz gegen Abuse (10 req/min)
-✅ **File Upload Validation** - Type, Size, Extension-Checks
-✅ **Virus Scanning** - ClamAV-Integration, EICAR-getestet, DSGVO-konform (lokal)
-✅ **Audit Trail** - JSON-Lines-Log aller sicherheitsrelevanten Aktionen
-✅ **PDF Token Security** - HMAC-SHA256, zeitlich begrenzt (30 Min)
-✅ **Tenant-Isolierung** - Alle Abfragen nach `tenant_id` gefiltert, IDOR-Versuche im Audit-Log
-✅ **Signierte API** - Pro-Tenant-HMAC für Submit und Upload; bekannte Standard-Secrets werden abgelehnt
-✅ **Session Security** - Regeneration, Timeout, Secure Cookies
-✅ **Admin Auth** - Optional, session-basiert mit Brute-Force-Protection
-✅ **Directory Traversal Prevention** - Path-Validierung
-✅ **Error Handling** - Keine sensitiven Daten in Errors
-
-### Security Best Practices
-
-**Production Setup:**
-1. ✅ HTTPS erzwingen (via Apache/Nginx)
-2. ✅ `AUTH_ENABLED=true` für Backend (wenn nicht im gesicherten Netz)
-3. ✅ Starke Secrets in `.env` (`openssl rand -hex 32`); `API_SECRET_KEY` darf kein Standardwert sein, `APP_ENV=production`
-4. ✅ `display_errors=Off` in PHP
-5. ✅ Regelmäßige Updates (Composer, PHP, OS)
-6. ✅ Firewall für Backend-Server (nur Intranet-Zugriff)
-
-**Bekannte Einschränkungen:**
-- Email-Service nutzt PHP `mail()` (ggf. auf SMTP umstellen)
-- Rate Limiting ist file-based (für Multi-Server: Redis empfohlen)
-
-Siehe [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit) für Details.
-
----
-
-## 🤝 Beitragen
-
-Wir freuen uns über Beiträge!
-
-### Mitmachen
-
-- 🐛 **Bug Reports:** Issues auf GitHub/Codeberg öffnen
-- 💡 **Feature Requests:** Ideen und Vorschläge willkommen
-- 🔧 **Pull Requests:** Code-Beiträge gerne gesehen
-- 📖 **Dokumentation:** Verbesserungen und Ergänzungen
-
-### Development Setup
-
-```bash
-# Repository klonen
-git clone https://github.com/your-org/ondisos.git
-cd ondisos
-
-# Root .env konfigurieren (Core Credentials)
-cp .env.example .env
-nano .env  # DB-Credentials, Secrets
-
-# Docker Dev Stack starten (Migration läuft automatisch)
-docker compose --profile dev up -d  # Backend + MySQL + Frontend (+ phpMyAdmin)
-
-# Formular-Konfiguration einspielen (fügt neue Formulare hinzu, überschreibt nichts)
-cp frontend/config/forms-config-dist.php frontend/config/forms-config.php   # anpassen
-docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
-
-# Oder: Manuelles Setup
-cd backend
-composer install
-php migrate.php
-
-cd ../frontend
-cp .env.example .env   # BACKEND_API_URL, TENANT_SLUG, TENANT_API_SECRET eintragen
-```
-
-Tests: `make test` bzw. `docker compose exec backend composer test` (siehe [backend/UNITTESTS.md](backend/UNITTESTS.md)).
-
-### Code-Konventionen
-
-- **PHP:** PSR-4, PSR-12, strict types
-- **Namespaces:** `App\*` (Backend), `Frontend\*` (Frontend)
-- **Type Hints:** Immer verwenden
-- **Dokumentation:** PHPDoc für alle public methods
-
-Siehe [CLAUDE.md § Code-Konventionen](CLAUDE.md#-code-konventionen) für Details.
-
----
-
-## 🙏 Danksagungen
-
-Dieses Projekt nutzt folgende Open Source Libraries:
-
-- **[SurveyJS](https://surveyjs.io/)** - Formular-Framework
-- **[Bootstrap 5](https://getbootstrap.com/)** - UI-Framework
-- **[DataTables](https://datatables.net/)** - Tabellen-Plugin
-- **[PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet)** - Excel-Export
-- **[mPDF](https://mpdf.github.io/)** - PDF-Generierung
-
----
-
-## 📄 Lizenz
-
-Open source, [MIT](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE). 
-
----
-
-## 📊 Projekt-Status
-
-**Version:** 3.0
-**Status:** ✅ Production Ready
-
-### Was ist neu in 3.0?
-
-- ✅ **Multi-Tenant** — mehrere Schulen, eine Backend-Instanz ([MULTI-TENANT.md](docs/MULTI-TENANT.md))
-- ✅ **Platform-Admin** mit Tenant-Switcher und Tenant-Verwaltung
-- ✅ **Signierte API** — pro Tenant HMAC-SHA256 für Submit und Upload; Upload-Isolierung pro Tenant
-- ✅ **Formular-Konfiguration in der Datenbank** statt `forms-config.php` (Migration + `seed-forms.php`)
-- ✅ **WordPress-Plugin** (ab 3.1.0 mit derselben Versionsnummer wie Backend und Frontend; frühere Versionen 2.1.x) — lädt die Konfiguration vom Backend, Tenant-Einstellungen
-- ✅ **Härtung** — bekannte Platzhalter-/Standard-Secrets authentifizieren nichts
-
-**Upgrade von 2.x:** [MIGRATION-3.0.md](docs/MIGRATION-3.0.md). Release-Historie: [CLAUDE.md § Änderungshistorie](CLAUDE.md#-änderungshistorie).
-
----
-
-## 📞 Support & Kontakt
-
-**Entwicklung:** Open Source Community
-**Issue Tracker:** GitHub Issues
-**Dokumentation:** [CLAUDE.md](CLAUDE.md)
-
----
-
-## 🎯 Roadmap
-
-### Completed (3.0)
-- [x] Multi-Tenant Support (✅ Datenisolierung, Platform-Admin, Tenant-Verwaltung)
-- [x] Per-Tenant HMAC API-Authentifizierung (✅ `api_secret` pro Tenant)
-- [x] Form-Config in Datenbank (✅ `form_configs`-Tabelle, `seed-forms.php`)
-- [x] Upload-Isolierung pro Tenant (✅ `uploads/tenant-<id>/`)
-- [x] WordPress-Plugin (✅ Shortcode, Tenant-Einstellungen)
-
-Siehe **[MULTI-TENANT.md](docs/MULTI-TENANT.md)** und **[MIGRATION-3.0.md](docs/MIGRATION-3.0.md)**.
-
-### In Planung
-- [ ] Weitere Unit Tests (Services, Repositories, Validators)
-- [ ] Integration Tests mit Test-Datenbank
-- [ ] Logging verbessern (strukturiertes Logging)
-- [ ] Monitoring Setup (z.B. Sentry, Prometheus)
-- [ ] API Documentation (OpenAPI/Swagger)
-
-### Umgesetzt in 3.1
-- [x] Formulare im Backend pflegen: Konfiguration als HTML-Formular (in Tabs), Survey-Editor (Creator-JSON einfügen, prüfen, Entwurf, Vorschau, veröffentlichen, Verlauf)
-- [x] Neue Schulen: Formulare von einem anderen Tenant übernehmen (Empfänger und Logo bleiben leer)
-- [x] Frontend holt Surveys vom Backend (ETag, Cache, Ausfallschutz); Backend ohne externe CDN-Abhängigkeit
-- [x] Schul-Branding für PDF-Bestätigungen: Logo-Upload und Akzentfarbe pro Schule, PDF-Vorschau mit Beispielangaben, zusätzliches PDF als Anhang pro Formular
-- [x] WordPress-Plugin als fertige ZIP (ohne Shell installierbar, ohne Zugangsdaten; Tag `vX.Y.Z` baut Release in GitLab)
-
-### Geplant
-- [ ] **3.1.1 / 3.1.2:** WordPress-Plugin ohne Shell, Rest: Verbindungscode und Update-Prüfung (AP2/AP3) — Entwurf: [docs/plans/PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md)
-- [ ] Datei-Fallback für Surveys (`frontend/surveys/`) abschaffen; die Dateien bleiben nur Importquelle (ohne festen Termin)
-- [ ] SMTP-Support für den E-Mail-Versand (statt PHP `mail()`)
-
-### Option (nicht geplant)
-- **Managed Multi-Frontend** (ein zentral gehostetes Frontend für mehrere Tenants, früher „3.2"): gestrichen. Mit Standalone-Frontend und WordPress-Plugin (ZIP) betreiben Schulen ihr Frontend selbst. Wird nur wieder aufgenommen, wenn Schulen gar nichts betreiben sollen.
-
-### Ideen
-- [ ] Workflow-System (z.B. Freigabe-Prozess)
-- [ ] Import-Funktion (z.B. aus SchoolSIS)
-- [ ] REST API für Integrationen
-
-Vorschläge? → [Issue erstellen](https://github.com/digitale-Schulverwaltung-BW/ondisos/)!
-
----
-
-<p align="center">
-  Made with ❤️ for digital education
-</p>
-
-<p align="center">
-  <a href="CLAUDE.md">📖 Dokumentation</a> •
-  <a href="https://github.com/digitale-Schulverwaltung-BW/ondisos/">🐙 GitHub</a> •
-  <a href="https://github.com/digitale-Schulverwaltung-BW/ondisos/issues">🐛 Issues</a>
-</p>
+Open Source unter der [MIT-Lizenz](LICENSE).
