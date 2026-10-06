@@ -43,7 +43,7 @@ Unten finden Sie die Werkzeuge für diese eine Anmeldung:
 
 | Schaltfläche | Was sie tut |
 |---|---|
-| **📥 Excel-Export** | lädt nur diese Anmeldung als Excel-Datei herunter (setzt den Status **nicht** auf *Exportiert*) |
+| **📥 Excel-Export** | lädt nur diese Anmeldung als Excel-Datei herunter (war die Anmeldung *Neu*, steht sie danach auf *Exportiert*, wie beim Export aus der Liste) |
 | **PDF Bestätigung** | erzeugt die PDF-Bestätigung dieser Anmeldung (Dateiname `bestaetigung-<formular>-<nr>.pdf`) |
 | **Status ändern:** 📝 / ☑️ / 👎 | *In Bearbeitung* / *Akzeptiert* / *Abgelehnt* (Mauszeiger darüber zeigt den Namen) |
 | **🗑️ Löschen** | verschiebt die Anmeldung in den Papierkorb (nach einer Rückfrage) |

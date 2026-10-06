@@ -279,6 +279,11 @@ class ExportService
             $this->enrichSchoolLookup($anmeldungen);
         }
 
+        // Auto-mark as exported if enabled (wie getExportData/getExportDataByIds)
+        if (Config::getInstance()->autoMarkAsRead) {
+            $this->statusService->markMultipleAsExported([$anmeldung->id]);
+        }
+
         $columns = $this->extractColumns($anmeldungen);
         sort($columns);
 

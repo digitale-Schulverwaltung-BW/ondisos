@@ -533,6 +533,31 @@ class ExportServiceTest extends TestCase
         $this->service->getExportData();
     }
 
+    public function testGetExportDataByIdMarksAsExportedWhenAutoMarkEnabled(): void
+    {
+        putenv('AUTO_MARK_AS_READ=true');
+
+        $this->mockRepository->method('findById')->with(42)->willReturn($this->makeAnmeldung(42));
+
+        $this->mockStatusService->expects($this->once())
+            ->method('markMultipleAsExported')
+            ->with([42]);
+
+        $this->service->getExportDataById(42);
+    }
+
+    public function testGetExportDataByIdSkipsMarkAsExportedWhenAutoMarkDisabled(): void
+    {
+        putenv('AUTO_MARK_AS_READ=false');
+
+        $this->mockRepository->method('findById')->with(42)->willReturn($this->makeAnmeldung(42));
+
+        $this->mockStatusService->expects($this->never())
+            ->method('markMultipleAsExported');
+
+        $this->service->getExportDataById(42);
+    }
+
     // =========================================================================
     // extractColumns – edge cases
     // =========================================================================
