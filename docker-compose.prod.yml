@@ -61,6 +61,9 @@ services:
     # No host port exposure needed - backend talks to mysql via internal Docker network.
     # For admin access use: docker compose exec mysql mysql -u anmeldung -p anmeldung
     # Credentials loaded from root .env (via docker-compose.yml variable substitution)
+    # `!override` replaces the "3306:3306" of docker-compose.yml (plain `ports:` lists are appended
+    # when files are merged). Needs Docker Compose >= 2.24, like the optional backend/.env above.
+    ports: !override []
     deploy:
       resources:
         limits:
