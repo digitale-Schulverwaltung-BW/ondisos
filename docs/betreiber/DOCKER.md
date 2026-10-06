@@ -59,6 +59,11 @@ docker compose exec backend composer test -- --testsuite=Unit
 docker compose exec backend composer test:filter AnmeldungValidatorTest
 ```
 
+> **Warum laufen die Tests im Dev-Container?** Einige Tests lesen Dateien außerhalb von `backend/` (`frontend/`, `docs/`, `README.md`, …).
+> Die Datei `docker-compose.override.yml` hängt sie nur lesend unter `/var/www/` ein; Compose lädt sie bei `docker compose up` automatisch mit.
+> Mit `-f docker-compose.yml -f docker-compose.prod.yml` (Produktion) wird sie nicht geladen, der Backend-Container bleibt dort ohne diese Verzeichnisse.
+> Nach dem Hinzufügen der Datei die Container neu anlegen: `docker compose --profile dev up -d`.
+
 ## 📦 Services
 
 ### Backend (Admin Interface)
