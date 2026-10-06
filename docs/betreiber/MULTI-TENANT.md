@@ -106,7 +106,7 @@ Der Platform-Admin sieht alle Tenants und kann zwischen ihnen wechseln.
      Hier lassen sich die Formulare eines bestehenden Tenants übernehmen (3.1); „leer starten" legt keine an.
 3. Nach dem Speichern erscheint der **API-Schlüssel** (das Tenant-Secret) —
    **jetzt sichern, er wird nur einmal angezeigt.** Er geht als `TENANT_API_SECRET` in die
-   Frontend-Konfiguration. Verloren? Auf der Tenant-Seite *„Secret neu generieren"* — das alte
+   Frontend-Konfiguration. Verloren? Auf der Tenant-Seite **„API-Schlüssel erneuern"** — das alte
    Secret ist danach ungültig, das Frontend muss angepasst werden.
 
 ### Neuen Tenant einrichten (Checkliste)
@@ -128,9 +128,10 @@ Nur **Plattform-Admins** dürfen kopieren (es werden Formulare eines anderen Ten
 
 ### Tenant-Admin anlegen
 
-Auf der Tenant-Detailseite (`tenants.php?id=<id>`) unter **„Admin hinzufügen"**:
-Benutzername und Passwort setzen und das Passwort beim ersten Anzeigen sichern. Der Tenant-Admin
-loggt sich über `login.php` ein und sieht ausschließlich die Daten seines Tenants.
+Auf der Tenant-Detailseite (`tenants.php?id=<id>`) unter **„Admin hinzufügen"**: Benutzername und Passwort (mindestens 8 Zeichen) eintragen und **Hinzufügen** klicken.
+Das Passwort geben Sie dem Schul-Admin getrennt vom API-Schlüssel weiter. Dieser meldet sich über `login.php` an und sieht ausschließlich die Daten seiner Schule: keinen Tenants-Menüpunkt,
+`tenants.php` antwortet mit 403, Einträge anderer Schulen mit 404 (und einem `idor_attempt` im Audit-Log). In der Liste der Administratoren lässt sich jeder Zugang **deaktivieren** (und wieder aktivieren)
+und das **Passwort zurücksetzen**.
 
 ---
 
