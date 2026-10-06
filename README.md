@@ -55,18 +55,13 @@ Das vollständige Verzeichnis aller Dokumente steht in **[docs/README.md](docs/R
 
 ## Architektur in Kürze
 
-```
- Internet                              Intranet (Medienzentrum / Schulträger)
-┌───────────────────────────┐   HMAC   ┌──────────────────────────────────────┐
-│ Frontend (Schulwebsite)   │ ───────▶ │ Backend (PHP, Docker)                │
-│ WordPress-Plugin oder     │  signed  │  Admin-Oberfläche · API · PDF · Excel│
-│ Standalone-PHP + SurveyJS │   API    │  MySQL/MariaDB · ClamAV (Virenscan)  │
-└───────────────────────────┘          └──────────────────────────────────────┘
-```
+<p align="center">
+  <img src="docs/img/architektur-ueberblick.svg" alt="Architektur: Frontend im Internet ruft per signierter API das Backend im Intranet auf" width="640">
+</p>
 
 Das Frontend zeigt die Formulare und nimmt Eingaben entgegen, das Backend speichert, prüft und verwaltet.
 Jede Anfrage nennt die Schule (`?tenant=<slug>`) und ist mit deren Secret signiert; das Secret bleibt auf dem Server.
-Details: [CLAUDE.md](CLAUDE.md) (Abschnitt Architektur) · [docs/MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md)
+Details: [CLAUDE.md](CLAUDE.md) (Abschnitt Architektur) · [Mehrere Schulen betreiben](docs/betreiber/MULTI-TENANT.md)
 
 ## Schnellstart (Backend mit Docker)
 
