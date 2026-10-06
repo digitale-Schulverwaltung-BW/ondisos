@@ -21,6 +21,7 @@ Anmeldungen im Backend ansehen, ausdrucken, als Excel exportieren und in ASV-BW 
 
 | Dokument | Inhalt |
 |---|---|
+| [Handreichung für das Sekretariat](sekretariat/README.md) | Anmelden, Neues finden, ansehen, ausdrucken (PDF), Excel-Export, Status, Archivieren und Papierkorb |
 | [ASV.md](sekretariat/ASV.md) | Excel-Export in ASV-BW importieren |
 
 ## Redaktion
