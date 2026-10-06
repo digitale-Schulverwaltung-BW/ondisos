@@ -1,0 +1,25 @@
+# ============================================================================
+# Entwicklung: Mounts für die Unit-Tests (nur lesend)
+# ============================================================================
+# Docker Compose lädt diese Datei automatisch zusammen mit docker-compose.yml
+# (`docker compose up`, `make test`). Im Produktivbetrieb wird sie NICHT geladen,
+# weil dort die Dateien explizit angegeben werden:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Dort sieht der Backend-Container weder frontend/ noch docs/.
+#
+# Einige Tests lesen per relativem Pfad Dateien außerhalb von backend/
+# (frontend/src, frontend/surveys, docs/, README.md, ...). Im Container liegt das
+# Backend unter /var/www/html, die Tests suchen das Repo-Root also in /var/www.
+# ============================================================================
+
+services:
+  backend:
+    volumes:
+      - ./backend:/var/www/backend:ro   # Tests nennen das Backend beim Namen (backend/public/...)
+      - ./frontend:/var/www/frontend:ro
+      - ./docs:/var/www/docs:ro
+      - ./wordpress-plugin:/var/www/wordpress-plugin:ro
+      - ./database:/var/www/database:ro
+      - ./README.md:/var/www/README.md:ro
+      - ./CLAUDE.md:/var/www/CLAUDE.md:ro
+      - ./LICENSE:/var/www/LICENSE:ro

@@ -4,9 +4,10 @@ services:
       context: .
       dockerfile: docker/test/Dockerfile
     volumes:
-      - .:/app
-      - vendor-cache:/app/vendor
-    working_dir: /app
+      - ..:/var/www:ro
+      - .:/var/www/backend
+      - vendor-cache:/var/www/backend/vendor
+    working_dir: /var/www/backend
     command: composer test
 
   coverage:
@@ -14,9 +15,10 @@ services:
       context: .
       dockerfile: docker/test/Dockerfile
     volumes:
-      - .:/app
-      - vendor-cache:/app/vendor
-    working_dir: /app
+      - ..:/var/www:ro
+      - .:/var/www/backend
+      - vendor-cache:/var/www/backend/vendor
+    working_dir: /var/www/backend
     command: composer test:coverage
 
 volumes:

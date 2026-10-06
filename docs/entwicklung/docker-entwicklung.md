@@ -50,8 +50,10 @@ composer test:coverage                 # Coverage-Bericht nach backend/coverage/
 
 Die Integration-Tests brauchen eine MySQL-Datenbank mit `database/schema.sql` (siehe [UNITTESTS.md](../../backend/UNITTESTS.md)).
 
-**Hinweis:** Im Backend-Container (`make test`, `docker compose exec backend composer test`) sind nur `./backend` und nicht `frontend/` und `docs/` eingehängt; ein Teil der Tests
-(Frontend-Klassen, Doku-Prüfungen) schlägt dort deshalb fehl. Bis das behoben ist: Tests auf dem Host ausführen (PHP 8.2+ und Composer).
+**Tests im Container:** Einige Tests lesen Dateien außerhalb von `backend/` (`frontend/`, `docs/`, `README.md`, …). `docker-compose.override.yml`
+hängt sie nur lesend unter `/var/www/` ein; Compose lädt sie bei `docker compose up` automatisch mit, damit laufen `make test` und
+`docker compose exec backend composer test` vollständig. Im Produktivbetrieb (`-f docker-compose.yml -f docker-compose.prod.yml`) wird die Datei
+nicht geladen, der Backend-Container bleibt dort ohne diese Verzeichnisse. Nach dem Aktualisieren die Container neu anlegen: `docker compose --profile dev up -d`.
 
 ## Alltag
 

@@ -13,6 +13,12 @@ Das Backend verfügt über eine PHPUnit 10.5 Test-Suite. Tests laufen via Docker
 Die Tests brauchen die PHP-Extension `mysqli` (Klassen wie `AnmeldungRepository` erben von bzw. nutzen `mysqli`); das
 Test-Image (`docker/test/Dockerfile`) bringt sie mit.
 
+**Verzeichnisse außerhalb von `backend/`:** Einige Tests lesen per relativem Pfad (`__DIR__ . '/../../../../frontend/…'`) Dateien aus dem Repo-Root
+(`frontend/`, `docs/`, `README.md`, `wordpress-plugin/`, …). Das Repo-Root muss daher zwei Ebenen über `backend/tests` liegen, wie im Checkout.
+- Dev-Stack (`docker compose exec backend composer test`): `docker-compose.override.yml` hängt die Verzeichnisse lesend unter `/var/www/` ein.
+  Sie wird nur ohne explizites `-f` geladen, also nicht im Produktionsbetrieb.
+- Test-Image (`backend/docker-compose.test.yml`): das ganze Repo wird unter `/var/www` eingehängt, `backend/` liegt in `/var/www/backend`.
+
 ---
 
 ## Testdateien

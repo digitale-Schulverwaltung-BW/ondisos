@@ -28,7 +28,7 @@ RUN for i in 1 2 3 4 5; do pecl install xdebug-3.5.0 && break || sleep 10; done 
 # Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-WORKDIR /app
+WORKDIR /var/www/backend
 
 # Install dependencies (cached in named volume, only re-runs when composer.json changes)
 COPY composer.json composer.lock* ./

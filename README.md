@@ -95,6 +95,10 @@ docker compose --profile dev up -d          # Backend + MySQL + Frontend (+ phpM
 docker compose exec backend composer test   # oder: make test
 ```
 
+Die Unit-Tests lesen auch Dateien außerhalb von `backend/` (Surveys, `frontend/src`, Doku). Dafür hängt die automatisch geladene
+`docker-compose.override.yml` diese Verzeichnisse nur lesend in den Dev-Container ein. Im Produktivbetrieb
+(`-f docker-compose.yml -f docker-compose.prod.yml`) wird sie nicht geladen; dort bleibt der Backend-Container ohne `frontend/` und `docs/`.
+
 Konventionen, Tests und Struktur: [CLAUDE.md](CLAUDE.md) · [backend/UNITTESTS.md](backend/UNITTESTS.md).
 
 ## Sicherheit
