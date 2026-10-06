@@ -345,7 +345,7 @@ Bei Problemen:
 4. Check Documentation:
    - [DOCKER.md](DOCKER.md) - Docker Details
    - [DISASTER_RECOVERY.md](DISASTER_RECOVERY.md) - Emergency Procedures
-   - [CI_CD.md](CI_CD.md) - Deployment Pipeline
+   - [CI_CD.md](../entwicklung/CI_CD.md) - Deployment Pipeline
 
 ---
 

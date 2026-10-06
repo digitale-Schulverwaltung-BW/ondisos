@@ -202,7 +202,7 @@ lint_php:
 # ============================================================================
 # Builds ondisos-<version>.zip (+ SHA-256), publishes both in the Generic Package Registry and creates a GitLab release.
 # The tag must equal the plugin version (wordpress-plugin/ondisos.php). Details: wordpress-plugin/publish-release.sh,
-# docs/plans/PLAN-3.1.1.md. The files are readable without login when the project is public.
+# docs/entwicklung/plans/PLAN-3.1.1.md. The files are readable without login when the project is public.
 release:plugin_zip:
   stage: release
   dependencies: []

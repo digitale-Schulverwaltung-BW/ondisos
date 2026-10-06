@@ -117,13 +117,13 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 == Upgrade Notice ==
 
 = 3.1.0 =
-Läuft mit Backend 3.0 und 3.1; die neuen Funktionen (Surveys aus dem Backend, Statuszeilen) brauchen Backend 3.1. Der Cache liegt in wp-content/uploads und muss beschreibbar sein (ohne Schreibrecht arbeitet das Plugin ohne Cache). Siehe docs/MIGRATION-3.1.md im Ondisos-Repository.
+Läuft mit Backend 3.0 und 3.1; die neuen Funktionen (Surveys aus dem Backend, Statuszeilen) brauchen Backend 3.1. Der Cache liegt in wp-content/uploads und muss beschreibbar sein (ohne Schreibrecht arbeitet das Plugin ohne Cache). Siehe docs/betreiber/MIGRATION-3.1.md im Ondisos-Repository.
 
 = 2.1.1 =
 Nur Diagnose-Verbesserungen, keine Konfigurationsänderung nötig.
 
 = 2.1.0 =
-Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe docs/MIGRATION-3.0.md im Ondisos-Repository).
+Benötigt ein Ondisos-Backend ab 3.0. Nach dem Update Tenant-Slug und Tenant-API-Secret unter Einstellungen → Ondisos eintragen (siehe docs/betreiber/MIGRATION-3.0.md im Ondisos-Repository).
 
 == Developer Notes ==
 

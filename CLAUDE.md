@@ -21,9 +21,9 @@
   (Text aus dem SurveyJS-Creator einfügen → prüfen → Entwurf → Vorschau → veröffentlichen, mit Verlauf und Wiederherstellen). Surveys und Themes liegen
   dann in der Datenbank (`form_resources`) und kommen mit der Config zum Frontend; die Dateien in `frontend/surveys/` bleiben als Fallback.
   Neue Tenants starten mit den Formularen eines anderen Tenants (`FormCopyService`; Empfänger und Logo werden nie kopiert).
-  Der Creator selbst ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/SURVEYJS.md).
+  Der Creator selbst ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md).
 
-**Weiterführende Dokumente:** [docs/README.md](docs/README.md) (Index) · [MIGRATION-3.1.md](docs/MIGRATION-3.1.md) (Upgrade 3.0 → 3.1) · [MIGRATION-3.0.md](docs/MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](docs/MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](docs/DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
+**Weiterführende Dokumente:** [docs/README.md](docs/README.md) (Index) · [MIGRATION-3.1.md](docs/betreiber/MIGRATION-3.1.md) (Upgrade 3.0 → 3.1) · [MIGRATION-3.0.md](docs/betreiber/MIGRATION-3.0.md) (Upgrade von 2.x) · [MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md) (Betrieb mehrerer Schulen) · [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md) · [wordpress-plugin/INSTALL.md](wordpress-plugin/INSTALL.md)
 
 ---
 
@@ -70,7 +70,8 @@ projekt/
 │   └── INSTALL.md
 │
 ├── docs/                          # Betriebs- und Projektdokumentation (Index: docs/README.md)
-│   └── plans/                    # Planungsdokumente (PLAN-3.1.md, …)
+│   ├── betreiber/ · redaktion/ · sekretariat/ · schul-it/   # nach Rolle
+│   └── entwicklung/              # plans/ (PLAN-3.1.md, …), releases/, CI_CD.md, TODO.md
 │
 ├── database/
 │   ├── schema.sql                # Neuinstallation (Tenant 1 mit Platzhalter-Secret!)
@@ -245,7 +246,7 @@ CREATE TABLE form_configs (        -- Formular-Konfiguration je Tenant
     UNIQUE KEY uq_tenant_form (tenant_id, form_key)
 );
 
--- 3.1 (Formular-Editor, Details: docs/plans/PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
+-- 3.1 (Formular-Editor, Details: docs/entwicklung/plans/PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
 -- form_resources:  veröffentlichte Surveys/Themes je Tenant, UNIQUE (tenant_id, kind, name), sha256 = Versions-Token
 -- form_drafts:     höchstens ein Survey-Entwurf je Formular (based_on_sha = Live-Stand beim Anlegen → Konflikterkennung)
 -- form_revisions:  Historie, nur anhängen (config | survey | theme), Aufbewahrung 50 je Formular und Typ
@@ -644,7 +645,7 @@ archiviert
 
 ## 🚀 Deployment
 
-> **📖 Vollständige Deployment-Dokumentation:** Siehe **[DEPLOYMENT.md](docs/DEPLOYMENT.md)**
+> **📖 Vollständige Deployment-Dokumentation:** Siehe **[DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md)**
 
 ### Quick Overview
 
@@ -684,11 +685,11 @@ curl http://your-server:9080/api/health.php
 - ✅ Automatisches Mapping: `DB_USER` → `MYSQL_USER`, keine Duplikation!
 - ✅ Frontend (manuell): `frontend/.env` mit `BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`
 
-**Upgrade von 2.x:** [MIGRATION-3.0.md](docs/MIGRATION-3.0.md). **Mehrere Schulen:** [MULTI-TENANT.md](docs/MULTI-TENANT.md).
+**Upgrade von 2.x:** [MIGRATION-3.0.md](docs/betreiber/MIGRATION-3.0.md). **Mehrere Schulen:** [MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md).
 
 ### Weitere Themen
 
-Siehe **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** für Details zu:
+Siehe **[DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md)** für Details zu:
 
 - **Option 1**: Docker Backend + Manuelles Frontend (empfohlen)
   - Docker-Setup mit vorkonfigurierten Compose-Files
@@ -703,7 +704,7 @@ Siehe **[DEPLOYMENT.md](docs/DEPLOYMENT.md)** für Details zu:
 
 - **Option 3**: Komplett Docker
   - Dev/Testing Environment
-  - Referenz: [DOCKER.md](docs/DOCKER.md)
+  - Referenz: [DOCKER.md](docs/betreiber/DOCKER.md)
 
 - **Wartung & Updates**
   - Docker-Updates & Rollbacks
@@ -971,8 +972,8 @@ http://intranet.example.com/backend/dashboard.php
 2. **Integration Tests** mit Test-Datenbank
 3. **Monitoring** Setup (z.B. Sentry, Prometheus)
 4. **API Documentation** (OpenAPI/Swagger)
-5. ~~Form-Config Admin-UI und Survey-Pflege im Backend~~ (3.1 ✅, Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md))
-6. **WordPress-Plugin ohne Shell**, Rest: Verbindungscode und Update-Prüfung (ZIP-Build ist umgesetzt; Entwurf: [PLAN-3.1.1.md](docs/plans/PLAN-3.1.1.md))
+5. ~~Form-Config Admin-UI und Survey-Pflege im Backend~~ (3.1 ✅, Plan: [PLAN-3.1.md](docs/entwicklung/plans/PLAN-3.1.md))
+6. **WordPress-Plugin ohne Shell**, Rest: Verbindungscode und Update-Prüfung (ZIP-Build ist umgesetzt; Entwurf: [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md))
 7. **Datei-Fallback abschaffen** (`frontend/surveys/` nur noch als Importquelle, ohne Termin)
 8. **SMTP-Versand** statt PHP `mail()`
 9. **Deutsche Locale** für SurveyJS
@@ -1186,7 +1187,7 @@ php -l backend/config/messages.local.php
 
 ### `Access denied for user 'anmeldung'` beim Start (Migration)
 → Das MySQL-Volume behält die Zugangsdaten vom **ersten** Start; spätere Änderungen von `DB_PASS`/`MYSQL_ROOT_PASSWORD` in der `.env` kommen nicht an
-→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](docs/DEPLOYMENT.md#datenbank-zugriff-verweigert)
+→ Alte Werte wiederherstellen, Passwort per `ALTER USER` nachziehen, oder nur das MySQL-Volume neu anlegen (Datenverlust, nicht `down -v`) — [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md#datenbank-zugriff-verweigert)
 
 ### Admin-Login abgelehnt, obwohl das Passwort stimmt
 → Meist ein beschädigter `ADMIN_PASSWORD_HASH`: In der Root-`.env` MUSS der Hash in einfachen Anführungszeichen stehen, sonst expandiert Docker Compose die `$…`-Teile (Länge im Container ≠ 60: `docker compose exec backend sh -c 'echo ${#ADMIN_PASSWORD_HASH}'`)
@@ -1215,7 +1216,7 @@ php -l backend/config/messages.local.php
 
 ### Anmeldung „erfolgreich", aber nichts im Backend / Formular „currently unavailable" trotz erreichbarem Backend
 → Formular mit `db: false` speichert nicht im Backend (nur E-Mail an `notify_email`). Ohne gültige `notify_email` würde die Absendung verworfen: das Frontend zeigt das Formular dann nicht an (503 / neutrale Meldung, Administratoren sehen die Ursache), `seed-forms.php` warnt
-→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](docs/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
+→ Beheben per SQL: `db` auf `true` setzen oder eine `notify_email` eintragen — [MIGRATION-3.0.md § 6](docs/betreiber/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern)
 
 ### Excel-Export zeigt Formular-Spalte
 → Check dass Filter gesetzt ist: `?form=bs`
@@ -1254,7 +1255,7 @@ php -l backend/config/messages.local.php
 - ✅ PDF-Vorschau (`form_pdf_preview.php`): Beispielangaben aus der Survey (Feldname, 1.1.2000, 1, erste Auswahl), nutzt die ungespeicherten Formularwerte, Wasserzeichen „VORSCHAU"
 - ✅ Docker-Image: GD mit JPEG-Unterstützung (`libjpeg-dev`, vorher konnten JPEG-Logos nicht verarbeitet werden)
 
-**Formulare im Backend pflegen** (Plan: [PLAN-3.1.md](docs/plans/PLAN-3.1.md), Upgrade: [MIGRATION-3.1.md](docs/MIGRATION-3.1.md))
+**Formulare im Backend pflegen** (Plan: [PLAN-3.1.md](docs/entwicklung/plans/PLAN-3.1.md), Upgrade: [MIGRATION-3.1.md](docs/betreiber/MIGRATION-3.1.md))
 - ✅ Neue Tabellen `form_resources` (veröffentlichte Surveys/Themes), `form_drafts` (ein Entwurf je Formular), `form_revisions` (Verlauf); `migrate.php` (Schritte 8–10)
 - ✅ Formular-Editor: Liste, anlegen, Konfiguration als HTML-Formular (Schema-getrieben, rollenabhängig: Tenant-Admins ohne Dateinamen/Logo), Verlauf mit Wiederherstellen, Konflikterkennung
 - ✅ Survey-Editor: JSON einfügen/laden (CodeMirror 6), Prüfung mit Zeile/Spalte, Feldänderungen, Diff, Entwurf, Veröffentlichen mit Versionsvorschlag, Wiederherstellen
@@ -1291,7 +1292,7 @@ php -l backend/config/messages.local.php
 - ✅ Endgültiges Löschen (Hard-Delete, Auto-/manuelles Expunge) entfernt auch die Upload-Dateien (`UploadCleanupService`)
 - ✅ Docker: Migration bei jedem Start, `docker compose` (Compose-Plugin), Makefile
 
-**Upgrade von 2.x:** siehe [MIGRATION-3.0.md](docs/MIGRATION-3.0.md).
+**Upgrade von 2.x:** siehe [MIGRATION-3.0.md](docs/betreiber/MIGRATION-3.0.md).
 
 ---
 

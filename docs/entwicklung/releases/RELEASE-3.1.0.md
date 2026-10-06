@@ -1,6 +1,6 @@
 # Release-Check 3.1.0
 
-Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELEASE-NOTES-3.1.0.md) · Upgrade: [MIGRATION-3.1.md](MIGRATION-3.1.md) · Plan: [plans/PLAN-3.1.md](plans/PLAN-3.1.md).
+Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELEASE-NOTES-3.1.0.md) · Upgrade: [MIGRATION-3.1.md](../../betreiber/MIGRATION-3.1.md) · Plan: [plans/PLAN-3.1.md](../plans/PLAN-3.1.md).
 
 ## 1. Was geprüft ist (Kopf des Stapels `feature/v31-ap8-docs`)
 
@@ -13,7 +13,7 @@ Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELE
 | Upgrade: Schema von `main` + `migrate.php` (zweimal) | 3 neue Tabellen, zweiter Lauf ohne Änderung (idempotent) |
 | Schema-Drift (`schema.sql` ↔ `migrations/add_form_editor_tables.sql` ↔ `migrate.php`) | Test grün |
 | Dokumentationslinks (`DocsLinksTest`) | keine kaputten Links, Root nur `README.md` + `CLAUDE.md` |
-| Demo-Ende-zu-Ende (Standalone, WordPress, Backend, zwei Tenants) | siehe Abnahmeliste in [TODO.md](TODO.md#v310--stand-der-abnahme) |
+| Demo-Ende-zu-Ende (Standalone, WordPress, Backend, zwei Tenants) | siehe Abnahmeliste in [TODO.md](../TODO.md#v310--stand-der-abnahme) |
 
 **Noch manuell zu prüfen** (steht auch in `TODO.md`):
 - [ ] WordPress-Plugin: Statusseite *Einstellungen → Ondisos* mit „Secret passt" / „0 Formulare".
@@ -42,7 +42,7 @@ Hinweis: `docs/plans/PLAN-3.1.1.md` ist ein Entwurf aus einer anderen Session, d
 
 1. `main` auschecken, Tests laufen lassen (`composer test`).
 2. Tag setzen: `git tag -a v3.1.0 -m "Ondisos 3.1.0 — Formulare im Backend pflegen"` und `git push origin v3.1.0`.
-3. Betrieb nach [MIGRATION-3.1.md](MIGRATION-3.1.md): Backend aktualisieren (`migrate.php`, Docker-Image neu bauen), Frontend-Cache-Verzeichnis, WordPress-Plugin aktualisieren.
+3. Betrieb nach [MIGRATION-3.1.md](../../betreiber/MIGRATION-3.1.md): Backend aktualisieren (`migrate.php`, Docker-Image neu bauen), Frontend-Cache-Verzeichnis, WordPress-Plugin aktualisieren.
 4. Rauchtest: Formular im Frontend öffnen und absenden; im Backend *Formulare* öffnen, ein Formular bearbeiten, Survey-Vorschau ansehen; Plugin-Statusseite prüfen.
 5. Release Notes ([RELEASE-NOTES-3.1.0.md](RELEASE-NOTES-3.1.0.md)) in die GitLab-Release-Beschreibung übernehmen.
 
@@ -53,4 +53,4 @@ Plugin-Version: entschieden und umgesetzt — das Plugin springt von `2.1.1` auf
 - **Code:** Vorheriges Release (`v3.0.0`) auschecken. Die neuen Tabellen stören 3.0 nicht (rein additiv); sie können stehen bleiben.
 - **Formulare:** Gelieferte Surveys kommen nur noch aus dem Backend, wenn dort eine liegt. Ein 3.0-Frontend ignoriert `survey_json` und nimmt seine Dateien.
 - **Einzelnes Formular:** Im Editor einen früheren Stand wiederherstellen (Verlauf), nicht per SQL.
-- **Backup:** Vor dem Upgrade einen Datenbank-Dump ziehen ([DISASTER_RECOVERY.md](DISASTER_RECOVERY.md)); er enthält die neuen Tabellen mit.
+- **Backup:** Vor dem Upgrade einen Datenbank-Dump ziehen ([DISASTER_RECOVERY.md](../../betreiber/DISASTER_RECOVERY.md)); er enthält die neuen Tabellen mit.

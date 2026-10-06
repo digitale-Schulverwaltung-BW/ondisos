@@ -20,7 +20,7 @@
 Ondisos nimmt Schulanmeldungen online entgegen und bringt sie ohne Abtippen in die Schulverwaltung:
 Eltern und Betriebe füllen ein Formular auf der Schulwebsite aus, das Sekretariat findet die Anmeldung
 im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter und importiert sie in
-[ASV-BW](docs/ASV.md). Die Daten bleiben auf Servern, die Sie selbst betreiben.
+[ASV-BW](docs/sekretariat/ASV.md). Die Daten bleiben auf Servern, die Sie selbst betreiben.
 
 ## Was Ondisos kann
 
@@ -66,7 +66,7 @@ Das vollständige Verzeichnis aller Dokumente steht in **[docs/README.md](docs/R
 
 Das Frontend zeigt die Formulare und nimmt Eingaben entgegen, das Backend speichert, prüft und verwaltet.
 Jede Anfrage nennt die Schule (`?tenant=<slug>`) und ist mit deren Secret signiert; das Secret bleibt auf dem Server.
-Details: [CLAUDE.md](CLAUDE.md) (Abschnitt Architektur) · [docs/MULTI-TENANT.md](docs/MULTI-TENANT.md)
+Details: [CLAUDE.md](CLAUDE.md) (Abschnitt Architektur) · [docs/MULTI-TENANT.md](docs/betreiber/MULTI-TENANT.md)
 
 ## Schnellstart (Backend mit Docker)
 
@@ -83,7 +83,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), die **Formulare** (`seed-forms.php`) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
 Diese Schritte, Prüfungen und Stolperfallen (Hash in einfachen Anführungszeichen!) stehen vollständig in der
-**[Installationsanleitung](docs/DEPLOYMENT.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/MIGRATION-3.1.md).
+**[Installationsanleitung](docs/betreiber/DEPLOYMENT.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md).
 
 **Voraussetzungen im Überblick:** Backend: Docker – oder PHP 8.2+, MySQL 8.0+/MariaDB 10.5+, Composer, Erweiterungen `pdo_mysql`, `mbstring`, `gd`.
 Frontend: PHP 8.0+ und Apache/Nginx – oder ein WordPress.
@@ -106,20 +106,20 @@ Konventionen, Tests und Struktur: [CLAUDE.md](CLAUDE.md) · [backend/UNITTESTS.m
 
 Prepared Statements, Escaping, CSRF-Schutz, Rate Limiting, Mandantentrennung bei jeder Abfrage, signierte API, geprüfte Uploads mit Virenscan,
 zeitlich begrenzte PDF-Links und ein Audit-Log.
-Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte Einschränkungen: [DEPLOYMENT.md](docs/DEPLOYMENT.md) · [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit).
+Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte Einschränkungen: [DEPLOYMENT.md](docs/betreiber/DEPLOYMENT.md) · [CLAUDE.md § Sicherheit](CLAUDE.md#-sicherheit).
 
 ## Status und Ausblick
 
 **Version 3.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
-([Release Notes](docs/RELEASE-NOTES-3.1.0.md)).
+([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.1.0.md)).
 
-Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
+Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
 Weitere Ideen: Freigabe-Workflow, Import aus Schulverwaltungssoftware, REST-API.
 
 ## Danksagung und Lizenz
 
 Ondisos baut auf [SurveyJS](https://surveyjs.io/), [Bootstrap 5](https://getbootstrap.com/), [DataTables](https://datatables.net/),
 [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet), [mPDF](https://mpdf.github.io/) und [CodeMirror](https://codemirror.net/).
-Der SurveyJS-Creator ist nicht Teil von Ondisos (eigene Lizenz, siehe [SURVEYJS.md](docs/SURVEYJS.md)).
+Der SurveyJS-Creator ist nicht Teil von Ondisos (eigene Lizenz, siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md)).
 
 Open Source unter der [MIT-Lizenz](LICENSE).

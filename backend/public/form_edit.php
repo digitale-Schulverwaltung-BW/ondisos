@@ -297,7 +297,7 @@ require __DIR__ . '/../inc/header.php';
                     <?= ff_e(M::format('forms.survey.fields', ['count' => count($form['survey_fields'] ?? [])], '{{count}} Felder')) ?></p>
             <?php else: ?>
                 <p class="mb-1"><span class="badge text-bg-secondary"><?= ff_e(M::get('forms.source.file', 'Datei im Frontend')) ?></span></p>
-                <p class="text-muted mb-0"><?= ff_e(M::get('forms.survey.import_hint', 'Diese Survey liegt als Datei im Frontend. Mit „php import-surveys.php" lässt sie sich ins Backend übernehmen (siehe docs/MIGRATION-3.1.md).')) ?></p>
+                <p class="text-muted mb-0"><?= ff_e(M::get('forms.survey.import_hint', 'Diese Survey liegt als Datei im Frontend. Mit „php import-surveys.php" lässt sie sich ins Backend übernehmen (siehe docs/betreiber/MIGRATION-3.1.md).')) ?></p>
             <?php endif; ?>
             <?php if ($form['has_draft']): ?><p class="mb-0 mt-2"><span class="badge text-bg-warning"><?= ff_e(M::get('forms.draft', 'Entwurf')) ?></span></p><?php endif; ?>
             <a href="form_survey.php?form=<?= urlencode($formKey) ?>" class="btn btn-outline-primary mt-3"><?= ff_e(M::get('forms.survey.edit', 'Survey bearbeiten')) ?></a>

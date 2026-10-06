@@ -1082,8 +1082,8 @@ docker compose down -v
 - [DEPLOYMENT.md](DEPLOYMENT.md) - Production Deployment, Backups
 - [MIGRATION-3.0.md](MIGRATION-3.0.md) - Upgrade von 2.x, Rollback
 - [MULTI-TENANT.md](MULTI-TENANT.md) - Tenants, Secrets, Isolierung
-- [CI_CD.md](CI_CD.md) - Automated Deployment
-- [CLAUDE.md](../CLAUDE.md) - Full Documentation
+- [CI_CD.md](../entwicklung/CI_CD.md) - Automated Deployment
+- [CLAUDE.md](../../CLAUDE.md) - Full Documentation
 
 **Checklisten:**
 - [ ] Backup-Prozedur getestet (monatlich)

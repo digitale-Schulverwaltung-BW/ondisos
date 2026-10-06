@@ -53,7 +53,7 @@ row per tenant and form; the frontend fetches it from the backend). To create it
 `frontend/config/forms-config-dist.php` to `frontend/config/forms-config.php`, edit it and import it:
 `php seed-forms.php` (manual install) or, with Docker, `docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php`
 (tenant 1 only; adds new forms, never overwrites existing rows).
-Later changes are made in `form_configs.config_json` (SQL) — see [../MIGRATION-3.0.md § 6](../docs/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
+Later changes are made in `form_configs.config_json` (SQL) — see [../MIGRATION-3.0.md § 6](../docs/betreiber/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
 The entry looks like this (shown as PHP; it is stored as JSON):
 
 ```php

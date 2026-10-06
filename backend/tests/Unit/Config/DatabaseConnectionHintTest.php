@@ -20,7 +20,7 @@ class DatabaseConnectionHintTest extends TestCase
         $this->assertStringContainsString('CREATED with', $hint);
         $this->assertStringContainsString('ONLY the MySQL volume', $hint);
         $this->assertStringContainsString('down -v', $hint, 'must warn against down -v');
-        $this->assertStringContainsString('docs/DEPLOYMENT.md', $hint);
+        $this->assertStringContainsString('docs/betreiber/DEPLOYMENT.md', $hint);
     }
 
     public function testUnknownDatabaseGetsTheSameHint(): void

@@ -23,7 +23,7 @@ Ein Formular besteht aus zwei Teilen:
 Beides pflegen Schul-Admins im Backend unter **Formulare** (ab Version 3.1). Surveys und Themes liegen in der Datenbank (pro Schule), das Frontend holt sie
 zusammen mit der Konfiguration vom Backend.
 
-![Liste der Formulare mit Schul-Logo und Farbe der PDF-Bestätigungen](img/backend-formulare.png)
+![Liste der Formulare mit Schul-Logo und Farbe der PDF-Bestätigungen](../img/backend-formulare.png)
 
 ## Formulare entwerfen (SurveyJS Creator)
 
@@ -63,7 +63,7 @@ Frontend / WordPress zeigt die veröffentlichte Fassung
 6. **Vorschau** ansehen (siehe unten), danach **Veröffentlichen**. Die Formular-Version kann dabei angepasst werden (ein Vorschlag wird gemacht); sie wird mit jeder
    Anmeldung gespeichert, so lässt sich später nachvollziehen, nach welchem Stand ausgefüllt wurde.
 
-![Survey-Editor mit JSON, Prüfen, Entwurf und Veröffentlichen](img/backend-survey-editor.png)
+![Survey-Editor mit JSON, Prüfen, Entwurf und Veröffentlichen](../img/backend-survey-editor.png)
 
 Wurde die Survey zwischenzeitlich von jemand anderem veröffentlicht, bleibt Ihr Entwurf gespeichert, wird aber nicht veröffentlicht. Der Editor zeigt den Unterschied; nach der Prüfung lässt sich erneut veröffentlichen.
 
@@ -75,7 +75,7 @@ Wurde die Survey zwischenzeitlich von jemand anderem veröffentlicht, bleibt Ihr
 3. **Survey bearbeiten**: das im Creator entworfene JSON einfügen und wie oben prüfen, als Entwurf speichern und veröffentlichen.
 4. Einbetten: Standalone `…/index.php?form=<schlüssel>`, WordPress `[ondisos form="<schlüssel>"]`.
 
-Eine neue Schule kann stattdessen mit den Formularen einer anderen Schule beginnen (*Formulare von einem anderen Tenant übernehmen*, siehe [MULTI-TENANT.md](MULTI-TENANT.md)).
+Eine neue Schule kann stattdessen mit den Formularen einer anderen Schule beginnen (*Formulare von einem anderen Tenant übernehmen*, siehe [MULTI-TENANT.md](../betreiber/MULTI-TENANT.md)).
 Empfänger-Adressen und Logo werden dabei nie kopiert.
 
 ### Vorschau
@@ -83,11 +83,11 @@ Empfänger-Adressen und Logo werden dabei nie kopiert.
 Die Vorschau zeigt Entwurf oder veröffentlichte Fassung genau so, wie Besucher das Formular sehen, in den Breiten Handy, Tablet und Desktop. Eingaben werden nicht gespeichert,
 „Abschicken“ sendet nichts. Die Vorschau läuft in einem abgeschotteten Rahmen und ändert nichts am Live-Formular.
 
-![Vorschau des Formulars im Backend](img/backend-vorschau.png)
+![Vorschau des Formulars im Backend](../img/backend-vorschau.png)
 
 So sieht das Formular für Besucher aus:
 
-![Das Anmeldeformular im Frontend](img/frontend-formular.png)
+![Das Anmeldeformular im Frontend](../img/frontend-formular.png)
 
 ### Verlauf und Wiederherstellen
 
@@ -101,7 +101,7 @@ verweist mit *Survey-Datei* und *Theme-Datei* auf die Survey und das Design-Them
 
 Die Konfiguration wird im Formular-Editor in Tabs gepflegt: *Allgemein*, *Benachrichtigungs-E-Mail*, *PDF-Bestätigung*, *Kalender-Download (iCal)* und *Info*.
 
-![Formular-Editor, Tab Allgemein](img/backend-formular-editor.png)
+![Formular-Editor, Tab Allgemein](../img/backend-formular-editor.png)
 
 Für jedes Formular lassen sich konfigurieren:
 
@@ -112,13 +112,13 @@ Für jedes Formular lassen sich konfigurieren:
 - ob ein PDF-Download nach dem Absenden angezeigt wird (Logo und Farbe der Schule, optional ein angehängtes PDF, PDF-Vorschau)
 - ob Teile des Formulars als Link vorausgefüllt weitergegeben werden können (für Firmen, die regelmäßig Auszubildende anmelden)
 
-![Tab „PDF-Bestätigung“ mit Logo, PDF-Vorschau und angehängtem PDF](img/backend-formular-pdf.png)
+![Tab „PDF-Bestätigung“ mit Logo, PDF-Vorschau und angehängtem PDF](../img/backend-formular-pdf.png)
 
 ⚠️ **Wichtig:** Es ist kein E-Mail-Versand der Formulardaten an den Benutzer vorgesehen, da diese unverschlüsselt übermittelt würden. Soll der Benutzer eine Bestätigung
 erhalten, muss die PDF-Bestätigung aktiviert werden: Sie wird TLS-verschlüsselt (über https) an das Endgerät übertragen.
 
 Die Konfiguration lässt sich auch per Skript einspielen: `php backend/seed-forms.php [--tenant=<slug>]` (fügt neue Formulare hinzu, überschreibt vorhandene nie, prüft jeden
-Eintrag; Vorlage: [frontend/config/forms-config-dist.php](../frontend/config/forms-config-dist.php)), siehe [MIGRATION-3.0.md § 6](MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
+Eintrag; Vorlage: [frontend/config/forms-config-dist.php](../../frontend/config/forms-config-dist.php)), siehe [MIGRATION-3.0.md § 6](../betreiber/MIGRATION-3.0.md#6-danach-formular-konfiguration-ändern).
 
 ## Surveys als Dateien (Fallback)
 
@@ -131,4 +131,4 @@ Vorhandene Dateien lassen sich in die Datenbank übernehmen:
 php backend/import-surveys.php [--tenant=<slug>] [--overwrite] [--dry-run] frontend/surveys
 ```
 
-Details und Upgrade-Hinweise: [MIGRATION-3.1.md](MIGRATION-3.1.md). Der Datei-Fallback soll später entfallen (kein Termin); die Dateien bleiben dann nur Importquelle.
+Details und Upgrade-Hinweise: [MIGRATION-3.1.md](../betreiber/MIGRATION-3.1.md). Der Datei-Fallback soll später entfallen (kein Termin); die Dateien bleiben dann nur Importquelle.

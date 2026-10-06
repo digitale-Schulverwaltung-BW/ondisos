@@ -7,7 +7,7 @@
 > **Von 2.x kommend?** Lies zuerst **[MIGRATION-3.0.md](MIGRATION-3.0.md)** — das Upgrade betrifft
 > Datenbank, Frontend-Konfiguration und die Frontend↔Backend-Kommunikation.
 > **Mehrere Schulen auf einem Backend?** → **[MULTI-TENANT.md](MULTI-TENANT.md)**.
-> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md)**.
+> **WordPress-Einbindung?** → **[wordpress-plugin/INSTALL.md](../../wordpress-plugin/INSTALL.md)**.
 
 Das System besteht aus zwei Servern:
 
@@ -522,9 +522,9 @@ Tenant-Admins laden das Logo selbst hoch und stellen die Akzentfarbe ein: *Formu
 - Akzentfarbe: Farbfeld oder Hex-Eingabe (`#rrggbb`, Standard `#3498db`), gespeichert unter `uploads/tenant-<id>/branding/accent.txt`. Sie färbt den Balken links an Einleitung und Abschnitten.
 - Je Formular lässt sich im PDF-Tab des Formular-Editors zusätzlich ein PDF anhängen (höchstens 5 MB / 20 Seiten); es wird hinter jede Bestätigung gesetzt.
 
-![Formulare: Logo der Schule und Farbe der PDF-Bestätigungen](img/backend-formulare.png)
+![Formulare: Logo der Schule und Farbe der PDF-Bestätigungen](../img/backend-formulare.png)
 
-![PDF-Bestätigung mit Schul-Logo](img/pdf-bestaetigung.png)
+![PDF-Bestätigung mit Schul-Logo](../img/pdf-bestaetigung.png)
 
 Reihenfolge der Logo-Quellen: `logo: false` in der Formular-Konfiguration (kein Logo) → Pfad in der Formular-Konfiguration (nur Plattform-Admin) → Schul-Logo (Upload) → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`.
 

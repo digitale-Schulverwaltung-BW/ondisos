@@ -4,7 +4,7 @@ Since **3.0**, one ondisos backend can serve several schools (*tenants*) with fu
 running with the same footprint as before (single-tenant mode, no extra administration).
 
 > This document records the **architecture and the decisions behind it**. For operating a multi-tenant installation see
-> [../MULTI-TENANT.md](../docs/MULTI-TENANT.md); for upgrading from 2.x see [../MIGRATION-3.0.md](../docs/MIGRATION-3.0.md).
+> [../MULTI-TENANT.md](../betreiber/MULTI-TENANT.md); for upgrading from 2.x see [../MIGRATION-3.0.md](../betreiber/MIGRATION-3.0.md).
 
 Two deployment settings are possible. **Scenario A (implemented in 3.0):** several frontend servers — one per school — feed a single
 multi-tenant backend. **Scenario B (dropped, kept as an option):** a managed multi-tenant frontend for several schools, e.g. in one municipality.
@@ -154,7 +154,7 @@ Entry points that use form config (`index.php`, `save.php`, `ical.php`, the Word
 
 ### 3.1 — Form config admin UI and survey management (implemented)
 
-Done in 3.1, see [../docs/plans/PLAN-3.1.md](../docs/plans/PLAN-3.1.md) and [../docs/MIGRATION-3.1.md](../docs/MIGRATION-3.1.md):
+Done in 3.1, see [../docs/plans/PLAN-3.1.md](plans/PLAN-3.1.md) and [../docs/MIGRATION-3.1.md](../betreiber/MIGRATION-3.1.md):
 
 - form configurations are edited through an HTML form in the backend (no JSON for school admins), saved with a revision history
 - surveys and themes are stored in the backend per tenant (`form_resources`), pasted/uploaded by the admin, validated, previewed and published with draft/rollback;

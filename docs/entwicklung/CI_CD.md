@@ -673,7 +673,7 @@ curl http://localhost:8081/index.php
 **Weitere Ressourcen:**
 - [GitLab CI/CD Docs](https://docs.gitlab.com/ee/ci/)
 - [Docker Compose Docs](https://docs.docker.com/compose/)
-- DISASTER_RECOVERY.md
+- [DISASTER_RECOVERY.md](../betreiber/DISASTER_RECOVERY.md)
 
 ---
 

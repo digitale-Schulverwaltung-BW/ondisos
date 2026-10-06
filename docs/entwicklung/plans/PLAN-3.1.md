@@ -1,7 +1,7 @@
 # Plan Ondisos 3.1 — Formulare im Backend pflegen
 
-Status: **umgesetzt** (Stand 2026-10-01; Release-Abnahme siehe [../TODO.md](../TODO.md), Upgrade siehe [../MIGRATION-3.1.md](../MIGRATION-3.1.md)).
-Grundlage: [../../CLAUDE.md](../../CLAUDE.md), [../../backend/MULTI-TENANT.md](../../backend/MULTI-TENANT.md), [../SURVEYJS.md](../SURVEYJS.md), Code-Sichtung (siehe „Befunde").
+Status: **umgesetzt** (Stand 2026-10-01; Release-Abnahme siehe [../TODO.md](../TODO.md), Upgrade siehe [../MIGRATION-3.1.md](../../betreiber/MIGRATION-3.1.md)).
+Grundlage: [../../CLAUDE.md](../../../CLAUDE.md), [../../backend/MULTI-TENANT.md](../MULTI-TENANT-DESIGN.md), [../SURVEYJS.md](../../redaktion/SURVEYJS.md), Code-Sichtung (siehe „Befunde").
 
 ## 0. Umsetzungsstand
 
