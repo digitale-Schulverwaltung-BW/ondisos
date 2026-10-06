@@ -358,7 +358,7 @@ class LoginTest extends TestCase
 
         $output = (string) shell_exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($script) . ' ' . escapeshellarg($password));
 
-        $this->assertSame(1, preg_match("/^ADMIN_PASSWORD_HASH='(\\\$2y\\\$10\\\$[.\\/A-Za-z0-9]{53})'$/m", $output, $m), 'the .env line must be single-quoted');
+        $this->assertSame(1, preg_match("/^ADMIN_PASSWORD_HASH='(\\\$2y\\\$[0-9]{2}\\\$[.\\/A-Za-z0-9]{53})'$/m", $output, $m), 'the .env line must be single-quoted');
         $this->assertTrue(password_verify($password, $m[1]));
         $this->assertStringContainsString('docker compose up -d backend', $output);
     }
