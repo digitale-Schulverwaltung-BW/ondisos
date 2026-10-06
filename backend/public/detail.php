@@ -83,10 +83,11 @@ require __DIR__ . '/../inc/header.php';
                         <dd class="col-sm-8">
                             <?php 
                                 $statusEnum = \App\Models\AnmeldungStatus::tryFromString($anmeldung->status);
-                                $badgeClass = $statusEnum?->badgeClass() ?? 'badge bg-secondary';                                
+                                $badgeClass = $statusEnum?->badgeClass() ?? 'badge bg-secondary';
+                                $statusLabel = $statusEnum?->label() ?? $anmeldung->status;
                             ?>
                             <span class="<?= $badgeClass ?>">
-                                <?= NH::displayHtml($anmeldung->status) ?>
+                                <?= htmlspecialchars($statusLabel) ?>
                             </span>
                         </dd>
                     </dl>

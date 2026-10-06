@@ -38,9 +38,9 @@ Das Formular auf der Schulwebsite einbinden und mit dem Backend verbinden.
 
 | Dokument | Inhalt |
 |---|---|
+| [Standalone-Frontend](schul-it/standalone-frontend.md) | Frontend ohne WordPress einrichten, testen, Fehlersuche |
 | [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md) | WordPress-Plugin installieren, konfigurieren, aktualisieren |
 | [wordpress-plugin/README.md](../wordpress-plugin/README.md) | Plugin im Detail: Shortcode, Hooks, Architektur |
-| [../frontend/.env.example](../frontend/.env.example) | Einstellungen des Standalone-Frontends (`BACKEND_API_URL`, `TENANT_SLUG`, `TENANT_API_SECRET`) |
 
 ## Betreiber
 
@@ -48,6 +48,7 @@ Das Backend installieren, Schulen einrichten, sichern und aktualisieren.
 
 | Dokument | Inhalt |
 |---|---|
+| [Betriebsmodell](betreiber/betriebsmodell.md) | Backend beim Schulträger, Frontend an der Schule: Aufgaben, Netzwerk, neue Schule anbinden |
 | [DEPLOYMENT.md](betreiber/DEPLOYMENT.md) | Installation (Docker, manuell), HTTPS, Admin-Zugang, Production-Checkliste |
 | [DOCKER.md](betreiber/DOCKER.md) | Docker-Umgebung im Detail |
 | [SERVER_SETUP.md](betreiber/SERVER_SETUP.md) | Server vorbereiten, Updates |
