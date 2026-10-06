@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git merge *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git pull *)",
+      "Bash(git rebase *)",
+      "Bash(git push *)",
+      "Bash(docker compose *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:9080/)"
+    ]
+  }
+}

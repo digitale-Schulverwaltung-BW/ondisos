@@ -87,7 +87,7 @@ Die Ausgabe enthält den Hash und die fertige Zeile `ADMIN_PASSWORD_HASH='…'`.
 
 ```bash
 ADMIN_USERNAME=admin
-ADMIN_PASSWORD_HASH='$2y$10$…'
+ADMIN_PASSWORD_HASH='$2y$…'
 ```
 
 Container neu erstellen, damit die Werte ankommen (ein `restart` übernimmt geänderte Compose-Variablen **nicht**), und prüfen:
