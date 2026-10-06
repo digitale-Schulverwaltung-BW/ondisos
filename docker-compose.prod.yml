@@ -31,11 +31,10 @@ services:
       # Override with production values
       - APP_ENV=production
       - APP_DEBUG=false
-      # Temporarily disabled until reverse proxy with SSL is set up:
-      # - SESSION_SECURE=true
-      # - FORCE_HTTPS=true
-      - SESSION_SECURE=false
-      - FORCE_HTTPS=false
+      # Both default to false until a reverse proxy with SSL is in place. Then set SESSION_SECURE=true
+      # (cookies only over HTTPS) and, if the proxy sends X-Forwarded-Proto, FORCE_HTTPS=true in the root .env.
+      - SESSION_SECURE=${SESSION_SECURE:-false}
+      - FORCE_HTTPS=${FORCE_HTTPS:-false}
       - AUTH_ENABLED=true
     deploy:
       resources:
