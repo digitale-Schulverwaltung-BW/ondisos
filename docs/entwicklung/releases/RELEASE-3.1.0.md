@@ -13,9 +13,9 @@ Stand der Vorbereitung: 2026-10-01. Release Notes: [RELEASE-NOTES-3.1.0.md](RELE
 | Upgrade: Schema von `main` + `migrate.php` (zweimal) | 3 neue Tabellen, zweiter Lauf ohne Änderung (idempotent) |
 | Schema-Drift (`schema.sql` ↔ `migrations/add_form_editor_tables.sql` ↔ `migrate.php`) | Test grün |
 | Dokumentationslinks (`DocsLinksTest`) | keine kaputten Links, Root nur `README.md` + `CLAUDE.md` |
-| Demo-Ende-zu-Ende (Standalone, WordPress, Backend, zwei Tenants) | siehe Abnahmeliste in [TODO.md](../TODO.md#v310--stand-der-abnahme) |
+| Demo-Ende-zu-Ende (Standalone, WordPress, Backend, zwei Tenants) | siehe [Abnahmeprotokoll](ABNAHME.md#v310) |
 
-**Noch manuell zu prüfen** (steht auch in `TODO.md`):
+**Noch manuell zu prüfen** (steht auch in [TODO.md](../TODO.md#manuell-zu-prüfen)):
 - [ ] WordPress-Plugin: Statusseite *Einstellungen → Ondisos* mit „Secret passt" / „0 Formulare".
 - [ ] Vorschau: Breitenumschalter (Handy/Tablet) in einem echten Browser.
 - [ ] Docker: Backend-Image neu bauen und die Vorschau gegen das frische Image prüfen.

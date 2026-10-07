@@ -27,7 +27,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand 2026-10-07: 958 Unit-Tests (Zählung von PHPUnit; bei 3.1.0 waren es 924) (`composer test -- --testsuite=Unit`; die 55,7 % Line-Coverage stammen aus einer früheren Messung) und 182 Integration-Tests bei 3.1.0, seitdem nicht neu gezählt (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand 2026-10-07: 958 Unit-Tests (Zählung von PHPUnit; bei 3.1.0 waren es 924) (`composer test -- --testsuite=Unit`; die Coverage misst der Pipeline-Job `coverage`) und 182 Integration-Tests bei 3.1.0, seitdem nicht neu gezählt (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 ### Tests lokal ausführen
 
@@ -136,60 +136,9 @@ class MyServiceTest extends TestCase
 composer test:filter MyServiceTest
 ```
 
-## GitLab CI/CD Pipeline
+## Pipeline
 
-Das Projekt verfügt über eine automatisierte GitLab CI/CD Pipeline:
-
-### Pipeline Stages
-
-```
-install → test → coverage → security
-```
-
-**install:**
-- `install_dependencies`: Composer install, Cache vendor/
-
-**test:**
-- `test_unit`: Unit Tests mit testdox, JUnit-Report
-- `test_integration`: Integration Tests mit MySQL 8.0 (allow_failure)
-- `lint_php`: PHP Syntax-Check für alle .php-Dateien
-
-**coverage:**
-- `coverage`: Code Coverage mit Xdebug (nur main/master/develop)
-  - HTML-Report als Artefakt (30 Tage)
-  - Coverage-Prozentsatz in Pipeline sichtbar
-
-**security:**
-- `secret_detection`: GitLab Secret Detection
-- `sast`: Static Application Security Testing
-
-### Pipeline lokal testen
-
-**Mit GitLab Runner:**
-```bash
-# GitLab Runner installieren
-curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
-sudo apt-get install gitlab-runner
-
-# Pipeline lokal ausführen
-gitlab-runner exec docker test_unit
-```
-
-**Mit Docker direkt:**
-```bash
-docker run --rm -v $(pwd):/app -w /app/backend php:8.1-cli \
-  bash -c "apt-get update && apt-get install -y git unzip && \
-  curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer && \
-  composer install && composer test"
-```
-
-### Pipeline-Konfiguration anpassen
-
-**.gitlab-ci.yml:**
-- PHP-Version ändern: `image: php:8.2-cli`
-- Test-Kommandos anpassen: `script: - composer test:filter MyTest`
-- Coverage nur auf bestimmten Branches: `only: - production`
-- Optionale Jobs aktivieren: Code Style, Security Check auskommentieren
+Jobs, Stufen, Release und lokales Nachstellen: [CI_CD.md](CI_CD.md).
 
 ## Manual Tests
 
@@ -207,7 +156,7 @@ http://anmeldung.example.com/index.php?form=bs
 # 1. Übersicht
 http://intranet.example.com/backend/
 
-# 2. Excel Export testen (Status sollte → "exportiert")
+# 2. Einträge in der Liste auswählen und Excel-Export testen (Status sollte → "exportiert")
 # 3. Detail ansehen
 # 4. Bulk-Action: Archivieren
 # 5. Papierkorb prüfen
@@ -222,15 +171,6 @@ http://intranet.example.com/backend/dashboard.php
 # Sollte zeigen: Letzter Lauf, Nächster Lauf, Anzahl bereit
 ```
 
-## Test Coverage Ziele
+## Testlücken und Ziele
 
-**Gut abgedeckt:** RateLimiter, PdfTokenService, MessageService, VirusScanService, HmacValidator, SecretPolicy, TenantContext, Tenant-Repositories, Upload-Validierung, FormConfigLoader.
-
-**Lücken:**
-- ⏳ Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) — bisher nur manuell/live geprüft
-- ⏳ AnmeldungRepository (Integration Tests gegen eine Test-Datenbank)
-- ⏳ JavaScript (`survey-handler-*.js`), WordPress-Plugin
-
-**Langfristig:** >80 % Code Coverage, Integration Tests mit Test-Datenbank, E2E-Tests für die kritischen Flows (Submit, Upload, PDF).
-
----
+Welche Bereiche noch keine Tests haben und was als Nächstes ansteht, führt [TODO.md](TODO.md#testlücken).

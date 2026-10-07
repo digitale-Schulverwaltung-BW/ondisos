@@ -29,5 +29,20 @@ Implementierte Schutzmaßnahmen und bekannte Einschränkungen.
 **Bekannte Einschränkungen:**
 - `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar und liefert z. B. `notify_email` — keine Geheimnisse in `config_json` ablegen.
 - Signaturen enthalten keinen Zeitstempel (kein Replay-Schutz über die Transportschicht hinaus): HTTPS zwischen Frontend und Backend verwenden.
+- Rate-Limit und Audit-Log verwenden die Absender-Adresse `REMOTE_ADDR`; hinter einem Reverse-Proxy ist das die Proxy-Adresse, das Limit gilt dann für alle Schulen gemeinsam ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)).
 
----
+## Behobene Befunde (Februar 2026)
+
+Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und durch Unit-Tests abgesichert.
+
+| Befund | Maßnahme | Wo |
+|---|---|---|
+| Fehlender CSRF-Schutz bei Löschen, Wiederherstellen und Sammelaktionen | Token-basierter Schutz mit `hash_equals`: `csrf_token()`, `csrf_validate()`, `csrf_field()`, `csrf_meta()`, `csrf_regenerate()`; Tokens in allen Formularen | `backend/inc/csrf.php`, `hard_delete.php`, `restore.php`, `bulk_actions.php` |
+| Datei-Upload nur nach Dateiendung geprüft | MIME-Typ per `finfo` aus dem **Inhalt**, Whitelist mit passenden Endungen (Doppelendungen wie `evil.php.jpg` und getarnte Dateien werden abgelehnt); `doc`/`docx` sind wegen Makro-Risiko **nicht** freigegeben (im Code auskommentiert) | `AnmeldungValidator`, `upload.php` |
+| Mögliches XSS in der Detailansicht (Feldnamen) | `htmlspecialchars` beim Aufbereiten der Feldnamen und beim Ausgeben (doppelte Absicherung) | `DetailController::humanizeKey()`, `detail.php` |
+| Rate-Limit durch User-Agent-Wechsel umgehbar | Schlüssel aus IP, SHA-256 des User-Agents und der Accept-Language | `RateLimiter::generateFingerprint()`, `submit.php` |
+| Session-Fixation bei Logout und Ablauf | `session_regenerate_id(true)` bei Login, Logout und Timeout | `inc/auth.php`, `login.php`, `logout.php` |
+| SQL-Injection über den Formular-Filter beim Export | Filter wird validiert (Repository und Service) | `AnmeldungValidator::validateFormularName()` |
+| Directory Traversal beim Upload und Download | `basename()`, Dateinamen-Validierung, Pfad muss im Tenant-Verzeichnis liegen | `upload.php`, `DownloadController` |
+
+Spätere Maßnahmen (Tenant-Isolierung, signierte API, Secret-Policy, Härtung des Formular-Editors) stehen im [Changelog](changelog.md).
