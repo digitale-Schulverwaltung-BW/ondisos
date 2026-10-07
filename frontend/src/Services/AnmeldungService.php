@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace Frontend\Services;
 
 use Frontend\Config\FormConfig;
+use Frontend\Utils\ClientIp;
 
 class AnmeldungService
 {
@@ -206,34 +207,12 @@ class AnmeldungService
     }
 
     /**
-     * Get client IP address (behind proxy-aware)
+     * Client IP address; X-Forwarded-For counts only behind a proxy listed in TRUSTED_PROXIES
      */
     private function getClientIp(): ?string
     {
-        $headers = [
-            'HTTP_CLIENT_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_X_FORWARDED',
-            'HTTP_FORWARDED_FOR',
-            'HTTP_FORWARDED',
-            'REMOTE_ADDR'
-        ];
+        $ip = ClientIp::get();
 
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                $ip = $_SERVER[$header];
-                
-                // X-Forwarded-For can contain multiple IPs
-                if (str_contains($ip, ',')) {
-                    $ip = trim(explode(',', $ip)[0]);
-                }
-
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
-                }
-            }
-        }
-
-        return null;
+        return filter_var($ip, FILTER_VALIDATE_IP) !== false ? $ip : null;
     }
 }

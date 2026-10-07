@@ -71,6 +71,7 @@ services:
       - FROM_EMAIL=noreply@example.com
       - MAIL_HEAD=Eine neue Anmeldung ist eingegangen
       - ALLOWED_ORIGINS=http://localhost:8081
+      - TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
       - UPLOAD_MAX_SIZE=10485760
       - UPLOAD_ALLOWED_TYPES=pdf,jpg,jpeg,png
     depends_on:
