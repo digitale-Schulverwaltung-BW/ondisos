@@ -66,7 +66,14 @@ Architektur, Tests, Pipeline, Planung.
 
 | Dokument | Inhalt |
 |---|---|
-| [../CLAUDE.md](../CLAUDE.md) | Architektur, Datenfluss, Schema, Konfiguration, Konventionen, Änderungshistorie |
+| [../CLAUDE.md](../CLAUDE.md) | Einstieg für Entwicklung: Kernkonzepte, Orientierung, Befehle, Konventionen, Dokumentationskarte |
+| [architektur.md](entwicklung/architektur.md) | Architektur, Dateiliste, Datenfluss, Datenbankschema, Funktionsumfang, Status-Ablauf |
+| [konfiguration.md](entwicklung/konfiguration.md) | Referenz: Einstellungen von Backend und Frontend, Formular-Konfiguration |
+| [pdf-system.md](entwicklung/pdf-system.md) | PDF-Download: Token, Proxy, Komponenten |
+| [sicherheit.md](entwicklung/sicherheit.md) | Schutzmaßnahmen und bekannte Einschränkungen |
+| [tests.md](entwicklung/tests.md) | PHPUnit-Suite, Pipeline, manuelle Tests |
+| [messages.md](entwicklung/messages.md) | Zentrale Message-Verwaltung (UI-Texte) |
+| [changelog.md](entwicklung/changelog.md) | Änderungshistorie |
 | [MULTI-TENANT-DESIGN.md](entwicklung/MULTI-TENANT-DESIGN.md) | Architekturentscheidungen zur Mandantenfähigkeit (englisch) |
 | [docker-entwicklung.md](entwicklung/docker-entwicklung.md) | Docker-Entwicklungsstack: Start, Code ändern, Tests, Fehlersuche |
 | [../backend/UNITTESTS.md](../backend/UNITTESTS.md) | Tests ausführen und schreiben |

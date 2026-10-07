@@ -470,7 +470,7 @@ For issues or questions:
 
 1. Check error logs first
 2. Review this guide
-3. Check CLAUDE.md for architecture details
+3. Check docs/entwicklung/pdf-system.md and docs/entwicklung/architektur.md for architecture details
 4. Create issue with:
    - Error message
    - Steps to reproduce

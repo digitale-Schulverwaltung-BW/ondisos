@@ -193,6 +193,18 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 
 **Vorsicht:** `docker compose down -v` und `docker system prune --volumes` löschen auch die Volumes, also Datenbank und Uploads.
 
+## Weitere Fehlerbilder
+
+| Beobachtung | Ursache und Abhilfe |
+|---|---|
+| `Unknown column 'tenant_id'` | Die Migration ist nicht gelaufen: `php backend/migrate.php` (Docker: läuft bei jedem Start, `docker compose logs backend` prüfen) |
+| `Class not found` | Abhängigkeiten fehlen: ohne Docker `composer install --no-dev --optimize-autoloader` im `backend/` |
+| Auto-Expunge läuft nicht | `AUTO_EXPUNGE_DAYS` muss größer 0 sein, `cache/` beschreibbar (dort liegt `last_expunge.txt`); das Dashboard zeigt Status und nächsten Lauf |
+| Excel-Export zeigt die Spalte „Formular“ | Der Export war nicht auf ein Formular gefiltert (`?form=bs`); beim Export eines einzelnen Formulars entfällt die Spalte |
+| Datumsfelder im Export falsch | Der Export wandelt Werte der Form `YYYY-MM-DD` in `dd.mm.yyyy` um; das Feld muss ISO-Format enthalten |
+| Browser meldet CORS-Fehler | Betrifft nur Browser-Aufrufe direkt am Backend (normalerweise ruft das Frontend serverseitig auf): `origin` der Schule unter *Tenants* bzw. `ALLOWED_ORIGINS` prüfen |
+| Anmeldung „erfolgreich“, aber nichts im Backend | Das Formular ist mit `db: false` konfiguriert und sendet nur E-Mail; unter *Formulare → Bearbeiten* „Anmeldungen im Backend speichern“ einschalten |
+
 ## Checkliste für den Produktivbetrieb
 
 - [ ] **Secrets:** `DB_PASS`, `MYSQL_ROOT_PASSWORD`, `PDF_TOKEN_SECRET`, `API_SECRET_KEY` selbst erzeugt (`openssl rand -hex 32`), kein Standardwert
