@@ -24,7 +24,7 @@ function editor_rate_limit(): void
         (int)\App\Config\EnvLoader::get('EDITOR_RATE_LIMIT_WINDOW', (string)EditorRateLimit::DEFAULT_WINDOW),
     ));
 
-    $retry = $limit->hit((string)($_SESSION['admin_username'] ?? 'anonymous'), (string)($_SERVER['REMOTE_ADDR'] ?? ''));
+    $retry = $limit->hit((string)($_SESSION['admin_username'] ?? 'anonymous'), \App\Utils\ClientIp::get());
     if ($retry !== null) {
         header('Retry-After: ' . $retry);
         http_response_code(429);

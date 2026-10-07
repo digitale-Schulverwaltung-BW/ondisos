@@ -5,6 +5,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Utils\ClientIp;
+
 /**
  * Lightweight file-based audit logger.
  *
@@ -231,13 +233,6 @@ class AuditLogger
 
     private static function getIp(): string
     {
-        // Support reverse proxy / Docker setup
-        $forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-        if ($forwarded !== '') {
-            // X-Forwarded-For can be a comma-separated list; first entry is client IP
-            return trim(explode(',', $forwarded)[0]);
-        }
-
-        return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+        return ClientIp::get();
     }
 }
