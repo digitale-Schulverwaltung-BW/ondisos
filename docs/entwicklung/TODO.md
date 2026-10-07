@@ -11,6 +11,7 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 | **SMTP-Versand** statt PHP `mail()` | Die Benachrichtigung geht vom Frontend-Server aus |
 | **Datei-Fallback für Surveys abschaffen** | `frontend/surveys/` nur noch als Importquelle (`import-surveys.php`); ohne Termin |
 | **Permalink auf die neueste Plugin-ZIP** | Das Release-Skript setzt jetzt feste Pfade ([CI_CD.md](CI_CD.md#release-wordpress-plugin)). Beim nächsten Release-Tag prüfen, dass `…/-/releases/permalink/latest/downloads/ondisos-plugin.zip` weiterleitet, und dann in `wordpress-plugin/INSTALL.md` verlinken |
+| **Schreibaktionen im Modus „Alle Tenants“** | Als Plattform-Admin ohne gewählte Schule (Umschalter „Alle Tenants“) scheitern Statuswechsel, Löschen und Sammelaktionen mit „Ein unerwarteter Fehler ist aufgetreten“, weil `TenantContext::getTenantId()` dort bewusst eine Ausnahme wirft. Sinnvoll: verständlicher Hinweis „Bitte zuerst eine Schule wählen“ bzw. Buttons ausblenden |
 | **Deutsche Locale** für SurveyJS | Validierungsmeldungen erscheinen englisch |
 | **`X-Content-Type-Options: nosniff`** beim Datei-Download | Kleine Härtung in `DownloadController`; unbekannte Endungen gehen schon als `application/octet-stream` raus |
 | **Monitoring und Logging** | strukturiertes Logging, Anbindung an Überwachung (z. B. Sentry); heute: `health.php` und Audit-Log |
