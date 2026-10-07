@@ -11,7 +11,7 @@ und signiert an das Ondisos-Backend übertragen — WordPress speichert keine An
 
 ## Schnellstart
 
-1. Die fertige **ZIP** von der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases) in WordPress hochladen (*Plugins → Installieren → Plugin hochladen*): [INSTALL.md](INSTALL.md).
+1. Die fertige **ZIP** ([neueste Version](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip), alle Versionen auf der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases)) in WordPress hochladen (*Plugins → Installieren → Plugin hochladen*): [INSTALL.md](INSTALL.md).
    Für Entwicklung und eigene Server alternativ per Git-Clone mit Symlink: [INSTALL-AUS-GIT.md](INSTALL-AUS-GIT.md)
 2. Plugin aktivieren
 3. *Einstellungen → Ondisos*: **Backend API URL**, **Tenant-Slug**, **Tenant-API-Secret** eintragen

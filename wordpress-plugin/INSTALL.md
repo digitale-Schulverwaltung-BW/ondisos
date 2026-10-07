@@ -40,8 +40,8 @@ Das Plugin benötigt ein Ondisos-Backend ab Version 3.0; Surveys aus dem Backend
 ## Installieren
 
 1. **ZIP herunterladen:** Auf der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases) steht die Datei `ondisos-<version>.zip` unter *Assets* („WordPress plugin (ZIP)“).
-   Zur neuesten Version führt dieser Link: [Neuestes Release](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest).
-   Daneben liegt die Prüfsumme `ondisos-<version>.zip.sha256` (optional: `shasum -a 256 -c ondisos-<version>.zip.sha256`).
+   **Direkter Download der neuesten Version:** [ondisos-plugin.zip](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip) (die Adresse bleibt bei jedem Release gleich); die Beschreibung der Version steht unter [Neuestes Release](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest).
+   Daneben liegt die Prüfsumme ([ondisos-plugin.zip.sha256](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip.sha256); optional, Datei und Prüfsumme in einen Ordner legen und `shasum -a 256 ondisos-plugin.zip` mit dem Wert vergleichen).
 2. In WordPress: *Plugins → Installieren → Plugin hochladen*, die ZIP wählen, **Jetzt installieren**, dann **Plugin aktivieren**.
    Der Eintrag heißt „ondisos - Onboarding Digital Souverän + Open Source“.
 
@@ -102,7 +102,7 @@ Checkliste:
 
 ## Aktualisieren
 
-1. Die neue ZIP von der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases) laden.
+1. Die neue ZIP laden: [ondisos-plugin.zip](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip) (neueste Version) oder von der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases).
 2. *Plugins → Installieren → Plugin hochladen*, die ZIP wählen und, wenn WordPress nachfragt, **Aktuelles durch hochgeladenes ersetzen**.
 3. Bei aktiven Cache-Plugins den Cache leeren.
 

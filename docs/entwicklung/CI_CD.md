@@ -48,7 +48,7 @@ https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/perm
 https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip.sha256
 ```
 
-Das gilt für Releases, die mit diesem Skript erstellt wurden (ab dem Release nach 3.1.0). Für ein früheres Release lassen sich die Pfade nachtragen, mit einem Zugriffstoken (Scope `api`):
+Das gilt für Releases, die mit diesem Skript erstellt wurden (seit 3.1.1, mit Download und Prüfsumme geprüft). Der Link ist in [INSTALL.md](../../wordpress-plugin/INSTALL.md#installieren) verlinkt. Für ein früheres Release lassen sich die Pfade nachtragen, mit einem Zugriffstoken (Scope `api`):
 
 ```bash
 curl --request PUT --header "PRIVATE-TOKEN: <token>" --data "direct_asset_path=/ondisos-plugin.zip" \
