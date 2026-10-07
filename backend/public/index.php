@@ -167,6 +167,15 @@ require __DIR__ . '/../inc/header.php';
             <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
                 <?= M::get('ui.buttons.delete') ?>
             </button>
+            <!-- Set the status of the selected entries (same buttons as in the detail view) -->
+            <div class="btn-group" role="group" aria-label="<?= htmlspecialchars(M::get('ui.detail.change_status', 'Status ändern')) ?>">
+                <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('in_bearbeitung')"
+                        title="<?= htmlspecialchars(M::get('ui.detail.status_in_progress', 'In Bearbeitung')) ?>">📝</button>
+                <button type="button" class="btn btn-sm btn-success" onclick="bulkAction('akzeptiert')"
+                        title="<?= htmlspecialchars(M::get('ui.detail.status_accepted', 'Akzeptiert')) ?>">☑️</button>
+                <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('abgelehnt')"
+                        title="<?= htmlspecialchars(M::get('ui.detail.status_rejected', 'Abgelehnt')) ?>">👎</button>
+            </div>
             <button type="button" class="btn btn-sm btn-secondary" onclick="window.location.reload()">
                 🔄 Ansicht aktualisieren
             </button>
@@ -360,8 +369,18 @@ function bulkAction(action) {
         return;
     }
 
-    const actionLabel = action === 'archive' ? '<?= M::get('bulk_actions.archive') ?>' : '<?= M::get('bulk_actions.delete') ?>';
-    const confirmMsg = `Möchten Sie ${checkboxes.length} Einträge wirklich ${actionLabel.toLowerCase()}?`;
+    const statusLabels = <?= json_encode([
+        'in_bearbeitung' => M::get('status.in_bearbeitung'),
+        'akzeptiert'     => M::get('status.akzeptiert'),
+        'abgelehnt'      => M::get('status.abgelehnt'),
+    ], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP) ?>;
+    let confirmMsg;
+    if (statusLabels[action]) {
+        confirmMsg = `Möchten Sie ${checkboxes.length} Einträge wirklich auf „${statusLabels[action]}“ setzen?`;
+    } else {
+        const actionLabel = action === 'archive' ? '<?= M::get('bulk_actions.archive') ?>' : '<?= M::get('bulk_actions.delete') ?>';
+        confirmMsg = `Möchten Sie ${checkboxes.length} Einträge wirklich ${actionLabel.toLowerCase()}?`;
+    }
 
     if (!confirm(confirmMsg)) {
         return;

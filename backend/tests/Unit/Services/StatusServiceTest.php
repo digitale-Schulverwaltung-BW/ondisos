@@ -241,4 +241,26 @@ class StatusServiceTest extends TestCase
 
         $this->assertSame($expected, $result);
     }
+
+    // =========================================================================
+    // bulkUpdateStatus
+    // =========================================================================
+
+    public function testBulkUpdateStatusPassesTheValidatedStatusToTheRepository(): void
+    {
+        $this->mockRepo->expects($this->once())
+            ->method('bulkUpdateStatus')
+            ->with([1, 2, 3], 'akzeptiert')
+            ->willReturn(3);
+
+        $this->assertSame(3, $this->service->bulkUpdateStatus([1, 2, 3], 'akzeptiert'));
+    }
+
+    public function testBulkUpdateStatusRejectsAnUnknownStatusWithoutTouchingTheRepository(): void
+    {
+        $this->mockRepo->expects($this->never())->method('bulkUpdateStatus');
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service->bulkUpdateStatus([1], 'erledigt');
+    }
 }

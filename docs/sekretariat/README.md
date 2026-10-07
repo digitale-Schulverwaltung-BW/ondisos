@@ -74,7 +74,7 @@ Die Schritte dafür stehen in **[ASV.md](ASV.md)**.
 
 ## 6. Bearbeitungsstand pflegen
 
-Den Status ändern Sie in der Detailansicht (📝 ☑️ 👎). So behalten Sie und Ihre Kolleginnen und Kollegen den Überblick:
+Den Status ändern Sie in der Detailansicht (📝 ☑️ 👎) oder für **mehrere Anmeldungen auf einmal** in der Liste: Kästchen vor den Nummern ankreuzen (das Kästchen in der Kopfzeile wählt alle angezeigten aus) und oben auf 📝 *In Bearbeitung*, ☑️ *Akzeptiert* oder 👎 *Abgelehnt* klicken. Das System fragt vor dem Ändern nach und meldet danach, wie viele Einträge geändert wurden. So behalten Sie und Ihre Kolleginnen und Kollegen den Überblick:
 
 | Status | Bedeutung |
 |---|---|

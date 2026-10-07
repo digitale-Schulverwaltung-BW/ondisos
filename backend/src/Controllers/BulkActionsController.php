@@ -5,13 +5,17 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Models\AnmeldungStatus;
 use App\Services\StatusService;
 use App\Services\AuditLogger;
 use InvalidArgumentException;
 
 class BulkActionsController
 {
-    private const ALLOWED_ACTIONS = ['archive', 'delete'];
+    /** Actions that set a status; the action name is the status value. */
+    public const STATUS_ACTIONS = ['in_bearbeitung', 'akzeptiert', 'abgelehnt'];
+
+    private const ALLOWED_ACTIONS = ['archive', 'delete', 'in_bearbeitung', 'akzeptiert', 'abgelehnt'];
 
     public function __construct(
         private StatusService $statusService
@@ -53,6 +57,7 @@ class BulkActionsController
         $affectedCount = match($action) {
             'archive' => $this->statusService->bulkArchive($ids),
             'delete' => $this->statusService->bulkDelete($ids),
+            'in_bearbeitung', 'akzeptiert', 'abgelehnt' => $this->statusService->bulkUpdateStatus($ids, $action),
             default => throw new InvalidArgumentException('Unknown action')
         };
 
@@ -71,6 +76,11 @@ class BulkActionsController
      */
     public static function getActionLabel(string $action): string
     {
+        if (in_array($action, self::STATUS_ACTIONS, true)) {
+            $label = AnmeldungStatus::tryFromString($action)?->label() ?? $action;
+            return 'auf „' . $label . '“ gesetzt';
+        }
+
         return match($action) {
             'archive' => 'Archiviert',
             'delete' => 'Gelöscht',

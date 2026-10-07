@@ -71,6 +71,24 @@ class StatusService
     }
 
     /**
+     * Set the same status on several anmeldungen (only those of the current tenant that are not deleted).
+     *
+     * @param int[] $ids
+     * @return int number of changed entries
+     * @throws \InvalidArgumentException for an unknown status
+     */
+    public function bulkUpdateStatus(array $ids, string $newStatus): int
+    {
+        $statusEnum = AnmeldungStatus::tryFromString($newStatus);
+
+        if ($statusEnum === null) {
+            throw new \InvalidArgumentException("Invalid status: $newStatus");
+        }
+
+        return $this->repository->bulkUpdateStatus($ids, $statusEnum->value);
+    }
+
+    /**
      * Soft delete single anmeldung
      */
     public function delete(int $id): bool
