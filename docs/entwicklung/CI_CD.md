@@ -36,7 +36,7 @@ ein Test stellt sicher, dass jede Datei in `docs/` im [Index](../README.md) steh
 
 ## Release: WordPress-Plugin
 
-1. Version in `wordpress-plugin/ondisos.php` hochsetzen; **der Tag muss dazu passen** (`v3.1.1` ↔ Plugin-Version 3.1.1).
+1. Version hochsetzen, **an vier Stellen**: Header und `ONDISOS_PLUGIN_VERSION` in `wordpress-plugin/ondisos.php`, `Stable tag` in `wordpress-plugin/readme.txt`, Badge in der `README.md` und `App\Config\Version::CURRENT` (`backend/src/Config/Version.php`; daraus bildet der Hilfe-Button die Doku-Adresse). Der Unit-Test `HelpLinksTest` schlägt bei Abweichungen fehl. **Der Tag muss dazu passen** (`v3.1.1` ↔ Plugin-Version 3.1.1); sonst bricht `release:plugin_zip` ab.
 2. Tag setzen und pushen: `git tag v3.1.1 && git push origin v3.1.1`.
 3. Der Job `release:plugin_zip` führt `wordpress-plugin/publish-release.sh` aus. Ergebnis: `dist/ondisos-<version>.zip` und `.sha256` als Artefakt, in der Package Registry und am Release
    (ohne Anmeldung abrufbar, wenn das Projekt öffentlich ist).

@@ -116,6 +116,29 @@
                     </div>
                 <?php endif; ?>
 
+                <?php
+                $helpEntries = \App\Utils\HelpLinks::forPage(
+                    $_SERVER['PHP_SELF'] ?? '',
+                    \App\Config\EnvLoader::get('HELP_BASE_URL', '')
+                );
+                $helpTitle = \App\Services\MessageService::get('help.title', 'Hilfe zu dieser Seite');
+                ?>
+                <?php if (count($helpEntries) > 1): ?>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light btn-sm fw-bold" type="button" data-bs-toggle="dropdown"
+                                aria-expanded="false" title="<?= htmlspecialchars($helpTitle) ?>" aria-label="<?= htmlspecialchars($helpTitle) ?>">?</button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><h6 class="dropdown-header"><?= htmlspecialchars($helpTitle) ?></h6></li>
+                            <?php foreach ($helpEntries as $entry): ?>
+                                <li><a class="dropdown-item" href="<?= htmlspecialchars($entry['url']) ?>" target="_blank" rel="noopener noreferrer"><?= htmlspecialchars($entry['label']) ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <a class="btn btn-outline-light btn-sm fw-bold" href="<?= htmlspecialchars($helpEntries[0]['url']) ?>"
+                       target="_blank" rel="noopener noreferrer" title="<?= htmlspecialchars($helpTitle) ?>" aria-label="<?= htmlspecialchars($helpTitle) ?>">?</a>
+                <?php endif; ?>
+
                 <?php if (!empty($_SESSION['admin_logged_in'])): ?>
                     <span class="navbar-text text-light me-3">
                         <small>Angemeldet als: <?= htmlspecialchars($_SESSION['admin_username'] ?? 'Admin') ?></small>

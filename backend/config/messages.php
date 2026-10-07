@@ -294,6 +294,10 @@ return [
      * Form editor (3.1): forms.php, form_edit.php
      * Labels and help texts of the config options are looked up as forms.fields.<path>.label / .help.
      */
+    'help' => [
+        'title' => 'Hilfe zu dieser Seite',
+    ],
+
     'forms' => [
         'pdf_preview' => [
             'button' => 'PDF-Vorschau',

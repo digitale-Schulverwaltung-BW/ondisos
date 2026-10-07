@@ -42,6 +42,9 @@ AUTH_ENABLED=false
 # Reverse-Proxy (kommagetrennte IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
 TRUSTED_PROXIES=
 
+# Hilfe-Button „?“: Basis-URL der Doku (leer = GitHub in der installierten Version)
+HELP_BASE_URL=
+
 # Rate Limiting, Virenscan, PDF-Logo, ...: siehe backend/.env.example
 ```
 

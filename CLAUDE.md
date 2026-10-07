@@ -78,6 +78,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 **Tests:** Neue Logik bekommt Unit-Tests (`Tests\Unit\*`, `declare(strict_types=1)`, sprechende Namen, eine Sache pro Test); die Endpoint-Skripte und der Browser-Teil sind nicht abgedeckt, dafür gibt es die manuellen Tests.
 **Dokumentation:** nach Rollen in `docs/` (betreiber, schul-it, redaktion, sekretariat, entwicklung), im Stil „Sie"; **jede neue Datei in `docs/README.md` eintragen** und relative Links prüfen
 (`DocsLinksTest` schlägt sonst fehl). Im Repository-Stamm bleiben nur `README.md` und `CLAUDE.md`. Befehle in Anleitungen vorher ausführen; Behauptungen aus Code, Oberfläche oder Test ableiten.
+**Release/Version:** die Nummer steht an vier Stellen (`ondisos.php`, `readme.txt`, README-Badge, `App\Config\Version`); `HelpLinksTest` prüft die Übereinstimmung. Der „?“-Button im Backend ordnet Seiten Doku-Abschnitten zu (`App\Utils\HelpLinks`); wer Überschriften der Doku umbenennt, bekommt vom Test Bescheid.
 **Git:** nur explizit stagen (`git add <Datei>`), nie `git add -A`: Fremddateien liegen oft untracked im Arbeitsverzeichnis.
 
 ## Bekannte Einschränkungen

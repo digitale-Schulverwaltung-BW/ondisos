@@ -7,6 +7,8 @@ Technische Kenntnisse brauchen Sie dafür nicht.
 **Was Sie von Ihrer IT bzw. vom Betreiber brauchen:** die Adresse des Backends, Ihren Benutzernamen und Ihr Passwort.
 Das Backend ist in der Regel nur im Schulnetz oder über das Netz des Schulträgers erreichbar.
 
+**Hilfe in der Oberfläche:** Oben rechts steht ein **?**. Es öffnet die Anleitung zur Seite, auf der Sie gerade sind (auf der Anmeldeliste u. a. auch die Anleitung zum Import in ASV-BW, [ASV.md](ASV.md)).
+
 ---
 
 ## 1. Anmelden

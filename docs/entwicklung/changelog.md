@@ -5,6 +5,9 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 
 ## 3.1.1
 
+**Hilfe**
+- ✅ Hilfe-Button „?“ in der Navigationsleiste des Backends: öffnet die zur Seite passende Dokumentation (Anmeldeliste → Handreichung und ASV, Formulare → Formulare pflegen, Tenants → Multi-Tenant usw.). Standardziel ist GitHub in der installierten Version (`blob/v<Version>/`); Betreiber können mit `HELP_BASE_URL` eine eigene Kopie angeben (`App\Utils\HelpLinks`, `App\Config\Version`). Ein Test prüft, dass jedes Ziel samt Anker existiert
+
 **Betrieb und Sicherheit**
 - ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`, im Frontend `Frontend\Utils\ClientIp` für die IP in der Anmeldung; im WordPress-Plugin als Einstellung *Vertrauenswürdige Proxys* (`ondisos_trusted_proxies`); dort wurden bisher `Client-IP`/`X-Forwarded-For` u. a. ungeprüft übernommen), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
 - ✅ Docker: MySQL wird im Produktions-Overlay nicht mehr auf dem Host-Port veröffentlicht (das `3306:3306` der Basisdatei wurde beim Zusammenführen nur ergänzt, nicht ersetzt)
