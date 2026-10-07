@@ -5,8 +5,10 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Services\StatusService;
+use App\Utils\SafeRedirect;
 use App\Repositories\AnmeldungRepository;
 use App\Services\MessageService as M;
 
@@ -16,11 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     die('Method Not Allowed');
 }
 
+// Validate CSRF token (the list page does not show session messages, so render the error directly)
+try {
+    csrf_validate();
+} catch (\InvalidArgumentException $e) {
+    error_log('Status/Delete action rejected: ' . $e->getMessage());
+    http_response_code(403);
+    require __DIR__ . '/../inc/header.php';
+    ?>
+    <div class="container mt-4">
+        <div class="alert alert-warning">
+            <h4>Fehler</h4>
+            <p><?= htmlspecialchars($e->getMessage()) ?></p>
+        </div>
+        <a href="index.php" class="btn btn-secondary">← Zurück zur Übersicht</a>
+    </div>
+    <?php
+    require __DIR__ . '/../inc/footer.php';
+    exit;
+}
+
 // Get POST data
 $id = (int)($_POST['id'] ?? 0);
 $action = $_POST['action'] ?? 'status_change';
 $newStatus = $_POST['status'] ?? '';
-$returnUrl = $_POST['return_url'] ?? 'index.php';
+$returnUrl = SafeRedirect::local($_POST['return_url'] ?? null);
 
 // Validate inputs
 if ($id <= 0) {

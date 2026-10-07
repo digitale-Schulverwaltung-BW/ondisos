@@ -5,6 +5,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
+require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Controllers\DetailController;
 use App\Repositories\AnmeldungRepository;
@@ -307,6 +308,7 @@ require __DIR__ . '/../inc/header.php';
             <!-- Status Change Buttons -->
             <div class="btn-group" role="group">
                 <form method="POST" action="change_status.php" class="d-inline">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                     <input type="hidden" name="status" value="in_bearbeitung">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
@@ -318,6 +320,7 @@ require __DIR__ . '/../inc/header.php';
                 </form>
 
                 <form method="POST" action="change_status.php" class="d-inline">
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                     <input type="hidden" name="status" value="akzeptiert">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
@@ -329,7 +332,7 @@ require __DIR__ . '/../inc/header.php';
                 </form>
 
                 <form method="POST" action="change_status.php" class="d-inline">
-                   
+                    <?php csrf_field(); ?>
                     <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                     <input type="hidden" name="status" value="abgelehnt">
                     <input type="hidden" name="return_url" value="detail.php?id=<?= $anmeldung->id ?>">
@@ -344,6 +347,7 @@ require __DIR__ . '/../inc/header.php';
             <!-- Delete Button -->
             <form method="POST" action="change_status.php" class="d-inline"
                   onsubmit="return confirm('<?= M::get('ui.detail.confirm_delete', 'Wirklich löschen?') ?>')">
+                <?php csrf_field(); ?>
                 <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="return_url" value="index.php?form=<?= urlencode($anmeldung->formular) ?>">
