@@ -8,6 +8,7 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 | Punkt | Hintergrund |
 |---|---|
 | **WordPress-Plugin ohne Shell, Rest** | Verbindungscode und Update-Prüfung; die ZIP ist umgesetzt. Entwurf: [PLAN-3.1.1.md](plans/PLAN-3.1.1.md) |
+| **Härtung der Admin-Anmeldung** | Netz-Allowlist pro Tenant, Zwei-Faktor-Anmeldung (TOTP, Passkeys) für Platform-Admins, Login-Rate-Limit. Entwurf: [PLAN-3.1.2.md](plans/PLAN-3.1.2.md) |
 | **SMTP-Versand** statt PHP `mail()` | Die Benachrichtigung geht vom Frontend-Server aus |
 | **Datei-Fallback für Surveys abschaffen** | `frontend/surveys/` nur noch als Importquelle (`import-surveys.php`); ohne Termin |
 | **Schreibaktionen im Modus „Alle Tenants“** | Als Plattform-Admin ohne gewählte Schule (Umschalter „Alle Tenants“) scheitern Statuswechsel, Löschen und Sammelaktionen mit „Ein unerwarteter Fehler ist aufgetreten“, weil `TenantContext::getTenantId()` dort bewusst eine Ausnahme wirft. Sinnvoll: verständlicher Hinweis „Bitte zuerst eine Schule wählen“ bzw. Buttons ausblenden |

@@ -84,6 +84,7 @@ Architektur, Tests, Pipeline, Planung.
 | [TODO.md](entwicklung/TODO.md) | Offene Punkte: Verbesserungen, manuelle Prüfungen, Testlücken |
 | [plans/PLAN-3.1.md](entwicklung/plans/PLAN-3.1.md) | Plan und Umsetzungsstand von 3.1 |
 | [plans/PLAN-3.1.1.md](entwicklung/plans/PLAN-3.1.1.md) | WordPress-Plugin ohne Shell (ZIP umgesetzt; Verbindungscode, Update-Prüfung offen) |
+| [plans/PLAN-3.1.2.md](entwicklung/plans/PLAN-3.1.2.md) | Härtung der Admin-Anmeldung: Netz-Allowlist, Zwei-Faktor (TOTP, Passkeys), Entwurf |
 | [releases/RELEASE-NOTES-3.1.0.md](entwicklung/releases/RELEASE-NOTES-3.1.0.md) | Was 3.1.0 bringt |
 | [releases/ABNAHME.md](entwicklung/releases/ABNAHME.md) | Abnahmeprotokolle 3.0.0 und 3.1.0 |
 | [releases/RELEASE-3.1.0.md](entwicklung/releases/RELEASE-3.1.0.md) | Release-Check: Prüfstand, Merge-Reihenfolge, Tag, Rückfall |
