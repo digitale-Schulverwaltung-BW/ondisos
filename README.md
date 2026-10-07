@@ -1,7 +1,7 @@
 <h1 align="center">Ondisos</h1>
 
 <p align="center">
-  <strong>Digital souveräne Schulanmeldung</strong><br>
+  <strong>Digital souveräne (Schul-) Anmeldung</strong><br>
   <sub><b>On</b>boarding – <b>Di</b>gital <b>S</b>ouverän und <b>O</b>pen <b>S</b>ource</sub>
 </p>
 
@@ -17,7 +17,7 @@
   <img src="docs/img/frontend-formular.png" alt="Anmeldeformular im Frontend" width="720">
 </p>
 
-Ondisos nimmt Schulanmeldungen online entgegen und bringt sie ohne Abtippen in die Schulverwaltung:
+Ondisos nimmt Schulanmeldungen (aber auch: Rückmeldungen zum Elternabend, Info-Tag und so weiter - alles, was einen Namen und eine E-Mail-Adresse abfragt) online entgegen und bringt sie ohne Abtippen in die Schulverwaltung:
 Eltern und Betriebe füllen ein Formular auf der Schulwebsite aus, das Sekretariat findet die Anmeldung
 im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter und importiert sie in
 [ASV-BW](docs/sekretariat/ASV.md). Die Daten bleiben auf Servern, die Sie selbst betreiben.

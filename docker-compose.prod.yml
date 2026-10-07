@@ -19,8 +19,10 @@ services:
   backend:
     container_name: ondisos-backend-prod
     restart: unless-stopped
-    ports:
-      - "9080:80"  # Or configure reverse proxy
+    # Behind a reverse proxy on the same host set BACKEND_BIND=127.0.0.1 in the root .env, so that only the proxy
+    # reaches the backend. `!override` replaces the "9080:80" of docker-compose.yml (Compose >= 2.24).
+    ports: !override
+      - "${BACKEND_BIND:-0.0.0.0}:${BACKEND_PORT:-9080}:80"
     env_file:
       # Optional: Backend-specific overrides (rate limits, virus scan, etc.).
       # Core credentials (DB_USER, DB_PASS) come from root .env.
