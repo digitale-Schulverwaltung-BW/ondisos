@@ -52,7 +52,7 @@ Das Backend installieren, Schulen einrichten, sichern und aktualisieren.
 | [Betriebsmodell](betreiber/betriebsmodell.md) | Backend beim Schulträger, Frontend an der Schule: Aufgaben, Netzwerk, neue Schule anbinden |
 | [installation.md](betreiber/installation.md) | Backend mit Docker installieren: Konfiguration, Start, Admin-Zugang, Formulare, Virenscan, Fehlersuche |
 | [installation-ohne-docker.md](betreiber/installation-ohne-docker.md) | Backend auf Apache/PHP ohne Docker |
-| [betrieb.md](betreiber/betrieb.md) | Updates, Sicherung und Wiederherstellung, HTTPS, Upload-Limits, Überwachung, Checkliste |
+| [betrieb.md](betreiber/betrieb.md) | Updates, Sicherung und Wiederherstellung, HTTPS, Reverse-Proxy (Client-IP), Upload-Limits, Überwachung, Checkliste |
 | [notfall.md](betreiber/notfall.md) | Notfall-Handbuch: Ausfall, Datenbank, Datenverlust, Sicherheitsvorfall, Speicher, Update-Rückfall |
 | [MULTI-TENANT.md](betreiber/MULTI-TENANT.md) | Mehrere Schulen betreiben, neuen Tenant einrichten |
 | [MIGRATION-3.1.md](betreiber/MIGRATION-3.1.md) | Upgrade 3.0 → 3.1: Formular-Editor, Cache, CLI |

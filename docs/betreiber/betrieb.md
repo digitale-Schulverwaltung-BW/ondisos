@@ -135,6 +135,27 @@ erst `BACKEND_API_URL` auf `https://` umstellen.
 (HSTS, X-Frame-Options, CSP) aktivieren; alternativ `FORCE_HTTPS=true` in `backend/.env`. Das Frontend ebenso (`frontend/public/.htaccess.example`).
 Die Vorschau im Formular-Editor braucht `X-Frame-Options: SAMEORIGIN` (nicht `DENY`); das mitgelieferte Docker-Image setzt es.
 
+## Reverse-Proxy: Client-IP und Rate-Limit
+
+Steht ein Reverse-Proxy vor dem Backend (siehe [HTTPS](#https)), sieht das Backend als Absender jeder Anfrage die Adresse des Proxys. Ohne Gegenmaßnahme teilen sich dann **alle Schulen ein gemeinsames Rate-Limit**
+(`RATE_LIMIT_MAX` je `RATE_LIMIT_WINDOW`, auch Formular-API, Downloads und Formular-Editor), und das Audit-Log zeigt überall dieselbe IP.
+
+Tragen Sie die Adresse(n) des Proxys in `TRUSTED_PROXIES` ein (Root-`.env` bei Docker, sonst `backend/.env`; kommagetrennte IPs oder CIDR-Bereiche, IPv4 und IPv6):
+
+```bash
+TRUSTED_PROXIES=127.0.0.1,172.16.0.0/12     # Beispiel: Proxy auf dem Host und im Docker-Netz
+```
+
+Danach `docker compose up -d backend`. Regeln:
+
+- **Leer (Standard):** `X-Forwarded-For` wird ignoriert; maßgeblich ist die Adresse der Verbindung.
+- **Nur wenn die Verbindung von einem vertrauenswürdigen Proxy kommt**, wertet das Backend `X-Forwarded-For` aus, von rechts nach links: der erste Eintrag, der selbst kein vertrauenswürdiger Proxy ist, gilt als Client. Mehrere Proxys hintereinander tragen Sie alle ein.
+- Ist der Header ungültig, gilt die Adresse des Proxys.
+- Tragen Sie **nur Ihre eigenen Proxys** ein, nie `0.0.0.0/0`: Sonst kann jeder seine Adresse fälschen und das Rate-Limit umgehen.
+- Der Proxy muss `X-Forwarded-For` setzen und dabei den vorhandenen Wert **anhängen** (Nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`, wie im Beispiel oben).
+
+Prüfen: Ein Eintrag im Audit-Log (`backend/logs/audit.log`) zeigt im Feld `ip` die Adresse des Clients statt der des Proxys.
+
 ## Upload-Limits
 
 Damit Uploads durchgehen, müssen **vier Grenzen** zusammenpassen; die kleinste gilt:

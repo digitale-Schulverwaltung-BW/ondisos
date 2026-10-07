@@ -39,6 +39,9 @@ SESSION_LIFETIME=3600
 SESSION_SECURE=true
 AUTH_ENABLED=false
 
+# Reverse-Proxy (kommagetrennte IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
+TRUSTED_PROXIES=
+
 # Rate Limiting, Virenscan, PDF-Logo, ...: siehe backend/.env.example
 ```
 

@@ -94,7 +94,7 @@ projekt/
     │   │                  TenantLogoService · PdfLogoResolver  (Schul-Logo: Upload durch Tenant-Admins, Reihenfolge der Logo-Quellen)
     │   ├── Cli/           CliArgs · ImportSurveysCommand · CopyFormsCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
-    │   └── Utils/         DataFormatter · FilenameSanitizer · NullableHelpers
+    │   └── Utils/         ClientIp · DataFormatter · FilenameSanitizer · NullableHelpers
     ├── inc/               bootstrap · auth · csrf · header · footer · form_editor · form_fields · form_copy (Editor-Helfer)
     ├── templates/pdf/     base.php · styles.css · sections/
     ├── config/            messages.php (+ messages.local.php, forms-config.php als Seed-Fallback)

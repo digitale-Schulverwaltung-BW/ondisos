@@ -6,6 +6,7 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 ## 3.1
 
 **Nachträge aus der ersten Praxis**
+- ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
 - ✅ Formular-Editor in Tabs (Allgemein · Benachrichtigungs-E-Mail · PDF-Bestätigung · Kalender-Download · Info), Speichern/Abbrechen neben den Tabs; Tab mit Fehlern wird geöffnet und markiert
 - ✅ Ein Logo pro Schule: Upload auf *Formulare* (`forms.php`) durch Tenant-Admins, gespeichert unter `uploads/tenant-<id>/branding/logo.png|jpg` (nur PNG/JPEG, max. 2 MB, per GD neu kodiert). Reihenfolge im PDF: `logo: false` (keins) → Pfad in der Config (Plattform-Admin) → Schul-Logo → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`
 - ✅ Akzentfarbe der PDFs pro Schule (Balken links an Einleitung und Abschnitten): Farbfeld + Hex-Eingabe auf *Formulare* (`forms.php`), gespeichert als `uploads/tenant-<id>/branding/accent.txt` (`TenantAccentColor`, nur `#rrggbb`; Standard `#3498db`), über `PdfLogoResolver` als `accent_color` in die PDF-Konfiguration und vom `PdfTemplateRenderer` ins Stylesheet eingesetzt
