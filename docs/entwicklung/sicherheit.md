@@ -38,6 +38,7 @@ Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und 
 | Befund | Maßnahme | Wo |
 |---|---|---|
 | Fehlender CSRF-Schutz bei Löschen, Wiederherstellen und Sammelaktionen | Token-basierter Schutz mit `hash_equals`: `csrf_token()`, `csrf_validate()`, `csrf_field()`, `csrf_meta()`, `csrf_regenerate()`; Tokens in allen Formularen | `backend/inc/csrf.php`, `hard_delete.php`, `restore.php`, `bulk_actions.php` |
+| Fehlender CSRF-Schutz bei Statusänderung und Löschen aus der Detailansicht (3.1.1; zuvor nur durch `SameSite=Lax` abgemildert) | `csrf_validate()` am Anfang des Endpunkts (Fehler ⇒ 403), `csrf_field()` in allen Formularen der Detailansicht; Struktur-Test stellt beides sicher | `change_status.php`, `detail.php`, `ChangeStatusCsrfTest` |
 | Datei-Upload nur nach Dateiendung geprüft | MIME-Typ per `finfo` aus dem **Inhalt**, Whitelist mit passenden Endungen (Doppelendungen wie `evil.php.jpg` und getarnte Dateien werden abgelehnt); `doc`/`docx` sind wegen Makro-Risiko **nicht** freigegeben (im Code auskommentiert) | `AnmeldungValidator`, `upload.php` |
 | Mögliches XSS in der Detailansicht (Feldnamen) | `htmlspecialchars` beim Aufbereiten der Feldnamen und beim Ausgeben (doppelte Absicherung) | `DetailController::humanizeKey()`, `detail.php` |
 | Rate-Limit durch User-Agent-Wechsel umgehbar | Schlüssel aus IP, SHA-256 des User-Agents und der Accept-Language | `RateLimiter::generateFingerprint()`, `submit.php` |
