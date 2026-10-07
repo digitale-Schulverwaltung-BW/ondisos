@@ -15,6 +15,7 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 - ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
 
 **Korrekturen**
+- ✅ Sicherheit: Open Redirect in `change_status.php` behoben: `return_url` wird über `App\Utils\SafeRedirect::local()` auf Seiten der Oberfläche (`name.php?query`) beschränkt, alles andere führt auf `index.php`
 - ✅ Sicherheit: `change_status.php` (Statuswechsel und Löschen aus der Detailansicht) prüfte kein CSRF-Token; jetzt `csrf_validate()` (ungültig oder fehlend ⇒ 403) und `csrf_field()` in den Formularen der Detailansicht (Struktur-Test `ChangeStatusCsrfTest`)
 - ✅ Namenssuche in der Anmeldungsliste: Die Filterfelder lagen in verschachtelten Formularen im Sammelformular, Enter im Namensfeld löste „Fehler: Invalid action“ aus; jedes Filterfeld hat jetzt ein eigenes GET-Formular außerhalb des Sammelformulars (Struktur-Test `IndexFormStructureTest`)
 - ✅ Der Excel-Export einer einzelnen Anmeldung setzt den Status auf „Exportiert“ (wie der Listen-Export)

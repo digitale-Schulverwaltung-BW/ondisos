@@ -8,6 +8,7 @@ require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Services\StatusService;
+use App\Utils\SafeRedirect;
 use App\Repositories\AnmeldungRepository;
 use App\Services\MessageService as M;
 
@@ -41,7 +42,7 @@ try {
 $id = (int)($_POST['id'] ?? 0);
 $action = $_POST['action'] ?? 'status_change';
 $newStatus = $_POST['status'] ?? '';
-$returnUrl = $_POST['return_url'] ?? 'index.php';
+$returnUrl = SafeRedirect::local($_POST['return_url'] ?? null);
 
 // Validate inputs
 if ($id <= 0) {
