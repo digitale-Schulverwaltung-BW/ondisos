@@ -164,9 +164,6 @@ require __DIR__ . '/../inc/header.php';
             <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('archive')">
                 <?= M::get('ui.buttons.archive') ?>
             </button>
-            <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
-                <?= M::get('ui.buttons.delete') ?>
-            </button>
             <!-- Set the status of the selected entries (same buttons as in the detail view) -->
             <div class="btn-group" role="group" aria-label="<?= htmlspecialchars(M::get('ui.detail.change_status', 'Status ändern')) ?>">
                 <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('in_bearbeitung')"
@@ -176,6 +173,9 @@ require __DIR__ . '/../inc/header.php';
                 <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('abgelehnt')"
                         title="<?= htmlspecialchars(M::get('ui.detail.status_rejected', 'Abgelehnt')) ?>">👎</button>
             </div>
+            <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
+                <?= M::get('ui.buttons.delete') ?>
+            </button>
             <button type="button" class="btn btn-sm btn-secondary" onclick="window.location.reload()">
                 🔄 Ansicht aktualisieren
             </button>
