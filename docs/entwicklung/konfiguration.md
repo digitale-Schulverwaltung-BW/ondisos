@@ -39,6 +39,9 @@ SESSION_LIFETIME=3600
 SESSION_SECURE=true
 AUTH_ENABLED=false
 
+# Reverse-Proxy (kommagetrennte IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
+TRUSTED_PROXIES=
+
 # Rate Limiting, Virenscan, PDF-Logo, ...: siehe backend/.env.example
 ```
 
@@ -55,6 +58,9 @@ TENANT_API_SECRET=...         # Secret des Tenants; signiert Submit/Upload. Nur 
 # Email
 FROM_EMAIL=noreply@example.com
 MAIL_HEAD=Eine neue Anmeldung ist eingegangen.
+
+# Reverse-Proxy vor dem Frontend (IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
+TRUSTED_PROXIES=
 
 # CORS
 ALLOWED_ORIGINS=http://anmeldung.example.com

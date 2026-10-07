@@ -52,6 +52,9 @@ API_SECRET_KEY=${API_SECRET_KEY:-dev-api-key-replace-in-production}
 # Multi-Tenant Mode
 MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
 
+# Reverse proxies whose X-Forwarded-For is trusted (comma-separated IPs/CIDR; empty = ignore the header)
+TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
+
 # Platform Admin (required for multi-tenant mode)
 ADMIN_USERNAME=${ADMIN_USERNAME:-}
 ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH:-}

@@ -16,7 +16,7 @@ $rateLimiter = new RateLimiter(
     60
 );
 
-$identifier = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$identifier = \App\Utils\ClientIp::get();
 if (!$rateLimiter->isAllowed($identifier)) {
     http_response_code(429);
     header('Content-Type: text/html; charset=utf-8');

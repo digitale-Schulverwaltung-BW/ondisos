@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Utils\ClientIp;
+
 /**
  * Simple file-based Rate Limiter
  *
@@ -136,7 +138,7 @@ class RateLimiter
      * Generate a robust fingerprint for rate limiting
      *
      * Combines multiple factors to make bypass attacks harder:
-     * - IP address (REMOTE_ADDR)
+     * - IP address (REMOTE_ADDR, or X-Forwarded-For behind a trusted proxy, see ClientIp)
      * - Hashed User-Agent (prevents header injection attacks)
      * - Accept-Language (adds browser fingerprinting)
      *
@@ -147,7 +149,7 @@ class RateLimiter
      */
     public static function generateFingerprint(array $server): string
     {
-        $ip = $server['REMOTE_ADDR'] ?? 'unknown';
+        $ip = ClientIp::get($server);
         $userAgent = $server['HTTP_USER_AGENT'] ?? '';
         $acceptLanguage = $server['HTTP_ACCEPT_LANGUAGE'] ?? '';
 
