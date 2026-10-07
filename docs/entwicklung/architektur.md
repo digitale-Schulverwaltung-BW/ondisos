@@ -42,7 +42,7 @@ projekt/
 │   ├── includes/                 # class-shortcode, -ajax-handler, -pdf-proxy, -settings,
 │   │                             # -form-config-loader, -assets, -plugin, -autoloader
 │   ├── assets/js/survey-handler-wp.js
-│   └── INSTALL.md
+│   └── INSTALL.md · INSTALL-AUS-GIT.md
 │
 ├── docs/                          # Betriebs- und Projektdokumentation (Index: docs/README.md)
 │   ├── betreiber/ · redaktion/ · sekretariat/ · schul-it/   # nach Rolle

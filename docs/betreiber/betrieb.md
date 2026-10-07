@@ -32,7 +32,7 @@ php migrate.php                     # idempotent
 sudo systemctl reload apache2       # bzw. php8.2-fpm: leert OPcache
 ```
 
-Frontend (Standalone): `git pull`, sonst nichts. Das WordPress-Plugin aktualisiert man über die neue ZIP bzw. wie in der [Plugin-Anleitung](../../wordpress-plugin/INSTALL.md#aktualisieren) beschrieben.
+Frontend (Standalone): `git pull`, sonst nichts. Das WordPress-Plugin aktualisiert man über die neue ZIP ([Plugin-Anleitung](../../wordpress-plugin/INSTALL.md#aktualisieren)) bzw. bei Git-Installationen per `git pull` ([INSTALL-AUS-GIT.md](../../wordpress-plugin/INSTALL-AUS-GIT.md#aktualisieren)).
 
 ## Sicherung und Wiederherstellung
 

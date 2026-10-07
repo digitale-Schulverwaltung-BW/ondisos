@@ -11,7 +11,8 @@ und signiert an das Ondisos-Backend übertragen — WordPress speichert keine An
 
 ## Schnellstart
 
-1. Plugin und Frontend-Code bereitstellen (Symlink, Volume oder Git-Clone) — [INSTALL.md](INSTALL.md)
+1. Die fertige **ZIP** von der [Releases-Seite](https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases) in WordPress hochladen (*Plugins → Installieren → Plugin hochladen*): [INSTALL.md](INSTALL.md).
+   Für Entwicklung und eigene Server alternativ per Git-Clone mit Symlink: [INSTALL-AUS-GIT.md](INSTALL-AUS-GIT.md)
 2. Plugin aktivieren
 3. *Einstellungen → Ondisos*: **Backend API URL**, **Tenant-Slug**, **Tenant-API-Secret** eintragen
 4. Shortcode `[ondisos form="<formular-key>"]` in eine Seite einfügen
@@ -24,7 +25,7 @@ und signiert an das Ondisos-Backend übertragen — WordPress speichert keine An
 - ✅ Datei-Upload (Virenscan im Backend), PDF-Bestätigung (Download über einen Proxy im Plugin), iCal-Download
 - ✅ Prefill per `?prefill=<base64>` (Link aus der Bestätigung) und per einfachen Query-Parametern (`?Klasse=5a`)
 - ✅ DSGVO-konform: lokale Fonts/Bibliotheken, keine externen CDNs
-- ✅ Updates per `git pull`, keine Dateien zu kopieren
+- ✅ Installation und Update ohne Shell per ZIP; alternativ per `git pull` (siehe [INSTALL-AUS-GIT.md](INSTALL-AUS-GIT.md))
 
 ## Verwendung
 
@@ -49,7 +50,7 @@ wordpress-plugin/
 ├── ondisos.php                  # Plugin-Bootstrap (Header, Konstanten, Layout-Erkennung)
 ├── uninstall.php                # räumt die Optionen auf
 ├── readme.txt                   # WordPress-Format
-├── INSTALL.md · README.md
+├── INSTALL.md · INSTALL-AUS-GIT.md · README.md
 ├── SYMLINK-SETUP.sh             # Hilfsskript für die Symlink-Installation
 ├── build-zip.sh                 # baut die Release-ZIP (Layout C: Plugin + Frontend-Teile), `make plugin-zip`
 ├── frontend-assets -> ../frontend/public   # Symlink auf die Frontend-Assets (Layout A)
@@ -104,7 +105,7 @@ Antwort mit PDF-Link / Prefill-Link an den Browser
 *Einstellungen → Ondisos*: Backend API URL, Tenant-Slug, Tenant-API-Secret (write-only), Von E-Mail.
 
 **Priorität:** 1. WordPress-Optionen · 2. `.env` im Frontend-Verzeichnis · 3. Standardwerte (Slug `default`).
-Details und Sicherheitshinweise (`.env` im Web-Verzeichnis sperren!): [INSTALL.md](INSTALL.md).
+Details und Sicherheitshinweise: [INSTALL.md](INSTALL.md); zur `.env` (im Web-Verzeichnis sperren!): [INSTALL-AUS-GIT.md](INSTALL-AUS-GIT.md#konfiguration-per-env).
 
 ## Hooks und AJAX-Endpoints
 
@@ -126,7 +127,7 @@ Siehe [INSTALL.md § Testen](INSTALL.md#testen).
 
 ## Fehlersuche
 
-- **„The form is currently unavailable" / als Administrator „Error (shown to administrators only): …"** — Die Meldung für angemeldete Administratoren nennt die Ursache (Backend nicht erreichbar, Tenant abgelehnt); *Einstellungen → Ondisos* zeigt den Verbindungsstatus. In Docker ist `localhost` der Container selbst: `http://host.docker.internal:9080/api` bzw. der Dienstname ([INSTALL.md](INSTALL.md#backend-url-wenn-wordpress-in-docker-läuft))
+- **„The form is currently unavailable" / als Administrator „Error (shown to administrators only): …"** — Die Meldung für angemeldete Administratoren nennt die Ursache (Backend nicht erreichbar, Tenant abgelehnt); *Einstellungen → Ondisos* zeigt den Verbindungsstatus. In Docker ist `localhost` der Container selbst: `http://host.docker.internal:9080/api` bzw. der Dienstname ([INSTALL.md](INSTALL.md#einstellungen))
 - **„Unknown form …"** — Das Backend ist erreichbar, kennt das Formular aber nicht für den Tenant: `seed-forms.php`, Formular-Key und Tenant-Slug prüfen
 - **„Unauthorized" beim Absenden** — Tenant-API-Secret fehlt oder passt nicht zum Backend
 - **Assets 404** — Layout A: `frontend-assets`-Symlink und `FollowSymLinks`; Layout B: `plugins/ondisos-frontend/public/assets/`

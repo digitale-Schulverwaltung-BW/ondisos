@@ -52,15 +52,15 @@ Unter Einstellungen → Ondisos können Sie:
 
 **Wichtig:** Das Plugin benötigt ein Ondisos-Backend ab Version 3.0.
 
-**Ohne Shell (empfohlen):** Die Release-ZIP `ondisos-<version>.zip` enthält Plugin und Frontend-Code. Unter Plugins → Installieren → Plugin hochladen auswählen, installieren, aktivieren, danach die Zugangsdaten unter Einstellungen → Ondisos eintragen.
+**Ohne Shell (empfohlen):** Die Release-ZIP `ondisos-<version>.zip` (Download: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases) enthält Plugin und Frontend-Code. Unter Plugins → Installieren → Plugin hochladen auswählen, installieren, aktivieren, danach die Zugangsdaten unter Einstellungen → Ondisos eintragen.
 
 **Mit Shell (Git-Clone):** Das Plugin braucht dann den Frontend-Code des Ondisos-Repositories neben sich.
 
-1. Repository klonen: `git clone https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos.git /opt/ondisos`
+1. Repository klonen: `git clone https://github.com/digitale-Schulverwaltung-BW/ondisos.git /opt/ondisos`
 2. Symlink im WordPress Plugins-Verzeichnis anlegen:
    `cd /var/www/wordpress/wp-content/plugins/`
    `ln -s /opt/ondisos/wordpress-plugin ondisos`
-   (Docker/getrennte Verzeichnisse: zusätzlich `ondisos-frontend` → `/opt/ondisos/frontend`, siehe INSTALL.md)
+   (Docker/getrennte Verzeichnisse: zusätzlich `ondisos-frontend` → `/opt/ondisos/frontend`, siehe INSTALL-AUS-GIT.md)
 3. Plugin aktivieren unter Plugins → Installierte Plugins
 4. Einstellungen → Ondisos: Backend API URL, Tenant-Slug und Tenant-API-Secret eintragen
 

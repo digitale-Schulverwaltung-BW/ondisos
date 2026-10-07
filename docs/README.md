@@ -40,7 +40,8 @@ Das Formular auf der Schulwebsite einbinden und mit dem Backend verbinden.
 | Dokument | Inhalt |
 |---|---|
 | [Standalone-Frontend](schul-it/standalone-frontend.md) | Frontend ohne WordPress einrichten, testen, Fehlersuche |
-| [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md) | WordPress-Plugin installieren, konfigurieren, aktualisieren |
+| [wordpress-plugin/INSTALL.md](../wordpress-plugin/INSTALL.md) | WordPress-Plugin mit der fertigen ZIP installieren, einstellen, einbinden, aktualisieren, Fehlersuche |
+| [wordpress-plugin/INSTALL-AUS-GIT.md](../wordpress-plugin/INSTALL-AUS-GIT.md) | Plugin aus dem Git-Repository (Symlink, Docker) für Entwickler und eigene Server |
 | [wordpress-plugin/README.md](../wordpress-plugin/README.md) | Plugin im Detail: Shortcode, Hooks, Architektur |
 
 ## Betreiber
