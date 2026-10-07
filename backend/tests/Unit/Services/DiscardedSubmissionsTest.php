@@ -22,6 +22,7 @@ class DiscardedSubmissionsTest extends TestCase
         require_once __DIR__ . '/../../../../frontend/src/Services/BackendApiClient.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/EmailService.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/MessageService.php';
+        require_once __DIR__ . '/../../../../frontend/src/Utils/ClientIp.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/AnmeldungService.php';
 
         FormConfig::load([]);
