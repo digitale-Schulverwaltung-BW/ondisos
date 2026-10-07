@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.1.0
+Stable tag: 3.1.1
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -97,6 +97,11 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 
 == Changelog ==
 
+= 3.1.1 =
+* Neue Einstellung „Vertrauenswürdige Proxys“ (Einstellungen → Ondisos): Nur von dort wird die Client-IP aus X-Forwarded-For übernommen; bisher wurden Client-IP-Header ungeprüft verwendet
+* Die Überschrift „Verfügbare Formulare“ in den Einstellungen erscheint nur noch einmal
+* Anleitung neu geordnet: Installation mit der fertigen ZIP (INSTALL.md) getrennt von der Installation aus Git (INSTALL-AUS-GIT.md)
+
 = 3.1.0 =
 * Die Versionsnummer folgt ab jetzt dem Ondisos-Release (Backend, Frontend und Plugin sind 3.1.0); frühere Plugin-Versionen waren 2.1.x
 * Surveys und Themes kommen mit der Formular-Konfiguration vom Backend (ein Aufruf, ETag); Datei im Frontend bleibt Fallback
@@ -115,6 +120,9 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
+
+= 3.1.1 =
+Keine Konfigurationsänderung nötig. Steht ein Reverse-Proxy vor WordPress, dessen Adresse unter Einstellungen → Ondisos → „Vertrauenswürdige Proxys“ eintragen; ohne Eintrag wird X-Forwarded-For ignoriert.
 
 = 3.1.0 =
 Läuft mit Backend 3.0 und 3.1; die neuen Funktionen (Surveys aus dem Backend, Statuszeilen) brauchen Backend 3.1. Der Cache liegt in wp-content/uploads und muss beschreibbar sein (ohne Schreibrecht arbeitet das Plugin ohne Cache). Siehe docs/betreiber/MIGRATION-3.1.md im Ondisos-Repository.

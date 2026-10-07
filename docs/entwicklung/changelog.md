@@ -3,10 +3,26 @@
 Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
+## 3.1.1
+
+**Betrieb und Sicherheit**
+- ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`, im Frontend `Frontend\Utils\ClientIp` für die IP in der Anmeldung; im WordPress-Plugin als Einstellung *Vertrauenswürdige Proxys* (`ondisos_trusted_proxies`); dort wurden bisher `Client-IP`/`X-Forwarded-For` u. a. ungeprüft übernommen), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
+- ✅ Docker: MySQL wird im Produktions-Overlay nicht mehr auf dem Host-Port veröffentlicht (das `3306:3306` der Basisdatei wurde beim Zusammenführen nur ergänzt, nicht ersetzt)
+- ✅ Docker: `SESSION_SECURE` und `FORCE_HTTPS` lassen sich über die Root-`.env` schalten; `BACKEND_BIND` und `BACKEND_PORT` binden das Backend an localhost, wenn ein Reverse-Proxy auf demselben Server davor steht
+- ✅ Dokumentation: Reverse-Proxy ist Pflicht, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist))
+
+**Korrekturen**
+- ✅ Der Excel-Export einer einzelnen Anmeldung setzt den Status auf „Exportiert“ (wie der Listen-Export)
+- ✅ Die Detailansicht zeigt das Status-Label statt des Rohwerts (`in_bearbeitung`), findet Uploads im Tenant-Verzeichnis, und die Datei-Heuristik trifft nicht mehr Felder wie „Ausbildungsbetrieb“
+- ✅ WordPress-Plugin: Überschrift „Verfügbare Formulare“ nur einmal; Einstellung *Vertrauenswürdige Proxys*
+- ✅ Tests: Unit-Tests laufen im Dev-Container, `LoginTest` unabhängig von den bcrypt-Kosten (PHP 8.5)
+- ✅ Release: feste Asset-Pfade an den Release-Links ergeben einen Permalink auf die neueste Plugin-ZIP ([CI_CD.md](CI_CD.md#release-wordpress-plugin))
+
+**Dokumentation neu geordnet:** nach Rollen (Sekretariat, Redaktion, Schul-IT, Betreiber, Entwicklung) mit Handreichung für das Sekretariat, Betriebsmodell, Installation, Betrieb, Notfall-Handbuch und Plugin-Installation per ZIP bzw. Git; `CLAUDE.md` ist nur noch der Entwickler-Einstieg ([Index](../README.md)).
+
 ## 3.1
 
 **Nachträge aus der ersten Praxis**
-- ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`, im Frontend `Frontend\Utils\ClientIp` für die IP in der Anmeldung; im WordPress-Plugin als Einstellung *Vertrauenswürdige Proxys* (`ondisos_trusted_proxies`); dort wurden bisher `Client-IP`/`X-Forwarded-For` u. a. ungeprüft übernommen), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
 - ✅ Formular-Editor in Tabs (Allgemein · Benachrichtigungs-E-Mail · PDF-Bestätigung · Kalender-Download · Info), Speichern/Abbrechen neben den Tabs; Tab mit Fehlern wird geöffnet und markiert
 - ✅ Ein Logo pro Schule: Upload auf *Formulare* (`forms.php`) durch Tenant-Admins, gespeichert unter `uploads/tenant-<id>/branding/logo.png|jpg` (nur PNG/JPEG, max. 2 MB, per GD neu kodiert). Reihenfolge im PDF: `logo: false` (keins) → Pfad in der Config (Plattform-Admin) → Schul-Logo → `PDF_LOGO_<FORM>` → `PDF_LOGO_PATH`
 - ✅ Akzentfarbe der PDFs pro Schule (Balken links an Einleitung und Abschnitten): Farbfeld + Hex-Eingabe auf *Formulare* (`forms.php`), gespeichert als `uploads/tenant-<id>/branding/accent.txt` (`TenantAccentColor`, nur `#rrggbb`; Standard `#3498db`), über `PdfLogoResolver` als `accent_color` in die PDF-Konfiguration und vom `PdfTemplateRenderer` ins Stylesheet eingesetzt

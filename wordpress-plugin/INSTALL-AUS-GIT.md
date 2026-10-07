@@ -45,7 +45,7 @@ Wer von Layout A oder B auf die ZIP wechselt: Plugin-Ordner (bzw. Symlink) `ondi
 ```bash
 # Repository klonen (irgendwo außerhalb des WordPress-Verzeichnisses)
 git clone https://github.com/digitale-Schulverwaltung-BW/ondisos.git /opt/ondisos
-cd /opt/ondisos && git checkout v3.1.0      # Release-Tag (Liste: git tag)
+cd /opt/ondisos && git checkout v3.1.1      # Release-Tag (Liste: git tag)
 
 # Symlink ins WordPress-Plugin-Verzeichnis (absoluter Pfad!)
 cd /var/www/html/wp-content/plugins

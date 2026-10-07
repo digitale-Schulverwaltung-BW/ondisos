@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://php.net"><img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4"></a>
   <a href="LICENSE"><img alt="Lizenz MIT" src="https://img.shields.io/badge/Lizenz-MIT-green"></a>
-  <img alt="Version 3.1" src="https://img.shields.io/badge/Version-3.1-blue">
+  <img alt="Version 3.1.1" src="https://img.shields.io/badge/Version-3.1.1-blue">
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Pipeline" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg"></a>
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Coverage" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg"></a>
 </p>
@@ -109,7 +109,7 @@ Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte 
 
 ## Status und Ausblick
 
-**Version 3.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
+**Version 3.1.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
 ([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.1.0.md)).
 
 Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
