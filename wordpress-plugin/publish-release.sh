@@ -10,6 +10,8 @@
 #   - ondisos-<version>.zip and .sha256 in the project's Generic Package Registry (package "ondisos-plugin")
 #   - a GitLab release for the tag that links both files
 # Both are readable without a login if the project is public. The tag must be v<plugin version> (e.g. v3.1.0).
+# The release links carry fixed file paths, so the newest ZIP has a stable address (GitLab 15.9+):
+#   <project>/-/releases/permalink/latest/downloads/ondisos-plugin.zip   (and ondisos-plugin.zip.sha256)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -53,8 +55,8 @@ BODY="$(jq -n \
     --arg desc "${CI_COMMIT_TAG_MESSAGE:-WordPress plugin $VERSION}" \
     --arg zip "$PKG/$ZIP" --arg sha "$PKG/$ZIP.sha256" \
     '{tag_name:$tag, name:$name, description:$desc,
-      assets:{links:[{name:"WordPress plugin (ZIP)", url:$zip, link_type:"package"},
-                     {name:"SHA-256 checksum", url:$sha, link_type:"other"}]}}')"
+      assets:{links:[{name:"WordPress plugin (ZIP)", url:$zip, link_type:"package", direct_asset_path:"/ondisos-plugin.zip"},
+                     {name:"SHA-256 checksum", url:$sha, link_type:"other", direct_asset_path:"/ondisos-plugin.zip.sha256"}]}}')"
 
 curl --fail --silent --show-error --request POST \
     --header "JOB-TOKEN: $CI_JOB_TOKEN" --header "Content-Type: application/json" \

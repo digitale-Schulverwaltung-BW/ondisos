@@ -10,7 +10,7 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 | **WordPress-Plugin ohne Shell, Rest** | Verbindungscode und Update-Prüfung; die ZIP ist umgesetzt. Entwurf: [PLAN-3.1.1.md](plans/PLAN-3.1.1.md) |
 | **SMTP-Versand** statt PHP `mail()` | Die Benachrichtigung geht vom Frontend-Server aus |
 | **Datei-Fallback für Surveys abschaffen** | `frontend/surveys/` nur noch als Importquelle (`import-surveys.php`); ohne Termin |
-| **Echte Client-IP hinter Reverse-Proxy** | `TRUSTED_PROXIES` für Rate-Limit und Audit-Log (siehe [sicherheit.md](sicherheit.md)) |
+| **Permalink auf die neueste Plugin-ZIP** | Das Release-Skript setzt jetzt feste Pfade ([CI_CD.md](CI_CD.md#release-wordpress-plugin)). Beim nächsten Release-Tag prüfen, dass `…/-/releases/permalink/latest/downloads/ondisos-plugin.zip` weiterleitet, und dann in `wordpress-plugin/INSTALL.md` verlinken |
 | **Deutsche Locale** für SurveyJS | Validierungsmeldungen erscheinen englisch |
 | **`X-Content-Type-Options: nosniff`** beim Datei-Download | Kleine Härtung in `DownloadController`; unbekannte Endungen gehen schon als `application/octet-stream` raus |
 | **Monitoring und Logging** | strukturiertes Logging, Anbindung an Überwachung (z. B. Sentry); heute: `health.php` und Audit-Log |

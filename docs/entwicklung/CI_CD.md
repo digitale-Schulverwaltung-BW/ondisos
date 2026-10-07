@@ -41,6 +41,24 @@ ein Test stellt sicher, dass jede Datei in `docs/` im [Index](../README.md) steh
 3. Der Job `release:plugin_zip` führt `wordpress-plugin/publish-release.sh` aus. Ergebnis: `dist/ondisos-<version>.zip` und `.sha256` als Artefakt, in der Package Registry und am Release
    (ohne Anmeldung abrufbar, wenn das Projekt öffentlich ist).
 
+Die Release-Links tragen feste Dateipfade (`direct_asset_path`). Dadurch hat die neueste ZIP eine stabile Adresse, die immer auf das jüngste Release zeigt (GitLab 15.9 oder neuer):
+
+```
+https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip
+https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/releases/permalink/latest/downloads/ondisos-plugin.zip.sha256
+```
+
+Das gilt für Releases, die mit diesem Skript erstellt wurden (ab dem Release nach 3.1.0). Für ein früheres Release lassen sich die Pfade nachtragen, mit einem Zugriffstoken (Scope `api`):
+
+```bash
+curl --request PUT --header "PRIVATE-TOKEN: <token>" --data "direct_asset_path=/ondisos-plugin.zip" \
+  "https://gitlab.hhs.karlsruhe.de/api/v4/projects/97/releases/v3.1.0/assets/links/1"        # Link 1: ZIP
+curl --request PUT --header "PRIVATE-TOKEN: <token>" --data "direct_asset_path=/ondisos-plugin.zip.sha256" \
+  "https://gitlab.hhs.karlsruhe.de/api/v4/projects/97/releases/v3.1.0/assets/links/2"        # Link 2: Prüfsumme
+```
+
+Prüfen: `curl -sI <permalink-Adresse>` liefert eine Weiterleitung (302) auf die ZIP.
+
 Lokal erzeugen: `make plugin-zip` bzw. `wordpress-plugin/build-zip.sh` (nur versionierte Dateien kommen hinein). Hintergrund: [plans/PLAN-3.1.1.md](plans/PLAN-3.1.1.md).
 
 ## Deployment: bewusst manuell
