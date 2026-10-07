@@ -44,6 +44,7 @@ class SafeRedirectTest extends TestCase
             ['index.php#x'],
             ["index.php?a=1\r\nSet-Cookie: x=y"],
             ['index.php '],
+            ["index.php\n"],
             ['evil.example'],
             [''],
         ];

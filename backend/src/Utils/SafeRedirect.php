@@ -15,7 +15,7 @@ final class SafeRedirect
      */
     public static function local(?string $url, string $default = 'index.php'): string
     {
-        if ($url === null || !preg_match('/^[A-Za-z0-9_-]+\.php(\?[^\x00-\x20\x7f\\\\#]*)?$/', $url)) {
+        if ($url === null || !preg_match('/^[A-Za-z0-9_-]+\.php(\?[^\x00-\x20\x7f\\\\#]*)?\z/', $url)) {
             return $default;
         }
 
