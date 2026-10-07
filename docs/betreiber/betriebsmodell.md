@@ -36,7 +36,17 @@ Frontend und Backend teilen genau drei Angaben. Mehr braucht es nicht:
 
 Der Slug adressiert die Schule, das Secret **autorisiert** die Anfrage. Das Secret bleibt auf dem Server der Schule; es gelangt nie in den Browser.
 
+## So läuft eine Anmeldung ab
+
+![Ablauf: Formular laden, Anmeldung absenden und PDF abholen zwischen Besucher, Frontend, Backend und Datenbank](../img/ablauf-anmeldung.svg)
+
+Das Formular holt das Frontend mit Konfiguration und veröffentlichter Survey vom Backend (und merkt sie sich im Cache). Beim Absenden übergibt es die Angaben **signiert** ans Backend,
+das sie in der Datenbank speichert und einen zeitlich begrenzten PDF-Link zurückgibt. Die Bestätigungs-E-Mail an die Schule geht vom Server des Frontends aus.
+Das PDF holt das Frontend mit dem Token vom Backend und reicht es an den Besucher weiter.
+
 ## Netzwerk: was muss erreichbar sein?
+
+![Netzwerk: Besucher erreichen nur die Schulwebsite; das Frontend ruft das Backend über einen Reverse-Proxy auf, die Verwaltungsoberfläche bleibt im Intranet](../img/deployment-netzwerk.svg)
 
 Das Frontend ruft das Backend **vom Server der Schule aus** auf, nie aus dem Browser der Besucher. Besucher sprechen ausschließlich mit der Schulwebsite.
 Damit gilt:
@@ -79,6 +89,32 @@ Weitere Hinweise:
 - **HTTPS ist Pflicht** zwischen Frontend und Backend: Die Signatur enthält keinen Zeitstempel und bietet allein keinen Replay-Schutz.
 - Die Antworten von `form-config.php` sind per Schul-Slug **ohne Signatur** lesbar (Konfiguration, veröffentlichte Surveys, auch `notify_email`): keine Geheimnisse in Formular-Konfigurationen ablegen.
 - Steht WordPress selbst in Docker, ist `localhost` der Container selbst ([INSTALL.md](../../wordpress-plugin/INSTALL.md)).
+
+### Reverse-Proxy: Pflicht, sobald das Backend nicht nur intern erreichbar ist
+
+Der Backend-Container spricht **unverschlüsseltes HTTP** und bedient unter demselben Port auch die **Verwaltungsoberfläche** mit den Anmeldungen. Soll das Backend aus einem Netz erreichbar sein,
+dem Sie nicht vollständig vertrauen (Internet, Hosting-Netz, WLAN, „halb-öffentlich" für externe Schul-Frontends), **muss ein Reverse-Proxy davor stehen**. Er
+übernimmt, was das Backend nicht kann:
+
+1. **TLS beenden** (HTTPS, gültiges Zertifikat); das Backend selbst bleibt auf HTTP.
+2. **Pfade begrenzen:** nur die API-Pfade aus der Tabelle oben nach außen; alles andere (Oberfläche, `login.php`, `assets/`) nur aus dem Intranet.
+3. **Header setzen:** `Host` und `X-Forwarded-Proto` (sonst erkennt `FORCE_HTTPS` die Verschlüsselung nicht), `X-Forwarded-For`.
+4. **Upload-Grenze** passend zu `UPLOAD_MAX_SIZE` (Nginx: `client_max_body_size 10M`).
+5. **Das Backend nur dem Proxy zeigen:** läuft der Proxy auf demselben Server, binden Sie den Backend-Port an localhost. In der Root-`.env`:
+
+   ```bash
+   BACKEND_BIND=127.0.0.1
+   ```
+
+   Danach `docker compose up -d backend`. Ohne diese Einstellung bleibt Port 9080 auf **allen** Schnittstellen offen und lässt sich am Proxy vorbei ansprechen. Läuft der Proxy auf einem anderen Server,
+   sperren Sie den Port per Firewall für alle außer dem Proxy.
+
+Ein vollständiges Nginx-Beispiel mit TLS steht in [betrieb.md](betrieb.md#https); das Beispiel für die Pfadbegrenzung oben ist mit einem echten Proxy vor dem Backend geprüft
+(API und PDF-Pfad werden durchgereicht, `login.php`, `index.php`, `tenants.php` und `assets/` abgewiesen).
+
+**Gut zu wissen:** Das Backend sieht hinter einem Proxy nur dessen Adresse. Das **Rate-Limit** (Standard: 10 Anmeldungen pro Minute je Absender, `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW`
+in der `backend/.env`) und die IP-Adresse im **Audit-Log** gelten dann für alle Schulen gemeinsam. Bei mehreren Schulen setzen Sie `RATE_LIMIT_MAX` entsprechend höher
+(etwa Zahl der Schulen × erwartete Anmeldungen pro Minute); die Auswertung von `X-Forwarded-For` für vertrauenswürdige Proxys ist als Verbesserung vorgemerkt.
 
 ## Eine neue Schule anbinden
 

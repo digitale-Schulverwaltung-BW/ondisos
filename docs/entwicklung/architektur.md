@@ -122,6 +122,9 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 
 ## Datenfluss
 
+![Ablauf einer Anmeldung](../img/ablauf-anmeldung.svg)
+
+
 ### Formular anzeigen
 
 ```

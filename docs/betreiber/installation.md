@@ -12,7 +12,7 @@ Ohne Docker: [installation-ohne-docker.md](installation-ohne-docker.md).
 |---|---|
 | **Server** | Linux (Ubuntu 22.04 LTS oder Debian 11+ empfohlen), mindestens 2 GB RAM (empfohlen 4 GB), 20 GB freier Speicher |
 | **Docker** | Docker Engine 20.10+ mit **Compose-Plugin ≥ 2.24** (`docker compose version`) |
-| **Netz** | Port 9080 (Backend) für das Frontend bzw. den vorgeschalteten Reverse-Proxy; MySQL wird **nicht** nach außen veröffentlicht |
+| **Netz** | Port 9080 (Backend) für das Frontend bzw. den vorgeschalteten Reverse-Proxy (Einstellung `BACKEND_PORT`, Bindung `BACKEND_BIND`); MySQL wird **nicht** nach außen veröffentlicht |
 | **Trennung** | Backend und Frontend nicht auf derselben Maschine betreiben: Die Docker-Volumes sind auf dem Host lesbar, bei einem Einbruch wären die Daten offen |
 
 Docker installieren (Ubuntu/Debian, Skript vorher ansehen; Alternativen: [Docker-Dokumentation](https://docs.docker.com/engine/install/)):
@@ -143,6 +143,10 @@ docker compose ps          # backend: healthy
 
 Öffnen Sie dann `http://<server>:9080/login.php` und melden Sie sich mit dem Zugang aus Schritt 4 an. Ab hier geht es mit dem
 [Betriebsmodell](betriebsmodell.md) weiter: HTTPS einrichten, die API für das Frontend erreichbar machen, die erste Schule anbinden.
+
+> **Nicht ohne Reverse-Proxy veröffentlichen.** Port 9080 spricht unverschlüsseltes HTTP und liefert auch die Verwaltungsoberfläche aus. Ist das Backend nur im vertrauenswürdigen Intranet erreichbar,
+> genügt das für den ersten Test. Muss es dagegen von außen erreichbar sein (zum Beispiel für die Frontends externer Schulen), gehört ein Reverse-Proxy davor, der TLS beendet, nur die API-Pfade durchlässt
+> und das Backend mit `BACKEND_BIND=127.0.0.1` sonst unerreichbar macht. Anleitung: [Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist) und [HTTPS in betrieb.md](betrieb.md#https).
 
 ## Virenscan (optional)
 

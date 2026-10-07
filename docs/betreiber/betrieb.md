@@ -94,7 +94,7 @@ Gelöschte und abgelaufene Anmeldungen sind in alten Dumps noch enthalten.
 
 Zwischen Frontend und Backend ist **HTTPS Pflicht**: Die API-Signaturen enthalten keinen Zeitstempel und schützen allein nicht vor Wiederholung, und die Admin-Oberfläche überträgt Passwörter.
 
-**Docker-Stack: TLS am Reverse-Proxy.** Der Container spricht HTTP (Port 9080); davor steht Nginx, Caddy oder Traefik. Beispiel Nginx:
+**Docker-Stack: TLS am Reverse-Proxy.** Der Container spricht HTTP (Port 9080); davor steht Nginx, Caddy oder Traefik. Das ist **Pflicht**, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Begründung und Checkliste](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)). Läuft der Proxy auf demselben Server, setzen Sie in der Root-`.env` `BACKEND_BIND=127.0.0.1`, damit der Backend-Port nur noch über den Proxy erreichbar ist. Beispiel Nginx:
 
 ```nginx
 server {
@@ -211,7 +211,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 - [ ] **Admin-Zugang:** `ADMIN_PASSWORD_HASH` in einfachen Anführungszeichen, Länge 60 geprüft; starkes Passwort
 - [ ] **Migration** gelaufen (`Migration complete` im Log), Formulare eingespielt, Testanmeldung durchgespielt (Eintrag, PDF-Download, Upload)
 - [ ] **HTTPS** für Backend und Frontend; `SESSION_SECURE=true`; HSTS erst nach erfolgreichem Test
-- [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade
+- [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade über einen **Reverse-Proxy**; bei Proxy auf demselben Server `BACKEND_BIND=127.0.0.1`
 - [ ] **Sicherung:** täglicher Dump, Uploads, `.env`-Dateien separat verschlüsselt; Probe-Restore durchgeführt
 - [ ] **Updates:** Verfahren und Zuständigkeit festgelegt; Docker-Logs begrenzt
 - [ ] **Upload-Limits** auf allen vier Ebenen abgestimmt
