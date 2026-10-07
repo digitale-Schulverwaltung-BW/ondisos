@@ -132,6 +132,13 @@ class Plugin
             putenv('FROM_EMAIL=' . $from_email);
             $_ENV['FROM_EMAIL'] = $from_email;
         }
+
+        // Reverse proxies whose X-Forwarded-For is trusted for the client IP of a registration
+        $trusted_proxies = get_option('ondisos_trusted_proxies');
+        if (!empty($trusted_proxies)) {
+            putenv('TRUSTED_PROXIES=' . $trusted_proxies);
+            $_ENV['TRUSTED_PROXIES'] = $trusted_proxies;
+        }
     }
 
     /**

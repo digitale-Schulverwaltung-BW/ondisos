@@ -105,6 +105,16 @@ class Settings
             ]
         );
 
+        register_setting(
+            self::OPTION_GROUP,
+            'ondisos_trusted_proxies',
+            [
+                'type' => 'string',
+                'sanitize_callback' => [$this, 'sanitize_trusted_proxies'],
+                'default' => ''
+            ]
+        );
+
         // Add settings section
         add_settings_section(
             'ondisos_main_section',
@@ -145,6 +155,15 @@ class Settings
             'ondisos_from_email',
             'Von E-Mail-Adresse',
             [$this, 'render_from_email_field'],
+            self::PAGE_SLUG,
+            'ondisos_main_section'
+        );
+
+        // Trusted proxies field
+        add_settings_field(
+            'ondisos_trusted_proxies',
+            'Vertrauenswürdige Proxys',
+            [$this, 'render_trusted_proxies_field'],
             self::PAGE_SLUG,
             'ondisos_main_section'
         );
@@ -272,6 +291,61 @@ class Settings
             <strong>Aktueller Wert aus .env:</strong> <code><?php echo esc_html($env_value); ?></code>
         </p>
         <?php
+    }
+
+    /**
+     * Render trusted proxies field
+     */
+    public function render_trusted_proxies_field(): void
+    {
+        $value = get_option('ondisos_trusted_proxies', '');
+        $env_value = getenv('TRUSTED_PROXIES') ?: 'Nicht gesetzt';
+
+        ?>
+        <input type="text"
+               name="ondisos_trusted_proxies"
+               value="<?php echo esc_attr($value); ?>"
+               class="regular-text"
+               placeholder="10.0.0.5, 172.16.0.0/12">
+        <p class="description">
+            Nur nötig, wenn ein Reverse-Proxy vor WordPress steht: IP-Adressen oder CIDR-Bereiche (kommagetrennt) der Proxys,
+            deren <code>X-Forwarded-For</code> für die Client-IP der Anmeldung gelten soll. Leer: Der Header wird ignoriert.
+            Tragen Sie nur Ihre eigenen Proxys ein.<br>
+            <strong>Aktueller Wert aus .env/Umgebung:</strong> <code><?php echo esc_html($env_value); ?></code>
+        </p>
+        <?php
+    }
+
+    /**
+     * Keep only valid IPs/CIDR ranges; report dropped entries and ranges that trust everyone.
+     */
+    public function sanitize_trusted_proxies($value): string
+    {
+        $raw    = array_filter(array_map('trim', explode(',', (string) $value)), static fn ($e) => $e !== '');
+        $parsed = \Frontend\Utils\ClientIp::parseTrustedProxies(implode(',', $raw));
+
+        if (count($parsed) < count($raw)) {
+            add_settings_error(
+                'ondisos_trusted_proxies',
+                'ondisos_trusted_proxies_invalid',
+                'Ungültige Einträge bei den vertrauenswürdigen Proxys wurden entfernt (erlaubt: IP oder IP/Präfix).',
+                'warning'
+            );
+        }
+
+        foreach ($parsed as $entry) {
+            if (str_ends_with($entry, '/0')) {
+                add_settings_error(
+                    'ondisos_trusted_proxies',
+                    'ondisos_trusted_proxies_all',
+                    'Achtung: „' . $entry . '" vertraut jeder Adresse; damit kann jeder seine IP fälschen. Tragen Sie nur Ihre Proxys ein.',
+                    'warning'
+                );
+                break;
+            }
+        }
+
+        return implode(', ', $parsed);
     }
 
     /**

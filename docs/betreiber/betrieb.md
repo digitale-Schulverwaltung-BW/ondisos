@@ -154,7 +154,7 @@ Danach `docker compose up -d backend`. Regeln:
 - Tragen Sie **nur Ihre eigenen Proxys** ein, nie `0.0.0.0/0`: Sonst kann jeder seine Adresse fälschen und das Rate-Limit umgehen.
 - Der Proxy muss `X-Forwarded-For` setzen und dabei den vorhandenen Wert **anhängen** (Nginx: `proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;`, wie im Beispiel oben).
 
-Dasselbe gilt für das **Frontend**: Steht dort ein Proxy davor (Docker: Root-`.env`, sonst `frontend/.env` bzw. Umgebung des Webservers; im WordPress-Plugin die Umgebung des Webservers), speichert es die Client-IP der Anmeldung nach derselben Regel. Es trägt dieselbe Einstellung `TRUSTED_PROXIES` ein; ohne sie steht die Adresse der Verbindung in der Anmeldung (frühere Versionen übernahmen `X-Forwarded-For` und ähnliche Header ungeprüft).
+Dasselbe gilt für das **Frontend**: Steht dort ein Proxy davor (Docker: Root-`.env`, sonst `frontend/.env` bzw. Umgebung des Webservers; im WordPress-Plugin das Feld *Vertrauenswürdige Proxys* unter *Einstellungen → Ondisos*, das Vorrang vor der Umgebung hat), speichert es die Client-IP der Anmeldung nach derselben Regel. Es trägt dieselbe Einstellung `TRUSTED_PROXIES` ein; ohne sie steht die Adresse der Verbindung in der Anmeldung (frühere Versionen übernahmen `X-Forwarded-For` und ähnliche Header ungeprüft).
 
 Prüfen: Ein Eintrag im Audit-Log (`backend/logs/audit.log`) zeigt im Feld `ip` die Adresse des Clients statt der des Proxys.
 

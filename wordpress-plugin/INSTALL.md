@@ -59,6 +59,7 @@ Die ZIP ist für alle Schulen gleich und enthält keine Zugangsdaten; es ist nic
 | **Tenant-Slug** | Kennung Ihrer Schule; leer = `default` (nur bei einer Einzelinstallation sinnvoll) |
 | **Tenant-API-Secret** | der Schlüssel vom Betreiber. Er wird nach dem Speichern **nie wieder angezeigt**; leer lassen bedeutet „unverändert“ |
 | **Von E-Mail-Adresse** | Absender der Benachrichtigungs-E-Mails an die Schule |
+| **Vertrauenswürdige Proxys** | Nur bei einem Reverse-Proxy vor WordPress: IPs/CIDR (kommagetrennt), deren `X-Forwarded-For` für die Client-IP der Anmeldung gilt. Leer = Header ignoriert. Siehe [Betrieb](../docs/betreiber/betrieb.md#reverse-proxy-client-ip-und-rate-limit) |
 
 Beim **Speichern** einer URL, unter der das Backend nicht antwortet, erscheint eine Warnung (die URL wird trotzdem gespeichert). Ob das Secret zum Tenant passt, zeigt der Verbindungsstatus
 („Secret passt zum Tenant“, ab Backend 3.1) bzw. spätestens das erste Absenden.
@@ -128,7 +129,7 @@ Mehr Details liefert das WordPress-Debug-Log (`define('WP_DEBUG', true); define(
 
 ## Deinstallation
 
-Plugin in WordPress **deaktivieren und löschen**: Dabei entfernt das Plugin seine Einstellungen (`ondisos_backend_url`, `ondisos_from_email`, `ondisos_tenant_slug`, `ondisos_tenant_api_secret`).
+Plugin in WordPress **deaktivieren und löschen**: Dabei entfernt das Plugin seine Einstellungen (`ondisos_backend_url`, `ondisos_from_email`, `ondisos_trusted_proxies`, `ondisos_tenant_slug`, `ondisos_tenant_api_secret`).
 Die Anmeldedaten liegen im Backend und bleiben unberührt.
 
 ## Sicherheitshinweise
