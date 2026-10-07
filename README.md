@@ -86,7 +86,7 @@ Frontend: PHP 8.0+ und Apache/Nginx – oder ein WordPress.
 ## Entwickeln und mitmachen
 
 Beiträge sind willkommen: Fehler melden, Ideen einbringen, Code oder Dokumentation verbessern –
-am besten über **[GitHub](https://github.com/digitale-Schulverwaltung-BW/ondisos)** ([Issues](https://github.com/digitale-Schulverwaltung-BW/ondisos/issues), Pull Requests).
+am besten über **[GitHub](https://github.com/digitale-Schulverwaltung-BW/ondisos)** ([Issues](https://github.com/digitale-Schulverwaltung-BW/ondisos/issues), [Diskussionen](https://github.com/orgs/digitale-Schulverwaltung-BW/discussions/categories/ondisos), [Pull Requests](https://github.com/digitale-Schulverwaltung-BW/ondisos/pulls)).
 Das GitLab der Entwicklung (`gitlab.hhs.karlsruhe.de`) nimmt keine Registrierungen an.
 
 ```bash
