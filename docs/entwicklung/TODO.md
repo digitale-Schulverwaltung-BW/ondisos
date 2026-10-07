@@ -35,7 +35,7 @@ Eine Coverage-Messung läuft in der Pipeline (Job `coverage`); lokal ist kein Co
 |---|---|---|
 | `PdfGeneratorService`, `PdfTemplateRenderer` | keine direkten Tests (Logo-Einbettung, Abschnitte, Feldfilter; mPDF-Erzeugung) | groß |
 | `SpreadsheetBuilder` | keine Tests (Zellformate, Datum `YYYY-MM-DD` → `dd.mm.yyyy`, Spaltenbreite, Zebra-Streifen) | mittel |
-| `AnmeldungController`, `BulkActionsController` | keine Tests (Integration gegen eine Test-Datenbank) | groß |
+| `AnmeldungController` | keine Tests (Integration gegen eine Test-Datenbank); `BulkActionsController` ist seit 3.1.1 mit Unit-Tests abgedeckt | groß |
 | `NominatimService`, `NullableHelpers` | keine Tests (externer Dienst gemockt bzw. kleine Hilfsfunktionen) | klein |
 | `AnmeldungRepository` | nur Mandanten-Isolierung und Nachbar-Abfragen getestet, CRUD, Soft-Delete und Filter fehlen als Integration-Tests | mittel |
 | Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `forms.php`, `pdf/download.php`) | keine Unit-Tests; ihre Logik liegt in getesteten Services, strukturelle Tests prüfen Reihenfolge und Abhängigkeiten | mittel |

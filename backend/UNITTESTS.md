@@ -68,7 +68,6 @@ ohne Datenbank.
 | `PdfGeneratorService` | mPDF-Abhängigkeit |
 | `PdfTemplateRenderer` | mPDF-Abhängigkeit |
 | `AnmeldungController` | `$_GET` Kopplung |
-| `BulkActionsController` | `$_SERVER`/`$_POST` Kopplung |
 | `DownloadController` | `exit` + `readfile()` nicht testbar |
 | Endpoint-Skripte (`public/api/*.php`, `pdf/download.php`) | Scripts mit `exit`/Superglobals; bisher nur live geprüft |
 | JavaScript (`survey-handler-*.js`), WordPress-Plugin | kein JS-/WP-Test-Setup |

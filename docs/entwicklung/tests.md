@@ -158,7 +158,7 @@ http://intranet.example.com/backend/
 
 # 2. Einträge in der Liste auswählen und Excel-Export testen (Status sollte → "exportiert")
 # 3. Detail ansehen
-# 4. Bulk-Action: Archivieren
+# 4. Bulk-Action: Archivieren und Status setzen (📝 ☑️ 👎) für mehrere ausgewählte Einträge
 # 5. Papierkorb prüfen
 ```
 

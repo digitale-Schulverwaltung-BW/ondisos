@@ -187,7 +187,7 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 4. Admin kann:
    - Einzeln ansehen (detail.php) inkl. PDF-Download und Datei-Download
    - Excel exportieren (excel_export.php)
-   - Bulk-Actions (archivieren/löschen)
+   - Bulk-Actions (archivieren, löschen, Status setzen: in Bearbeitung / akzeptiert / abgelehnt)
    - Papierkorb verwalten (trash.php)
 ```
 
@@ -299,7 +299,7 @@ CREATE TABLE anmeldungen (
 **Backend Admin:**
 - Übersicht mit Pagination & Filterung
 - Status-System mit Auto-Status-Update
-- Bulk-Actions (Archivieren, Löschen)
+- Bulk-Actions (Archivieren, Löschen, Status setzen: In Bearbeitung, Akzeptiert, Abgelehnt)
 - Soft-Delete mit Papierkorb
 - Wiederherstellen aus Papierkorb
 - Excel-Export mit:

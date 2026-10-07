@@ -30,6 +30,7 @@ Die Seite **Anmeldungen** zeigt alle eingegangenen Anmeldungen, die neuesten obe
   (z. B. *Neu*). In den Feldern unter **Name** und **E-Mail** können Sie nach Namen suchen.
 - **Sortieren:** Klick auf eine Spaltenüberschrift mit Pfeil (Name, E-Mail, Status, Datum).
 - **Einträge pro Seite:** 10, 25, 50 oder 100.
+- **Mehrere Einträge auswählen:** Kästchen vor den Nummern ankreuzen (das Kästchen in der Kopfzeile wählt alle angezeigten aus). Mit den Schaltflächen oberhalb der Tabelle wirken Sie dann auf alle ausgewählten Anmeldungen gleichzeitig; sie stehen unter [Bearbeitungsstand pflegen](#6-bearbeitungsstand-pflegen) und [Aufräumen](#7-aufräumen-archivieren-löschen-papierkorb).
 - Das **Dashboard** (Menü oben) zählt die Anmeldungen je Status und bietet unter **Schnellzugriff** direkt „Neue Anmeldungen".
 
 ## 3. Eine Anmeldung ansehen
@@ -74,7 +75,7 @@ Die Schritte dafür stehen in **[ASV.md](ASV.md)**.
 
 ## 6. Bearbeitungsstand pflegen
 
-Den Status ändern Sie in der Detailansicht (📝 ☑️ 👎) oder für **mehrere Anmeldungen auf einmal** in der Liste: Kästchen vor den Nummern ankreuzen (das Kästchen in der Kopfzeile wählt alle angezeigten aus) und oben auf 📝 *In Bearbeitung*, ☑️ *Akzeptiert* oder 👎 *Abgelehnt* klicken. Das System fragt vor dem Ändern nach und meldet danach, wie viele Einträge geändert wurden. So behalten Sie und Ihre Kolleginnen und Kollegen den Überblick:
+Den Status ändern Sie in der Detailansicht (📝 ☑️ 👎) oder für **mehrere Anmeldungen auf einmal** in der Liste: Kästchen vor den Nummern ankreuzen (das Kästchen in der Kopfzeile wählt alle angezeigten aus) und oben auf 📝 *In Bearbeitung*, ☑️ *Akzeptiert* oder 👎 *Abgelehnt* klicken. Das System fragt vor dem Ändern nach und meldet danach, wie viele Einträge geändert wurden. Die Buttons stehen zwischen **Archivieren** und **Löschen**; der Mauszeiger darüber zeigt den Namen. So behalten Sie und Ihre Kolleginnen und Kollegen den Überblick:
 
 | Status | Bedeutung |
 |---|---|
@@ -86,7 +87,7 @@ Den Status ändern Sie in der Detailansicht (📝 ☑️ 👎) oder für **mehre
 
 ## 7. Aufräumen: Archivieren, Löschen, Papierkorb
 
-In der Liste markieren Sie Einträge und nutzen die Schaltflächen darüber:
+In der Liste markieren Sie Einträge und nutzen die Schaltflächen darüber. Von links nach rechts: **Archivieren**, die drei Statusbuttons (📝 ☑️ 👎, siehe oben), **Löschen** und **Ansicht aktualisieren**.
 
 - **📦 Archivieren** – für erledigte Anmeldungen. **Wichtig:** Archivierte Anmeldungen werden nach einer festen Frist
   (Standard **90 Tage** nach der letzten Änderung, einstellbar durch den Betreiber) **endgültig und samt hochgeladener Dateien gelöscht**.
@@ -96,7 +97,7 @@ In der Liste markieren Sie Einträge und nutzen die Schaltflächen darüber:
   oder mit **⚠️ Endgültig löschen** unwiderruflich entfernen.
 - **🔄 Ansicht aktualisieren** lädt die Liste neu, z. B. wenn inzwischen neue Anmeldungen eingegangen sind.
 
-Vor jedem Archivieren und Löschen fragt das System noch einmal nach.
+Vor jedem Archivieren, Löschen und Statuswechsel mehrerer Einträge fragt das System noch einmal nach.
 
 ## Hilfe
 
