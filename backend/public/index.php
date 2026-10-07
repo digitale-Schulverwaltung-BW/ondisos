@@ -130,6 +130,28 @@ require __DIR__ . '/../inc/header.php';
         </select>
     </form>
 
+    <?php
+    // Base params preserved across sort/filter links (excludes sort/dir/page — those are set per link)
+    $filterBase = [];
+    if ($selectedForm !== '')  $filterBase['form']    = $selectedForm;
+    if ($pagination['perPage'] !== 25) $filterBase['perPage'] = $pagination['perPage'];
+    if ($nameSearch !== '')    $filterBase['name']    = $nameSearch;
+    if ($emailSearch !== '')   $filterBase['email']   = $emailSearch;
+    if ($selectedStatus !== '') $filterBase['status'] = $selectedStatus;
+    ?>
+    <!-- Filter forms: kept outside the bulk form (nested forms are invalid HTML and made the name filter submit the bulk form).
+         The filter fields in the table header belong to them through their form="" attribute. -->
+    <?php foreach (['name', 'email', 'status'] as $filterField): ?>
+        <form method="get" id="filter-<?= $filterField ?>">
+            <?php foreach ($filterBase as $k => $v): if ($k === $filterField) continue; ?>
+                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
+            <?php endforeach; ?>
+            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+            <input type="hidden" name="page" value="1">
+        </form>
+    <?php endforeach; ?>
+
     <!-- Bulk Actions Form -->
     <form method="post" action="bulk_actions.php" id="bulkForm">
         <?php csrf_field(); ?>
@@ -154,16 +176,6 @@ require __DIR__ . '/../inc/header.php';
                 </button>
             </div>
         </div>
-
-        <?php
-        // Base params preserved across sort/filter links (excludes sort/dir/page — those are set per link)
-        $filterBase = [];
-        if ($selectedForm !== '')  $filterBase['form']    = $selectedForm;
-        if ($pagination['perPage'] !== 25) $filterBase['perPage'] = $pagination['perPage'];
-        if ($nameSearch !== '')    $filterBase['name']    = $nameSearch;
-        if ($emailSearch !== '')   $filterBase['email']   = $emailSearch;
-        if ($selectedStatus !== '') $filterBase['status'] = $selectedStatus;
-        ?>
 
         <!-- Data Table -->
         <table class="table table-striped table-sm table-hover align-middle">
@@ -210,38 +222,15 @@ require __DIR__ . '/../inc/header.php';
                     <?php if ($selectedForm === ''): ?><th></th><?php endif; ?>
                     <th></th><!-- Version: no filter -->
                     <th>
-                        <form method="get" class="mb-0">
-                            <?php foreach ($filterBase as $k => $v): if ($k === 'name') continue; ?>
-                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
-                            <?php endforeach; ?>
-                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
-                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
-                            <input type="hidden" name="page" value="1">
-                            <input type="text" name="name" value="<?= htmlspecialchars($nameSearch) ?>"
+                        <input type="text" name="name" form="filter-name" value="<?= htmlspecialchars($nameSearch) ?>"
                                    class="form-control form-control-sm" placeholder="Filter…" style="min-width:100px">
-                        </form>
                     </th>
                     <th>
-                        <form method="get" class="mb-0">
-                            <?php foreach ($filterBase as $k => $v): if ($k === 'email') continue; ?>
-                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
-                            <?php endforeach; ?>
-                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
-                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
-                            <input type="hidden" name="page" value="1">
-                            <input type="text" name="email" value="<?= htmlspecialchars($emailSearch) ?>"
+                        <input type="text" name="email" form="filter-email" value="<?= htmlspecialchars($emailSearch) ?>"
                                    class="form-control form-control-sm" placeholder="Filter…" style="min-width:120px">
-                        </form>
                     </th>
                     <th>
-                        <form method="get" class="mb-0">
-                            <?php foreach ($filterBase as $k => $v): if ($k === 'status') continue; ?>
-                                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
-                            <?php endforeach; ?>
-                            <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
-                            <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
-                            <input type="hidden" name="page" value="1">
-                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:110px">
+                        <select name="status" form="filter-status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:110px">
                                 <option value="">Alle</option>
                                 <?php foreach (\App\Models\AnmeldungStatus::cases() as $s): ?>
                                     <option value="<?= $s->value ?>" <?= $selectedStatus === $s->value ? 'selected' : '' ?>>
@@ -249,7 +238,6 @@ require __DIR__ . '/../inc/header.php';
                                     </option>
                                 <?php endforeach; ?>
                             </select>
-                        </form>
                     </th>
                     <th>
                         <?php
@@ -297,8 +285,6 @@ require __DIR__ . '/../inc/header.php';
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </form>
-
     </form>
 
     <!-- Pagination -->

@@ -12,6 +12,7 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 - ✅ Dokumentation: Reverse-Proxy ist Pflicht, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist))
 
 **Korrekturen**
+- ✅ Namenssuche in der Anmeldungsliste: Die Filterfelder lagen in verschachtelten Formularen im Sammelformular, Enter im Namensfeld löste „Fehler: Invalid action“ aus; jedes Filterfeld hat jetzt ein eigenes GET-Formular außerhalb des Sammelformulars (Struktur-Test `IndexFormStructureTest`)
 - ✅ Der Excel-Export einer einzelnen Anmeldung setzt den Status auf „Exportiert“ (wie der Listen-Export)
 - ✅ Die Detailansicht zeigt das Status-Label statt des Rohwerts (`in_bearbeitung`), findet Uploads im Tenant-Verzeichnis, und die Datei-Heuristik trifft nicht mehr Felder wie „Ausbildungsbetrieb“
 - ✅ WordPress-Plugin: Überschrift „Verfügbare Formulare“ nur einmal; Einstellung *Vertrauenswürdige Proxys*
