@@ -341,4 +341,58 @@ class DataFormatterTest extends TestCase
         $this->assertArrayNotHasKey('consent_x', $result);
         $this->assertArrayNotHasKey('_meta', $result);
     }
+
+    // =========================================================================
+    // isImageDataUri / Unterschrift (SurveyJS signaturepad)
+    // =========================================================================
+
+    private const PNG_URI = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+    public function testIsImageDataUriAcceptsPngAndJpeg(): void
+    {
+        $this->assertTrue(DataFormatter::isImageDataUri(self::PNG_URI));
+        $this->assertTrue(DataFormatter::isImageDataUri('data:image/jpeg;base64,/9j/4AAQSkZJRg=='));
+    }
+
+    public function testIsImageDataUriRejectsSvg(): void
+    {
+        $this->assertFalse(DataFormatter::isImageDataUri('data:image/svg+xml;base64,PHN2Zy8+'));
+    }
+
+    public function testIsImageDataUriRejectsOtherMimeTypes(): void
+    {
+        $this->assertFalse(DataFormatter::isImageDataUri('data:text/html;base64,PHNjcmlwdD4='));
+        $this->assertFalse(DataFormatter::isImageDataUri('data:application/pdf;base64,JVBERi0='));
+    }
+
+    public function testIsImageDataUriRejectsMalformedBase64(): void
+    {
+        $this->assertFalse(DataFormatter::isImageDataUri('data:image/png;base64,abc"onerror="x'));
+        $this->assertFalse(DataFormatter::isImageDataUri('data:image/png;base64,'));
+        $this->assertFalse(DataFormatter::isImageDataUri('data:image/png;base64,AAAA BBBB'));
+    }
+
+    public function testIsImageDataUriRejectsNonStrings(): void
+    {
+        $this->assertFalse(DataFormatter::isImageDataUri(null));
+        $this->assertFalse(DataFormatter::isImageDataUri(['content' => self::PNG_URI]));
+        $this->assertFalse(DataFormatter::isImageDataUri('https://example.org/a.png'));
+    }
+
+    public function testIsImageDataUriRejectsOversizedImage(): void
+    {
+        $tooBig = 'data:image/png;base64,' . str_repeat('A', DataFormatter::MAX_IMAGE_DATA_URI_LENGTH);
+
+        $this->assertFalse(DataFormatter::isImageDataUri($tooBig));
+    }
+
+    public function testFormatValueShowsPlaceholderForSignature(): void
+    {
+        $this->assertSame('[Unterschrift]', DataFormatter::formatValue(self::PNG_URI));
+    }
+
+    public function testFormatValueShowsPlaceholderForOtherDataUri(): void
+    {
+        $this->assertSame('[Datei]', DataFormatter::formatValue('data:application/pdf;base64,JVBERi0='));
+    }
 }

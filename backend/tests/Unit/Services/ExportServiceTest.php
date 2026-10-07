@@ -361,10 +361,17 @@ class ExportServiceTest extends TestCase
         $this->assertEquals('not-a-date', $result);
     }
 
+    public function testFormatCellValueLabelsSignatureImage(): void
+    {
+        $signature = 'data:image/png;base64,' . str_repeat('A', 1000);
+
+        $this->assertEquals('[Unterschrift]', $this->service->formatCellValue($signature));
+    }
+
     public function testFormatCellValueWithBase64Data(): void
     {
         // Data URI should be replaced with placeholder
-        $base64 = 'data:image/png;base64,' . str_repeat('A', 1000);
+        $base64 = 'data:application/pdf;base64,' . str_repeat('A', 1000);
         $result = $this->service->formatCellValue($base64);
         $this->assertEquals('[Datei-Upload]', $result);
 

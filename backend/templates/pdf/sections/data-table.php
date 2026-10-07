@@ -19,12 +19,12 @@
                 <tr>
                     <!-- Erstes Feld-Wert-Paar -->
                     <th><?= htmlspecialchars($formatter::humanizeKey($keys[0])) ?></th>
-                    <td<?= $isLastOdd ? ' colspan="3"' : '' ?>><?= nl2br(htmlspecialchars($formatter::formatValue($items[0]))) ?></td>
+                    <td<?= $isLastOdd ? ' colspan="3"' : '' ?>><?php if ($formatter::isImageDataUri($items[0])): ?><img src="<?= htmlspecialchars($items[0]) ?>" class="signature" alt=""><?php else: ?><?= nl2br(htmlspecialchars($formatter::formatValue($items[0]))) ?><?php endif; ?></td>
 
                     <!-- Zweites Feld-Wert-Paar (nur bei gerader Anzahl) -->
                     <?php if (!$isLastOdd): ?>
                         <th><?= htmlspecialchars($formatter::humanizeKey($keys[1])) ?></th>
-                        <td><?= nl2br(htmlspecialchars($formatter::formatValue($items[1]))) ?></td>
+                        <td><?php if ($formatter::isImageDataUri($items[1])): ?><img src="<?= htmlspecialchars($items[1]) ?>" class="signature" alt=""><?php else: ?><?= nl2br(htmlspecialchars($formatter::formatValue($items[1]))) ?><?php endif; ?></td>
                     <?php endif; ?>
                 </tr>
             <?php endforeach; ?>

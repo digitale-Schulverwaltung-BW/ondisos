@@ -273,6 +273,11 @@ class EmailService
             return implode(', ', $formatted);
         }
 
+        // Inline images (SurveyJS signaturepad) must never be printed as Base64 text
+        if (is_string($value) && preg_match('#^data:image/(?:png|jpeg);base64,#', $value) === 1) {
+            return '[Unterschrift]';
+        }
+
         if (is_bool($value)) {
             return $value ? 'Ja' : 'Nein';
         }

@@ -204,6 +204,11 @@ class ExportService
 
         // Safety check: Detect and handle base64/upload data that slipped through
         if (is_string($value)) {
+            // Signature (PNG/JPEG data URI) gets its own label
+            if (\App\Utils\DataFormatter::isImageDataUri($value)) {
+                return '[Unterschrift]';
+            }
+
             // Check for data URI (should have been filtered already)
             if (preg_match('/^data:[^;]+;base64,/', $value)) {
                 return '[Datei-Upload]';

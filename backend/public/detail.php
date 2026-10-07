@@ -196,6 +196,11 @@ require __DIR__ . '/../inc/header.php';
                                         }
                                         break;
 
+                                    case 'signature':
+                                        // Validated PNG/JPEG data URI (DataFormatter::isImageDataUri)
+                                        echo '<img src="' . htmlspecialchars($value) . '" alt="' . htmlspecialchars(M::get('ui.detail.signature', 'Unterschrift')) . '" class="img-fluid border bg-white" style="max-width: 400px; max-height: 200px;">';
+                                        break;
+
                                     case 'boolean':
                                         echo $value
                                             ? '<span class="badge bg-success">' . M::get('ui.detail.yes', 'Ja') . '</span>'

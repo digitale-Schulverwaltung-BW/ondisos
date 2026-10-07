@@ -121,6 +121,11 @@ class DetailController
      */
     private function detectValueType(mixed $value, ?array $storedType = null): string
     {
+        // SurveyJS signaturepad delivers a PNG/JPEG data URI
+        if (\App\Utils\DataFormatter::isImageDataUri($value)) {
+            return 'signature';
+        }
+
         // Use stored type info from SurveyJS if available
         if ($storedType !== null) {
             $type = $storedType['type'] ?? null;

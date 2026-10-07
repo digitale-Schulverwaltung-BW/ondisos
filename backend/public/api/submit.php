@@ -20,6 +20,7 @@ use App\Services\PdfTokenService;
 use App\Services\RateLimiter;
 use App\Config\FormConfig;
 use App\Config\TenantContext;
+use App\Utils\DataFormatter;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -129,6 +130,13 @@ try {
 
     if (empty($data) || !is_array($data)) {
         throw new RuntimeException(M::get('errors.invalid_data'), 400);
+    }
+
+    // Inline data (e.g. SurveyJS signaturepad) is only accepted as a small PNG/JPEG data URI
+    foreach ($data as $fieldValue) {
+        if (is_string($fieldValue) && str_starts_with($fieldValue, 'data:') && !DataFormatter::isImageDataUri($fieldValue)) {
+            throw new RuntimeException(M::get('errors.invalid_data'), 400);
+        }
     }
 
     // Extract common fields

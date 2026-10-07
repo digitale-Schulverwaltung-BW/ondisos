@@ -17,6 +17,8 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 **Funktionen**
 - ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
 
+- ✅ Unterschriftsfelder (SurveyJS `signaturepad`, Wert als PNG/JPEG-Data-URI): Detailansicht und PDF zeigen das Bild, Excel und Benachrichtigungs-Mail den Platzhalter „[Unterschrift]“; `submit.php` lehnt andere `data:`-Werte in Feldern ab (`DataFormatter::isImageDataUri()`, höchstens 500.000 Zeichen, kein SVG)
+
 **Korrekturen**
 - ✅ Sicherheit: Open Redirect in `change_status.php` behoben: `return_url` wird über `App\Utils\SafeRedirect::local()` auf Seiten der Oberfläche (`name.php?query`) beschränkt, alles andere führt auf `index.php`
 - ✅ Sicherheit: `change_status.php` (Statuswechsel und Löschen aus der Detailansicht) prüfte kein CSRF-Token; jetzt `csrf_validate()` (ungültig oder fehlend ⇒ 403) und `csrf_field()` in den Formularen der Detailansicht (Struktur-Test `ChangeStatusCsrfTest`)

@@ -138,6 +138,8 @@ return [
             'no_files' => 'Keine Dateien hochgeladen',
             'mark_as' => 'Markieren als',
             'no_data' => 'Keine Daten vorhanden',
+            'signature' => 'Unterschrift',
+            'file_inline' => 'Datei',
             'yes' => 'Ja',
             'no' => 'Nein',
             'deleted_yes' => 'Ja',

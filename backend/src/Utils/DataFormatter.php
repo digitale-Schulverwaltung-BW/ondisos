@@ -83,6 +83,14 @@ class DataFormatter
             return implode(', ', array_map('strval', $value));
         }
 
+        // Signature (SurveyJS signaturepad) or other inline data: never print Base64 as text
+        if (is_string($value) && self::isImageDataUri($value)) {
+            return '[' . M::get('ui.detail.signature', 'Unterschrift') . ']';
+        }
+        if (is_string($value) && str_starts_with($value, 'data:')) {
+            return '[' . M::get('ui.detail.file_inline', 'Datei') . ']';
+        }
+
         // Handle string - check if it's a date
         if (is_string($value) && self::isIsoDate($value)) {
             return self::formatDate($value);
@@ -90,6 +98,25 @@ class DataFormatter
 
         // Default: return as string
         return (string)$value;
+    }
+
+    /** Upper bound for an inline image (Base64 characters); a signature is ~10-60 KB */
+    public const MAX_IMAGE_DATA_URI_LENGTH = 500000;
+
+    /**
+     * Check if a value is an inline PNG/JPEG image as Base64 data URI
+     *
+     * This is how SurveyJS "signaturepad" delivers its value. Only this strict shape may be
+     * rendered as <img>; anything else (SVG, other MIME types, malformed Base64) is not an image.
+     *
+     * @param mixed $value The value to check
+     * @return bool True for data:image/png|jpeg;base64,<Base64> within the length limit
+     */
+    public static function isImageDataUri(mixed $value): bool
+    {
+        return is_string($value)
+            && strlen($value) <= self::MAX_IMAGE_DATA_URI_LENGTH
+            && preg_match('#^data:image/(?:png|jpeg);base64,[A-Za-z0-9+/]+={0,2}$#', $value) === 1;
     }
 
     /**

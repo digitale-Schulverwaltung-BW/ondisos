@@ -190,3 +190,8 @@ h3 {
 .italic {
     font-style: italic;
 }
+
+.data-table img.signature {
+    max-width: 60mm;
+    max-height: 25mm;
+}
