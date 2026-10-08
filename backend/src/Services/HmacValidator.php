@@ -74,6 +74,30 @@ class HmacValidator
     }
 
     /**
+     * Canonical string of signature format v2. Binds the purpose (an upload signature is useless for
+     * submit.php), the time and a one-time nonce to the payload, so a captured request cannot be replayed.
+     *
+     * Payloads: submit = sha256(raw body); upload = "{anmeldung_id}\n{fieldname}\n{filename}\n{sha256(file content)}";
+     * forms = tenant slug.
+     */
+    public static function canonicalV2(string $purpose, string $timestamp, string $nonce, string $payload): string
+    {
+        return "v2\n" . $purpose . "\n" . $timestamp . "\n" . $nonce . "\n" . $payload;
+    }
+
+    /** Validate a v2 signature (see canonicalV2()). Freshness and replay are checked by SignatureVerifier. */
+    public function validateV2(string $purpose, string $payload, string $timestamp, string $nonce, string $providedSig): bool
+    {
+        if ($providedSig === '' || $timestamp === '' || $nonce === '' || !$this->secretIsUsable()) {
+            return false;
+        }
+
+        $expected = hash_hmac('sha256', self::canonicalV2($purpose, $timestamp, $nonce, $payload), $this->secret);
+
+        return hash_equals($expected, $providedSig);
+    }
+
+    /**
      * Refuse to authenticate against a publicly known secret (see SecretPolicy).
      * Logged without the secret so a misconfigured tenant is diagnosable.
      */

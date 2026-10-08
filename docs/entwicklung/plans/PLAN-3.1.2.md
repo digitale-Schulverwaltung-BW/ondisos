@@ -110,6 +110,18 @@ Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung 
 - **Session-Cookie-Flags:** `HttpOnly`, `Secure` (hinter HTTPS), `SameSite=Strict` explizit setzen und per Test oder manueller Prüfung belegen (bisher keine ausdrückliche Konfiguration gefunden; vor der Änderung den tatsächlichen Stand prüfen).
 - Benutzer-Enumeration prüfen: gleiche Meldung und möglichst gleiche Laufzeit bei unbekanntem Benutzer und falschem Passwort (heute wird bei unbekanntem Tenant-Admin kein `password_verify` ausgeführt).
 
+### AP6 – Signaturformat 2 für die API (umgesetzt, Festschreibung offen)
+
+**Stand:** Das Frontend (Standalone und WordPress-Plugin über `BackendApiClient`) signiert in Format 2 (`X-Timestamp`, `X-Nonce`, Inhaltshash, bei Uploads SHA-256 der Datei); das Backend prüft über `SignatureVerifier` und nimmt im Modus `compat` (Standard) auch das alte Format an. Aufbau, Wirkung und Notausstieg: [sicherheit.md](../sicherheit.md#signierte-api-signaturformat-2-312).
+
+**Umstellungsphase (rückwärtskompatibel):**
+
+1. **Release 3.1.2:** Backend, Standalone-Frontend und Plugin bringen Format 2 mit. Update-Reihenfolge wie immer: Backend zuerst, dann Frontends und Plugin. Bis ein Frontend aktualisiert ist, sendet es Format 1 und wird vom Backend im Modus `compat` weiter angenommen; jede solche Anfrage steht (höchstens einmal pro Stunde und Tenant) als `api_legacy_signature` im Audit-Log, damit klar ist, welche Schule noch fehlt.
+2. **Festschreiben:** Sobald das Audit-Log keinen `api_legacy_signature` mehr zeigt, setzt der Betreiber `API_SIGNATURE_MODE=strict`. Ab diesem Zeitpunkt ist Format 1 abgeschaltet.
+3. **Release-Notes 3.1.2** nennen die Uhrzeit-Voraussetzung (höchstens 5 Minuten Abweichung zwischen Frontend- und Backend-Server) und den Notausstieg (`API_SIGNATURE_VERSION=1` im Frontend, nur gegen ein älteres Backend).
+
+**Zu entscheiden:** Ab welchem Release `strict` der Standard ist. Vorschlag: Mit 3.1.2 bleibt `compat` Standard, im Folgerelease wird `strict` der Standard und Format 1 entfällt später ganz. So bricht ein Update auf 3.1.2 keine Schule, die ihr Plugin noch nicht aktualisiert hat.
+
 ## Offene Entscheidungen
 
 | Frage | Optionen | Tendenz |
@@ -126,8 +138,9 @@ Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung 
 1. AP1 (Refactoring, klein, mit Tests)
 2. AP2 (Allowlist): eigenständig nutzbar, größter Nutzen pro Aufwand
 3. AP5 (Login-Rate-Limit, Cookie-Flags): klein, vor 2FA, damit der Login-Kern einmal angefasst wird
-4. AP3 (2FA mit TOTP, Schonfrist, Wizard, Recovery)
-5. AP4 (Passkeys)
+4. AP6 (Signaturformat 2): umgesetzt, Festschreibung nach der Umstellungsphase
+5. AP3 (2FA mit TOTP, Schonfrist, Wizard, Recovery)
+6. AP4 (Passkeys)
 
 AP1 bis AP3 können als **3.1.2** erscheinen; AP4 darf bei Bedarf in 3.1.3 wandern, ohne dass AP3 betroffen ist.
 

@@ -40,6 +40,43 @@ class BackendApiClient
     }
 
     /**
+     * Signature format: 2 (default) = timestamp + nonce + content hash, 1 = the format of 3.1.1 and earlier.
+     * Pin 1 with API_SIGNATURE_VERSION=1 only while the backend is older than this version
+     * (update the backend first, then the frontends).
+     */
+    private function signatureVersion(): int
+    {
+        return (int)(getenv('API_SIGNATURE_VERSION') ?: 2) === 1 ? 1 : 2;
+    }
+
+    /**
+     * Signature headers for one request (format 2: X-Timestamp, X-Nonce, X-Signature).
+     *
+     * The HMAC covers purpose, time, nonce and payload (see App\Services\HmacValidator::canonicalV2()), so a
+     * captured request is useless after a few minutes and can be used only once. Payloads: submit = sha256(body),
+     * upload = "{id}\n{field}\n{filename}\n{sha256(file)}", forms = slug.
+     *
+     * @param string $legacyMessage the string signed by format 1
+     * @return list<string>
+     */
+    private function signatureHeaders(string $purpose, string $payload, string $legacyMessage): array
+    {
+        if ($this->signatureVersion() === 1) {
+            return ['X-Signature: ' . $this->sign($legacyMessage)];
+        }
+
+        $timestamp = (string)time();
+        $nonce     = bin2hex(random_bytes(16));
+        $canonical = "v2\n" . $purpose . "\n" . $timestamp . "\n" . $nonce . "\n" . $payload;
+
+        return [
+            'X-Timestamp: ' . $timestamp,
+            'X-Nonce: ' . $nonce,
+            'X-Signature: ' . $this->sign($canonical),
+        ];
+    }
+
+    /**
      * HMAC-SHA256 signature as validated by backend App\Services\HmacValidator.
      */
     private function sign(string $message): string
@@ -116,8 +153,7 @@ class BackendApiClient
             CURLOPT_HTTPHEADER => array_merge([
                 'Content-Type: application/json',
                 'Accept: application/json',
-                'X-Signature: ' . $this->sign($body),
-            ], $this->clientHeader())
+            ], $this->signatureHeaders('submit', hash('sha256', $body), $body), $this->clientHeader())
         ]);
 
         $response = curl_exec($ch);
@@ -201,8 +237,13 @@ class BackendApiClient
                 )
             ];
 
-            // Signature over "{anmeldung_id}:{fieldname}:{original_filename}" (see HmacValidator)
-            $signature = $this->sign($anmeldungId . ':' . $fieldName . ':' . basename((string) $file['name']));
+            // Signature over id, field, original filename and (format 2) the SHA-256 of the file content
+            $uploadName = basename((string) $file['name']);
+            $signatureHeaders = $this->signatureHeaders(
+                'upload',
+                (string)$anmeldungId . "\n" . $fieldName . "\n" . $uploadName . "\n" . (string)hash_file('sha256', $file['tmp_name']),
+                $anmeldungId . ':' . $fieldName . ':' . $uploadName
+            );
 
             $ch = curl_init($endpoint);
             
@@ -211,7 +252,7 @@ class BackendApiClient
                 CURLOPT_POSTFIELDS => $postData,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_TIMEOUT => 60,
-                CURLOPT_HTTPHEADER => array_merge(['X-Signature: ' . $signature], $this->clientHeader()),
+                CURLOPT_HTTPHEADER => array_merge($signatureHeaders, $this->clientHeader()),
             ]);
 
             $response = curl_exec($ch);
@@ -342,10 +383,10 @@ class BackendApiClient
             return ['ok' => false, 'reason' => self::FAIL_UNAUTHORIZED, 'detail' => 'no tenant API secret configured', 'forms' => []];
         }
 
-        $response = $this->httpRequest($url, 5, [
-            'Accept: application/json',
-            'X-Signature: ' . $this->sign('forms:' . $tenantSlug),
-        ]);
+        $response = $this->httpRequest($url, 5, array_merge(
+            ['Accept: application/json'],
+            $this->signatureHeaders('forms', $tenantSlug, 'forms:' . $tenantSlug)
+        ));
         $code = $response['code'];
 
         if ($response['error'] !== '' || $code === 0) {

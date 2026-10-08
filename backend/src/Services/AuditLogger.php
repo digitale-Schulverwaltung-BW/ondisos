@@ -37,6 +37,21 @@ class AuditLogger
         self::log('login_failed', ['username' => $username]);
     }
 
+    /**
+     * Anfrage mit dem alten Signaturformat (v1) angenommen. Höchstens einmal pro Stunde und Tenant,
+     * damit das Log nicht überläuft; zeigt, welche Frontends noch umgestellt werden müssen.
+     */
+    public static function apiLegacySignature(string $purpose, int $tenantId): void
+    {
+        $marker = __DIR__ . '/../../cache/legacy_sig_' . $tenantId;
+        $last = @filemtime($marker);
+        if ($last !== false && $last > time() - 3600) {
+            return;
+        }
+        @touch($marker);
+        self::log('api_legacy_signature', ['purpose' => $purpose]);
+    }
+
     public static function loginBlocked(string $username, int $retryAfter): void
     {
         self::log('login_blocked', ['username' => $username, 'retry_after' => $retryAfter]);

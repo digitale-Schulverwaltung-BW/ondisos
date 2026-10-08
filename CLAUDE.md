@@ -85,7 +85,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 
 - Der E-Mail-Versand nutzt PHP `mail()` (SMTP ist geplant); die Benachrichtigung geht vom **Frontend-Server** aus und enthält die Angaben der Anmeldung.
 - `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar (liefert z. B. `notify_email`): keine Geheimnisse in `config_json`.
-- Signaturen enthalten keinen Zeitstempel (kein Replay-Schutz über die Transportschicht hinaus): HTTPS zwischen Frontend und Backend ist Pflicht.
+- Signaturformat 2 (Zeitstempel, Nonce, Dateihash) ist Standard, Format 1 wird im Modus `API_SIGNATURE_MODE=compat` noch akzeptiert (Replay möglich); HTTPS zwischen Frontend und Backend ist Pflicht. Die Uhren beider Server dürfen höchstens 5 Minuten abweichen ([sicherheit.md](docs/entwicklung/sicherheit.md#signierte-api-signaturformat-2-312)).
 - `seed-forms.php` überschreibt vorhandene Einträge nie; bestehende Formulare ändern die Schulen im Backend.
 - Surveys liegen im Backend (`form_resources`) **oder** als Datei im Frontend (Fallback, Abschaffung ohne Termin); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien.
 - Die Vorschau im Backend trägt eigene Kopien der SurveyJS-Dateien (`backend/public/assets/preview/`); nach SurveyJS-Updates `backend/tools/sync-preview-assets.sh` ausführen.

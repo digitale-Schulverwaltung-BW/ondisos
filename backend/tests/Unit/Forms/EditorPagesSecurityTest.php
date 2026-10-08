@@ -89,7 +89,7 @@ class EditorPagesSecurityTest extends TestCase
     public function testTheSignedStatusEndpointChecksTheSignatureBeforeAnyData(): void
     {
         $php = (string)file_get_contents(self::PUBLIC . '/api/forms.php');
-        $sig = strpos($php, 'validateMessage(');
+        $sig = strpos($php, 'verifyForms(');
         $data = strpos($php, 'formKeys()');
         $this->assertNotFalse($sig);
         $this->assertLessThan($data, $sig);

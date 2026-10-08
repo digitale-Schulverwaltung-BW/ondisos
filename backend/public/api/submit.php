@@ -15,7 +15,7 @@ use App\Repositories\AnmeldungRepository;
 use App\Repositories\TenantRepository;
 use App\Validators\AnmeldungValidator;
 use App\Services\MessageService as M;
-use App\Services\HmacValidator;
+use App\Services\SignatureVerifier;
 use App\Services\PdfTokenService;
 use App\Services\RateLimiter;
 use App\Config\FormConfig;
@@ -49,7 +49,7 @@ if (!empty($tenant['origin'])) {
     if ($requestOrigin === $tenant['origin']) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Timestamp, X-Nonce, X-Ondisos-Client');
     }
 } else {
     // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
@@ -59,7 +59,7 @@ if (!empty($tenant['origin'])) {
     if (in_array($requestOrigin, $allowedOrigins, true)) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Timestamp, X-Nonce, X-Ondisos-Client');
     }
 }
 
@@ -71,9 +71,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // HMAC validation — sign over raw request body
 $body        = file_get_contents('php://input');
-$providedSig = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
-$hmacValidator = new HmacValidator($tenant['api_secret']);
-if (!$hmacValidator->validate($body, $providedSig)) {
+$signatureCheck = SignatureVerifier::fromEnv((string)$tenant['api_secret'], $tenantId)->verifySubmit($body, $_SERVER);
+if (!$signatureCheck['ok']) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;

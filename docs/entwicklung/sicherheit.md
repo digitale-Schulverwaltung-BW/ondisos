@@ -57,7 +57,25 @@ Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und 
 | Feldname gegen die Survey | Der Upload muss zu einer Datei-Frage des veröffentlichten Formulars gehören (`foto` oder `foto_0`). Formulare, deren Survey nur als Datei im Frontend liegt, werden hier nicht geprüft. | `App\Services\UploadPolicy` |
 | Grenzen je Anmeldung | höchstens `UPLOAD_MAX_FILES_PER_ANMELDUNG` Dateien (20) und `UPLOAD_MAX_BYTES_PER_ANMELDUNG` (50 MB); Überschreiben desselben Namens zählt nicht doppelt; Antwort 429 und Audit-Eintrag | `upload.php`, `UploadPolicy::capError()` |
 
-Offen: Der Zähler je Besucher bleibt umgehbar, wer viele IP-Adressen hat (Botnetz). Dagegen helfen nur Captcha oder vorgeschaltete Filter; bewusst nicht vorgesehen. Die Signatur des Uploads deckt den Dateiinhalt weiterhin nicht ab (F-06).
+Offen: Der Zähler je Besucher bleibt umgehbar, wer viele IP-Adressen hat (Botnetz). Dagegen helfen nur Captcha oder vorgeschaltete Filter; bewusst nicht vorgesehen. Die Signatur des Uploads deckt den Dateiinhalt seit Format 2 ab (siehe unten).
+
+## Signierte API: Signaturformat 2 (3.1.2)
+
+Das Frontend signiert jede Anfrage an `submit.php`, `upload.php` und `forms.php` mit dem Tenant-Secret. Format 2 (Header `X-Timestamp`, `X-Nonce`, `X-Signature`) schließt die Lücken des alten Formats:
+
+| Eigenschaft | Format 1 (bis 3.1.1) | Format 2 |
+|---|---|---|
+| Replay | möglich, beliebig oft und beliebig spät | Zeitstempel höchstens `API_SIGNATURE_MAX_SKEW` (300 s) alt, Nonce nur einmal (`ReplayGuard`, `cache/replay/`) |
+| Zweck | Signatur eines Endpunkts war nur durch die Form des Inhalts abgegrenzt | Zweck (`submit`, `upload`, `forms`) steckt in der Signatur |
+| Upload-Inhalt | nicht signiert: gleicher Dateiname, anderer Inhalt | SHA-256 der Datei ist Teil der Signatur |
+
+Der Aufbau steht in `HmacValidator::canonicalV2()` (Backend) und `BackendApiClient::signatureHeaders()` (Frontend); `SignatureVerifier` prüft Format, Frische und Wiederholung. Ein Request mit v2-Headern und falscher Signatur wird nie auf Format 1 zurückgestuft.
+
+**Umstellung:** `API_SIGNATURE_MODE=compat` (Standard) nimmt beide Formate an und protokolliert Format 1 höchstens einmal pro Stunde und Tenant als `api_legacy_signature` im Audit-Log; `strict` nimmt nur Format 2 an. Reihenfolge: Backend aktualisieren, dann Frontends und Plugin, im Audit-Log auf das Ende von `api_legacy_signature` warten, dann `strict`. Ein Frontend mit Format 2 an einem älteren Backend scheitert mit 401; `API_SIGNATURE_VERSION=1` im Frontend ist der Notausstieg.
+
+**Voraussetzung:** Die Uhren von Frontend- und Backend-Server dürfen um höchstens 5 Minuten abweichen (NTP). Bei Abweichung steht `API signature rejected (…): timestamp_skew` im Fehlerlog des Backends.
+
+Der Replay-Schutz ist dateibasiert (ein Backend-Server) wie das Rate-Limit. Das Transportproblem (HTTPS zwischen Frontend und Backend) bleibt Pflicht: Die Signatur schützt nicht vor dem Mitlesen.
 
 ## Bewusst akzeptierte Restrisiken
 

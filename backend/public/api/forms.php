@@ -21,7 +21,7 @@ use App\Repositories\FormConfigRepository;
 use App\Repositories\FormResourceRepository;
 use App\Repositories\TenantRepository;
 use App\Services\FormDeliveryService;
-use App\Services\HmacValidator;
+use App\Services\SignatureVerifier;
 use App\Services\RateLimiter;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -49,8 +49,8 @@ if ($tenant === null || !(bool)$tenant['active'] || (string)($tenant['slug'] ?? 
 }
 
 // Same answer for "wrong secret", "no signature" and "placeholder secret": nothing to learn from the difference.
-$validator = new HmacValidator((string)$tenant['api_secret']);
-if (!$validator->validateMessage('forms:' . $tenant['slug'], (string)($_SERVER['HTTP_X_SIGNATURE'] ?? ''))) {
+$signatureCheck = SignatureVerifier::fromEnv((string)$tenant['api_secret'], $tenantId)->verifyForms((string)$tenant['slug'], $_SERVER);
+if (!$signatureCheck['ok']) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;

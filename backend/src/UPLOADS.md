@@ -51,7 +51,10 @@ Wird vom Frontend (`BackendApiClient`) nach dem Submit aufgerufen, je Datei ein 
 
 ```http
 POST /api/upload.php?tenant=<slug>
-X-Signature: <HMAC-SHA256 über "{anmeldung_id}:{fieldname}:{dateiname}" mit dem Tenant-Secret>
+X-Timestamp: <Unix-Zeit>
+X-Nonce: <16 Byte hex, einmalig>
+X-Signature: <HMAC-SHA256 mit dem Tenant-Secret über "v2\nupload\n{timestamp}\n{nonce}\n{anmeldung_id}\n{fieldname}\n{dateiname}\n{sha256 der Datei}">
+# Altes Format (Backend im Modus compat): X-Signature über "{anmeldung_id}:{fieldname}:{dateiname}", ohne Zeit und Dateiinhalt
 Content-Type: multipart/form-data
 
 anmeldung_id: 123

@@ -51,19 +51,19 @@ class TenantFormsEndpointTest extends TestCase
         $c->fetchTenantForms('schule-a');
 
         $this->assertSame('http://backend.test/api/forms.php?tenant=schule-a', $c->url);
-        $sig = null;
+        $server = [];
         foreach ($c->headers as $h) {
-            if (str_starts_with($h, 'X-Signature: ')) {
-                $sig = substr($h, strlen('X-Signature: '));
+            if (str_contains($h, ': ') && str_starts_with($h, 'X-')) {
+                [$name, $value] = explode(': ', $h, 2);
+                $server['HTTP_' . strtoupper(str_replace('-', '_', $name))] = $value;
             }
         }
-        $this->assertNotNull($sig);
+        $this->assertArrayHasKey('HTTP_X_SIGNATURE', $server);
 
-        $v = new HmacValidator(self::SECRET);
-        $this->assertTrue($v->validateMessage('forms:schule-a', $sig));
-        $this->assertFalse($v->validateMessage('forms:schule-b', $sig), 'bound to the slug');
-        $this->assertFalse($v->validateMessage('schule-a', $sig), 'bound to the purpose');
-        $this->assertFalse((new HmacValidator('another-secret-another-secret-123456'))->validateMessage('forms:schule-a', $sig));
+        $verifier = fn(string $secret) => new \App\Services\SignatureVerifier(new HmacValidator($secret), null, 'strict');
+        $this->assertTrue($verifier(self::SECRET)->verifyForms('schule-a', $server)['ok']);
+        $this->assertFalse($verifier(self::SECRET)->verifyForms('schule-b', $server)['ok'], 'bound to the slug');
+        $this->assertFalse($verifier('another-secret-another-secret-123456')->verifyForms('schule-a', $server)['ok']);
     }
 
     public function testASubmitSignatureCannotBeReplayedForTheStatusEndpoint(): void

@@ -15,7 +15,7 @@ use App\Config\Config;
 use App\Config\TenantContext;
 use App\Repositories\AnmeldungRepository;
 use App\Repositories\TenantRepository;
-use App\Services\HmacValidator;
+use App\Services\SignatureVerifier;
 use App\Validators\AnmeldungValidator;
 use App\Services\AuditLogger;
 use App\Services\VirusScanService;
@@ -53,7 +53,7 @@ if (!empty($tenant['origin'])) {
     if ($requestOrigin === $tenant['origin']) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Timestamp, X-Nonce, X-Ondisos-Client');
     }
 } else {
     // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
@@ -63,18 +63,19 @@ if (!empty($tenant['origin'])) {
     if (in_array($requestOrigin, $allowedOrigins, true)) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Timestamp, X-Nonce, X-Ondisos-Client');
     }
 }
 
 // HMAC validation — sign over canonical string (not multipart body)
 // Canonical string: "{anmeldung_id}:{fieldname}:{original_filename}"
-$providedSig      = $_SERVER['HTTP_X_SIGNATURE'] ?? '';
 $anmeldungIdStr   = $_POST['anmeldung_id'] ?? '';
 $fieldname        = $_POST['fieldname'] ?? '';
 $originalFilename = $_FILES['file']['name'] ?? '';
-$hmacValidator    = new HmacValidator($tenant['api_secret']);
-if (!$hmacValidator->validateUploadSignature($anmeldungIdStr, $fieldname, $originalFilename, $providedSig)) {
+$uploadTmpPath    = (($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK) ? ($_FILES['file']['tmp_name'] ?? null) : null;
+$signatureCheck   = SignatureVerifier::fromEnv((string)$tenant['api_secret'], $tenantId)
+    ->verifyUpload((string)$anmeldungIdStr, (string)$fieldname, (string)$originalFilename, $uploadTmpPath, $_SERVER);
+if (!$signatureCheck['ok']) {
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;
