@@ -7,6 +7,8 @@ require_once __DIR__ . '/../inc/bootstrap.php';
 
 use App\Services\AuditLogger;
 use App\Services\LoginService;
+use App\Services\LoginThrottle;
+use App\Utils\ClientIp;
 use App\Config\Database;
 
 // Session was started in bootstrap.php (with PHP_SESSION_NONE guard).
@@ -35,10 +37,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
     $csrfToken = $_POST['csrf_token'] ?? '';
+    $throttle = new LoginThrottle(__DIR__ . '/../cache/ratelimit-login');
+    $clientIp = ClientIp::get($_SERVER);
 
     // CSRF check
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
         $error = 'Ungültiger Sicherheitstoken. Bitte versuchen Sie es erneut.';
+    } elseif ($throttle->isBlocked($clientIp, $username)) {
+        $retryMinutes = max(1, (int)ceil($throttle->retryAfter($clientIp, $username) / 60));
+        $error = sprintf('Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen Sie es in etwa %d Minute(n) erneut.', $retryMinutes);
+        AuditLogger::loginBlocked($username, $throttle->retryAfter($clientIp, $username));
+        usleep(500000);
     } else {
         $loginService = new LoginService();
         $loggedIn = false;
@@ -90,6 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['tenant_id'] = $tenantId;
             }
 
+            $throttle->recordSuccess($clientIp, $username);
             AuditLogger::loginSuccess($username);
 
             // Redirect to index
@@ -97,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } else {
             $error = 'Benutzername oder Passwort falsch.';
+            $throttle->recordFailure($clientIp, $username);
             AuditLogger::loginFailed($username);
             // Brute-force protection: 0.5s delay on failed login
             usleep(500000);

@@ -14,6 +14,11 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 - ✅ Docker: `SESSION_SECURE` und `FORCE_HTTPS` lassen sich über die Root-`.env` schalten; `BACKEND_BIND` und `BACKEND_PORT` binden das Backend an localhost, wenn ein Reverse-Proxy auf demselben Server davor steht
 - ✅ Dokumentation: Reverse-Proxy ist Pflicht, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist))
 
+**Sicherheit (Audit)**
+- ✅ Login-Drosselung (`LoginThrottle`): 5 Fehlversuche je IP und Benutzername, 20 je IP in 15 Minuten, Audit-Ereignis `login_blocked`; gleiche Laufzeit bei unbekanntem Benutzer (Dummy-Hash)
+- ✅ Session-Cookies: `HttpOnly`, `SameSite=Lax` und `Secure` (Backend über `SESSION_SECURE`, Frontend automatisch bei HTTPS) werden im Code gesetzt (`App\Utils\SessionCookie`), nicht nur in der Docker-`php.ini`
+- ✅ Excel-Export schreibt Eingaben immer als Text (keine Formel-Injection); CSRF-Token für „Jetzt manuell ausführen“ im Dashboard; SVG-Uploads nicht mehr erlaubt; Downloads mit `nosniff`, Inline-Anzeige nur für PDF und Bilder
+
 **Funktionen**
 - ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
 

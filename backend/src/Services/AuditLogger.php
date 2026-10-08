@@ -37,6 +37,11 @@ class AuditLogger
         self::log('login_failed', ['username' => $username]);
     }
 
+    public static function loginBlocked(string $username, int $retryAfter): void
+    {
+        self::log('login_blocked', ['username' => $username, 'retry_after' => $retryAfter]);
+    }
+
     public static function logout(string $username): void
     {
         self::log('logout', ['username' => $username]);

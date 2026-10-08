@@ -25,6 +25,12 @@ use mysqli;
 class LoginService
 {
     /**
+     * Gültiger bcrypt-Hash eines zufälligen Werts. Wird bei unbekanntem Benutzer geprüft,
+     * damit Laufzeit und Antwort nicht verraten, ob der Benutzername existiert.
+     */
+    private const DUMMY_HASH = '$2y$12$wgjlv50Uu3ZJaGHUYmKzaeVjHcgJAfCZZSAjs8XpvRJAcZRfhoD5K';
+
+    /**
      * Attempt platform admin login via .env credentials.
      *
      * Reads ADMIN_USERNAME and ADMIN_PASSWORD_HASH from $_ENV.
@@ -57,6 +63,8 @@ class LoginService
         }
 
         if ($username !== $adminUsername) {
+            password_verify($password, self::DUMMY_HASH);
+
             return false;
         }
 
@@ -97,6 +105,8 @@ class LoginService
         $row = $stmt->get_result()->fetch_assoc();
 
         if ($row === null || $row === false) {
+            password_verify($password, self::DUMMY_HASH);
+
             return null;
         }
 

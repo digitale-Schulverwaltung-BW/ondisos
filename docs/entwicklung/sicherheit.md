@@ -20,7 +20,7 @@ Implementierte Schutzmaßnahmen und bekannte Einschränkungen.
 - ✅ Secret Key Management (`PDF_TOKEN_SECRET`, `API_SECRET_KEY` in `.env`; `TENANT_API_SECRET` nur serverseitig, nie im Browser; WP-Einstellung ist write-only)
 - ✅ Admin Authentication (Optional, session-basiert; bei `MULTI_TENANT_ENABLED=true` erzwungen)
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
-- ✅ Brute-Force Protection (0.5s Delay bei falschen Logins)
+- ✅ Brute-Force Protection (0,5 s Verzögerung bei falschen Logins; Sperre nach 5 Fehlversuchen je IP und Benutzername bzw. 20 je IP innerhalb von 15 Minuten, `LoginThrottle`, Audit-Ereignis `login_blocked`)
 - ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
 - ✅ HTTPS Enforcement (Apache .htaccess + PHP Fallback)
 - ✅ Virus Scanning (ClamAV via TCP/INSTREAM, Docker-Service, DSGVO-konform, EICAR-getestet)

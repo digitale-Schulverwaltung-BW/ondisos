@@ -102,6 +102,8 @@ Erst nach stabilem AP3.
 
 ### AP5 – Begleitende Härtung (klein, im selben Release)
 
+**Stand:** Login-Rate-Limit (`LoginThrottle`), Cookie-Flags (`SessionCookie`, `SameSite=Lax` statt `Strict`, weil Links aus E-Mails sonst ohne Sitzung ankämen) und Gleichlauf bei unbekanntem Benutzer (Dummy-Hash) sind umgesetzt; die folgenden Punkte bleiben als Beschreibung stehen.
+
 Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung mit aufgenommen:
 
 - **Login-Rate-Limit:** Heute nur `usleep(500000)` pro Fehlversuch; parallele Anfragen umgehen die Verzögerung. `RateLimiter` pro IP und pro Benutzername für `login.php` einsetzen (mit Sperrzeit und Audit-Eintrag).
