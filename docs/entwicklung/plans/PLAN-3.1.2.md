@@ -16,7 +16,7 @@
 
 ## Ziel
 
-1. **Netz-Allowlist:** Admin-Anmeldung und Admin-Sitzungen nur aus zulässigen Netzen, pro Tenant einstellbar; für Platform-Admins eine eigene, globale Liste.
+1. **Netz-Allowlist:** Admin-Anmeldung und Admin-Sitzungen nur aus zulässigen Netzen, pro Tenant einstellbar; für Platform-Admins eine eigene, globale Liste. Dieselbe Liste begrenzt auch den **Betrieb ohne Login** (Modell A) auf das Verwaltungsnetz (AP2b).
 2. **Zwei-Faktor-Anmeldung:** verpflichtend für Platform-Admins im Mehrmandantenbetrieb; TOTP (QR-Code) und Passkeys; Einführung mit Schonfrist und Wizard.
 
 Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung der signierten Frontend-API (`/api/*`; sie ist durch HMAC und CORS geschützt und kommt von Schul-Webservern, nicht von Admin-Arbeitsplätzen).
@@ -53,6 +53,18 @@ Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung 
 - **Fehlkonfigurations-Warnung:** Ist `TRUSTED_PROXIES` leer und die erkannte Client-IP eine private/Docker-Adresse (typisch: Reverse Proxy ohne Vertrauenseintrag), sieht das Backend nur die Proxy-IP. Das Formular warnt dann, dass die Allowlist so nicht sinnvoll wirkt.
 - **Notausstieg:** CLI-Skript `backend/clear-network-restriction.php <slug>` (Platform-Betreiber mit Shell-Zugang; idempotent wie `migrate.php`); für Platform-Admins genügt, die `.env`-Variable zu leeren.
 - Audit-Log-Eintrag bei jeder Änderung (alt/neu).
+
+### AP2b – Allowlist für den Betrieb ohne Login (Modell A)
+
+**Hintergrund:** Ohne Login (`AUTH_ENABLED=false`, Einzelbetrieb) gilt jeder Nutzer als Platform-Admin; der einzige Schutz ist das Netz. Zulässig ist das nur im **Verwaltungsnetz** (Sekretariat und erweiterte Schulleitung, vom Schüler-, Lehrer- und Gästenetz getrennt; [Betriebsmodell](../../betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)).
+Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in der Netzaufteilung nicht sofort alle Daten öffnet. AP2 prüft dagegen nur bei Login und Sitzung; im Modell A gibt es beides nicht.
+
+- **Eine Liste für beide Fälle:** `PLATFORM_ADMIN_ALLOWED_NETWORKS` (AP2) gilt im Modell A für **alle** Browser-Anfragen, da dort jeder Platform-Admin ist. Keine zweite Variable.
+- **Einhängepunkt:** in `inc/auth.php` **vor** dem frühen Rückkehr-Zweig für „Auth ausgeschaltet“ (heute `return`, bevor überhaupt etwas geprüft wird). Nicht betroffen bleiben wie in AP2 `/api/*` und `pdf/download.php`. Neutrale 403-Seite, Audit-Ereignis `admin_network_denied` (Adresse, Pfad).
+- **Standard bleibt „keine Einschränkung“** (leere Liste), damit ein Update niemanden aussperrt. Ist ohne Login **keine** Liste gesetzt, zeigt die Oberfläche einen Hinweis („Zugriff nicht auf das Verwaltungsnetz begrenzt“) und `migrate.php` sowie `health.php` melden es (Vorschlag, zu bestätigen).
+- **Client-IP:** nur `ClientIp` (`REMOTE_ADDR`, `X-Forwarded-For` nur hinter `TRUSTED_PROXIES`). Hinter einem Reverse-Proxy ohne Vertrauenseintrag sieht das Backend nur die Proxy-Adresse; AP2 warnt dann bereits bei Fehlkonfiguration.
+- **Selbstaussperrung:** Die Variable steht in der `.env` (nicht in der Oberfläche); Notausstieg ist, sie dort zu leeren. Im Hinweis- und Setup-Text das Verwaltungsnetz als Beispiel nennen (`10.10.0.0/24`).
+- **Tests:** Modell A mit leerer Liste (alles erlaubt), mit Liste (fremde Adresse ⇒ 403, API und PDF-Token unberührt), `X-Forwarded-For` ohne `TRUSTED_PROXIES` wirkungslos, Mehrschul-Betrieb unverändert.
 
 ### AP3 – Zugangsdaten-Tabelle und TOTP
 
@@ -126,6 +138,7 @@ Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung 
 
 | Frage | Optionen | Tendenz |
 |---|---|---|
+| Standard von `AUTH_ENABLED` | bleibt `false` (Modell A zulässig im Verwaltungsnetz); `true` als Standard mit Übergangsphase; sofort `true` | Zweischritt wie beim Signaturformat: 3.1.2 warnt (Hinweis, Doku, AP2b), im Folgerelease Standard `true`; **zu bestätigen** |
 | Sollen Tenant-Admins 2FA bekommen? | nein; optional (selbst einrichten); Pflicht pro Tenant einstellbar | Optional einrichtbar ab AP3, Pflicht pro Tenant als Einstellung; Standard für Tenant-Admins: aus (Schulen müssen es mittragen) |
 | Platform-Admin langfristig in die Datenbank? | bei `.env` bleiben; in `tenant_admins`/eigene Tabelle überführen | Später überführen; für 3.1.2 mit fester Kennung auskommen, damit der Umbau nicht den Login-Kern berührt |
 | Speicherort der Allowlist | Datenbank (`tenants`); Konfigurationsdatei | Datenbank für Tenants, `.env` für die Platform-Liste |
@@ -136,7 +149,7 @@ Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung 
 ## Reihenfolge
 
 1. AP1 (Refactoring, klein, mit Tests)
-2. AP2 (Allowlist): eigenständig nutzbar, größter Nutzen pro Aufwand
+2. AP2 und AP2b (Allowlist, auch ohne Login): eigenständig nutzbar, größter Nutzen pro Aufwand
 3. AP5 (Login-Rate-Limit, Cookie-Flags): klein, vor 2FA, damit der Login-Kern einmal angefasst wird
 4. AP6 (Signaturformat 2): umgesetzt, Festschreibung nach der Umstellungsphase
 5. AP3 (2FA mit TOTP, Schonfrist, Wizard, Recovery)

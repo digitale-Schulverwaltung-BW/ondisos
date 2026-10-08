@@ -76,7 +76,7 @@ setzen, dann genügt `docker compose …` ohne die `-f`-Optionen.
 
 ## 4. Admin-Zugang einrichten
 
-Mit `AUTH_ENABLED=true` (Standard in Produktion) ist ohne Zugang keine Anmeldung möglich.
+Mit `AUTH_ENABLED=true` (Standard in Produktion) ist ohne Zugang keine Anmeldung möglich. Ohne Login (`AUTH_ENABLED=false`) hat jeder, der die Seite erreicht, alle Rechte; das ist nur im [Verwaltungsnetz](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login) vertretbar.
 
 ```bash
 docker compose exec backend php scripts/generate-password-hash.php "Ihr-Passwort"
@@ -144,8 +144,8 @@ docker compose ps          # backend: healthy
 Öffnen Sie dann `http://<server>:9080/login.php` und melden Sie sich mit dem Zugang aus Schritt 4 an. Ab hier geht es mit dem
 [Betriebsmodell](betriebsmodell.md) weiter: HTTPS einrichten, die API für das Frontend erreichbar machen, die erste Schule anbinden.
 
-> **Nicht ohne Reverse-Proxy veröffentlichen.** Port 9080 spricht unverschlüsseltes HTTP und liefert auch die Verwaltungsoberfläche aus. Ist das Backend nur im vertrauenswürdigen Intranet erreichbar,
-> genügt das für den ersten Test. Muss es dagegen von außen erreichbar sein (zum Beispiel für die Frontends externer Schulen), gehört ein Reverse-Proxy davor, der TLS beendet, nur die API-Pfade durchlässt
+> **Nicht ohne Reverse-Proxy veröffentlichen.** Port 9080 spricht unverschlüsseltes HTTP und liefert auch die Verwaltungsoberfläche aus. Ist das Backend nur im **Verwaltungsnetz** (Sekretariat und Schulleitung, vom Schüler- und Lehrernetz getrennt) erreichbar,
+> genügt das für den ersten Test; ohne Login (`AUTH_ENABLED=false`) ist nur dieses Netz zulässig, siehe [Verwaltungsoberfläche: Verwaltungsnetz oder Login](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login). Muss es dagegen von außen erreichbar sein (zum Beispiel für die Frontends externer Schulen), gehört ein Reverse-Proxy davor, der TLS beendet, nur die API-Pfade durchlässt
 > und das Backend mit `BACKEND_BIND=127.0.0.1` sonst unerreichbar macht. Anleitung: [Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist) und [HTTPS in betrieb.md](betrieb.md#https).
 
 ## Virenscan (optional)

@@ -231,7 +231,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 ## Checkliste für den Produktivbetrieb
 
 - [ ] **Secrets:** `DB_PASS`, `MYSQL_ROOT_PASSWORD`, `PDF_TOKEN_SECRET`, `API_SECRET_KEY` selbst erzeugt (`openssl rand -hex 32`), kein Standardwert
-- [ ] **Admin-Zugang:** `ADMIN_PASSWORD_HASH` in einfachen Anführungszeichen, Länge 60 geprüft; starkes Passwort
+- [ ] **Admin-Zugang:** `ADMIN_PASSWORD_HASH` in einfachen Anführungszeichen, Länge 60 geprüft; starkes Passwort. Ohne Login (`AUTH_ENABLED=false`) nur im **Verwaltungsnetz** (Sekretariat/Schulleitung), und die Trennung vom Schüler- und Lehrernetz ist geprüft ([Betriebsmodell](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login))
 - [ ] **Migration** gelaufen (`Migration complete` im Log), Formulare eingespielt, Testanmeldung durchgespielt (Eintrag, PDF-Download, Upload)
 - [ ] **HTTPS** für Backend und Frontend; `SESSION_SECURE=true`; HSTS erst nach erfolgreichem Test
 - [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade über einen **Reverse-Proxy**; bei Proxy auf demselben Server `BACKEND_BIND=127.0.0.1`

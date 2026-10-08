@@ -85,6 +85,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 
 - Der E-Mail-Versand nutzt PHP `mail()` (SMTP ist geplant); die Benachrichtigung geht vom **Frontend-Server** aus und enthält die Angaben der Anmeldung.
 - `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar (liefert z. B. `notify_email`): keine Geheimnisse in `config_json`.
+- Ohne Login (`AUTH_ENABLED=false`, Einzelbetrieb) haben alle Nutzer des Netzes die Platform-Rolle und das Audit-Log nennt keinen Benutzer: nur im **Verwaltungsnetz** (Sekretariat/Schulleitung) zulässig, sonst Login ([Betriebsmodell](docs/betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)); die Allowlist ohne Login ist für 3.1.2 geplant (AP2b).
 - Signaturformat 2 (Zeitstempel, Nonce, Dateihash) ist Standard, Format 1 wird im Modus `API_SIGNATURE_MODE=compat` noch akzeptiert (Replay möglich); HTTPS zwischen Frontend und Backend ist Pflicht. Die Uhren beider Server dürfen höchstens 5 Minuten abweichen ([sicherheit.md](docs/entwicklung/sicherheit.md#signierte-api-signaturformat-2-312)).
 - `seed-forms.php` überschreibt vorhandene Einträge nie; bestehende Formulare ändern die Schulen im Backend.
 - Surveys liegen im Backend (`form_resources`) **oder** als Datei im Frontend (Fallback, Abschaffung ohne Termin); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien.

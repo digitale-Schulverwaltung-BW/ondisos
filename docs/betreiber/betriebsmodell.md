@@ -86,7 +86,7 @@ Das muss stehen, **bevor** die erste externe Schule angebunden wird. Prüfen Sie
 
 Weitere Hinweise:
 
-- **HTTPS ist Pflicht** zwischen Frontend und Backend: Die Signatur enthält keinen Zeitstempel und bietet allein keinen Replay-Schutz.
+- **HTTPS ist Pflicht** zwischen Frontend und Backend: Die Signatur (Format 2: Zeitstempel, Nonce, Dateihash) verhindert Replay und Manipulation, schützt aber nicht vor dem Mitlesen. Die Uhren beider Server dürfen höchstens 5 Minuten abweichen ([Signaturformat](../entwicklung/sicherheit.md#signierte-api-signaturformat-2-312)).
 - Die Antworten von `form-config.php` sind per Schul-Slug **ohne Signatur** lesbar (Konfiguration, veröffentlichte Surveys, auch `notify_email`): keine Geheimnisse in Formular-Konfigurationen ablegen.
 - Steht WordPress selbst in Docker, ist `localhost` der Container selbst ([INSTALL.md](../../wordpress-plugin/INSTALL.md)).
 
@@ -116,6 +116,32 @@ Ein vollständiges Nginx-Beispiel mit TLS steht in [betrieb.md](betrieb.md#https
 in der `backend/.env`) gilt **je Besucher**: Das Frontend schickt eine pseudonyme Kennung (HMAC der Besucher-IP), sodass sich die Besucher einer Schule keinen Zähler teilen. Ein älteres Frontend ohne
 diese Kennung teilt sich weiter einen Zähler pro Frontend-Server. Die IP im **Audit-Log** und das Rate-Limit der **Downloads und Editoren** gelten hinter einem Proxy ohne `TRUSTED_PROXIES` für alle gemeinsam
 (siehe [Reverse-Proxy: Client-IP und Rate-Limit](betrieb.md#reverse-proxy-client-ip-und-rate-limit)).
+
+## Verwaltungsoberfläche: Verwaltungsnetz oder Login
+
+Die Verwaltungsoberfläche zeigt alle Anmeldungen mit personenbezogenen Daten und erlaubt Export, Löschen und das Ändern der Formulare (auch der Empfänger-Adresse der Benachrichtigungen).
+Wer sie erreicht, braucht deshalb einen Schutz. Es gibt zwei Betriebsarten:
+
+| | **Modell A: ohne Login** (`AUTH_ENABLED=false`, Einzelbetrieb) | **Modell B: mit Login** (`AUTH_ENABLED=true`; im Mehrschul-Betrieb immer) |
+|---|---|---|
+| Schutz | allein das **Netz**: nur wer die Seite erreicht, darf alles | Benutzername und Passwort, Sitzung, Rollen (Platform-Admin, Schul-Admin) |
+| Geeignet für | **ausschließlich das Verwaltungsnetz** der Schule: das abgeschottete Netz, in dem **Sekretariat und (erweiterte) Schulleitung** arbeiten | jedes andere Netz; Pflicht, sobald das Backend nicht im Verwaltungsnetz steht |
+| Rechte | **alle** Nutzer des Netzes haben dieselben Rechte (Platform-Rolle: Anmeldungen, Export, Löschen, Formular-Editor) | getrennt nach Rolle |
+| Nachvollziehbarkeit | im Audit-Log steht **kein Benutzer** | Benutzername im Audit-Log |
+
+**Was mit „Verwaltungsnetz“ gemeint ist:** ein Netz, in dem ausschließlich Geräte des Sekretariats und der (erweiterten) Schulleitung stehen und das vom Schüler-, Lehrer-, pädagogischen, Gäste- und WLAN-Netz technisch getrennt ist
+(eigenes VLAN mit Firewall-Regeln, nicht nur eine andere IP-Adresse). **Jedes andere „Intranet“ ist für Modell A nicht empfohlen und gefährlich:** Im Lehrer- oder allgemeinen Schulnetz sitzen Schülerinnen und Schüler
+oder Personen ohne Berechtigung im selben Netz. Wer dort die Seite aufruft, kann ohne Login alle Anmeldungen lesen, exportieren, löschen und die Benachrichtigungs-Adresse der Formulare auf ein fremdes Postfach umleiten,
+ohne dass das Audit-Log einen Benutzer nennt. In solchen Netzen ist Modell B (Login) Pflicht.
+
+**Mindestens für Modell A:**
+
+- Das Backend steht **nur im Verwaltungsnetz** erreichbar; per Firewall ist der Zugriff auf Port 80/443 bzw. 9080 auf dieses Netz (und, für die API, auf den Frontend-Server) beschränkt.
+- Die Trennung wurde **geprüft**, zum Beispiel von einem Gerät im Schülernetz: Die Seite darf dort nicht antworten.
+- Fällt eine der beiden Bedingungen weg, oder ist unklar, wer das Netz erreichen kann: `AUTH_ENABLED=true` setzen ([Admin-Zugang einrichten](installation.md#4-admin-zugang-einrichten)).
+
+Vorgemerkt für 3.1.2 ([PLAN-3.1.2.md](../entwicklung/plans/PLAN-3.1.2.md), AP2b): Eine **Netz-Allowlist** (`PLATFORM_ADMIN_ALLOWED_NETWORKS`) wird auch ohne Login erzwungen, sodass die Anwendung selbst auf das Verwaltungsnetz begrenzt.
+Sie ersetzt keine Firewall, fängt aber Fehler in der Netzaufteilung ab.
 
 ## Eine neue Schule anbinden
 

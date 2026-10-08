@@ -83,6 +83,7 @@ Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):
 
 | Thema | Einordnung |
 |---|---|
+| Betrieb ohne Login (Modell A, `AUTH_ENABLED=false`) | Jeder im Netz hat alle Rechte, das Audit-Log nennt keinen Benutzer, und die Empfänger-Adresse der Benachrichtigungen ist änderbar. Zulässig **nur im Verwaltungsnetz** (Sekretariat und erweiterte Schulleitung, vom Schüler-, Lehrer- und Gästenetz getrennt); in jedem anderen Netz ist Login Pflicht. Siehe [Betriebsmodell](../betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login). Die Netz-Allowlist ohne Login ist für 3.1.2 geplant (PLAN-3.1.2, AP2b). |
 | `GET /api/form-config.php` ohne Signatur | liefert u. a. `notify_email`; die Antworten 401/404 verraten, ob ein Tenant-Slug existiert. Keine Geheimnisse in `config_json`. |
 | WordPress-Plugin: Tenant-Secret in `wp_options` | Das Secret liegt im Klartext in der WordPress-Datenbank (die Oberfläche zeigt es nie wieder an). Wer Code in WordPress ausführen oder die Datenbank lesen kann, kann Anmeldungen signieren: bei Verdacht das Secret im Backend erneuern. |
 | Vorbefüllung per `?prefill=<base64>` | Personenbezogene Daten stehen in der URL (Browser-Verlauf, Proxy- und Access-Logs, Referer). Nur verwenden, wenn die Schule das so will; keine sensiblen Felder vorbefüllen. |
