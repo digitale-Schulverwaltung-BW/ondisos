@@ -13,7 +13,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Allow: POST');
     die('Method Not Allowed');
 }
-csrf_validate();
+try {
+    csrf_validate();
+} catch (\InvalidArgumentException $e) {
+    http_response_code(403);
+    die('Ungültiger Sicherheitstoken. Bitte laden Sie die Seite neu.');
+}
 
 use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;

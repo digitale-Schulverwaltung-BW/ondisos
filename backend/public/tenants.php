@@ -542,7 +542,7 @@ else:
                     <label for="slug" class="form-label">Slug <span class="text-danger">*</span></label>
                     <input type="text" id="slug" name="slug"
                            class="form-control" maxlength="100" required
-                           pattern="[a-z0-9-]+" title="Nur Kleinbuchstaben, Ziffern und Bindestriche"
+                           pattern="[a-z0-9\-]+" title="Nur Kleinbuchstaben, Ziffern und Bindestriche"
                            value="<?= htmlspecialchars($_POST['slug'] ?? '') ?>">
                     <div class="form-text">Wird automatisch aus dem Namen generiert. Nur a–z, 0–9, Bindestrich.</div>
                 </div>
