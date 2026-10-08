@@ -5,6 +5,7 @@
 - [Überblick](#überblick)
 - [Formulare entwerfen (SurveyJS Creator)](#formulare-entwerfen-surveyjs-creator)
   - [Lizenzhinweis](#lizenzhinweis)
+- [Unterschriftsfelder](#unterschriftsfelder)
 - [Workflow im Backend](#workflow-im-backend)
   - [Bestehendes Formular ändern](#bestehendes-formular-ändern)
   - [Was „Prüfen“ meldet](#was-prüfen-meldet)
@@ -37,6 +38,15 @@ Der Creator ist **nicht Teil von Ondisos**. Das Backend enthält nur einen Code-
 
 Die SurveyJS-Bibliothek, die Ondisos zur Anzeige der Formulare nutzt, ist quelloffen (MIT). Der **Creator** ist dagegen proprietär lizenziert; deshalb wird er
 weder mitgeliefert noch in das Backend eingebunden. Für seine Nutzung gelten die Bedingungen von SurveyJS (https://surveyjs.io/licensing).
+
+## Unterschriftsfelder
+
+Der SurveyJS-Fragetyp `signaturepad` wird unterstützt. Die Unterschrift wird als Bild gespeichert und erscheint in der Detailansicht und in der PDF-Bestätigung; in der Excel-Ausgabe und in der Benachrichtigungs-Mail steht stattdessen der Platzhalter „[Unterschrift]“.
+
+**Verwenden Sie das Format PNG** (`"dataFormat": "png"`, das ist die Voreinstellung von SurveyJS). Mit `"dataFormat": "jpeg"` wird der Hintergrund der Unterschrift schwarz, im Formular wie im PDF, weil JPEG keine Transparenz kennt.
+SVG wird nicht angenommen.
+
+Eine Unterschrift ist ein einfaches Bild, keine qualifizierte elektronische Signatur. Ob das für Ihren Zweck genügt, klären Sie mit Schulträger oder Datenschutzbeauftragten.
 
 ## Workflow im Backend
 
