@@ -318,7 +318,7 @@ require __DIR__ . '/../inc/header.php';
                     </div>
                 </div>
                 <button type="submit" name="action" value="publish" class="btn btn-success"
-                        onclick="return confirm('<?= ff_e(M::get('survey_editor.publish.confirm', 'Jetzt veröffentlichen? Das Formular ändert sich sofort für alle Besucher.')) ?>');"><?= ff_e(M::get('survey_editor.btn.publish', 'Veröffentlichen')) ?></button>
+                        data-confirm="<?= ff_e(M::get('survey_editor.publish.confirm', 'Jetzt veröffentlichen? Das Formular ändert sich sofort für alle Besucher.')) ?>"><?= ff_e(M::get('survey_editor.btn.publish', 'Veröffentlichen')) ?></button>
             </div>
         </div>
     </form>
@@ -331,7 +331,7 @@ require __DIR__ . '/../inc/header.php';
             <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap"><?= ff_e(M::get('survey_editor.btn.upload', 'Datei laden')) ?></button>
         </form>
         <?php if ($view['draft'] !== null): ?>
-            <form method="post" action="<?= ff_e($self) ?>" onsubmit="return confirm('<?= ff_e(M::get('survey_editor.discard_confirm', 'Den Entwurf wirklich verwerfen?')) ?>');">
+            <form method="post" action="<?= ff_e($self) ?>" data-confirm="<?= ff_e(M::get('survey_editor.discard_confirm', 'Den Entwurf wirklich verwerfen?')) ?>">
                 <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="discard">
                 <button type="submit" class="btn btn-sm btn-outline-danger"><?= ff_e(M::get('survey_editor.btn.discard', 'Entwurf verwerfen')) ?></button>
@@ -374,7 +374,7 @@ require __DIR__ . '/../inc/header.php';
                         <td><?= ff_e($rev['created_by'] ?? '') ?></td>
                         <td class="text-end">
                             <form method="post" action="<?= ff_e($self) ?>" class="d-inline"
-                                  onsubmit="return confirm('<?= ff_e(M::get('forms.history.confirm', 'Diesen früheren Stand wiederherstellen? Der aktuelle Stand bleibt im Verlauf erhalten.')) ?>');">
+                                  data-confirm="<?= ff_e(M::get('forms.history.confirm', 'Diesen früheren Stand wiederherstellen? Der aktuelle Stand bleibt im Verlauf erhalten.')) ?>">
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="action" value="restore">
                                 <input type="hidden" name="revision" value="<?= (int)$rev['id'] ?>">
@@ -391,7 +391,7 @@ require __DIR__ . '/../inc/header.php';
 </div>
 
 <?php
-// Findings for the code editor (marks them on their line). Escaped for use inside a <script> element.
+// Findings for the code editor (marks them on their line). Escaped for use inside a script element element.
 $diagnostics = [];
 if ($report !== null) {
     foreach ($report['errors'] as $e) {

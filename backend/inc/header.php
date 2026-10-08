@@ -1,6 +1,7 @@
 <?php
 // admin/inc/header.php
 require_once __DIR__ . '/csrf.php';
+\App\Utils\ContentSecurityPolicy::send();
 ?>
 <!DOCTYPE html>
 <html lang="de">

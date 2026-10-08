@@ -358,7 +358,7 @@ require __DIR__ . '/../inc/header.php';
 
             <!-- Delete Button -->
             <form method="POST" action="change_status.php" class="d-inline"
-                  onsubmit="return confirm('<?= M::get('ui.detail.confirm_delete', 'Wirklich löschen?') ?>')">
+                  data-confirm="<?= htmlspecialchars((string)(M::get('ui.detail.confirm_delete', 'Wirklich löschen?')), ENT_QUOTES, 'UTF-8') ?>">
                 <?php csrf_field(); ?>
                 <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
                 <input type="hidden" name="action" value="delete">

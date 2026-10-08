@@ -372,7 +372,7 @@ if ($id !== null && $id > 0):
                 <span class="text-muted">(aus Sicherheitsgründen verborgen)</span>
             </p>
             <form method="POST" action="tenants.php?id=<?= $id ?>"
-                  onsubmit="return confirm('API-Schlüssel wirklich erneuern? Der alte Schlüssel wird sofort ungültig.')">
+                  data-confirm="API-Schlüssel wirklich erneuern? Der alte Schlüssel wird sofort ungültig.">
                 <?php csrf_field(); ?>
                 <input type="hidden" name="action" value="regenerate_secret">
                 <button type="submit" class="btn btn-warning">API-Schlüssel erneuern</button>
@@ -426,7 +426,7 @@ if ($id !== null && $id > 0):
                                     </form>
                                     <!-- Reset password -->
                                     <form method="POST" action="tenants.php?id=<?= $id ?>" class="d-inline"
-                                          onsubmit="return confirm('Passwort für <?= htmlspecialchars(addslashes($admin['username'])) ?> zurücksetzen?')">
+                                          data-confirm="Passwort für <?= htmlspecialchars($admin['username']) ?> zurücksetzen?">
                                         <?php csrf_field(); ?>
                                         <input type="hidden" name="action" value="reset_password">
                                         <input type="hidden" name="admin_id" value="<?= (int)$admin['id'] ?>">
@@ -575,7 +575,7 @@ else:
         </div>
     </div>
 
-    <script>
+    <script nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>">
     document.getElementById('name').addEventListener('input', function () {
         const slug = this.value
             .toLowerCase()

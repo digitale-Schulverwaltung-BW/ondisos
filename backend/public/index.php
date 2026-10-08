@@ -74,7 +74,7 @@ require __DIR__ . '/../inc/header.php';
                 <?php if ($selectedStatus !== ''): ?>
                     <input type="hidden" name="status" value="<?= htmlspecialchars($selectedStatus) ?>">
                 <?php endif; ?>
-                <select name="form" id="form" class="form-select" onchange="this.form.submit()">
+                <select name="form" id="form" class="form-select" data-autosubmit>
                     <option value=""><?= M::get('ui.filters.all_forms') ?></option>
                     <?php foreach ($forms as $formKey): ?>
                         <option value="<?= htmlspecialchars($formKey) ?>"
@@ -121,7 +121,7 @@ require __DIR__ . '/../inc/header.php';
         <?php endif; ?>
 
         <label for="perPage" class="form-label mb-0"><?= M::get('ui.entries_per_page') ?></label>
-        <select name="perPage" id="perPage" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+        <select name="perPage" id="perPage" class="form-select form-select-sm w-auto" data-autosubmit>
             <?php foreach ($allowedPerPage as $n): ?>
                 <option value="<?= $n ?>" <?= $n === $pagination['perPage'] ? 'selected' : '' ?>>
                     <?= $n ?>
@@ -161,26 +161,26 @@ require __DIR__ . '/../inc/header.php';
         
         <!-- Action Buttons -->
         <div class="d-flex gap-2 mb-3">
-            <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('archive')">
+            <button type="button" class="btn btn-sm btn-warning" data-bulk="archive">
                 <?= M::get('ui.buttons.archive') ?>
             </button>
             <!-- Set the status of the selected entries (same buttons as in the detail view) -->
             <div class="btn-group" role="group" aria-label="<?= htmlspecialchars(M::get('ui.detail.change_status', 'Status ändern')) ?>">
-                <button type="button" class="btn btn-sm btn-warning" onclick="bulkAction('in_bearbeitung')"
+                <button type="button" class="btn btn-sm btn-warning" data-bulk="in_bearbeitung"
                         title="<?= htmlspecialchars(M::get('ui.detail.status_in_progress', 'In Bearbeitung')) ?>">📝</button>
-                <button type="button" class="btn btn-sm btn-success" onclick="bulkAction('akzeptiert')"
+                <button type="button" class="btn btn-sm btn-success" data-bulk="akzeptiert"
                         title="<?= htmlspecialchars(M::get('ui.detail.status_accepted', 'Akzeptiert')) ?>">☑️</button>
-                <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('abgelehnt')"
+                <button type="button" class="btn btn-sm btn-danger" data-bulk="abgelehnt"
                         title="<?= htmlspecialchars(M::get('ui.detail.status_rejected', 'Abgelehnt')) ?>">👎</button>
             </div>
-            <button type="button" class="btn btn-sm btn-danger" onclick="bulkAction('delete')">
+            <button type="button" class="btn btn-sm btn-danger" data-bulk="delete">
                 <?= M::get('ui.buttons.delete') ?>
             </button>
-            <button type="button" class="btn btn-sm btn-secondary" onclick="window.location.reload()">
+            <button type="button" class="btn btn-sm btn-secondary" data-reload>
                 🔄 Ansicht aktualisieren
             </button>
             <div class="ms-auto">
-                <button type="button" class="btn btn-sm btn-success" onclick="exportExcel()">
+                <button type="button" class="btn btn-sm btn-success" data-export-excel>
                     <?= M::get('ui.buttons.excel_export') ?>
                 </button>
             </div>
@@ -239,7 +239,7 @@ require __DIR__ . '/../inc/header.php';
                                    class="form-control form-control-sm" placeholder="Filter…" style="min-width:120px">
                     </th>
                     <th>
-                        <select name="status" form="filter-status" class="form-select form-select-sm" onchange="this.form.submit()" style="min-width:110px">
+                        <select name="status" form="filter-status" class="form-select form-select-sm" data-autosubmit style="min-width:110px">
                                 <option value="">Alle</option>
                                 <?php foreach (\App\Models\AnmeldungStatus::cases() as $s): ?>
                                     <option value="<?= $s->value ?>" <?= $selectedStatus === $s->value ? 'selected' : '' ?>>
@@ -323,7 +323,14 @@ require __DIR__ . '/../inc/header.php';
     </nav>
 </div>
 
-<script>
+<script nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>">
+// Buttons der Sammelaktionen (statt Inline-Handlern, siehe ContentSecurityPolicy)
+document.addEventListener('click', function (event) {
+    const bulk = event.target.closest('[data-bulk]');
+    if (bulk) { bulkAction(bulk.getAttribute('data-bulk')); return; }
+    if (event.target.closest('[data-export-excel]')) { exportExcel(); }
+});
+
 // Select All checkbox
 document.getElementById('selectAll').addEventListener('change', function() {
     const checkboxes = document.querySelectorAll('.row-checkbox');

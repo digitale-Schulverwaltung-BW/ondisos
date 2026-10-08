@@ -280,7 +280,7 @@ require __DIR__ . '/../inc/header.php';
         <input type="hidden" name="action" value="attachment_upload">
     </form>
     <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="attachment-delete-form"
-          onsubmit="return confirm('<?= ff_e(M::get('forms.attachment.confirm_remove', 'Das angehängte PDF wirklich entfernen?')) ?>');">
+          data-confirm="<?= ff_e(M::get('forms.attachment.confirm_remove', 'Das angehängte PDF wirklich entfernen?')) ?>">
         <?php csrf_field(); ?>
         <input type="hidden" name="action" value="attachment_delete">
     </form>
@@ -329,7 +329,7 @@ require __DIR__ . '/../inc/header.php';
                         <td class="text-end">
                             <?php if (in_array($rev['kind'], ['config', 'survey'], true)): ?>
                                 <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" class="d-inline"
-                                      onsubmit="return confirm('<?= ff_e(M::get('forms.history.confirm', 'Diesen früheren Stand wiederherstellen? Der aktuelle Stand bleibt im Verlauf erhalten.')) ?>');">
+                                      data-confirm="<?= ff_e(M::get('forms.history.confirm', 'Diesen früheren Stand wiederherstellen? Der aktuelle Stand bleibt im Verlauf erhalten.')) ?>">
                                     <?php csrf_field(); ?>
                                     <input type="hidden" name="action" value="restore">
                                     <input type="hidden" name="revision" value="<?= (int)$rev['id'] ?>">
@@ -351,7 +351,7 @@ require __DIR__ . '/../inc/header.php';
             <?php if ($form['can_delete']): ?>
                 <p><?= ff_e(M::get('forms.delete.help', 'Das Formular ist dann nicht mehr erreichbar. Der Verlauf bleibt erhalten.')) ?></p>
                 <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>"
-                      onsubmit="return confirm('<?= ff_e(M::get('forms.delete.confirm', 'Dieses Formular wirklich löschen?')) ?>');">
+                      data-confirm="<?= ff_e(M::get('forms.delete.confirm', 'Dieses Formular wirklich löschen?')) ?>">
                     <?php csrf_field(); ?>
                     <input type="hidden" name="action" value="delete">
                     <button type="submit" class="btn btn-outline-danger"><?= ff_e(M::get('forms.delete.button', 'Löschen')) ?></button>

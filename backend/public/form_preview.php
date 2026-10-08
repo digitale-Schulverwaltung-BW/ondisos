@@ -107,7 +107,7 @@ require __DIR__ . '/../inc/header.php';
     <?php endif; ?>
 </div>
 
-<script>
+<script nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>">
 (function () {
     var frame = document.getElementById('preview-frame');
     var group = document.getElementById('width-buttons');

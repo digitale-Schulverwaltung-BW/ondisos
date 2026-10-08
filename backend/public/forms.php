@@ -194,7 +194,7 @@ require __DIR__ . '/../inc/header.php';
                         <button type="submit" class="btn btn-primary"><?= ff_e($logoInfo !== null ? M::get('forms.logo.replace', 'Logo ersetzen') : M::get('forms.logo.upload', 'Logo hochladen')) ?></button>
                     </form>
                     <?php if ($logoInfo !== null): ?>
-                        <form method="post" action="forms.php" class="mt-2" onsubmit="return confirm('<?= ff_e(M::get('forms.logo.confirm_remove', 'Das Logo wirklich entfernen?')) ?>');">
+                        <form method="post" action="forms.php" class="mt-2" data-confirm="<?= ff_e(M::get('forms.logo.confirm_remove', 'Das Logo wirklich entfernen?')) ?>">
                             <?php csrf_field(); ?>
                             <input type="hidden" name="action" value="logo_delete">
                             <button type="submit" class="btn btn-sm btn-outline-danger"><?= ff_e(M::get('forms.logo.remove', 'Logo entfernen')) ?></button>
@@ -231,7 +231,7 @@ require __DIR__ . '/../inc/header.php';
             <?php endif; ?>
         </div>
     </div>
-    <script>
+    <script nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>">
     (function () {
         var picker = document.getElementById('accent-picker'), hex = document.getElementById('accent-hex'), sample = document.getElementById('accent-sample');
         if (!picker || !hex) { return; }

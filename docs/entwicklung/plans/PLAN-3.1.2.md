@@ -21,6 +21,20 @@
 
 Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung der signierten Frontend-API (`/api/*`; sie ist durch HMAC und CORS geschützt und kommt von Schul-Webservern, nicht von Admin-Arbeitsplätzen).
 
+## Übergabe an die 2FA-Sitzung (AP1 bis AP4)
+
+AP1 (CIDR-Hilfsklasse), AP2 und AP2b (Netz-Allowlist, auch ohne Login), AP3 (TOTP, Wizard, Recovery) und AP4 (Passkeys) werden in **einer eigenen Sitzung** umgesetzt, weil sie alle `inc/auth.php` und `login.php` anfassen. Die übrigen Pakete (AP5, AP6) sind umgesetzt.
+
+**Was die Sitzung vorfindet und nutzen soll:**
+
+- `App\Utils\ClientIp` (mit `TRUSTED_PROXIES`) und `AuditLogger` (u. a. `login_blocked`, `api_legacy_signature`); `LoginThrottle` und `RateLimiter` für Fehlversuche, auch für TOTP-Codes wiederverwendbar.
+- `App\Utils\SessionCookie` setzt `HttpOnly`, `SameSite=Lax` und `Secure` vor `session_start()`; `session_regenerate_id(true)` gehört wie geplant erst nach dem **vollständigen** Login (Passwort und zweiter Faktor).
+- `AUTH_ENABLED=true` ist Standard; `inc/auth.php` kehrt bei ausgeschalteter Authentifizierung früh zurück. AP2b muss die Allowlist **vor** diesem Zweig prüfen.
+- **Content-Security-Policy:** Skripte nur mit Nonce, **keine Inline-Handler**. Neue Seiten (`two_factor.php`, `two_factor_setup.php`, Passkey-Registrierung) laden ihr JavaScript als Datei unter `assets/js/` oder tragen `nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>"`; Bestätigungen laufen über `data-confirm`. `ContentSecurityPolicyTest` schlägt sonst fehl. Die CSP wird in `inc/header.php` und `login.php` gesendet: Seiten ohne `header.php` (wie die 2FA-Seiten, falls eigenständig) rufen `\App\Utils\ContentSecurityPolicy::send()` selbst auf, vor jeder Ausgabe.
+- Das Sicherheitsverhalten von `auth.php` (Zwischenzustand `pending_2fa` gibt keinen Zugang) braucht den Skript-übergreifenden Test, wie unter „Tests und Abnahme“ beschrieben.
+
+**Reihenfolge innerhalb der Sitzung:** AP1, AP2/AP2b, AP3, AP4 wie unten unter „Reihenfolge“. Wer `auth.php` ändert, ergänzt `sicherheit.md`, `konfiguration.md` und `docs/README.md` (neue Dateien).
+
 ## Arbeitspakete
 
 ### AP1 – CIDR-Hilfsklasse herauslösen (Refactoring)

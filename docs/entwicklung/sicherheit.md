@@ -59,6 +59,26 @@ Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und 
 
 Offen: Der Zähler je Besucher bleibt umgehbar, wer viele IP-Adressen hat (Botnetz). Dagegen helfen nur Captcha oder vorgeschaltete Filter; bewusst nicht vorgesehen. Die Signatur des Uploads deckt den Dateiinhalt seit Format 2 ab (siehe unten).
 
+## Content-Security-Policy (3.1.2)
+
+Die Verwaltungsoberfläche und die Standalone-Formularseite senden eine CSP, die **Skripte nur von der eigenen Herkunft oder mit der Nonce der Anfrage** zulässt (kein `unsafe-inline`, kein `unsafe-eval` bei Skripten).
+Eingeschleustes HTML, etwa aus einem Anmeldefeld, einer Survey oder einer Ausgabe, die einmal nicht escaped wird, kann damit kein JavaScript ausführen, auch kein `onerror=`/`onclick=`.
+
+| | Verwaltungsoberfläche | Formularseite (Standalone) |
+|---|---|---|
+| Skripte | `'self'` + Nonce | `'self'` + Nonce |
+| Styles | `'self'` + `'unsafe-inline'` (Style-Attribute, kleine `<style>`-Blöcke) | wie links (SurveyJS setzt Inline-Styles) |
+| Bilder | `'self'`, `data:`, `blob:` (Unterschriften, Altdaten) | zusätzlich `https:` (Bilder aus Surveys und Themes) |
+| Sonst | `connect-src`, `frame-src`, `form-action`, `base-uri` `'self'`, `object-src 'none'`, `frame-ancestors 'self'` | wie links, aber **ohne** `frame-ancestors` (Schulen binden das Formular per iframe ein) |
+| Wo gesetzt | `inc/header.php`, `login.php` (`App\Utils\ContentSecurityPolicy`) | `index.php` (`Frontend\Utils\ContentSecurityPolicy`) |
+
+**Regeln für Entwickler:** keine Inline-Handler (`onclick=` usw.); Bestätigungen über `data-confirm`, Auto-Submit über `data-autosubmit`, Neuladen über `data-reload` (`assets/js/admin-ui.js`); Inline-`<script>` nur mit
+`nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>"`. `ContentSecurityPolicyTest` prüft das für alle Seiten in `backend/public` und `backend/inc`. Neue 2FA-Seiten (PLAN-3.1.2) folgen derselben Regel (WebAuthn-Skript als Datei oder mit Nonce).
+
+**Betrieb:** `CSP_MODE=enforce` (Standard), `report-only` (nur Meldungen in der Browser-Konsole, zum Diagnostizieren nach einem Update) oder `off`. Die Vorschau im Formular-Editor sendet ihre eigene, strengere Richtlinie (Sandbox mit Nonce).
+Das **WordPress-Plugin** sendet keine CSP: Die Seite gehört WordPress (Theme, Sicherheits-Plugins). Wer dort eine CSP setzt, muss die Nonce-Skripte des Plugins berücksichtigen.
+Zusätzliche Header am Webserver gelten **gemeinsam** mit denen der Anwendung (die strengere gewinnt): keine zweite CSP in Apache oder Nginx setzen.
+
 ## Signierte API: Signaturformat 2 (3.1.2)
 
 Das Frontend signiert jede Anfrage an `submit.php`, `upload.php` und `forms.php` mit dem Tenant-Secret. Format 2 (Header `X-Timestamp`, `X-Nonce`, `X-Signature`) schließt die Lücken des alten Formats:

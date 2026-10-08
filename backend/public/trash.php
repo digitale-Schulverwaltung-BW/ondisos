@@ -124,7 +124,7 @@ require __DIR__ . '/../inc/header.php';
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
                                 <button type="submit" class="btn btn-sm btn-success"
-                                        onclick="return confirm('<?= M::format('ui.trash.confirm_restore', ['id' => $entry->id]) ?>')">
+                                        data-confirm="<?= htmlspecialchars((string)(M::format('ui.trash.confirm_restore', ['id' => $entry->id])), ENT_QUOTES, 'UTF-8') ?>">
                                     <?= M::get('ui.buttons.restore') ?>
                                 </button>
                             </form>
@@ -132,7 +132,7 @@ require __DIR__ . '/../inc/header.php';
                                 <?php csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?= $entry->id ?>">
                                 <button type="submit" class="btn btn-sm btn-danger"
-                                        onclick="return confirm('<?= M::get('ui.trash.confirm_hard_delete') ?>')">
+                                        data-confirm="<?= htmlspecialchars((string)(M::get('ui.trash.confirm_hard_delete')), ENT_QUOTES, 'UTF-8') ?>">
                                     <?= M::get('ui.buttons.hard_delete') ?>
                                 </button>
                             </form>

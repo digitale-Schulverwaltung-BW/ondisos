@@ -127,7 +127,7 @@ if (FormConfig::discardsSubmissions($formKey)) {
 $formConfig = FormConfig::get($formKey);
 
 // Survey and theme: from the backend if it delivers them, else the files in frontend/surveys/.
-// Both are re-encoded for safe use inside a <script> element (see JsonEmbed).
+// Both are re-encoded for safe use inside a script element (see JsonEmbed).
 try {
     $surveyJson = SurveySource::survey($formKey);
     $themeJson  = SurveySource::theme($formKey);
@@ -139,6 +139,9 @@ try {
 
 // Generate CSRF token
 $csrfToken = CsrfProtection::getToken();
+
+// Content-Security-Policy (Nonce für den Inline-Block unten)
+\Frontend\Utils\ContentSecurityPolicy::send();
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -213,7 +216,7 @@ $csrfToken = CsrfProtection::getToken();
     <script src="js/survey-handler-base.js"></script>
     <script src="js/survey-handler.js"></script>
     
-    <script>
+    <script nonce="<?= \Frontend\Utils\ContentSecurityPolicy::nonce() ?>">
         // Configure survey
         window.surveyConfig = {
             formKey: <?= json_encode($formKey, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,

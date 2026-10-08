@@ -74,7 +74,10 @@ class SurveyHandlerWP extends SurveyHandlerBase {
 
             // Render survey
             this.survey.render(this.container);
-            this.addHoneypot(this.container);
+            // (typeof-Prüfung: ein gecachtes altes survey-handler-base.js darf das Formular nicht verhindern)
+            if (typeof this.addHoneypot === 'function') {
+                this.addHoneypot(this.container);
+            }
 
         } catch (error) {
             console.error('Survey initialization failed:', error);
@@ -164,7 +167,7 @@ class SurveyHandlerWP extends SurveyHandlerBase {
         formData.append('action', 'ondisos_submit');
         formData.append('form_key', this.formKey);
         formData.append('nonce', this.nonce);
-        formData.append('website_url', this.honeypotValue());
+        formData.append('website_url', typeof this.honeypotValue === 'function' ? this.honeypotValue() : '');
         formData.append('meta', JSON.stringify({
             formular: this.formKey,
             version: this.version,

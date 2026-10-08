@@ -174,7 +174,7 @@ require __DIR__ . '/../inc/header.php';
                 <form method="post" class="mt-3">
                     <?php csrf_field(); ?>
                     <button type="submit" name="force_expunge" class="btn btn-danger"
-                            onclick="return confirm('<?= M::format('ui.dashboard.confirm_expunge', ['count' => $expungePreview['count']]) ?>')">
+                            data-confirm="<?= htmlspecialchars((string)(M::format('ui.dashboard.confirm_expunge', ['count' => $expungePreview['count']])), ENT_QUOTES, 'UTF-8') ?>">
                         <?= M::get('ui.dashboard.run_expunge_now', '🗑️ Jetzt manuell ausführen') ?>
                     </button>
                 </form>
