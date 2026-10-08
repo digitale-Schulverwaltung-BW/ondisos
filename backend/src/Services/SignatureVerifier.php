@@ -22,6 +22,12 @@ class SignatureVerifier
     public const MODE_COMPAT = 'compat';
     public const MODE_STRICT = 'strict';
 
+    /**
+     * Standard, wenn API_SIGNATURE_MODE nicht gesetzt ist. Während der Umstellung "compat"; ab 3.1.3 "strict"
+     * (PLAN-3.1.2, AP6). SignatureModeDefaultTest schlägt ab 3.1.3 fehl, solange das nicht umgestellt ist.
+     */
+    public const DEFAULT_MODE = self::MODE_COMPAT;
+
     /** Gültigkeit der Nonce: Zeitstempel darf ±maxSkew abweichen, also bis zu 2 × maxSkew merken. */
     private const NONCE_TTL_FACTOR = 2;
 
@@ -37,8 +43,8 @@ class SignatureVerifier
 
     public static function fromEnv(string $secret, int $tenantId): self
     {
-        $mode = strtolower((string)($_ENV['API_SIGNATURE_MODE'] ?? self::MODE_COMPAT));
-        $mode = $mode === self::MODE_STRICT ? self::MODE_STRICT : self::MODE_COMPAT;
+        $mode = strtolower((string)($_ENV['API_SIGNATURE_MODE'] ?? self::DEFAULT_MODE));
+        $mode = in_array($mode, [self::MODE_COMPAT, self::MODE_STRICT], true) ? $mode : self::DEFAULT_MODE;
         $skew = max(30, (int)($_ENV['API_SIGNATURE_MAX_SKEW'] ?? 300));
 
         return new self(

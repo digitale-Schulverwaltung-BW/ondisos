@@ -9,11 +9,11 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 |---|---|
 | **WordPress-Plugin ohne Shell, Rest** | Verbindungscode und Update-Prüfung; die ZIP ist umgesetzt. Entwurf: [PLAN-3.1.1.md](plans/PLAN-3.1.1.md) |
 | **Härtung der Admin-Anmeldung** | Netz-Allowlist pro Tenant, Zwei-Faktor-Anmeldung (TOTP, Passkeys) für Platform-Admins, Login-Rate-Limit. Entwurf: [PLAN-3.1.2.md](plans/PLAN-3.1.2.md) |
+| **Signaturformat: `strict` als Standard (ab 3.1.3)** | Mit 3.1.2 ist `API_SIGNATURE_MODE=compat` Standard (Umstellungsphase). Im Folgerelease `SignatureVerifier::DEFAULT_MODE`, `.env.example` und Doku auf `strict` stellen, später Format 1 entfernen. `SignatureModeDefaultTest` schlägt ab Version 3.1.3 fehl, bis das erledigt ist. [PLAN-3.1.2.md](plans/PLAN-3.1.2.md#ap6--signaturformat-2-für-die-api-umgesetzt-festschreibung-offen) |
 | **SMTP-Versand** statt PHP `mail()` | Die Benachrichtigung geht vom Frontend-Server aus |
 | **Datei-Fallback für Surveys abschaffen** | `frontend/surveys/` nur noch als Importquelle (`import-surveys.php`); ohne Termin |
 | **Schreibaktionen im Modus „Alle Tenants“** | Als Plattform-Admin ohne gewählte Schule (Umschalter „Alle Tenants“) scheitern Statuswechsel, Löschen und Sammelaktionen mit „Ein unerwarteter Fehler ist aufgetreten“, weil `TenantContext::getTenantId()` dort bewusst eine Ausnahme wirft. Sinnvoll: verständlicher Hinweis „Bitte zuerst eine Schule wählen“ bzw. Buttons ausblenden |
 | **Deutsche Locale** für SurveyJS | Validierungsmeldungen erscheinen englisch |
-| **`X-Content-Type-Options: nosniff`** beim Datei-Download | Kleine Härtung in `DownloadController`; unbekannte Endungen gehen schon als `application/octet-stream` raus |
 | **Monitoring und Logging** | strukturiertes Logging, Anbindung an Überwachung (z. B. Sentry); heute: `health.php` und Audit-Log |
 | **API-Beschreibung** (OpenAPI) | die Endpunkte sind in [architektur.md](architektur.md) und im Betriebsmodell beschrieben |
 | *Option, nicht geplant:* Managed Multi-Frontend | ein zentral gehostetes Frontend für mehrere Schulen; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen |

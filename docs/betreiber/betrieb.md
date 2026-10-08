@@ -240,6 +240,8 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 - [ ] **Upload-Limits** auf allen vier Ebenen abgestimmt
 - [ ] **Berechtigungen:** `.env`-Dateien `chmod 600`, nicht im Repository; ohne Docker `uploads`, `cache`, `logs` für den Webserver beschreibbar
 - [ ] **Frontend-Cache** (`frontend/cache`, WordPress: `wp-content/uploads`) beschreibbar
+- [ ] **Uhrzeit:** Frontend- und Backend-Server mit NTP synchronisiert (die API verlangt höchstens 5 Minuten Abweichung, sonst `timestamp_skew` im Fehlerlog)
+- [ ] **API-Signatur:** alle Frontends und Plugins aktualisiert und im Audit-Log kein `api_legacy_signature` mehr, dann `API_SIGNATURE_MODE=strict` ([Hintergrund](../entwicklung/sicherheit.md#signierte-api-signaturformat-2-312))
 - [ ] **Firewall:** nur 80/443 (und SSH) von außen
 
 Gegenproben für die Sicherheits-Header: `curl -I https://backend.example.org/login.php` und `curl -I http://backend.example.org/` (erwartet 301 auf `https://`).
