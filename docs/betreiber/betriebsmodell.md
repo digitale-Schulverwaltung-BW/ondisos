@@ -112,9 +112,10 @@ dem Sie nicht vollständig vertrauen (Internet, Hosting-Netz, WLAN, „halb-öff
 Ein vollständiges Nginx-Beispiel mit TLS steht in [betrieb.md](betrieb.md#https); das Beispiel für die Pfadbegrenzung oben ist mit einem echten Proxy vor dem Backend geprüft
 (API und PDF-Pfad werden durchgereicht, `login.php`, `index.php`, `tenants.php` und `assets/` abgewiesen).
 
-**Gut zu wissen:** Das Backend sieht hinter einem Proxy nur dessen Adresse. Das **Rate-Limit** (Standard: 10 Anmeldungen pro Minute je Absender, `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW`
-in der `backend/.env`) und die IP-Adresse im **Audit-Log** gelten dann für alle Schulen gemeinsam. Bei mehreren Schulen setzen Sie `RATE_LIMIT_MAX` entsprechend höher
-(etwa Zahl der Schulen × erwartete Anmeldungen pro Minute); die Auswertung von `X-Forwarded-For` für vertrauenswürdige Proxys ist als Verbesserung vorgemerkt.
+**Gut zu wissen:** Das Backend sieht hinter einem Proxy nur dessen Adresse. Das **Rate-Limit der Anmeldungen** (Standard: 10 pro Minute, `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW`
+in der `backend/.env`) gilt **je Besucher**: Das Frontend schickt eine pseudonyme Kennung (HMAC der Besucher-IP), sodass sich die Besucher einer Schule keinen Zähler teilen. Ein älteres Frontend ohne
+diese Kennung teilt sich weiter einen Zähler pro Frontend-Server. Die IP im **Audit-Log** und das Rate-Limit der **Downloads und Editoren** gelten hinter einem Proxy ohne `TRUSTED_PROXIES` für alle gemeinsam
+(siehe [Reverse-Proxy: Client-IP und Rate-Limit](betrieb.md#reverse-proxy-client-ip-und-rate-limit)).
 
 ## Eine neue Schule anbinden
 

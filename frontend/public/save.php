@@ -10,6 +10,7 @@ use Frontend\Services\AnmeldungService;
 use Frontend\Services\BackendApiClient;
 use Frontend\Services\EmailService;
 use Frontend\Utils\CsrfProtection;
+use Frontend\Utils\Honeypot;
 use Frontend\Config\FormConfig;
 use Frontend\Config\FormConfigLoader;
 use Frontend\Services\MessageService as M;
@@ -27,6 +28,13 @@ try {
 
     if (!CsrfProtection::validate($csrfToken)) {
         throw new RuntimeException(M::get('errors.csrf_invalid'), 403);
+    }
+
+    // 2b. Honeypot: von Bots ausgefülltes Feld ⇒ nichts weitergeben, aber Erfolg melden
+    if (Honeypot::isTriggered($_POST)) {
+        error_log('Honeypot triggered (save.php), submission dropped');
+        echo json_encode(Honeypot::fakeSuccess());
+        exit;
     }
 
     // 3. Get form key

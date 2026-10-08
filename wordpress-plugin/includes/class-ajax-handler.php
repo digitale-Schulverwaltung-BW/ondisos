@@ -73,6 +73,12 @@ class Ajax_Handler
                 throw new \RuntimeException('Unbekanntes Formular', 400);
             }
 
+            // 3b. Honeypot: von Bots ausgefülltes Feld ⇒ nichts weitergeben, aber Erfolg melden
+            if (\Frontend\Utils\Honeypot::isTriggered(wp_unslash($_POST))) {
+                error_log('ondisos - honeypot triggered, submission dropped');
+                wp_send_json(\Frontend\Utils\Honeypot::fakeSuccess(), 200);
+            }
+
             // 4. Get survey data (WordPress adds slashes, must remove)
             if (empty($_POST['survey_data'])) {
                 throw new \RuntimeException('Keine Formulardaten empfangen', 400);

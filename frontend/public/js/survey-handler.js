@@ -49,6 +49,7 @@ class SurveyHandler extends SurveyHandlerBase {
 
         // Render survey
         this.survey.render(document.getElementById(this.config.containerId));
+        this.addHoneypot(document.getElementById(this.config.containerId));
     }
 
     /**
@@ -244,6 +245,7 @@ class SurveyHandler extends SurveyHandlerBase {
 
         formData.append('survey_data', JSON.stringify(this._sortDataByQuestionOrder(data, sender)));
         formData.append('csrf_token', this.csrfToken);
+        formData.append('website_url', this.honeypotValue());
         formData.append('meta', JSON.stringify({
             formular: this.config.formKey,
             version: this.config.version || '1.0.0',

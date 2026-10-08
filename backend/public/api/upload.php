@@ -20,6 +20,12 @@ use App\Validators\AnmeldungValidator;
 use App\Services\AuditLogger;
 use App\Services\VirusScanService;
 use App\Utils\FilenameSanitizer;
+use App\Utils\ClientIdentity;
+use App\Services\RateLimiter;
+use App\Services\UploadPolicy;
+use App\Services\FormDeliveryService;
+use App\Repositories\FormConfigRepository;
+use App\Repositories\FormResourceRepository;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -47,7 +53,7 @@ if (!empty($tenant['origin'])) {
     if ($requestOrigin === $tenant['origin']) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
     }
 } else {
     // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
@@ -57,7 +63,7 @@ if (!empty($tenant['origin'])) {
     if (in_array($requestOrigin, $allowedOrigins, true)) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
     }
 }
 
@@ -72,6 +78,23 @@ if (!$hmacValidator->validateUploadSignature($anmeldungIdStr, $fieldname, $origi
     http_response_code(401);
     echo json_encode(['error' => 'Unauthorized']);
     exit;
+}
+
+// Rate limiting per visitor (after the signature check, like submit.php)
+if (filter_var($_ENV['RATE_LIMIT_ENABLED'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) {
+    $uploadLimiter = new RateLimiter(
+        __DIR__ . '/../../cache/ratelimit-upload',
+        (int)($_ENV['UPLOAD_RATE_LIMIT_MAX'] ?? 60),
+        (int)($_ENV['UPLOAD_RATE_LIMIT_WINDOW'] ?? 60)
+    );
+    $uploadIdentifier = ClientIdentity::fingerprint($_SERVER, $tenantId);
+    if (!$uploadLimiter->isAllowed($uploadIdentifier)) {
+        $retryAfter = $uploadLimiter->getRetryAfter($uploadIdentifier);
+        header('Retry-After: ' . $retryAfter);
+        http_response_code(429);
+        echo json_encode(['error' => 'Too many requests. Please try again later.', 'retry_after' => $retryAfter]);
+        exit;
+    }
 }
 
 try {
@@ -93,8 +116,22 @@ try {
     // The entry must exist and belong to the authenticated tenant. The HMAC only proves
     // the caller holds this tenant's secret, not that anmeldung_id is theirs. findById()
     // is tenant-scoped and logs an IDOR attempt for foreign ids.
-    if ((new AnmeldungRepository())->findById($anmeldungId) === null) {
+    $anmeldung = (new AnmeldungRepository())->findById($anmeldungId);
+    if ($anmeldung === null) {
         throw new RuntimeException('Anmeldung nicht gefunden', 404);
+    }
+
+    // The field must be a file question of the published survey: the frontend relays whatever
+    // the browser posted. (Forms that still use a survey file in the frontend have no survey here; the
+    // limits per Anmeldung below apply regardless.)
+    $bundle = (new FormDeliveryService(new FormConfigRepository(), new FormResourceRepository()))
+        ->bundle($anmeldung->formular);
+    if ($bundle !== null && $bundle['survey_json'] !== null) {
+        $survey = json_decode($bundle['survey_json'], true);
+        if (is_array($survey) && !UploadPolicy::isFileField($survey, (string)$fieldname)) {
+            AuditLogger::uploadRejected($anmeldungId, (string)$originalFilename, 'unknown field ' . $fieldname);
+            throw new RuntimeException('Ungültiges Upload-Feld', 400);
+        }
     }
 
     // Check if file was uploaded
@@ -122,6 +159,44 @@ try {
     $mimeType = $validationResult['mime_type'];
     $extension = $validationResult['extension'];
 
+    // Upload directory — scoped to the current tenant
+    $tenantId  = TenantContext::getTenantId();
+    $uploadsRoot = realpath(__DIR__ . '/../../uploads');
+    if ($uploadsRoot === false) {
+        throw new RuntimeException('Upload-Verzeichnis nicht verfügbar.', 500);
+    }
+    $uploadDir = $uploadsRoot . '/tenant-' . $tenantId;
+    if (!is_dir($uploadDir)) {
+        mkdir($uploadDir, 0755, true);
+    }
+
+    // Generate safe filename: {anmeldung_id}_{sanitized_name}.{validated_ext}
+    $originalName = basename($file['name']);
+    $nameWithoutExt = FilenameSanitizer::sanitizeStem(pathinfo($originalName, PATHINFO_FILENAME));
+
+    // Force the validated extension (prevents double extension attacks like evil.php.jpg)
+    $safeFilename = $anmeldungId . '_' . $nameWithoutExt . '.' . $extension;
+    $targetPath = $uploadDir . '/' . $safeFilename;
+
+    // Limits per Anmeldung (a signature does not bound how many requests the browser can trigger)
+    // (overwriting a file of the same name adds nothing)
+    $existing = array_values(array_filter(
+        glob($uploadDir . '/' . $anmeldungId . '_*') ?: [],
+        fn(string $f): bool => is_file($f) && $f !== $targetPath
+    ));
+    $existingBytes = array_sum(array_map('filesize', $existing));
+    $capError = UploadPolicy::capError(
+        count($existing),
+        (int)$existingBytes,
+        (int)$file['size'],
+        (int)($_ENV['UPLOAD_MAX_FILES_PER_ANMELDUNG'] ?? 20),
+        (int)($_ENV['UPLOAD_MAX_BYTES_PER_ANMELDUNG'] ?? 52428800)
+    );
+    if ($capError !== null) {
+        AuditLogger::uploadRejected($anmeldungId, (string)$originalFilename, 'cap: ' . $capError);
+        throw new RuntimeException($capError, 429);
+    }
+
     // Virus scan (ClamAV) — scans the tmp file before it is stored
     $virusScanEnabled = filter_var($_ENV['VIRUS_SCAN_ENABLED'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
     if ($virusScanEnabled) {
@@ -144,25 +219,6 @@ try {
             // Soft fail: continue upload with warning in log
         }
     }
-
-    // Upload directory — scoped to the current tenant
-    $tenantId  = TenantContext::getTenantId();
-    $uploadsRoot = realpath(__DIR__ . '/../../uploads');
-    if ($uploadsRoot === false) {
-        throw new RuntimeException('Upload-Verzeichnis nicht verfügbar.', 500);
-    }
-    $uploadDir = $uploadsRoot . '/tenant-' . $tenantId;
-    if (!is_dir($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
-
-    // Generate safe filename: {anmeldung_id}_{sanitized_name}.{validated_ext}
-    $originalName = basename($file['name']);
-    $nameWithoutExt = FilenameSanitizer::sanitizeStem(pathinfo($originalName, PATHINFO_FILENAME));
-
-    // Force the validated extension (prevents double extension attacks like evil.php.jpg)
-    $safeFilename = $anmeldungId . '_' . $nameWithoutExt . '.' . $extension;
-    $targetPath = $uploadDir . '/' . $safeFilename;
 
     // Move uploaded file
     if (!move_uploaded_file($file['tmp_name'], $targetPath)) {

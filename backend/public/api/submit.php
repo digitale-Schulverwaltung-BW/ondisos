@@ -20,6 +20,7 @@ use App\Services\PdfTokenService;
 use App\Services\RateLimiter;
 use App\Config\FormConfig;
 use App\Config\TenantContext;
+use App\Utils\ClientIdentity;
 use App\Utils\DataFormatter;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -48,7 +49,7 @@ if (!empty($tenant['origin'])) {
     if ($requestOrigin === $tenant['origin']) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
     }
 } else {
     // Tenant origin is NULL — fall back to global ALLOWED_ORIGINS
@@ -58,7 +59,7 @@ if (!empty($tenant['origin'])) {
     if (in_array($requestOrigin, $allowedOrigins, true)) {
         header('Access-Control-Allow-Origin: ' . $requestOrigin);
         header('Access-Control-Allow-Methods: POST, OPTIONS');
-        header('Access-Control-Allow-Headers: Content-Type, X-Signature');
+        header('Access-Control-Allow-Headers: Content-Type, X-Signature, X-Ondisos-Client');
     }
 }
 
@@ -90,9 +91,9 @@ if ($rateLimitEnabled) {
         $rateLimitWindow
     );
 
-    // Use robust fingerprinting (IP + hashed User-Agent + Accept-Language)
-    // This prevents bypass via User-Agent rotation attacks
-    $identifier = RateLimiter::generateFingerprint($_SERVER);
+    // Per visitor: the frontend forwards a pseudonymous client id (X-Ondisos-Client). Without it
+    // (older frontend) all visitors would share one bucket, see ClientIdentity.
+    $identifier = ClientIdentity::fingerprint($_SERVER, $tenantId);
 
     if (!$rateLimiter->isAllowed($identifier)) {
         $retryAfter = $rateLimiter->getRetryAfter($identifier);

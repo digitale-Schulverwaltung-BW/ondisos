@@ -48,6 +48,31 @@ class BackendApiClient
     }
 
     /**
+     * Pseudonyme Kennung des Besuchers für das Rate-Limit des Backends.
+     *
+     * Beim Backend kommen alle Anfragen vom Frontend-Server an; ohne diese Kennung teilten sich
+     * alle Besucher einen Zähler. HMAC der Client-IP mit dem Tenant-Secret: nicht umkehrbar
+     * (kein Durchprobieren des IPv4-Raums) und zwischen Tenants nicht vergleichbar.
+     * Sie dient nur der Begrenzung, nicht der Authentifizierung.
+     */
+    private function clientId(): ?string
+    {
+        $ip = \Frontend\Utils\ClientIp::get();
+
+        return filter_var($ip, FILTER_VALIDATE_IP) !== false
+            ? hash_hmac('sha256', 'client:' . $ip, $this->apiSecret)
+            : null;
+    }
+
+    /** @return list<string> */
+    private function clientHeader(): array
+    {
+        $id = $this->clientId();
+
+        return $id === null ? [] : ['X-Ondisos-Client: ' . $id];
+    }
+
+    /**
      * Submit anmeldung to backend
      *
      * @param array|null $pdfConfig PDF configuration from frontend forms-config (optional)
@@ -88,11 +113,11 @@ class BackendApiClient
             CURLOPT_POSTFIELDS => $body,
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT => 30,
-            CURLOPT_HTTPHEADER => [
+            CURLOPT_HTTPHEADER => array_merge([
                 'Content-Type: application/json',
                 'Accept: application/json',
                 'X-Signature: ' . $this->sign($body),
-            ]
+            ], $this->clientHeader())
         ]);
 
         $response = curl_exec($ch);
@@ -186,7 +211,7 @@ class BackendApiClient
                 CURLOPT_POSTFIELDS => $postData,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_TIMEOUT => 60,
-                CURLOPT_HTTPHEADER => ['X-Signature: ' . $signature],
+                CURLOPT_HTTPHEADER => array_merge(['X-Signature: ' . $signature], $this->clientHeader()),
             ]);
 
             $response = curl_exec($ch);

@@ -47,6 +47,18 @@ Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und 
 | SQL-Injection über den Formular-Filter beim Export | Filter wird validiert (Repository und Service) | `AnmeldungValidator::validateFormularName()` |
 | Directory Traversal beim Upload und Download | `basename()`, Dateinamen-Validierung, Pfad muss im Tenant-Verzeichnis liegen | `upload.php`, `DownloadController` |
 
+## Missbrauchsschutz der öffentlichen Anmeldung (3.1.2)
+
+| Maßnahme | Wirkung | Wo |
+|---|---|---|
+| Besucher-Kennung für das Rate-Limit | Das Frontend schickt `X-Ondisos-Client` (HMAC der Client-IP mit dem Tenant-Secret, nicht umkehrbar). Das Backend zählt je Besucher statt je Frontend-Server: ein Angreifer sperrt nicht mehr den Kanal für alle. Die Kennung ist nicht signiert, sie begrenzt nur. | `BackendApiClient`, `App\Utils\ClientIdentity`, `submit.php`, `upload.php` |
+| Honeypot-Feld `website_url` | Unsichtbares Feld, das die Survey-Handler anlegen. Ein Treffer verwirft die Anmeldung still (Antwort: Erfolg, kein Backend-Aufruf, keine Mail). Schützt vor Bots, die alle Felder befüllen; nicht vor Bots, die den Endpunkt direkt ansprechen (dort greift das Rate-Limit). | `Frontend\Utils\Honeypot`, `save.php`, `class-ajax-handler.php`, `survey-handler*.js` |
+| Rate-Limit für Uploads | je Besucher (`UPLOAD_RATE_LIMIT_MAX` je `UPLOAD_RATE_LIMIT_WINDOW`) | `upload.php` |
+| Feldname gegen die Survey | Der Upload muss zu einer Datei-Frage des veröffentlichten Formulars gehören (`foto` oder `foto_0`). Formulare, deren Survey nur als Datei im Frontend liegt, werden hier nicht geprüft. | `App\Services\UploadPolicy` |
+| Grenzen je Anmeldung | höchstens `UPLOAD_MAX_FILES_PER_ANMELDUNG` Dateien (20) und `UPLOAD_MAX_BYTES_PER_ANMELDUNG` (50 MB); Überschreiben desselben Namens zählt nicht doppelt; Antwort 429 und Audit-Eintrag | `upload.php`, `UploadPolicy::capError()` |
+
+Offen: Der Zähler je Besucher bleibt umgehbar, wer viele IP-Adressen hat (Botnetz). Dagegen helfen nur Captcha oder vorgeschaltete Filter; bewusst nicht vorgesehen. Die Signatur des Uploads deckt den Dateiinhalt weiterhin nicht ab (F-06).
+
 ## Bewusst akzeptierte Restrisiken
 
 Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):

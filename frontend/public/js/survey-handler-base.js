@@ -84,6 +84,33 @@ class SurveyHandlerBase {
     }
 
     /**
+     * Honeypot: legt ein für Menschen unsichtbares Feld im Formular-Container an.
+     * Bots, die alle Felder befüllen, füllen es mit; der Server verwirft solche Anmeldungen.
+     * Der Feldname muss zu App\\Utils\\Honeypot::FIELD (PHP) passen.
+     *
+     * @param {Element} container - Element, in das die Survey gerendert wurde
+     */
+    addHoneypot(container) {
+        if (!container || container.querySelector('input[name="website_url"]')) return;
+        const wrap = document.createElement('div');
+        wrap.setAttribute('aria-hidden', 'true');
+        wrap.style.cssText = 'position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.name = 'website_url';
+        input.tabIndex = -1;
+        input.autocomplete = 'off';
+        wrap.appendChild(input);
+        container.appendChild(wrap);
+        this._honeypot = input;
+    }
+
+    /** Wert des Honeypot-Feldes (leer bei Menschen). */
+    honeypotValue() {
+        return this._honeypot ? this._honeypot.value : '';
+    }
+
+    /**
      * Convert a base64 data URL to a Blob
      */
     dataUrlToBlob(dataUrl) {
