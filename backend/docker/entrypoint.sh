@@ -140,5 +140,15 @@ echo "🌐 Backend available at: http://localhost:9080"
 echo "📊 Admin interface: http://localhost:9080/index.php"
 echo ""
 
+# Entwicklung: Fehler anzeigen und geänderte Dateien sofort laden (php.ini ist auf Produktion ausgelegt)
+if [ "${APP_ENV:-production}" = "development" ]; then
+    cat > /usr/local/etc/php/conf.d/zz-dev.ini <<'DEVINI'
+display_errors = On
+display_startup_errors = On
+opcache.validate_timestamps = 1
+opcache.revalidate_freq = 0
+DEVINI
+fi
+
 # Execute CMD (apache2-foreground)
 exec "$@"

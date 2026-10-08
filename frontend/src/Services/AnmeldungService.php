@@ -63,13 +63,14 @@ class AnmeldungService
             'name' => $name,
             'email' => $email,
             'data' => $surveyData,
-            'metadata' => array_merge([
+            // Serverseitige Werte zuletzt: der Client darf sie nicht überschreiben
+            'metadata' => array_merge($metadata, [
                 'formular' => $formKey,
                 'version' => $metadata['version'] ?? 'unknown',
                 'submitted_at' => date('c'),
                 'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? null,
                 'ip_address' => $this->getClientIp()
-            ], $metadata)
+            ])
         ];
 
         $warnings = [];

@@ -91,10 +91,8 @@ services:
     image: mysql:8.0
     restart: unless-stopped  # Auto-start after reboot
     ports:
-      # DEV: Expose on all interfaces
-      - "3306:3306"
-      # PRODUCTION: Expose only on localhost (uncomment below, comment above)
-      # - "127.0.0.1:3306:3306"
+      # Nur lokal erreichbar (Standardzugangsdaten!). Für den Zugriff aus dem Netz bewusst ändern.
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
@@ -147,7 +145,7 @@ services:
     image: phpmyadmin:latest
     restart: "no"  # Do not auto-start (dev only)
     ports:
-      - "8082:80"
+      - "127.0.0.1:8082:80"
     environment:
       - PMA_HOST=mysql
       - PMA_PORT=3306

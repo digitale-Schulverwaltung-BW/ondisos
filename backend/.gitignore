@@ -9,7 +9,8 @@
 /logs/
 
 # Uploads
-/uploads/
+/uploads/*
+!/uploads/.htaccess
 
 # School lookup CSV (contains school data, place at backend/data/schulen.csv)
 /data/schulen.csv

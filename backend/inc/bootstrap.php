@@ -92,8 +92,16 @@ if (!$multiTenantEnabled) {
 // Tenant switcher — platform admin only, runs on every admin page (all include bootstrap.php)
 // Must run AFTER the TenantContext initialization block above so it can override the context.
 if (($multiTenantEnabled ?? false) && !empty($_SESSION['is_platform_admin'])) {
-    if (isset($_GET['switch_tenant'])) {
-        $switchVal = (int)$_GET['switch_tenant'];
+    // POST mit CSRF-Token: ein Link darf den Mandanten nicht umschalten
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['switch_tenant'])) {
+        require_once __DIR__ . '/csrf.php';
+        try {
+            csrf_validate();
+        } catch (InvalidArgumentException $e) {
+            http_response_code(403);
+            exit('Ungültiger Sicherheitstoken. Bitte laden Sie die Seite neu.');
+        }
+        $switchVal = (int)$_POST['switch_tenant'];
         if ($switchVal === 0) {
             // Switch to "All tenants" view
             unset($_SESSION['switched_tenant_id']);
@@ -103,8 +111,8 @@ if (($multiTenantEnabled ?? false) && !empty($_SESSION['is_platform_admin'])) {
             $_SESSION['switched_tenant_id'] = $switchVal;
             App\Config\TenantContext::initialize($switchVal);
         }
-        // PRG: redirect to current page without switch_tenant in query string
-        $cleanUrl = strtok($_SERVER['REQUEST_URI'], '?');
+        // PRG: redirect to current page (GET)
+        $cleanUrl = $_SERVER['REQUEST_URI'];
         header('Location: ' . $cleanUrl);
         exit;
     }

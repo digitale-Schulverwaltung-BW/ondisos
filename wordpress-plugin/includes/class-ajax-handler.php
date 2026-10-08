@@ -57,6 +57,13 @@ class Ajax_Handler
             // 2. Get and validate form key
             $form_key = sanitize_key($_POST['form_key'] ?? '');
 
+            // 3. Verify WordPress nonce first (replaces CSRF token): unknown form keys are not distinguishable before this check
+            $nonce = sanitize_text_field($_POST['nonce'] ?? '');
+
+            if (!wp_verify_nonce($nonce, 'ondisos_submit_' . $form_key)) {
+                throw new \RuntimeException('Sicherheitsvalidierung fehlgeschlagen', 403);
+            }
+
             if (!Form_Config_Loader::ensure($form_key)) {
                 // Backend unreachable / tenant rejected is a service problem, not a client error (details: PHP error log)
                 if ((Form_Config_Loader::failure($form_key)['reason'] ?? 'not_found') !== 'not_found') {
@@ -64,13 +71,6 @@ class Ajax_Handler
                 }
 
                 throw new \RuntimeException('Unbekanntes Formular', 400);
-            }
-
-            // 3. Verify WordPress nonce (replaces CSRF token)
-            $nonce = sanitize_text_field($_POST['nonce'] ?? '');
-
-            if (!wp_verify_nonce($nonce, 'ondisos_submit_' . $form_key)) {
-                throw new \RuntimeException('Sicherheitsvalidierung fehlgeschlagen', 403);
             }
 
             // 4. Get survey data (WordPress adds slashes, must remove)

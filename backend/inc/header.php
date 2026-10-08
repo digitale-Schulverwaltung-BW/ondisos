@@ -1,5 +1,6 @@
 <?php
 // admin/inc/header.php
+require_once __DIR__ . '/csrf.php';
 ?>
 <!DOCTYPE html>
 <html lang="de">
@@ -96,19 +97,25 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item<?= $switchedId === null ? ' active' : '' ?>"
-                                   href="<?= htmlspecialchars($currentPage) ?>?switch_tenant=0">
-                                    Alle Tenants
-                                </a>
+                                <form method="POST" action="<?= htmlspecialchars($currentPage) ?>" class="m-0">
+                                    <?php csrf_field(); ?>
+                                    <button type="submit" name="switch_tenant" value="0"
+                                            class="dropdown-item<?= $switchedId === null ? ' active' : '' ?>">
+                                        Alle Tenants
+                                    </button>
+                                </form>
                             </li>
                             <?php if (!empty($allTenants)): ?>
                                 <li><hr class="dropdown-divider"></li>
                                 <?php foreach ($allTenants as $t): ?>
                                     <li>
-                                        <a class="dropdown-item<?= ((int)($switchedId ?? -1) === (int)$t['id']) ? ' active' : '' ?>"
-                                           href="<?= htmlspecialchars($currentPage) ?>?switch_tenant=<?= (int)$t['id'] ?>">
-                                            <?= htmlspecialchars($t['name']) ?>
-                                        </a>
+                                        <form method="POST" action="<?= htmlspecialchars($currentPage) ?>" class="m-0">
+                                            <?php csrf_field(); ?>
+                                            <button type="submit" name="switch_tenant" value="<?= (int)$t['id'] ?>"
+                                                    class="dropdown-item<?= ((int)($switchedId ?? -1) === (int)$t['id']) ? ' active' : '' ?>">
+                                                <?= htmlspecialchars($t['name']) ?>
+                                            </button>
+                                        </form>
                                     </li>
                                 <?php endforeach; ?>
                             <?php endif; ?>

@@ -17,6 +17,10 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 **Sicherheit (Audit)**
 - ✅ Login-Drosselung (`LoginThrottle`): 5 Fehlversuche je IP und Benutzername, 20 je IP in 15 Minuten, Audit-Ereignis `login_blocked`; gleiche Laufzeit bei unbekanntem Benutzer (Dummy-Hash)
 - ✅ Session-Cookies: `HttpOnly`, `SameSite=Lax` und `Secure` (Backend über `SESSION_SECURE`, Frontend automatisch bei HTTPS) werden im Code gesetzt (`App\Utils\SessionCookie`), nicht nur in der Docker-`php.ini`
+- ✅ Excel-Export (setzt ggf. den Status) und Mandantenwechsel nur noch per POST mit CSRF-Token; der Mandantenwechsel war ein GET-Link
+- ✅ Metadaten der Anmeldung (`submitted_at`, `ip_address`, `user_agent`) kann der Browser nicht mehr überschreiben; WordPress-Plugin prüft den Nonce vor dem Formularschlüssel
+- ✅ PDF-Logo nur aus `templates/pdf/assets` und `uploads` (kein beliebiges Bild des Servers); `uploads/.htaccess` und Apache-Konfiguration sperren direkten Zugriff
+- ✅ Docker: MySQL und phpMyAdmin nur an `127.0.0.1`; `php.ini` ist auf Produktion ausgelegt (keine Fehleranzeige, OPcache ohne Zeitstempelprüfung), die Entwicklungswerte setzt der Entrypoint bei `APP_ENV=development`
 - ✅ Excel-Export schreibt Eingaben immer als Text (keine Formel-Injection); CSRF-Token für „Jetzt manuell ausführen“ im Dashboard; SVG-Uploads nicht mehr erlaubt; Downloads mit `nosniff`, Inline-Anzeige nur für PDF und Bilder
 
 **Funktionen**

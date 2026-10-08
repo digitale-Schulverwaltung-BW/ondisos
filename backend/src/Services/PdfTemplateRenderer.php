@@ -97,6 +97,25 @@ class PdfTemplateRenderer
     }
 
     /**
+     * Liegt der Pfad (nach Auflösung von Symlinks und "..") in templates/pdf/assets oder uploads?
+     */
+    public static function isAllowedLogoPath(string $path): bool
+    {
+        $real = realpath($path);
+        if ($real === false) {
+            return false;
+        }
+        foreach ([__DIR__ . '/../../templates/pdf/assets', __DIR__ . '/../../uploads'] as $base) {
+            $baseReal = realpath($base);
+            if ($baseReal !== false && str_starts_with($real, $baseReal . DIRECTORY_SEPARATOR)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Load logo data with dimensions
      *
      * Optimizes logo by resizing and converting to JPEG if needed.
@@ -122,6 +141,12 @@ class PdfTemplateRenderer
 
         if (!file_exists($fullPath)) {
             error_log("PDF logo not found: {$fullPath}");
+            return ['dataUri' => null, 'width' => null, 'height' => null];
+        }
+
+        // Nur Logos aus den Asset- und Upload-Verzeichnissen einbetten (kein beliebiges Bild des Servers)
+        if (!self::isAllowedLogoPath($fullPath)) {
+            error_log("PDF logo outside allowed directories: {$fullPath}");
             return ['dataUri' => null, 'width' => null, 'height' => null];
         }
 

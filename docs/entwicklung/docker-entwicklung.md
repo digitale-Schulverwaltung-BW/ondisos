@@ -23,7 +23,7 @@ Das Frontend bekommt `TENANT_SLUG=default` und das Secret von Tenant 1 automatis
 | Backend | http://localhost:9080 | ohne Login (`AUTH_ENABLED=false`); API unter `/api/` |
 | Frontend | http://localhost:8081/index.php?form=bs | nur mit `--profile dev` |
 | phpMyAdmin | http://localhost:8082 | nur mit `--profile dev`, nie in Produktion |
-| MySQL | `localhost:3306` | in der Entwicklung veröffentlicht; Zugang `anmeldung` / `secret123`, Root `rootpass123` (Standardwerte der `.env.example`) |
+| MySQL | `localhost:3306` | in der Entwicklung nur auf `127.0.0.1` veröffentlicht; Zugang `anmeldung` / `secret123`, Root `rootpass123` (Standardwerte der `.env.example`) |
 | ClamAV | – | nur mit `--profile clamav` |
 
 `APP_ENV=development` und `APP_DEBUG=true` sind gesetzt; bekannte Standard-Secrets werden hier akzeptiert (in Produktion nicht).

@@ -335,8 +335,24 @@ function exportExcel() {
     const checkboxes = document.querySelectorAll('.row-checkbox:checked');
 
     if (checkboxes.length === 0) {
-        // Nothing selected: fall back to regular GET export (exports all / filtered)
-        window.location.href = 'excel_export.php?<?= http_build_query($_GET) ?>';
+        // Nothing selected: export all / filtered (POST with CSRF token)
+        const exportForm = document.createElement('form');
+        exportForm.method = 'POST';
+        exportForm.action = 'excel_export.php';
+        const fields = {
+            csrf_token: document.getElementById('bulkForm').querySelector('[name=csrf_token]').value,
+            form: <?= json_encode((string)($_GET['form'] ?? ''), JSON_HEX_TAG | JSON_HEX_AMP) ?>
+        };
+        for (const [name, value] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = value;
+            exportForm.appendChild(input);
+        }
+        document.body.appendChild(exportForm);
+        exportForm.submit();
+        document.body.removeChild(exportForm);
         return;
     }
 

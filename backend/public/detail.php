@@ -299,10 +299,13 @@ require __DIR__ . '/../inc/header.php';
             <?= M::get('ui.back_to_overview') ?>
         </a>
 
-        <a href="excel_export.php?id=<?= $anmeldung->id ?>"
-           class="btn btn-success">
-            <?= M::get('ui.buttons.excel_export') ?>
-        </a>
+        <form method="POST" action="excel_export.php" class="d-inline">
+            <?php csrf_field(); ?>
+            <input type="hidden" name="id" value="<?= $anmeldung->id ?>">
+            <button type="submit" class="btn btn-success">
+                <?= M::get('ui.buttons.excel_export') ?>
+            </button>
+        </form>
 
         <a href="pdf/admin_download.php?id=<?= $anmeldung->id ?>"
            class="btn btn-secondary"

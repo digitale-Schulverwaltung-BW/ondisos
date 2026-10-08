@@ -47,4 +47,17 @@ Ergebnis einer Sicherheitsdurchsicht; die Maßnahmen sind im Code vorhanden und 
 | SQL-Injection über den Formular-Filter beim Export | Filter wird validiert (Repository und Service) | `AnmeldungValidator::validateFormularName()` |
 | Directory Traversal beim Upload und Download | `basename()`, Dateinamen-Validierung, Pfad muss im Tenant-Verzeichnis liegen | `upload.php`, `DownloadController` |
 
+## Bewusst akzeptierte Restrisiken
+
+Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):
+
+| Thema | Einordnung |
+|---|---|
+| `GET /api/form-config.php` ohne Signatur | liefert u. a. `notify_email`; die Antworten 401/404 verraten, ob ein Tenant-Slug existiert. Keine Geheimnisse in `config_json`. |
+| WordPress-Plugin: Tenant-Secret in `wp_options` | Das Secret liegt im Klartext in der WordPress-Datenbank (die Oberfläche zeigt es nie wieder an). Wer Code in WordPress ausführen oder die Datenbank lesen kann, kann Anmeldungen signieren: bei Verdacht das Secret im Backend erneuern. |
+| Vorbefüllung per `?prefill=<base64>` | Personenbezogene Daten stehen in der URL (Browser-Verlauf, Proxy- und Access-Logs, Referer). Nur verwenden, wenn die Schule das so will; keine sensiblen Felder vorbefüllen. |
+| PDF-Links (Token) | Der Link ist ein Bearer-Link: 30 Minuten gültig, nicht einmalig, nicht widerrufbar. Wer ihn in einer E-Mail oder einem Log findet, kann das PDF laden. |
+| E-Mail über PHP `mail()` | keine SMTP-Authentifizierung und keine TLS-Kontrolle (SMTP ist geplant). |
+| Keine Content-Security-Policy für Admin-Oberfläche und Formularseite | Nur der Vorschau-Frame hat eine CSP. Eine Standard-CSP ist als Härtung offen. |
+
 Spätere Maßnahmen (Tenant-Isolierung, signierte API, Secret-Policy, Härtung des Formular-Editors) stehen im [Changelog](changelog.md).

@@ -198,9 +198,12 @@ require __DIR__ . '/../inc/header.php';
                 <a href="index.php" class="btn btn-secondary">
                     <?= M::get('ui.dashboard.all_anmeldungen', '📋 Alle Anmeldungen') ?>
                 </a>
-                <a href="excel_export.php" class="btn btn-success">
-                    <?= M::get('ui.buttons.excel_export') ?>
-                </a>
+                <form method="POST" action="excel_export.php" class="d-inline">
+                    <?php csrf_field(); ?>
+                    <button type="submit" class="btn btn-success">
+                        <?= M::get('ui.buttons.excel_export') ?>
+                    </button>
+                </form>
             </div>
         </div>
     </div>

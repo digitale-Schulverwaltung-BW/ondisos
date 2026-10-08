@@ -147,7 +147,11 @@ try {
 
     // Upload directory — scoped to the current tenant
     $tenantId  = TenantContext::getTenantId();
-    $uploadDir = realpath(__DIR__ . '/../../uploads') . '/tenant-' . $tenantId;
+    $uploadsRoot = realpath(__DIR__ . '/../../uploads');
+    if ($uploadsRoot === false) {
+        throw new RuntimeException('Upload-Verzeichnis nicht verfügbar.', 500);
+    }
+    $uploadDir = $uploadsRoot . '/tenant-' . $tenantId;
     if (!is_dir($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }

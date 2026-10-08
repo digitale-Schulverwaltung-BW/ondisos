@@ -7,10 +7,13 @@ require_once __DIR__ . '/../inc/bootstrap.php';
 require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 
-// CSRF check for POST requests
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    csrf_validate();
+// Der Export setzt (je nach AUTO_MARK_AS_READ) den Status auf "exportiert": nur per POST mit CSRF-Token
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    die('Method Not Allowed');
 }
+csrf_validate();
 
 use App\Repositories\AnmeldungRepository;
 use App\Services\ExportService;
@@ -37,16 +40,14 @@ try {
         }
     }
 
-    // Check for single ID export (GET only)
-    $id = isset($_GET['id']) && $_GET['id'] !== ''
-        ? (int)$_GET['id']
+    // Single ID export
+    $id = isset($_POST['id']) && $_POST['id'] !== ''
+        ? (int)$_POST['id']
         : null;
 
-    // Get filter from request (GET for normal export, POST for selected export)
+    // Optional form filter
     $formularFilter = null;
-    $rawForm = $_SERVER['REQUEST_METHOD'] === 'POST'
-        ? ($_POST['form'] ?? '')
-        : ($_GET['form'] ?? '');
+    $rawForm = (string)($_POST['form'] ?? '');
     if ($rawForm !== '') {
         $formularFilter = trim($rawForm);
     }
