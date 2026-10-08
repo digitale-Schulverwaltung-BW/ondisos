@@ -43,6 +43,9 @@ if (file_exists($envFile)) {
 // Start session early so TenantContext can read session vars below.
 // Guard: CLI (PHPUnit) has no sessions; also skip if already active.
 if (php_sapi_name() !== 'cli' && session_status() === PHP_SESSION_NONE) {
+    App\Utils\SessionCookie::configure(
+        filter_var(App\Config\EnvLoader::get('SESSION_SECURE', 'true'), FILTER_VALIDATE_BOOLEAN)
+    );
     session_start();
 }
 

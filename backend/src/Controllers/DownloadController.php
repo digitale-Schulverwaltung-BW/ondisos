@@ -80,7 +80,11 @@ class DownloadController
         header('Content-Type: ' . $mimeType);
 
         // Inline for browser viewing (PDFs, images) or attachment for download
-        $disposition = $inline ? 'inline' : 'attachment';
+        // (nur Formate, die der Browser nicht als aktive Inhalte ausführt)
+        $disposition = ($inline && in_array($extension, ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp'], true))
+            ? 'inline'
+            : 'attachment';
+        header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: ' . $disposition . '; filename="' . $this->sanitizeFileName($fileName) . '"');
 
         header('Content-Length: ' . $fileSize);

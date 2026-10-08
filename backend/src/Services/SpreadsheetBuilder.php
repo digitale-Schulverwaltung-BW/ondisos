@@ -6,6 +6,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Anmeldung;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
@@ -162,12 +163,12 @@ class SpreadsheetBuilder
 
             // Only add Formular column if we're exporting multiple forms
             if ($includeFormular) {
-                $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formular);
+                $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $anmeldung->formular);
             }
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->formularVersion ?? '');
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->name ?? '');
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->email ?? '');
-            $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->status);
+            $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $anmeldung->formularVersion ?? '');
+            $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $anmeldung->name ?? '');
+            $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $anmeldung->email ?? '');
+            $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $anmeldung->status);
             $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $anmeldung->createdAt->format('d.m.Y H:i:s'));
 
             // Dynamic columns from data (via ExportService für Teilort-Enrichment)
@@ -192,11 +193,20 @@ class SpreadsheetBuilder
                     $formatted = $this->exportService->formatCellValue($value);
                 }
 
-                $sheet->setCellValue($this->colLetter($colNum++) . $rowNum, $formatted);
+                $this->setText($sheet, $this->colLetter($colNum++) . $rowNum, $formatted);
             }
 
             $rowNum++;
         }
+    }
+
+    /**
+     * Schreibt Benutzerdaten immer als Text. So wertet Excel/LibreOffice
+     * Eingaben wie "=HYPERLINK(...)" nicht als Formel aus (Formula Injection).
+     */
+    private function setText($sheet, string $coordinate, string $value): void
+    {
+        $sheet->setCellValueExplicit($coordinate, $value, DataType::TYPE_STRING);
     }
 
     /**

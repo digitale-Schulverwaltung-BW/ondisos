@@ -13,7 +13,7 @@ class AnmeldungValidator
 
     /**
      * Allowed MIME types and their corresponding file extensions
-     * NOTE: doc/docx excluded due to macro security risks
+     * NOTE: doc/docx excluded due to macro security risks, SVG due to active content (Script)
      */
     private const ALLOWED_MIME_TYPES = [
         'application/pdf' => ['pdf'],
@@ -21,7 +21,6 @@ class AnmeldungValidator
         'image/png' => ['png'],
         'image/gif' => ['gif'],
         'image/webp' => ['webp'],
-        'image/svg+xml' => ['svg'],
         // Office documents excluded by default for security (can contain macros)
         // Uncomment if needed:
         // 'application/msword' => ['doc'],

@@ -172,7 +172,7 @@ require __DIR__ . '/../inc/header.php';
                                                 $name = $file['name'] ?? 'unnamed';
                                                 $type = $file['type'] ?? '';
 
-                                                if (str_starts_with($content, 'data:image/')) {
+                                                if (preg_match('#^data:image/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/=]+$#', $content)) {
                                                     echo '<div class="mb-2">';
                                                     echo '<img src="' . htmlspecialchars($content) . '" alt="' . htmlspecialchars($name) . '" class="img-fluid" style="max-width: 100%; max-height: 400px;">';
                                                     echo '<br><small class="text-muted">' . htmlspecialchars($name) . '</small>';
@@ -180,12 +180,16 @@ require __DIR__ . '/../inc/header.php';
                                                     echo '<i class="bi bi-download"></i> ' . M::get('ui.buttons.download');
                                                     echo '</a>';
                                                     echo '</div>';
-                                                } else {
+                                                } elseif (preg_match('#^data:application/pdf;base64,[A-Za-z0-9+/=]+$#', $content)) {
                                                     echo '<div class="mb-2">';
                                                     echo '<a href="' . htmlspecialchars($content) . '" download="' . htmlspecialchars($name) . '" class="btn btn-sm btn-outline-primary">';
                                                     echo '<i class="bi bi-download"></i> ' . htmlspecialchars($name);
                                                     echo '</a>';
                                                     echo '</div>';
+                                                } else {
+                                                    // Andere Altdaten (base64) nicht als Link ausgeben: Typ ist vom Absender kontrolliert
+                                                    echo '<div class="mb-2"><span class="badge bg-light text-dark border">'
+                                                        . htmlspecialchars($name) . '</span></div>';
                                                 }
                                             }
                                         } else {
