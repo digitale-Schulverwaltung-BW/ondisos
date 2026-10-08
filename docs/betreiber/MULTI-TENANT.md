@@ -133,6 +133,18 @@ Das Passwort geben Sie dem Schul-Admin getrennt vom API-Schlüssel weiter. Diese
 `tenants.php` antwortet mit 403, Einträge anderer Schulen mit 404 (und einem `idor_attempt` im Audit-Log). In der Liste der Administratoren lässt sich jeder Zugang **deaktivieren** (und wieder aktivieren)
 und das **Passwort zurücksetzen**.
 
+### Tenant löschen
+
+Auf der Tenant-Detailseite (`tenants.php?id=<id>`) ganz unten unter **„Tenant löschen"**. Das Löschen ist endgültig und nur für Plattform-Admins möglich, und nur wenn alle Bedingungen erfüllt sind:
+
+- der Tenant ist **inaktiv** (Haken bei „Tenant aktiv" entfernen und speichern),
+- er hat **keine Formulare** mehr (unter *Formulare* löschen),
+- er hat **keine Anmeldungen** mehr, **auch nicht im Papierkorb**. Sie würden sonst stillschweigend mitgelöscht, deshalb sperrt die Oberfläche das Löschen, bis sie entfernt sind.
+
+Der Tenant `default` (Tenant 1) lässt sich nie löschen. Solange eine Bedingung fehlt, ist der Button deaktiviert und nennt den Grund. Beim Löschen verschwinden außerdem die Administratoren,
+der API-Schlüssel und das Upload-Verzeichnis `uploads/tenant-<id>/` (Logo, Akzentfarbe). Das Audit-Log vermerkt das Ereignis `tenant_deleted` mit Slug und Name.
+Ein dazugehöriges Frontend bekommt danach `401`; tragen Sie es dort aus.
+
 ---
 
 ## Frontend für einen Tenant konfigurieren

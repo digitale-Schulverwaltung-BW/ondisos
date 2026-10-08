@@ -27,6 +27,7 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 - ✅ Excel-Export schreibt Eingaben immer als Text (keine Formel-Injection); CSRF-Token für „Jetzt manuell ausführen“ im Dashboard; SVG-Uploads nicht mehr erlaubt; Downloads mit `nosniff`, Inline-Anzeige nur für PDF und Bilder
 
 **Funktionen**
+- ✅ Tenant löschen (Plattform-Admin, `tenants.php`): nur inaktiv, ohne Formulare und ohne Anmeldungen (auch Papierkorb; die Fremdschlüssel kaskadieren), Tenant 1 nie. Prüfung unter Zeilensperre in `TenantRepository::delete()` (`TenantDeletionPolicy`), danach Upload-Verzeichnis entfernen (`TenantUploadCleaner`) und Audit-Ereignis `tenant_deleted`
 - ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
 
 - ✅ Unterschriftsfelder (SurveyJS `signaturepad`, Wert als PNG/JPEG-Data-URI): Detailansicht und PDF zeigen das Bild, Excel und Benachrichtigungs-Mail den Platzhalter „[Unterschrift]“; `submit.php` lehnt andere `data:`-Werte in Feldern ab (`DataFormatter::isImageDataUri()`, höchstens 500.000 Zeichen, kein SVG)

@@ -11,6 +11,9 @@ require_once __DIR__ . '/../inc/form_copy.php';
 
 use App\Repositories\TenantRepository;
 use App\Repositories\TenantAdminRepository;
+use App\Services\AuditLogger;
+use App\Services\TenantDeletionPolicy;
+use App\Services\TenantUploadCleaner;
 
 // ---------------------------------------------------------------------------
 // Platform-admin guard
@@ -187,6 +190,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminRepo->resetPassword($adminId, $hash);
         $_SESSION['flash'] = ['new_password' => $plainPass];
         header('Location: tenants.php?id=' . $id . '&password_reset=1');
+        exit;
+    }
+
+    // ------------------------------------------------------------------
+    // 7. Delete tenant (inactive, no forms, no submissions)
+    // ------------------------------------------------------------------
+    elseif ($action === 'delete_tenant' && $id !== null) {
+        $victim = $tenantRepo->findById($id);
+        try {
+            $tenantRepo->delete($id);
+        } catch (\DomainException $e) {
+            $_SESSION['flash'] = ['delete_error' => $e->getMessage()];
+            header('Location: tenants.php?id=' . $id);
+            exit;
+        }
+        if ($victim !== null) {
+            AuditLogger::tenantDeleted($id, (string)$victim['slug'], (string)$victim['name']);
+        }
+        $uploadsRemoved = (new TenantUploadCleaner())->remove($id);
+        $_SESSION['flash'] = $uploadsRemoved ? [] : ['delete_warning' => 'Der Tenant wurde gelöscht, das Upload-Verzeichnis uploads/tenant-' . $id . ' konnte aber nicht vollständig entfernt werden.'];
+        header('Location: tenants.php?deleted=1');
         exit;
     }
 }
@@ -464,6 +488,38 @@ if ($id !== null && $id > 0):
         </div>
     </div>
 
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Delete tenant                                                         -->
+    <!-- ------------------------------------------------------------------ -->
+    <?php
+    $submissionCount = (function () use ($id): int {
+        $stmt = \App\Config\Database::getConnection()->prepare('SELECT COUNT(*) AS cnt FROM anmeldungen WHERE tenant_id = ?');
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        return (int)($stmt->get_result()->fetch_assoc()['cnt'] ?? 0);
+    })();
+    $deleteBlocker = TenantDeletionPolicy::blocker($id, (bool)$tenant['active'], count($tenantForms), $submissionCount);
+    ?>
+    <div class="card mb-4 border-danger">
+        <div class="card-header text-danger"><h5 class="mb-0">Tenant löschen</h5></div>
+        <div class="card-body">
+            <?php if (!empty($flash['delete_error'])): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($flash['delete_error']) ?></div>
+            <?php endif; ?>
+            <p>Löscht den Tenant endgültig samt Administratoren, API-Schlüssel und Upload-Verzeichnis (Logo, Akzentfarbe). Das lässt sich nicht rückgängig machen.
+                Möglich ist es nur für einen <strong>inaktiven</strong> Tenant ohne <strong>Formulare</strong> und ohne <strong>Anmeldungen</strong> (auch im Papierkorb).</p>
+            <?php if ($deleteBlocker !== null): ?>
+                <p class="text-muted mb-2"><?= htmlspecialchars($deleteBlocker) ?></p>
+            <?php endif; ?>
+            <form method="POST" action="tenants.php?id=<?= $id ?>"
+                  data-confirm="Tenant „<?= htmlspecialchars($tenant['name']) ?>“ (<?= htmlspecialchars((string)$tenant['slug']) ?>) endgültig löschen? Administratoren und API-Schlüssel gehen verloren.">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="delete_tenant">
+                <button type="submit" class="btn btn-danger" <?= $deleteBlocker !== null ? 'disabled' : '' ?>>Tenant löschen</button>
+            </form>
+        </div>
+    </div>
+
 <?php
 // ===========================================================================
 // LIST VIEW (no $id set) + CREATE FORM
@@ -475,6 +531,13 @@ else:
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Tenants</h1>
     </div>
+
+    <?php if (!empty($_GET['deleted'])): ?>
+        <div class="alert alert-success">Tenant wurde gelöscht.</div>
+    <?php endif; ?>
+    <?php if (!empty($flash['delete_warning'])): ?>
+        <div class="alert alert-warning"><?= htmlspecialchars($flash['delete_warning']) ?></div>
+    <?php endif; ?>
 
     <?php if (!empty($createError ?? null)): ?>
         <div class="alert alert-danger"><?= htmlspecialchars($createError) ?></div>

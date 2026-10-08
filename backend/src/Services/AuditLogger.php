@@ -127,6 +127,11 @@ class AuditLogger
         self::log($event, ['form' => $formKey] + $details);
     }
 
+    public static function tenantDeleted(int $tenantId, string $slug, string $name): void
+    {
+        self::log('tenant_deleted', ['deleted_tenant_id' => $tenantId, 'slug' => $slug, 'name' => $name]);
+    }
+
     // =========================================================================
     // Log rotation
     // =========================================================================

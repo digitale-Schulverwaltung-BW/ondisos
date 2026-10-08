@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Config\Database;
+use App\Services\TenantDeletionPolicy;
 use mysqli;
 
 /**
@@ -199,6 +200,55 @@ class TenantRepository
         }
 
         return $rows;
+    }
+
+    /**
+     * Delete a tenant (platform admin only).
+     *
+     * Checks run under a row lock inside a transaction (see TenantDeletionPolicy): tenant 1,
+     * active tenants and tenants with forms or submissions are refused. The remaining rows
+     * (admins, drafts, revisions, resources) go via ON DELETE CASCADE.
+     *
+     * @throws \DomainException with a German reason when the tenant must not be deleted
+     */
+    public function delete(int $id): void
+    {
+        $this->db->begin_transaction();
+        try {
+            $stmt = $this->db->prepare('SELECT id, active FROM tenants WHERE id = ? FOR UPDATE');
+            $stmt->bind_param('i', $id);
+            $stmt->execute();
+            $tenant = $stmt->get_result()->fetch_assoc();
+            if (!$tenant) {
+                throw new \DomainException('Tenant nicht gefunden.');
+            }
+
+            $forms = $this->countFor('form_configs', $id);
+            $submissions = $this->countFor('anmeldungen', $id);
+
+            $reason = TenantDeletionPolicy::blocker($id, (bool)$tenant['active'], $forms, $submissions);
+            if ($reason !== null) {
+                throw new \DomainException($reason);
+            }
+
+            $del = $this->db->prepare('DELETE FROM tenants WHERE id = ?');
+            $del->bind_param('i', $id);
+            $del->execute();
+            $this->db->commit();
+        } catch (\Throwable $e) {
+            $this->db->rollback();
+            throw $e;
+        }
+    }
+
+    /** @param 'form_configs'|'anmeldungen' $table */
+    private function countFor(string $table, int $tenantId): int
+    {
+        $stmt = $this->db->prepare("SELECT COUNT(*) AS cnt FROM {$table} WHERE tenant_id = ?");
+        $stmt->bind_param('i', $tenantId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        return (int)($row['cnt'] ?? 0);
     }
 
     // =========================================================================
