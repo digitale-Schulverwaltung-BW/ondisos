@@ -120,9 +120,9 @@ diese Kennung teilt sich weiter einen Zähler pro Frontend-Server. Die IP im **A
 ## Verwaltungsoberfläche: Verwaltungsnetz oder Login
 
 Die Verwaltungsoberfläche zeigt alle Anmeldungen mit personenbezogenen Daten und erlaubt Export, Löschen und das Ändern der Formulare (auch der Empfänger-Adresse der Benachrichtigungen).
-Wer sie erreicht, braucht deshalb einen Schutz. Es gibt zwei Betriebsarten:
+Wer sie erreicht, braucht deshalb einen Schutz. Standard ist der **Login** (`AUTH_ENABLED=true` in der `.env`-Vorlage und im Produktions-Overlay); ihn auszuschalten ist eine bewusste Entscheidung des Betreibers. Es gibt zwei Betriebsarten:
 
-| | **Modell A: ohne Login** (`AUTH_ENABLED=false`, Einzelbetrieb) | **Modell B: mit Login** (`AUTH_ENABLED=true`; im Mehrschul-Betrieb immer) |
+| | **Modell A: ohne Login** (`AUTH_ENABLED=false`, Einzelbetrieb, bewusst gesetzt) | **Modell B: mit Login** (`AUTH_ENABLED=true`; im Mehrschul-Betrieb immer) |
 |---|---|---|
 | Schutz | allein das **Netz**: nur wer die Seite erreicht, darf alles | Benutzername und Passwort, Sitzung, Rollen (Platform-Admin, Schul-Admin) |
 | Geeignet für | **ausschließlich das Verwaltungsnetz** der Schule: das abgeschottete Netz, in dem **Sekretariat und (erweiterte) Schulleitung** arbeiten | jedes andere Netz; Pflicht, sobald das Backend nicht im Verwaltungsnetz steht |

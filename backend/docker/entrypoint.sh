@@ -41,7 +41,7 @@ SESSION_LIFETIME=${SESSION_LIFETIME:-3600}
 SESSION_SECURE=${SESSION_SECURE:-false}
 
 # Authentication (Optional)
-AUTH_ENABLED=${AUTH_ENABLED:-false}
+AUTH_ENABLED=${AUTH_ENABLED:-true}
 
 # PDF Tokens
 PDF_TOKEN_SECRET=${PDF_TOKEN_SECRET:-change-me-min-32-characters}
@@ -106,6 +106,13 @@ if [ -n "${ADMIN_PASSWORD_HASH:-}" ] \
     echo "⚠️  ADMIN_PASSWORD_HASH looks damaged (length ${#ADMIN_PASSWORD_HASH}, a bcrypt hash has 60)."
     echo "    Wrap it in single quotes in the root .env: ADMIN_PASSWORD_HASH='\$2y\$10\$...'"
     echo "    then run: docker compose up -d backend"
+fi
+
+# Login is on by default: without a password hash nobody can sign in. Say so instead of failing silently.
+if [ "${AUTH_ENABLED:-true}" = "true" ] && [ -z "${ADMIN_PASSWORD_HASH:-}" ]; then
+    echo "⚠️  AUTH_ENABLED=true but ADMIN_PASSWORD_HASH is empty: nobody can log in to the admin interface."
+    echo "    Create a hash: docker compose exec backend php scripts/generate-password-hash.php \"your-password\""
+    echo "    and set ADMIN_PASSWORD_HASH='...' (single quotes) in the root .env."
 fi
 
 # Install/update Composer dependencies

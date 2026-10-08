@@ -28,7 +28,7 @@ Datenisolierung pro Schule (*Tenant*). Dieses Dokument ist die Betriebsanleitung
 
 | Modus | Konfiguration | Beschreibung |
 |-------|--------------|--------------|
-| **Single-Tenant** (Standard) | `MULTI_TENANT_ENABLED=false` (oder nicht gesetzt) | Eine Schule. Kein Login-Zwang (außer `AUTH_ENABLED=true`), keine Tenant-Oberfläche. Alle Anmeldungen gehören zu Tenant 1 ("Default"). |
+| **Single-Tenant** (Standard) | `MULTI_TENANT_ENABLED=false` (oder nicht gesetzt) | Eine Schule. Login über `AUTH_ENABLED` (Standard der Vorlage: `true`; `false` nur im [Verwaltungsnetz](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)), keine Tenant-Oberfläche. Alle Anmeldungen gehören zu Tenant 1 ("Default"). |
 | **Multi-Tenant** | `MULTI_TENANT_ENABLED=true` | Mehrere Schulen. Login ist **erzwungen**; Platform-Admin verwaltet Tenants, Tenant-Admins sehen nur die Daten ihrer Schule. |
 
 Das Schema ist in beiden Modi identisch: Die Tabellen `tenants`, `tenant_admins` und

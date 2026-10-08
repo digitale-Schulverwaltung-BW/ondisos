@@ -37,7 +37,7 @@ AUTO_MARK_AS_READ=true
 # Session / Auth
 SESSION_LIFETIME=3600
 SESSION_SECURE=true
-AUTH_ENABLED=false
+AUTH_ENABLED=true
 
 # Reverse-Proxy (kommagetrennte IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
 TRUSTED_PROXIES=

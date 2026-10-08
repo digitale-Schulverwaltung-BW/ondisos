@@ -61,7 +61,7 @@ Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in
 
 - **Eine Liste für beide Fälle:** `PLATFORM_ADMIN_ALLOWED_NETWORKS` (AP2) gilt im Modell A für **alle** Browser-Anfragen, da dort jeder Platform-Admin ist. Keine zweite Variable.
 - **Einhängepunkt:** in `inc/auth.php` **vor** dem frühen Rückkehr-Zweig für „Auth ausgeschaltet“ (heute `return`, bevor überhaupt etwas geprüft wird). Nicht betroffen bleiben wie in AP2 `/api/*` und `pdf/download.php`. Neutrale 403-Seite, Audit-Ereignis `admin_network_denied` (Adresse, Pfad).
-- **Standard bleibt „keine Einschränkung“** (leere Liste), damit ein Update niemanden aussperrt. Ist ohne Login **keine** Liste gesetzt, zeigt die Oberfläche einen Hinweis („Zugriff nicht auf das Verwaltungsnetz begrenzt“) und `migrate.php` sowie `health.php` melden es (Vorschlag, zu bestätigen).
+- **Standard bleibt „keine Einschränkung“** (leere Liste), damit ein Update niemanden aussperrt. Einen Hinweis in der Oberfläche gibt es bewusst nicht: Wer `AUTH_ENABLED=false` setzt, entscheidet das selbst, und der Einzelbetrieb mit Login ist nicht sicherer als der Betrieb ohne Login im Verwaltungsnetz, solange alle Konten dieselben Rechte haben (siehe Offene Entscheidungen, Rollen).
 - **Client-IP:** nur `ClientIp` (`REMOTE_ADDR`, `X-Forwarded-For` nur hinter `TRUSTED_PROXIES`). Hinter einem Reverse-Proxy ohne Vertrauenseintrag sieht das Backend nur die Proxy-Adresse; AP2 warnt dann bereits bei Fehlkonfiguration.
 - **Selbstaussperrung:** Die Variable steht in der `.env` (nicht in der Oberfläche); Notausstieg ist, sie dort zu leeren. Im Hinweis- und Setup-Text das Verwaltungsnetz als Beispiel nennen (`10.10.0.0/24`).
 - **Tests:** Modell A mit leerer Liste (alles erlaubt), mit Liste (fremde Adresse ⇒ 403, API und PDF-Token unberührt), `X-Forwarded-For` ohne `TRUSTED_PROXIES` wirkungslos, Mehrschul-Betrieb unverändert.
@@ -138,7 +138,8 @@ Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung 
 
 | Frage | Optionen | Tendenz |
 |---|---|---|
-| Standard von `AUTH_ENABLED` | bleibt `false` (Modell A zulässig im Verwaltungsnetz); `true` als Standard mit Übergangsphase; sofort `true` | Zweischritt wie beim Signaturformat: 3.1.2 warnt (Hinweis, Doku, AP2b), im Folgerelease Standard `true`; **zu bestätigen** |
+| Standard von `AUTH_ENABLED` | bleibt `false`; `true` mit Übergangsphase; sofort `true` | **Entschieden:** `true` in `.env.example` und im Docker-Entrypoint (ändert keine bestehende `.env`); `false` setzt der Betreiber bewusst. Eine Installation ohne Login entsteht nicht mehr aus Versehen |
+| Rollen: Schul-Admin und Sekretariat getrennt? | keine Trennung (heute); Rolle `sekretariat` an `tenant_admins` (nur Anmeldungen, kein Editor, keine Empfänger-Adresse); Hinweis-Mail an die alte Empfänger-Adresse bei Änderung | **offen, gesondert zu besprechen:** Heute sieht jedes Konto einer Schule alle Anmeldungen und darf `notify_email` ändern, im Mehrschul-Betrieb genauso wie im Einzelbetrieb |
 | Sollen Tenant-Admins 2FA bekommen? | nein; optional (selbst einrichten); Pflicht pro Tenant einstellbar | Optional einrichtbar ab AP3, Pflicht pro Tenant als Einstellung; Standard für Tenant-Admins: aus (Schulen müssen es mittragen) |
 | Platform-Admin langfristig in die Datenbank? | bei `.env` bleiben; in `tenant_admins`/eigene Tabelle überführen | Später überführen; für 3.1.2 mit fester Kennung auskommen, damit der Umbau nicht den Login-Kern berührt |
 | Speicherort der Allowlist | Datenbank (`tenants`); Konfigurationsdatei | Datenbank für Tenants, `.env` für die Platform-Liste |
