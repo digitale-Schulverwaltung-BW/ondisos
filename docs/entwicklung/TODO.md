@@ -16,6 +16,7 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 | **Deutsche Locale** für SurveyJS | Validierungsmeldungen erscheinen englisch |
 | **Monitoring und Logging** | strukturiertes Logging, Anbindung an Überwachung (z. B. Sentry); heute: `health.php` und Audit-Log |
 | **API-Beschreibung** (OpenAPI) | die Endpunkte sind in [architektur.md](architektur.md) und im Betriebsmodell beschrieben |
+| *Idee, nicht geplant:* Rolle „Sekretariat“ | Heute sieht jedes Konto einer Schule alle Anmeldungen und darf Formulare sowie die Empfänger-Adresse (`notify_email`) ändern, im Mehrschul-Betrieb wie im Einzelbetrieb; im Einzelbetrieb hat jedes Konto zusätzlich die Platform-Rolle im Editor (`EditorAccess`). Möglich wäre eine Rolle `sekretariat` an `tenant_admins` (nur Anmeldungen bearbeiten, exportieren, PDF; kein Editor, keine Empfänger-Adresse, keine Kontenverwaltung). Gegenargument: Export und Löschen braucht das Sekretariat ohnehin, und in kleinen Schulen sind Sekretariat und Redaktion oft dieselbe Person. Wird erst verfolgt, wenn eine Schule es braucht. Verwandte Idee: Hinweis-Mail an die bisherigen Empfänger, wenn `notify_email` geändert wird (schützt gegen stilles Umleiten, ohne neue Rollen). Hintergrund: Audit F-09, [PLAN-3.1.2.md](plans/PLAN-3.1.2.md) |
 | *Option, nicht geplant:* Managed Multi-Frontend | ein zentral gehostetes Frontend für mehrere Schulen; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen |
 
 ## Manuell zu prüfen
