@@ -284,7 +284,21 @@ class AuditLogger
             return; // json_encode failed — don't crash the application
         }
 
-        file_put_contents(self::LOG_FILE, $entry . "\n", FILE_APPEND | LOCK_EX);
+        $isNew = !file_exists(self::LOG_FILE);
+        if (@file_put_contents(self::LOG_FILE, $entry . "\n", FILE_APPEND | LOCK_EX) === false) {
+            // A log that cannot be written must not take the application down (it used to end every
+            // login with a 500). Make the problem visible in the PHP error log instead.
+            error_log('Audit log not writable: ' . self::LOG_FILE . ' (event ' . $event . ')');
+
+            return;
+        }
+
+        // CLI scripts run as root in the container (docker compose exec ...): a log file created there
+        // would be unwritable for the web server (www-data) and break the next login.
+        if ($isNew && function_exists('posix_geteuid') && posix_geteuid() === 0) {
+            @chown(self::LOG_FILE, 'www-data');
+            @chgrp(self::LOG_FILE, 'www-data');
+        }
     }
 
     private static function getUser(): ?string
