@@ -5,6 +5,7 @@ declare(strict_types=1);
 define('SKIP_AUTH_CHECK', true);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
+use App\Services\AdminNetworkPolicy;
 use App\Services\AuditLogger;
 use App\Services\LoginService;
 use App\Services\LoginThrottle;
@@ -30,6 +31,10 @@ $info = null;
 // Check for expired session
 if (isset($_GET['expired'])) {
     $info = 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.';
+}
+// Session ended because the request came from a network outside the admin allowlist
+if (isset($_GET['network'])) {
+    $info = 'Ihre Sitzung wurde beendet, weil der Zugriff aus diesem Netz nicht zulässig ist.';
 }
 
 // Handle login POST
@@ -84,6 +89,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
+        // Network allowlist: after the password check, so that the answer is the same as for a wrong
+        // password and does not reveal that the credentials were correct.
+        $networkDenied = false;
+        if ($loggedIn) {
+            $networkPolicy = AdminNetworkPolicy::fromEnvironment();
+            if (!$networkPolicy->isAllowed($tenantId, $isPlatformAdmin, $clientIp)) {
+                $loggedIn = false;
+                $networkDenied = true;
+            }
+        }
+
         if ($loggedIn) {
             // Regenerate session ID to prevent session fixation
             session_regenerate_id(true);
@@ -108,7 +124,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = 'Benutzername oder Passwort falsch.';
             $throttle->recordFailure($clientIp, $username);
-            AuditLogger::loginFailed($username);
+            if ($networkDenied) {
+                AuditLogger::loginNetworkDenied($username);
+            } else {
+                AuditLogger::loginFailed($username);
+            }
             // Brute-force protection: 0.5s delay on failed login
             usleep(500000);
         }

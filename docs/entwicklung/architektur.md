@@ -67,7 +67,7 @@ projekt/
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
     │   ├── login.php · logout.php
-    │   ├── tenants.php           # Tenant-Verwaltung (Platform-Admin)
+    │   ├── tenants.php           # Tenant-Verwaltung (Platform-Admin), u. a. Netz-Allowlist je Tenant
     │   ├── pdf/
     │   │   ├── download.php          # PDF per Token (ohne Session)
     │   │   └── admin_download.php    # PDF aus der Detailansicht (Admin)
@@ -203,6 +203,7 @@ CREATE TABLE tenants (
     name          VARCHAR(255) NOT NULL,
     slug          VARCHAR(100) NULL,              -- adressiert den Tenant in API-Aufrufen (eindeutig)
     origin        VARCHAR(255) NULL,              -- CORS-Origin des Frontends
+    admin_allowed_networks TEXT NULL,             -- 3.1.2: erlaubte Netze der Admins (CIDR, zeilenweise); NULL = keine Einschränkung
     api_secret    VARCHAR(255) NOT NULL,          -- HMAC-Secret für submit/upload
     active        TINYINT(1) DEFAULT 1,
     created_at    DATETIME DEFAULT CURRENT_TIMESTAMP

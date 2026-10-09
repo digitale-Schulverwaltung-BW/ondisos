@@ -42,6 +42,11 @@ AUTH_ENABLED=true
 # Reverse-Proxy (kommagetrennte IPs/CIDR; leer = X-Forwarded-For wird ignoriert)
 TRUSTED_PROXIES=
 
+# Admin-Netz-Allowlist (3.1.2): IPs/CIDR, aus denen Platform-Admins das Backend nutzen dürfen
+# (bei AUTH_ENABLED=false: jede Browser-Anfrage). Leer = keine Einschränkung. Beispiel: 10.10.0.0/24
+# Tenant-Admins: Liste je Tenant unter „Tenants“. Nicht für /api/* und pdf/download.php.
+PLATFORM_ADMIN_ALLOWED_NETWORKS=
+
 # Hilfe-Button „?“: Basis-URL der Doku (leer = GitHub in der installierten Version)
 HELP_BASE_URL=
 

@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS tenants (
     name          VARCHAR(255)  NOT NULL,
     slug          VARCHAR(100)  NULL,
     origin        VARCHAR(255)  NULL,
+    admin_allowed_networks TEXT NULL,
     api_secret    VARCHAR(255)  NOT NULL,
     active        TINYINT(1)    DEFAULT 1,
     created_at    DATETIME      DEFAULT CURRENT_TIMESTAMP

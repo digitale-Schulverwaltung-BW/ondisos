@@ -163,4 +163,18 @@ class ClientIpTest extends TestCase
             unset($_ENV['TRUSTED_PROXIES']);
         }
     }
+
+    public function testForwardedHeaderIgnoredWhenPeerIsNotTrusted(): void
+    {
+        $server = ['REMOTE_ADDR' => '172.18.0.1', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'];
+        $this->assertTrue(ClientIp::forwardedHeaderIgnored($server, []));
+        $this->assertTrue(ClientIp::forwardedHeaderIgnored($server, ['10.0.0.1']));
+    }
+
+    public function testForwardedHeaderNotIgnoredWhenPeerIsTrustedOrHeaderMissing(): void
+    {
+        $server = ['REMOTE_ADDR' => '10.0.0.1', 'HTTP_X_FORWARDED_FOR' => '203.0.113.5'];
+        $this->assertFalse(ClientIp::forwardedHeaderIgnored($server, ['10.0.0.0/24']));
+        $this->assertFalse(ClientIp::forwardedHeaderIgnored(['REMOTE_ADDR' => '10.0.0.1'], []));
+    }
 }

@@ -114,6 +114,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ------------------------------------------------------------------
+    // 2b. Network allowlist for the admins of the tenant
+    // ------------------------------------------------------------------
+    elseif ($action === 'update_networks' && $id !== null) {
+        $raw    = trim((string)($_POST['admin_allowed_networks'] ?? ''));
+        $parsed = \App\Utils\CidrList::parse($raw);
+        if ($parsed->invalid() !== []) {
+            $_SESSION['flash'] = ['network_error' => 'Ungültige Einträge: ' . implode(', ', $parsed->invalid())
+                . '. Erlaubt sind IP-Adressen und CIDR-Bereiche (z. B. 10.10.0.0/24).'];
+            header('Location: tenants.php?id=' . $id);
+            exit;
+        }
+        $new = implode("\n", $parsed->entries());
+        $old = $tenantRepo->getAdminAllowedNetworks($id);
+        if ($new !== $old) {
+            $tenantRepo->update($id, ['admin_allowed_networks' => $new !== '' ? $new : null]);
+            AuditLogger::networkRestrictionChanged($id, $old, $new);
+        }
+        header('Location: tenants.php?id=' . $id . '&saved=1');
+        exit;
+    }
+
+    // ------------------------------------------------------------------
     // 3. Regenerate API secret — MUST use updateApiSecret(), NOT update()
     // ------------------------------------------------------------------
     elseif ($action === 'regenerate_secret' && $id !== null) {
@@ -381,6 +403,50 @@ if ($id !== null && $id > 0):
 
                 <button type="submit" class="btn btn-primary">Speichern</button>
                 <a href="tenants.php" class="btn btn-secondary ms-2">← Zurück zur Übersicht</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- ------------------------------------------------------------------ -->
+    <!-- Admin network allowlist                                               -->
+    <!-- ------------------------------------------------------------------ -->
+    <?php
+    $currentNetworks = $tenantRepo->getAdminAllowedNetworks($id);
+    $myIp            = \App\Utils\ClientIp::get();
+    $proxyIgnored    = \App\Utils\ClientIp::forwardedHeaderIgnored(
+        $_SERVER,
+        \App\Utils\ClientIp::parseTrustedProxies((string)\App\Config\EnvLoader::get('TRUSTED_PROXIES', ''))
+    );
+    ?>
+    <div class="card mb-4">
+        <div class="card-header"><h5 class="mb-0">Admin-Zugang nur aus bestimmten Netzen</h5></div>
+        <div class="card-body">
+            <?php if (!empty($flash['network_error'])): ?>
+                <div class="alert alert-danger"><?= htmlspecialchars($flash['network_error']) ?></div>
+            <?php endif; ?>
+            <?php if ($proxyIgnored): ?>
+                <div class="alert alert-warning">
+                    Diese Anfrage kam mit <code>X-Forwarded-For</code>, aber <code>TRUSTED_PROXIES</code> enthält die Adresse des Proxys nicht.
+                    Das Backend sieht dann nur die Proxy-Adresse (<code><?= htmlspecialchars($_SERVER['REMOTE_ADDR'] ?? '') ?></code>),
+                    und die Einschränkung wirkt nicht wie gewünscht. Tragen Sie den Proxy in <code>TRUSTED_PROXIES</code> ein, bevor Sie hier etwas festlegen.
+                </div>
+            <?php endif; ?>
+            <form method="POST" action="tenants.php?id=<?= $id ?>">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="update_networks">
+                <div class="mb-3">
+                    <label for="admin_allowed_networks" class="form-label">Erlaubte Netze</label>
+                    <textarea id="admin_allowed_networks" name="admin_allowed_networks" class="form-control font-monospace"
+                              rows="4" placeholder="10.10.0.0/24"><?= htmlspecialchars($currentNetworks) ?></textarea>
+                    <div class="form-text">
+                        Eine IP-Adresse oder ein CIDR-Bereich je Zeile (IPv4 und IPv6). Leer = keine Einschränkung.
+                        Die Liste gilt für die Admin-Konten dieses Tenants, bei der Anmeldung und bei jedem Seitenaufruf.
+                        Plattform-Admins nutzen die globale Liste <code>PLATFORM_ADMIN_ALLOWED_NETWORKS</code> in der <code>.env</code>.
+                        Ihre aktuelle Adresse: <code><?= htmlspecialchars($myIp) ?></code>.
+                        Notausstieg bei Aussperrung: <code>php clear-network-restriction.php <?= htmlspecialchars((string)$tenant['slug']) ?></code> auf dem Server.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Speichern</button>
             </form>
         </div>
     </div>

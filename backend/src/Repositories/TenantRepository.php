@@ -67,6 +67,22 @@ class TenantRepository
     }
 
     /**
+     * Network allowlist for the admins of a tenant (CIDR list as entered, '' = no restriction).
+     *
+     * Separate from findById() so that a pending migration (column missing) cannot break
+     * tenant resolution for the API.
+     */
+    public function getAdminAllowedNetworks(int $id): string
+    {
+        $stmt = $this->db->prepare('SELECT admin_allowed_networks FROM tenants WHERE id = ? LIMIT 1');
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+
+        return trim((string)($row['admin_allowed_networks'] ?? ''));
+    }
+
+    /**
      * Return all active tenants ordered by name.
      *
      * Used by the platform-admin tenant switcher dropdown in header.php to
@@ -126,7 +142,7 @@ class TenantRepository
     }
 
     /**
-     * Update whitelisted fields (name, origin, active) for a tenant.
+     * Update whitelisted fields (name, origin, active, admin_allowed_networks) for a tenant.
      *
      * api_secret is intentionally excluded from the whitelist to prevent
      * accidental overwrites. Secret rotation MUST use updateApiSecret().
@@ -136,7 +152,7 @@ class TenantRepository
      */
     public function update(int $id, array $data): void
     {
-        $allowed  = ['name', 'origin', 'active'];
+        $allowed  = ['name', 'origin', 'active', 'admin_allowed_networks'];
         $filtered = array_intersect_key($data, array_flip($allowed));
 
         if (empty($filtered)) {

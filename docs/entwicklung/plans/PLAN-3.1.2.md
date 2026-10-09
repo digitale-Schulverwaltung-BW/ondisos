@@ -1,6 +1,6 @@
 # PLAN 3.1.2 – Härtung der Admin-Anmeldung: Netz-Allowlist und Zwei-Faktor-Anmeldung
 
-**Status:** Entwurf. Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
+**Status:** in Umsetzung. AP1, AP2, AP2b, AP5 und AP6 sind umgesetzt; offen sind AP3 (TOTP) und AP4 (Passkeys). Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
 
 **Stand der Voraussetzungen:** Die Client-IP wird zentral über `App\Utils\ClientIp` ermittelt (`X-Forwarded-For` nur hinter Proxys aus `TRUSTED_PROXIES`, siehe [sicherheit.md](../sicherheit.md) und [konfiguration.md](../konfiguration.md)).
 `AuditLogger`, `RateLimiter`, `editor_rate_limit.php` und `download.php` nutzen sie bereits. Damit ist die Grundlage für die Netz-Allowlist (AP2) geschaffen.
@@ -21,9 +21,18 @@
 
 Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung der signierten Frontend-API (`/api/*`; sie ist durch HMAC und CORS geschützt und kommt von Schul-Webservern, nicht von Admin-Arbeitsplätzen).
 
-## Übergabe an die 2FA-Sitzung (AP1 bis AP4)
+## Übergabe an die 2FA-Sitzung (AP3 und AP4)
 
-AP1 (CIDR-Hilfsklasse), AP2 und AP2b (Netz-Allowlist, auch ohne Login), AP3 (TOTP, Wizard, Recovery) und AP4 (Passkeys) werden in **einer eigenen Sitzung** umgesetzt, weil sie alle `inc/auth.php` und `login.php` anfassen. Die übrigen Pakete (AP5, AP6) sind umgesetzt.
+AP1 (CIDR-Hilfsklasse) sowie AP2 und AP2b (Netz-Allowlist, auch ohne Login) sind umgesetzt (`App\Utils\CidrList`, `App\Services\AdminNetworkPolicy`, Prüfung in `inc/auth.php` und `login.php`). AP3 (TOTP, Wizard, Recovery) und AP4 (Passkeys) folgen, weil sie `inc/auth.php` und `login.php` erneut anfassen. AP5 und AP6 sind umgesetzt.
+
+**Entscheidungen für AP3/AP4:**
+
+- **Geltungsbereich der Pflicht:** `TWO_FACTOR_REQUIRED=platform` gilt nur bei `MULTI_TENANT_ENABLED=true`. Mehrmandantenbetrieb ist das beste verfügbare Indiz dafür, dass die Instanz aus dem Internet erreichbar ist; im Einzelbetrieb bleibt 2FA optional einrichtbar.
+- **Replay-Schutz:** Die Faktor-Tabelle bekommt eine Spalte für den letzten akzeptierten TOTP-Zeitschritt (`last_totp_step`).
+- **Fehlversuche beim zweiten Faktor:** Nach etwa 5 falschen Codes wird `pending_2fa` verworfen (neuer Passwort-Login nötig). Die Netzprüfung gilt auch im Zwischenzustand.
+- **`TWO_FACTOR_KEY`:** Pflicht bei aktiver 2FA; fehlt er, wird abgelehnt statt unverschlüsselt gespeichert (fail-closed, klare Meldung). Der Docker-Entrypoint erzeugt ihn wie die anderen Secrets. Keine Schlüsselrotation in 3.1.2 (dokumentieren).
+- **Recovery-Codes:** zufällig und lang genug, deshalb als SHA-256 gespeichert (kein `password_hash`).
+- **Bibliotheken:** `spomky-labs/otphp` und ein QR-Code als SVG ohne GD (z. B. `bacon/bacon-qr-code`); vor der Übernahme Lizenz und Abhängigkeiten prüfen. Dasselbe für `web-auth/webauthn-lib` in AP4.
 
 **Was die Sitzung vorfindet und nutzen soll:**
 
@@ -37,15 +46,15 @@ AP1 (CIDR-Hilfsklasse), AP2 und AP2b (Netz-Allowlist, auch ohne Login), AP3 (TOT
 
 ## Arbeitspakete
 
-### AP1 – CIDR-Hilfsklasse herauslösen (Refactoring)
+### AP1 – CIDR-Hilfsklasse herauslösen (Refactoring) – umgesetzt
 
 `ClientIp::matches()` und `isTrusted()` sind `private`, `parseTrustedProxies()` ist auf Proxys zugeschnitten. Für die Allowlist wird derselbe Code gebraucht.
 
-- Neue Klasse `App\Utils\CidrList` (reine Logik, ohne Umgebung): `parse(string): list<string>` (IPs und CIDR, IPv4 und IPv6, ungültige Einträge werden gemeldet statt still verworfen), `contains(string $ip): bool`, Normalisierung wie in `ClientIp::normalize()`.
+- Neue Klasse `App\Utils\CidrList` (reine Logik, ohne Umgebung): `parse(string): CidrList` (IPs und CIDR, IPv4 und IPv6; Trenner Komma, Semikolon, Zeilenumbruch) mit `entries()`, `invalid()` (ungültige Einträge werden gemeldet statt still verworfen), `contains(string $ip): bool` und `normalize()` wie zuvor in `ClientIp`.
 - `ClientIp` nutzt `CidrList`; Verhalten unverändert (`ClientIpTest` bleibt grün, ergänzt um `CidrListTest`).
 - Frontend-Pendant `Frontend\Utils\ClientIp` bleibt wie es ist (eigenständig ausgeliefert); nur ändern, wenn dort dieselbe Logik angepasst werden müsste (`ClientIpTest` prüft die Übereinstimmung).
 
-### AP2 – Netz-Allowlist für Admin-Zugänge
+### AP2 – Netz-Allowlist für Admin-Zugänge – umgesetzt
 
 **Datenmodell**
 
@@ -54,21 +63,22 @@ AP1 (CIDR-Hilfsklasse), AP2 und AP2b (Netz-Allowlist, auch ohne Login), AP3 (TOT
 
 **Prüfung**
 
-- Neuer Service `AdminNetworkPolicy` (`isAllowed(?int $tenantId, bool $isPlatformAdmin, string $ip): bool`), gespeist aus `ClientIp::get()` und `CidrList`.
+- Neuer Service `AdminNetworkPolicy` (`isAllowed(?int $tenantId, bool $isPlatformAdmin, string $ip): bool`), gespeist aus `ClientIp::get()` und `CidrList`. Eine gesetzte Liste ohne gültigen Eintrag (Tippfehler) sperrt alle, statt still zu öffnen.
 - **Beim Login** (`login.php`), *nach* der Passwortprüfung: Ist die IP nicht zulässig, gibt es dieselbe Meldung wie bei falschem Passwort (kein Hinweis, dass die Zugangsdaten stimmten) und einen Audit-Eintrag `login_network_denied` mit Benutzer und IP.
 - **Bei jedem Request** (`inc/auth.php`): Die Prüfung läuft pro Seitenaufruf, nicht nur beim Login. Eine gestohlene Session ist aus einem fremden Netz sonst nutzbar. Bei Verstoß: Session beenden, Audit-Eintrag, Redirect auf `login.php`.
 - **Nicht betroffen:** `/api/*` und `pdf/download.php` (Token-Endpunkt); sie haben eigene Schutzmechanismen und andere Aufrufer.
-- Im Modus „Alle Tenants" (Platform-Admin) gilt ausschließlich die Platform-Liste.
+- Platform-Admins unterliegen immer nur der Platform-Liste, auch nach dem Wechsel in einen einzelnen Tenant.
+- Bei Verstoß während der Sitzung führt der Redirect auf `login.php?network=1` (Hinweis „Zugriff aus diesem Netz nicht zulässig“).
 
 **Pflege und Bedienung**
 
-- Das Feld erscheint in `tenants.php` und ist **nur für Platform-Admins** bearbeitbar. Tenant-Admins sehen die Einstellung nur lesend, sonst könnte ein gestohlener Account die Sperre selbst aufheben.
-- **Schutz vor Selbstaussperrung:** Beim Speichern prüft das Backend, ob die IP der Bearbeiterin bzw. des Bearbeiters in der neuen Liste liegt (bei Platform-Admins gegen die Tenant-Liste nicht erforderlich, aber Warnung, wenn deren eigene Liste betroffen ist). Wenn nicht: Warnung mit ausdrücklicher Bestätigung.
-- **Fehlkonfigurations-Warnung:** Ist `TRUSTED_PROXIES` leer und die erkannte Client-IP eine private/Docker-Adresse (typisch: Reverse Proxy ohne Vertrauenseintrag), sieht das Backend nur die Proxy-IP. Das Formular warnt dann, dass die Allowlist so nicht sinnvoll wirkt.
+- Das Feld erscheint in `tenants.php` (Karte „Admin-Zugang nur aus bestimmten Netzen“, eigene Aktion `update_networks`). Die Seite ist ohnehin Platform-Admins vorbehalten; Tenant-Admins können die Einstellung weder sehen noch ändern, ein gestohlener Account kann die Sperre also nicht selbst aufheben. Ungültige Einträge werden beim Speichern abgelehnt.
+- **Selbstaussperrung:** Die Bearbeitenden sind Platform-Admins und unterliegen der Tenant-Liste nicht; eine Bestätigungsabfrage entfällt deshalb. Die Karte zeigt die aktuelle Adresse als Eingabehilfe und nennt den Notausstieg.
+- **Fehlkonfigurations-Warnung:** Trägt die Anfrage `X-Forwarded-For`, obwohl die Verbindung nicht von einem Proxy aus `TRUSTED_PROXIES` kommt (`ClientIp::forwardedHeaderIgnored()`), sieht das Backend nur die Proxy-IP. Die Karte warnt dann, dass die Liste so nicht wirkt. (Das Kriterium „private Adresse“ wäre im Intranet ein Fehlalarm.)
 - **Notausstieg:** CLI-Skript `backend/clear-network-restriction.php <slug>` (Platform-Betreiber mit Shell-Zugang; idempotent wie `migrate.php`); für Platform-Admins genügt, die `.env`-Variable zu leeren.
-- Audit-Log-Eintrag bei jeder Änderung (alt/neu).
+- Audit-Log-Eintrag bei jeder Änderung (`admin_networks_changed`, alt/neu).
 
-### AP2b – Allowlist für den Betrieb ohne Login (Modell A)
+### AP2b – Allowlist für den Betrieb ohne Login (Modell A) – umgesetzt
 
 **Hintergrund:** Ohne Login (`AUTH_ENABLED=false`, Einzelbetrieb) gilt jeder Nutzer als Platform-Admin; der einzige Schutz ist das Netz. Zulässig ist das nur im **Verwaltungsnetz** (Sekretariat und erweiterte Schulleitung, vom Schüler-, Lehrer- und Gästenetz getrennt; [Betriebsmodell](../../betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)).
 Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in der Netzaufteilung nicht sofort alle Daten öffnet. AP2 prüft dagegen nur bei Login und Sitzung; im Modell A gibt es beides nicht.
@@ -126,15 +136,9 @@ Erst nach stabilem AP3.
 - Vanilla JavaScript (`navigator.credentials`), keine Frontend-Frameworks, passend zum Stack. Fehlertexte über `MessageService`.
 - Später möglich: Passkey statt Passwort (passwortloser Login). Ausdrücklich nicht in 3.1.2.
 
-### AP5 – Begleitende Härtung (klein, im selben Release)
+### AP5 – Begleitende Härtung (umgesetzt)
 
-**Stand:** Login-Rate-Limit (`LoginThrottle`), Cookie-Flags (`SessionCookie`, `SameSite=Lax` statt `Strict`, weil Links aus E-Mails sonst ohne Sitzung ankämen) und Gleichlauf bei unbekanntem Benutzer (Dummy-Hash) sind umgesetzt; die folgenden Punkte bleiben als Beschreibung stehen.
-
-Beim Durchsehen von `login.php` und `bootstrap.php` aufgefallen, in der Planung mit aufgenommen:
-
-- **Login-Rate-Limit:** Heute nur `usleep(500000)` pro Fehlversuch; parallele Anfragen umgehen die Verzögerung. `RateLimiter` pro IP und pro Benutzername für `login.php` einsetzen (mit Sperrzeit und Audit-Eintrag).
-- **Session-Cookie-Flags:** `HttpOnly`, `Secure` (hinter HTTPS), `SameSite=Strict` explizit setzen und per Test oder manueller Prüfung belegen (bisher keine ausdrückliche Konfiguration gefunden; vor der Änderung den tatsächlichen Stand prüfen).
-- Benutzer-Enumeration prüfen: gleiche Meldung und möglichst gleiche Laufzeit bei unbekanntem Benutzer und falschem Passwort (heute wird bei unbekanntem Tenant-Admin kein `password_verify` ausgeführt).
+**Stand:** Login-Rate-Limit (`LoginThrottle`), Cookie-Flags (`SessionCookie`, `SameSite=Lax` statt `Strict`, weil Links aus E-Mails sonst ohne Sitzung ankämen) und Gleichlauf bei unbekanntem Benutzer (Dummy-Hash) sind umgesetzt.
 
 ### AP6 – Signaturformat 2 für die API (umgesetzt, Festschreibung offen)
 

@@ -73,6 +73,27 @@ final class ClientIp
     }
 
     /**
+     * Whether the request carries X-Forwarded-For although its peer is not a trusted proxy.
+     *
+     * Typical misconfiguration behind a reverse proxy without TRUSTED_PROXIES: the backend then
+     * sees only the proxy address, and everything that depends on the client IP (allowlist, rate
+     * limits, audit log) works with the wrong address.
+     *
+     * @param array<string, mixed> $server
+     * @param list<string>         $trustedProxies
+     */
+    public static function forwardedHeaderIgnored(array $server, array $trustedProxies): bool
+    {
+        $forwarded = $server['HTTP_X_FORWARDED_FOR'] ?? null;
+        if (!is_string($forwarded) || trim($forwarded) === '') {
+            return false;
+        }
+        $remote = $server['REMOTE_ADDR'] ?? null;
+
+        return !is_string($remote) || !CidrList::parse(implode(',', $trustedProxies))->contains($remote);
+    }
+
+    /**
      * Parses a list of IPs/CIDR ranges; invalid entries are dropped (see CidrList::parse() to report them).
      *
      * @return list<string> normalized entries ("1.2.3.4", "10.0.0.0/8", "2001:db8::/32")

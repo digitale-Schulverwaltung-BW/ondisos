@@ -375,6 +375,23 @@ try {
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     echo "OK\n";
 
+    // Step 11: Network allowlist for tenant admins (3.1.2)
+    echo "Step 11: Add admin_allowed_networks column to tenants... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'tenants' AND COLUMN_NAME = 'admin_allowed_networks'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE tenants ADD COLUMN admin_allowed_networks TEXT NULL");
+        echo "OK\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
     echo "Migration complete.\n";
 } catch (\Throwable $e) {
     fwrite(STDERR, "Migration failed: {$e->getMessage()}\n");

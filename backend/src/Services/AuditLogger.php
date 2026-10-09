@@ -57,6 +57,31 @@ class AuditLogger
         self::log('login_blocked', ['username' => $username, 'retry_after' => $retryAfter]);
     }
 
+    /**
+     * Correct credentials, but from a network outside the admin allowlist (login refused).
+     */
+    public static function loginNetworkDenied(string $username): void
+    {
+        self::log('login_network_denied', ['username' => $username]);
+    }
+
+    /**
+     * Request to the admin area from a network outside the allowlist (running session ended,
+     * or access without login refused).
+     */
+    public static function adminNetworkDenied(string $path, bool $sessionEnded): void
+    {
+        self::log('admin_network_denied', ['path' => $path, 'session_ended' => $sessionEnded]);
+    }
+
+    /**
+     * Admin allowlist of a tenant changed.
+     */
+    public static function networkRestrictionChanged(int $tenantId, string $old, string $new): void
+    {
+        self::log('admin_networks_changed', ['target_tenant_id' => $tenantId, 'old' => $old, 'new' => $new]);
+    }
+
     public static function logout(string $username): void
     {
         self::log('logout', ['username' => $username]);

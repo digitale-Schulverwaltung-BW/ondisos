@@ -44,6 +44,14 @@ Das Sekretariat kommt nicht mehr in die Oberfläche. Bereits gespeicherte Daten 
 
 Beim Start wartet der Backend-Container auf MySQL (Healthcheck); ein „Connection refused" kurz nach dem Start legt sich meist von selbst.
 
+### Aussperrung durch die Netz-Einschränkung
+
+Die Anmeldung wird mit „Benutzername oder Passwort falsch“ abgelehnt oder die Seite meldet `403`, obwohl die Zugangsdaten stimmen? Möglicherweise liegt Ihre Adresse nicht in der Netz-Allowlist (Audit-Log: `login_network_denied` bzw. `admin_network_denied`, Feld `ip`).
+
+- **Platform-Admin / Betrieb ohne Login:** `PLATFORM_ADMIN_ALLOWED_NETWORKS` in der `.env` leeren oder korrigieren, dann `docker compose up -d backend`.
+- **Schul-Admin:** Auf dem Server `docker compose exec backend php clear-network-restriction.php <slug>` (hebt die Einschränkung des Tenants auf); ein Platform-Admin kann die Liste auch unter *Tenants* ändern.
+- Steht ein Reverse-Proxy davor, prüfen Sie `TRUSTED_PROXIES`: Fehlt der Eintrag, sieht das Backend nur die Proxy-Adresse ([Reverse-Proxy](betrieb.md#reverse-proxy-client-ip-und-rate-limit)).
+
 ## 2. Datenbank defekt oder leer
 
 Ondisos verwendet InnoDB. Die früher übliche „Reparatur" mit `mysqlcheck --auto-repair` greift bei InnoDB nicht; der sichere Weg ist die **Wiederherstellung aus dem Dump**.

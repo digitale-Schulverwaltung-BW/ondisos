@@ -140,8 +140,15 @@ ohne dass das Audit-Log einen Benutzer nennt. In solchen Netzen ist Modell B (Lo
 - Die Trennung wurde **geprüft**, zum Beispiel von einem Gerät im Schülernetz: Die Seite darf dort nicht antworten.
 - Fällt eine der beiden Bedingungen weg, oder ist unklar, wer das Netz erreichen kann: `AUTH_ENABLED=true` setzen ([Admin-Zugang einrichten](installation.md#4-admin-zugang-einrichten)).
 
-Vorgemerkt für 3.1.2 ([PLAN-3.1.2.md](../entwicklung/plans/PLAN-3.1.2.md), AP2b): Eine **Netz-Allowlist** (`PLATFORM_ADMIN_ALLOWED_NETWORKS`) wird auch ohne Login erzwungen, sodass die Anwendung selbst auf das Verwaltungsnetz begrenzt.
-Sie ersetzt keine Firewall, fängt aber Fehler in der Netzaufteilung ab.
+**Netz-Allowlist (ab 3.1.2):** Mit `PLATFORM_ADMIN_ALLOWED_NETWORKS` in der `.env` (IPs oder CIDR-Bereiche, kommagetrennt) begrenzt die Anwendung selbst auf das Verwaltungsnetz: Anfragen aus anderen Adressen erhalten ohne Login `403`, im Audit-Log steht `admin_network_denied`.
+
+```bash
+PLATFORM_ADMIN_ALLOWED_NETWORKS=10.10.0.0/24     # Beispiel: das Verwaltungsnetz
+```
+
+Leer (Standard) heißt keine Einschränkung, ein Update sperrt also niemanden aus. Die Liste ersetzt keine Firewall, fängt aber Fehler in der Netzaufteilung ab. Sie gilt auch in Modell B (für Platform-Admins; Schul-Admins haben eine Liste je Tenant unter *Tenants*), dort bei der Anmeldung und bei jedem Seitenaufruf.
+Nicht betroffen sind die API für die Frontends (`/api/*`, durch Signatur geschützt) und der PDF-Download per Token. Die Adresse stammt von der Verbindung; `X-Forwarded-For` zählt nur von Proxys aus `TRUSTED_PROXIES` ([Reverse-Proxy](betrieb.md#reverse-proxy-client-ip-und-rate-limit)). Hinter einem Proxy ohne diesen Eintrag sähe das Backend nur die Proxy-Adresse und die Liste wirkte nicht.
+Aussperrung: `PLATFORM_ADMIN_ALLOWED_NETWORKS` in der `.env` leeren ([Notfall](notfall.md#aussperrung-durch-die-netz-einschränkung)).
 
 ## Eine neue Schule anbinden
 

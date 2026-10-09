@@ -18,8 +18,21 @@ if (defined('SKIP_AUTH_CHECK') && SKIP_AUTH_CHECK === true) {
 $multiTenantEnabled = filter_var(\App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
 $authEnabled = filter_var(\App\Config\EnvLoader::get('AUTH_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
 
+$networkPolicy = \App\Services\AdminNetworkPolicy::fromEnvironment();
+$clientIp = \App\Utils\ClientIp::get();
+
 if (!$authEnabled && !$multiTenantEnabled) {
-    // Auth fully disabled — allow access
+    // Auth fully disabled (single tenant, administration network only): everyone counts as platform
+    // admin, so the network is the only protection. PLATFORM_ADMIN_ALLOWED_NETWORKS enforces it
+    // (empty = no restriction). Checked before returning, /api/* and pdf/download.php never get here.
+    if (!$networkPolicy->isAllowedWithoutLogin($clientIp)) {
+        \App\Services\AuditLogger::adminNetworkDenied(basename($_SERVER['SCRIPT_NAME'] ?? ''), false);
+        http_response_code(403);
+        header('Content-Type: text/plain; charset=UTF-8');
+        echo "403 Forbidden\n";
+        exit;
+    }
+
     return;
 }
 
@@ -27,6 +40,19 @@ if (!$authEnabled && !$multiTenantEnabled) {
 if (empty($_SESSION['admin_logged_in'])) {
     // Not logged in — redirect to login page
     header('Location: login.php');
+    exit;
+}
+
+// Network allowlist on every request, not only at login: a stolen session must not work from
+// a foreign network. Platform admins use the global list, tenant admins the list of their tenant.
+$sessionIsPlatformAdmin = !empty($_SESSION['is_platform_admin']);
+$sessionTenantId = isset($_SESSION['tenant_id']) ? (int)$_SESSION['tenant_id'] : null;
+if (!$networkPolicy->isAllowed($sessionTenantId, $sessionIsPlatformAdmin, $clientIp)) {
+    \App\Services\AuditLogger::adminNetworkDenied(basename($_SERVER['SCRIPT_NAME'] ?? ''), true);
+    $_SESSION = [];
+    session_regenerate_id(true);
+    session_destroy();
+    header('Location: login.php?network=1');
     exit;
 }
 

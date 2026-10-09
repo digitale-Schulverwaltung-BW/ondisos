@@ -20,6 +20,7 @@ Implementierte Schutzmaßnahmen und bekannte Einschränkungen.
 - ✅ Secret Key Management (`PDF_TOKEN_SECRET`, `API_SECRET_KEY` in `.env`; `TENANT_API_SECRET` nur serverseitig, nie im Browser; WP-Einstellung ist write-only)
 - ✅ Admin Authentication (Optional, session-basiert; bei `MULTI_TENANT_ENABLED=true` erzwungen)
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
+- ✅ **Netz-Allowlist für Admin-Zugänge (3.1.2):** `PLATFORM_ADMIN_ALLOWED_NETWORKS` (`.env`) für Platform-Admins, `tenants.admin_allowed_networks` je Tenant für Schul-Admins; geprüft nach der Passwortprüfung (gleiche Meldung wie bei falschem Passwort, Audit `login_network_denied`) **und bei jedem Seitenaufruf** (`inc/auth.php`: Sitzung beenden, Audit `admin_network_denied`). Ohne Login (`AUTH_ENABLED=false`) gilt die Platform-Liste für jede Browser-Anfrage (403). Leer = keine Einschränkung; eine Liste ohne gültigen Eintrag sperrt alle. Nicht betroffen: `/api/*`, `pdf/download.php`. Die Client-IP kommt aus `ClientIp` (`X-Forwarded-For` nur hinter `TRUSTED_PROXIES`). Notausstieg: `.env` leeren bzw. `php clear-network-restriction.php <slug>`
 - ✅ Brute-Force Protection (0,5 s Verzögerung bei falschen Logins; Sperre nach 5 Fehlversuchen je IP und Benutzername bzw. 20 je IP innerhalb von 15 Minuten, `LoginThrottle`, Audit-Ereignis `login_blocked`)
 - ✅ Rate Limiting (File-based, 10 req/min, konfigurierbar)
 - ✅ HTTPS Enforcement (Apache .htaccess + PHP Fallback)

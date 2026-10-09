@@ -55,6 +55,9 @@ MULTI_TENANT_ENABLED=${MULTI_TENANT_ENABLED:-false}
 # Reverse proxies whose X-Forwarded-For is trusted (comma-separated IPs/CIDR; empty = ignore the header)
 TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
 
+# Admin network allowlist (empty = no restriction)
+PLATFORM_ADMIN_ALLOWED_NETWORKS=${PLATFORM_ADMIN_ALLOWED_NETWORKS:-}
+
 # Base URL of the documentation behind the "?" button (empty = GitHub, pinned to the installed version)
 HELP_BASE_URL=${HELP_BASE_URL:-}
 

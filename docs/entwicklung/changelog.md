@@ -3,6 +3,12 @@
 Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
+## 3.1.2 (in Arbeit, [PLAN-3.1.2.md](plans/PLAN-3.1.2.md))
+
+**Sicherheit**
+- ✅ Netz-Allowlist für Admin-Zugänge (AP1, AP2, AP2b): `PLATFORM_ADMIN_ALLOWED_NETWORKS` (`.env`) und `tenants.admin_allowed_networks` (je Tenant unter `tenants.php`); Prüfung beim Login und bei jedem Seitenaufruf, ohne Login (`AUTH_ENABLED=false`) für jede Browser-Anfrage. Neue Klassen `App\Utils\CidrList` (aus `ClientIp` herausgelöst) und `App\Services\AdminNetworkPolicy`; Audit-Ereignisse `login_network_denied`, `admin_network_denied`, `admin_networks_changed`; Notausstieg `clear-network-restriction.php`. Migration: Spalte `tenants.admin_allowed_networks` (`php migrate.php`). Details: [sicherheit.md](sicherheit.md)
+
+
 ## 3.1.1
 
 **Hilfe**
