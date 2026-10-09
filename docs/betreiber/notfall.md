@@ -88,7 +88,7 @@ Lässt sich MySQL gar nicht mehr starten und gibt es **keine** Sicherung, bleibt
 
 ## 4. Verdacht auf Kompromittierung
 
-Anzeichen: unbekannte Anmeldungen im Backend, verdächtige Uploads, `login_failed` oder `idor_attempt` im Audit-Log, Warnungen von Firewall oder Provider.
+Anzeichen: unbekannte Anmeldungen im Backend, verdächtige Uploads, `login_failed`, `two_factor_failed`, `admin_network_denied` oder `idor_attempt` im Audit-Log, Warnungen von Firewall oder Provider.
 
 **Sofort (in den ersten Minuten):**
 
@@ -99,7 +99,7 @@ Anzeichen: unbekannte Anmeldungen im Backend, verdächtige Uploads, `login_faile
 **Untersuchen (nur lesen):**
 
 ```bash
-grep -E 'login_failed|idor_attempt|upload' logs/audit.log                # im Container: /var/www/html/logs/audit.log
+grep -E 'login_failed|login_blocked|login_network_denied|admin_network_denied|two_factor_failed|two_factor_reset|recovery_code|idor_attempt|upload' logs/audit.log                # im Container: /var/www/html/logs/audit.log
 docker compose exec backend find /var/www/html/uploads -type f \( -name '*.php' -o -perm -u+x \)   # sollte leer sein
 docker compose exec backend ps aux
 ```
@@ -112,8 +112,12 @@ docker compose exec backend ps aux
 | `PDF_TOKEN_SECRET` | Root-`.env` | neu erzeugen; offene PDF-Links werden ungültig |
 | Datenbank-Passwörter | Root-`.env` **und** MySQL | im MySQL ändern (`ALTER USER`, siehe [installation.md](installation.md#datenbank-zugriff-verweigert)) und in der `.env` angleichen |
 | Admin-Zugang | `ADMIN_PASSWORD_HASH` | neuen Hash erzeugen (`scripts/generate-password-hash.php`), in einfachen Anführungszeichen eintragen, `docker compose up -d backend` |
+| `TWO_FACTOR_KEY` | Root-`.env` | nur bei Verdacht, dass der Schlüssel samt Datenbank-Abzug bekannt ist: neuen Schlüssel setzen, danach sind **alle** Authenticator ungültig; mit `reset-2fa.php <benutzer>` (bzw. *Tenants → 2FA zurücksetzen*) zurücksetzen, die Admins richten neu ein ([zwei-faktor.md](zwei-faktor.md)). Zusätzlich die Authenticator-Einrichtung der Platform-Admins neu vornehmen lassen |
 | Tenant-Admins | Oberfläche | *Tenants → Schule → Administratoren → Passwort zurücksetzen* oder deaktivieren |
 | Server-Zugänge (SSH-Schlüssel, Sudo-Passwörter) | Server | durch den Systemadministrator |
+
+**Zugang eingrenzen:** Setzen Sie bis zur Klärung `PLATFORM_ADMIN_ALLOWED_NETWORKS` (und die Netze der Schulen unter *Tenants*) auf das Verwaltungsnetz; laufende Sitzungen aus anderen Netzen enden damit beim nächsten Seitenaufruf.
+Alle Sitzungen beenden Sie, indem Sie den Container neu erstellen (`docker compose up -d --force-recreate backend`; die Sitzungsdateien liegen im Container, nicht in einem Volume). Ohne das enden sie spätestens nach `SESSION_LIFETIME` (Standard eine Stunde).
 
 **Neu aufsetzen** (wenn der Server selbst als kompromittiert gilt): neuen Server nach [installation.md](installation.md) aufbauen, **nur die Datenbank** aus einer Sicherung vor dem Vorfall einspielen
 und Uploads erst nach einer Prüfung zurückkopieren (ClamAV-Scan, keine ausführbaren Dateien). Code frisch aus dem Repository holen, keine Dateien vom alten System übernehmen.

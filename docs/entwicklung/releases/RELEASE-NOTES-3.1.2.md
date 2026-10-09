@@ -30,6 +30,7 @@ Neue Funktionen für Sekretariat oder Redaktion gibt es kaum; die Änderungen be
 - **Missbrauchsschutz der Anmeldung:** Rate-Limit je Besucher statt je Frontend-Server, Honeypot-Feld, Upload-Limits (20 Dateien, 50 MB je Anmeldung), Prüfung des Upload-Feldnamens gegen die Survey.
 - **Login:** Drosselung (5 Fehlversuche je IP und Benutzername, 20 je IP in 15 Minuten), gleiche Laufzeit bei unbekanntem Benutzer, Session-Cookies im Code mit `HttpOnly`/`SameSite=Lax`/`Secure`.
 - **Weitere Korrekturen aus dem Audit:** Excel-Formel-Injection (Eingaben immer als Text), CSRF bei Excel-Export, Mandantenwechsel und Dashboard, Metadaten der Anmeldung nicht mehr vom Browser setzbar, PDF-Logo nur aus erlaubten Verzeichnissen, SVG-Uploads nicht mehr erlaubt, Downloads mit `nosniff`, Docker: MySQL und phpMyAdmin nur an `127.0.0.1`.
+- **Abhängigkeiten aktualisiert** (PhpSpreadsheet 3.10.8, mPDF 8.3.1, FPDI 2.6.8): `composer audit` meldet keine Advisories mehr.
 - `AUTH_ENABLED=true` ist Standard in `.env.example` und im Docker-Entrypoint (bestehende `.env`-Dateien ändern sich nicht).
 
 ## Korrekturen
@@ -43,7 +44,7 @@ Neue Funktionen für Sekretariat oder Redaktion gibt es kaum; die Änderungen be
 Reihenfolge wie immer: **Backend zuerst**, danach Frontends und WordPress-Plugin. Vorher sichern ([betrieb.md](../../betreiber/betrieb.md#sicherung-und-wiederherstellung)).
 
 1. **`TWO_FACTOR_KEY` setzen** (Root-`.env`; erzeugen mit `openssl rand -hex 32`, sichern, später nicht ändern). Fehlt er, läuft die Anmeldung in der Schonfrist weiter, danach wird sie mit einer klaren Meldung abgelehnt.
-2. Update: `git pull`, `docker compose up -d --build backend` (ohne Docker zusätzlich `composer install --no-dev --optimize-autoloader` und `php migrate.php`). Die Migration legt die Spalte `tenants.admin_allowed_networks` und die Tabellen `admin_two_factor` und `admin_recovery_codes` an; im Log erscheint `Migration complete`.
+2. Update: `git pull`, `docker compose up -d --build backend` (ohne Docker zusätzlich `composer install --no-dev --optimize-autoloader` und `php migrate.php`; neu nötige PHP-Erweiterungen: `iconv` und `sodium`). Die Migration legt die Spalte `tenants.admin_allowed_networks` und die Tabellen `admin_two_factor` und `admin_recovery_codes` an; im Log erscheint `Migration complete`.
 3. **Mehrschul-Betrieb:** Platform-Admins sehen bei den nächsten Anmeldungen den Hinweis zur Zwei-Faktor-Anmeldung und müssen sie spätestens nach 10 Anmeldungen einrichten. Wer das vermeiden will, setzt vorübergehend `TWO_FACTOR_REQUIRED=off`.
 4. **Einzelbetrieb:** keine Pflicht (`platform` greift nur im Mehrschul-Betrieb); Einrichtung freiwillig unter *Mein Konto*.
 5. **Optional:** `PLATFORM_ADMIN_ALLOWED_NETWORKS` und Netze je Schule setzen, z. B. `10.10.0.0/24`. Hinter einem Reverse-Proxy zuerst `TRUSTED_PROXIES` eintragen, sonst sieht das Backend nur die Proxy-Adresse ([betrieb.md](../../betreiber/betrieb.md#reverse-proxy-client-ip-und-rate-limit)).

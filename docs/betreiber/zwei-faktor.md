@@ -1,7 +1,7 @@
 # Zwei-Faktor-Anmeldung
 
 Ab 3.1.2 können sich Admins zusätzlich zum Passwort mit einem Einmal-Code aus einer **Authenticator-App** anmelden (TOTP, z. B. Aegis, FreeOTP, Google oder Microsoft Authenticator). Für Platform-Admins im Mehrschul-Betrieb ist das vorgeschrieben.
-Passkeys sind für eine spätere Ausgabe vorgesehen ([PLAN-3.1.2.md](../entwicklung/plans/PLAN-3.1.2.md), AP4).
+Passkeys sind für 3.1.3 vorgesehen ([PLAN-3.1.2.md](../entwicklung/plans/PLAN-3.1.2.md#ap4--passkeys-webauthn-verschoben-auf-313)).
 
 ## Wer braucht es?
 

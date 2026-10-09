@@ -133,6 +133,12 @@ Das Passwort geben Sie dem Schul-Admin getrennt vom API-Schlüssel weiter. Diese
 `tenants.php` antwortet mit 403, Einträge anderer Schulen mit 404 (und einem `idor_attempt` im Audit-Log). In der Liste der Administratoren lässt sich jeder Zugang **deaktivieren** (und wieder aktivieren)
 und das **Passwort zurücksetzen**.
 
+**Zwei-Faktor-Anmeldung der Schul-Admins:** Sie ist für Schul-Admins standardmäßig freiwillig (`TWO_FACTOR_REQUIRED=platform`); wer sie einrichtet (*Mein Konto*), muss danach bei jeder Anmeldung einen Code eingeben. In der Liste der Administratoren zeigt die Spalte „2FA“, wer sie nutzt. Hat ein Schul-Admin Gerät und Recovery-Codes verloren,
+setzen Sie sie mit **„2FA zurücksetzen“** zurück ([zwei-faktor.md](zwei-faktor.md#wiederherstellung)). Wer sie für alle Schul-Admins vorschreiben will, setzt `TWO_FACTOR_REQUIRED=tenants` (oder `all`).
+
+**Netz-Allowlist je Schule:** Auf der Tenant-Seite begrenzt die Karte „Admin-Zugang nur aus bestimmten Netzen“ Anmeldung und Sitzungen der Admins dieser Schule auf bestimmte Netze (IP-Adressen oder CIDR, eine je Zeile; leer = keine Einschränkung). Nur Platform-Admins können sie ändern.
+Prüfen Sie zuvor, aus welchem Netz die Schule tatsächlich zugreift (Schul-IT fragen; hinter einem Proxy zählt `TRUSTED_PROXIES`). Notausstieg: `php clear-network-restriction.php <slug>` ([notfall.md](notfall.md#aussperrung-durch-die-netz-einschränkung)). Siehe auch [betriebsmodell.md](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login).
+
 ### Tenant löschen
 
 Auf der Tenant-Detailseite (`tenants.php?id=<id>`) ganz unten unter **„Tenant löschen"**. Das Löschen ist endgültig und nur für Plattform-Admins möglich, und nur wenn alle Bedingungen erfüllt sind:

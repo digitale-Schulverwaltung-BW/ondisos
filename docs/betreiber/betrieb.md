@@ -42,7 +42,7 @@ Frontend (Standalone): `git pull`, sonst nichts. Das WordPress-Plugin aktualisie
 |---|---|---|
 | **Datenbank** | Container `mysql` | enthält Anmeldungen, Schulen, Admin-Zugänge (Hashes), Formulare, Entwürfe und Verlauf |
 | **Uploads** | Volume `backend-uploads` (`uploads/tenant-<id>/…`) | Anhänge der Anmeldungen, Logos, angehängte PDFs |
-| **`.env`-Dateien** | Projektverzeichnis | enthalten die Secrets, in ein **separates, verschlüsseltes** Backup |
+| **`.env`-Dateien** | Projektverzeichnis | enthalten die Secrets, in ein **separates, verschlüsseltes** Backup. Darin steht auch `TWO_FACTOR_KEY`: **ohne ihn sind die Authenticator-Einträge in einem Datenbank-Backup unbrauchbar** (Admins müssten zurückgesetzt werden, [zwei-faktor.md](zwei-faktor.md#wiederherstellung)) |
 
 **Sichern (Docker)**
 
@@ -92,7 +92,7 @@ Gelöschte und abgelaufene Anmeldungen sind in alten Dumps noch enthalten.
 
 ## HTTPS
 
-Zwischen Frontend und Backend ist **HTTPS Pflicht**: Die API-Signaturen enthalten keinen Zeitstempel und schützen allein nicht vor Wiederholung, und die Admin-Oberfläche überträgt Passwörter.
+Zwischen Frontend und Backend ist **HTTPS Pflicht**: Die API-Signaturen (Format 2, ab 3.1.2) tragen Zeitstempel und Einmal-Kennung, der Inhalt selbst läuft aber im Klartext, solange kein TLS davor steht; das alte Format 1 (Modus `compat`) schützt nicht vor Wiederholung. Die Admin-Oberfläche überträgt Passwörter und Einmal-Codes.
 
 **Docker-Stack: TLS am Reverse-Proxy.** Der Container spricht HTTP (Port 9080); davor steht Nginx, Caddy oder Traefik. Das ist **Pflicht**, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Begründung und Checkliste](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)). Läuft der Proxy auf demselben Server, setzen Sie in der Root-`.env` `BACKEND_BIND=127.0.0.1`, damit der Backend-Port nur noch über den Proxy erreichbar ist. Beispiel Nginx:
 
@@ -188,7 +188,28 @@ Diese Datei beim Start als weitere Compose-Datei angeben (`COMPOSE_FILE=docker-c
 Anschließend `docker compose up -d backend` und mit `docker compose exec backend php -i | grep -E 'upload_max_filesize|post_max_size'` prüfen.
 Das **Frontend** hat eigene PHP- und Webserver-Limits: Besucher laden zuerst dort hoch, erst danach reicht das Frontend die Datei ans Backend weiter.
 
+**Weitere Grenzen je Anmeldung und Besucher (ab 3.1.2):** `UPLOAD_MAX_FILES_PER_ANMELDUNG` (Standard 20) und `UPLOAD_MAX_BYTES_PER_ANMELDUNG` (Standard 50 MB) begrenzen alle Dateien einer Anmeldung; `UPLOAD_RATE_LIMIT_MAX` je `UPLOAD_RATE_LIMIT_WINDOW` (60 je 60 Sekunden) begrenzen die Upload-Anfragen je Besucher. Gezählt wird je Besucher (`X-Ondisos-Client`) statt je Frontend-Server, damit eine Schule nicht alle anderen ausbremst.
+
 **Symptome:** `HTTP 413 Request Entity Too Large` → Webserver-Limit; Fehler im Formular ohne 413 oder „exceeds the upload_max_filesize" → PHP-Limit; „Dateityp nicht erlaubt" → Typ bzw. echter Inhalt passt nicht zu `UPLOAD_ALLOWED_TYPES`.
+
+## Zugang zur Verwaltungsoberfläche absichern
+
+Ab 3.1.2 gibt es drei Schalter in der `.env`, die zusammen den Zugang schützen:
+
+| Schutz | Einstellung | Beschreibung |
+|---|---|---|
+| **Netz-Allowlist** | `PLATFORM_ADMIN_ALLOWED_NETWORKS` (Platform-Admins, und ohne Login jede Anfrage); Liste je Schule unter *Tenants* | nur Anmeldungen und Sitzungen aus erlaubten Netzen; leer = keine Einschränkung ([Betriebsmodell](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)) |
+| **Zwei-Faktor-Anmeldung** | `TWO_FACTOR_REQUIRED`, `TWO_FACTOR_GRACE_LOGINS`, `TWO_FACTOR_KEY` | Authenticator-App; Pflicht für Platform-Admins im Mehrschul-Betrieb ([zwei-faktor.md](zwei-faktor.md)) |
+| **Drosselung** | fest eingebaut | 5 Fehlversuche je IP und Benutzername, 20 je IP innerhalb von 15 Minuten, danach Sperre bis zum Ablauf; ebenso für falsche Codes |
+
+Die Netz-Allowlist ist nur so gut wie die erkannte Client-IP: Hinter einem Reverse-Proxy muss `TRUSTED_PROXIES` stimmen ([Reverse-Proxy](#reverse-proxy-client-ip-und-rate-limit)).
+Sie gilt nicht für `/api/*` (durch Signatur geschützt) und den PDF-Download per Token.
+
+**Weitere Einstellungen in der `.env`** (Vorlage `backend/.env.example`):
+
+- `CSP_MODE=enforce` (Standard): Die Content-Security-Policy erlaubt Skripte nur von der eigenen Herkunft oder mit Nonce. Meldet der Browser nach einem Eigenbau (eigene Skripte, Proxy-Filter) Verstöße in der Konsole, hilft zum Diagnostizieren `report-only` (nur melden); `off` schaltet sie ab. Ein Reverse-Proxy darf den Header nicht überschreiben. Das Standalone-Frontend hat eine eigene Einstellung `CSP_MODE` in `frontend/.env`.
+- `API_SIGNATURE_MODE=compat|strict` und `API_SIGNATURE_MAX_SKEW` (Sekunden, Standard 300): Umstellung auf das neue Signaturformat, siehe Checkliste unten.
+- `HELP_BASE_URL`: Basis-URL einer eigenen Kopie der Dokumentation für den „?“-Button (leer = GitHub in der installierten Version; `{version}` wird ersetzt).
 
 ## Überwachung und Protokolle
 
@@ -198,8 +219,11 @@ Das **Frontend** hat eigene PHP- und Webserver-Limits: Besucher laden zuerst dor
 | Gesundheitsprüfung | `curl https://backend.example.org/api/health.php` → `{"status":"ok",…}` |
 | Backend-Ausgabe, Migration | `docker compose logs -f backend` |
 | PHP-Fehler | `docker compose exec backend tail -f /var/www/html/logs/php_errors.log` |
-| **Audit-Log** (Anmeldungen, Statuswechsel, Uploads, Löschungen, fremde IDs) | `docker compose exec backend tail -f /var/www/html/logs/audit.log` (JSON-Zeilen mit Schule) |
+| **Audit-Log** (Anmeldungen, Statuswechsel, Uploads, Löschungen, fremde IDs, Sicherheitsereignisse, siehe unten) | `docker compose exec backend tail -f /var/www/html/logs/audit.log` (JSON-Zeilen mit Schule) |
 | ClamAV | `docker compose logs -f clamav` |
+
+**Sicherheitsereignisse im Audit-Log** (Auszug; Feld `event`): `login_failed`, `login_blocked` (Drosselung), `login_network_denied` und `admin_network_denied` (Netz-Allowlist), `two_factor_failed`, `two_factor_success`, `recovery_code_used`, `two_factor_enabled`, `two_factor_removed`, `two_factor_reset`,
+`recovery_codes_regenerated`, `admin_networks_changed`, `api_legacy_signature` (Frontend sendet noch das alte Signaturformat), `idor_attempt`. Auffällig oft `two_factor_failed` oder `login_network_denied` aus fremden Adressen lohnt einen Blick ([notfall.md](notfall.md#4-verdacht-auf-kompromittierung)).
 
 `logs/` und `cache/` liegen in eigenen Docker-Volumes. Docker-Logs begrenzen Sie in `/etc/docker/daemon.json` (`{"log-driver":"json-file","log-opts":{"max-size":"10m","max-file":"3"}}`, danach Docker neu starten).
 Eine Überwachung (z. B. Uptime-Check auf `/api/health.php`) ist sinnvoll; sie gehört zum Betreiber, nicht zum Projekt.
@@ -226,12 +250,19 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 | Excel-Export zeigt die Spalte „Formular“ | Der Export war nicht auf ein Formular gefiltert (`?form=bs`); beim Export eines einzelnen Formulars entfällt die Spalte |
 | Datumsfelder im Export falsch | Der Export wandelt Werte der Form `YYYY-MM-DD` in `dd.mm.yyyy` um; das Feld muss ISO-Format enthalten |
 | Browser meldet CORS-Fehler | Betrifft nur Browser-Aufrufe direkt am Backend (normalerweise ruft das Frontend serverseitig auf): `origin` der Schule unter *Tenants* bzw. `ALLOWED_ORIGINS` prüfen |
+| Anmeldung mit Fehler 500 (Seite: „Ein Fehler ist aufgetreten“) | `docker compose exec backend tail logs/php_errors.log`. Häufig: `logs/` nicht beschreibbar (nach CLI-Aufrufen als `root` bis 3.1.1; ab 3.1.2 legt das Backend das Audit-Log für den Webserver an). Abhilfe: `docker compose exec -u root backend chown -R www-data:www-data /var/www/html/logs`, dann `docker compose up -d backend` |
+| Anmeldung wird abgelehnt („Benutzername oder Passwort falsch“), Zugangsdaten stimmen | Möglich: Netz-Allowlist (Audit `login_network_denied`, [notfall.md](notfall.md#aussperrung-durch-die-netz-einschränkung)) oder Sperre durch zu viele Fehlversuche (Audit `login_blocked`, Meldung „Zu viele fehlgeschlagene Anmeldeversuche“; sie läuft nach 15 Minuten ab) |
+| Code der Authenticator-App wird nicht akzeptiert | Uhrzeit des Handys prüfen (automatisch einstellen), den **nächsten** Code abwarten (ein Code gilt nur einmal); sonst Recovery-Code ([zwei-faktor.md](zwei-faktor.md#wiederherstellung)) |
+| Anmeldung: „TWO_FACTOR_KEY fehlt“ oder „Zwei-Faktor-Prüfung nicht verfügbar“ | Schlüssel in der Root-`.env` eintragen bzw. `php migrate.php` ausführen; Notausstieg `TWO_FACTOR_REQUIRED=off` ([zwei-faktor.md](zwei-faktor.md)) |
+| Frontend meldet 401 nach dem Update, im PHP-Fehlerlog des Backends steht `timestamp_skew` | Uhren von Frontend- und Backend-Server weichen mehr als 5 Minuten ab (NTP), siehe Checkliste |
 | Anmeldung „erfolgreich“, aber nichts im Backend | Das Formular ist mit `db: false` konfiguriert und sendet nur E-Mail; unter *Formulare → Bearbeiten* „Anmeldungen im Backend speichern“ einschalten |
 
 ## Checkliste für den Produktivbetrieb
 
 - [ ] **Secrets:** `DB_PASS`, `MYSQL_ROOT_PASSWORD`, `PDF_TOKEN_SECRET`, `API_SECRET_KEY` selbst erzeugt (`openssl rand -hex 32`), kein Standardwert
 - [ ] **Admin-Zugang:** `ADMIN_PASSWORD_HASH` in einfachen Anführungszeichen, Länge 60 geprüft; starkes Passwort. Ohne Login (`AUTH_ENABLED=false`) nur im **Verwaltungsnetz** (Sekretariat/Schulleitung), und die Trennung vom Schüler- und Lehrernetz ist geprüft ([Betriebsmodell](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login))
+- [ ] **Zwei-Faktor:** `TWO_FACTOR_KEY` gesetzt und mit den `.env`-Dateien gesichert; Platform-Admins haben den Authenticator eingerichtet und Recovery-Codes aufbewahrt ([zwei-faktor.md](zwei-faktor.md)); `TWO_FACTOR_REQUIRED` bewusst gewählt
+- [ ] **Netz-Allowlist** (wo sinnvoll): `PLATFORM_ADMIN_ALLOWED_NETWORKS` und Netze je Schule gesetzt, bei Reverse-Proxy `TRUSTED_PROXIES` geprüft, von außerhalb getestet
 - [ ] **Migration** gelaufen (`Migration complete` im Log), Formulare eingespielt, Testanmeldung durchgespielt (Eintrag, PDF-Download, Upload)
 - [ ] **HTTPS** für Backend und Frontend; `SESSION_SECURE=true`; HSTS erst nach erfolgreichem Test
 - [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade über einen **Reverse-Proxy**; bei Proxy auf demselben Server `BACKEND_BIND=127.0.0.1`

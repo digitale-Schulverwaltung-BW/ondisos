@@ -101,6 +101,8 @@ docker compose exec backend printenv ADMIN_PASSWORD_HASH | tr -d '\n' | wc -c   
 
 Weitere Zugänge für einzelne Schulen legen Sie später im Backend an ([MULTI-TENANT.md](MULTI-TENANT.md)).
 
+**Zwei-Faktor-Anmeldung:** Im Mehrschul-Betrieb (`MULTI_TENANT_ENABLED=true`) richtet der Platform-Admin sie nach der Anmeldung ein (die ersten 10 Anmeldungen sind noch ohne möglich, danach führt ein Assistent durch die Einrichtung). Dafür muss `TWO_FACTOR_KEY` in Schritt 2 gesetzt sein. Ablauf und Wiederherstellung: [zwei-faktor.md](zwei-faktor.md).
+
 ## 5. Formulare einspielen
 
 Ohne Formular-Konfiguration gibt es nichts anzuzeigen. Die Vorlage `frontend/config/forms-config-dist.php` enthält Beispielformulare:
@@ -229,6 +231,11 @@ Wer sie später ändert (oder den Stack einmal mit den Beispielwerten gestartet 
 Fast immer ist der Hash beschädigt: In der Root-`.env` zerlegt Docker Compose jedes `$…` eines **nicht** in einfache Anführungszeichen gesetzten Hashes (aus 60 Zeichen werden etwa 35).
 Sonderzeichen im *Passwort* sind unkritisch. Länge wie in Schritt 4 prüfen; bei einem Wert ≠ 60 den Hash in einfache Anführungszeichen setzen und `docker compose up -d backend` wiederholen.
 Das Backend meldet den Fall beim Start (`⚠️ ADMIN_PASSWORD_HASH looks damaged`, `docker compose logs backend`).
+
+### Anmeldung endet mit „Ein Fehler ist aufgetreten“ (500)
+
+Ursache bis 3.1.1: Ein Skript, das Sie mit `docker compose exec backend php …` (also als `root`) gestartet haben, legte `logs/audit.log` für `root` an, und der Webserver konnte nicht mehr schreiben. Ab 3.1.2 passiert das nicht mehr. Bei einer älteren Installation:
+`docker compose exec -u root backend chown -R www-data:www-data /var/www/html/logs`. Jeder Neustart des Containers korrigiert die Besitzer ebenfalls. Die PHP-Meldung steht in `logs/php_errors.log` ([betrieb.md](betrieb.md#überwachung-und-protokolle)).
 
 ### Container startet immer wieder neu
 

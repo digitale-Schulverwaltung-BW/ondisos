@@ -11,7 +11,7 @@ Der empfohlene Weg ist der [Docker-Stack](installation.md); er liefert PHP, Comp
 | | |
 |---|---|
 | **PHP** | 8.2 oder höher |
-| **PHP-Erweiterungen** | `mysqli`, `mbstring`, `gd` (mit JPEG-Unterstützung: Logos), `zip`, `xml`/`dom`, `fileinfo`, `zlib`, `ctype`; empfohlen `curl`, `bcmath` |
+| **PHP-Erweiterungen** | `mysqli`, `mbstring`, `gd` (mit JPEG-Unterstützung: Logos), `zip`, `xml`/`dom`, `fileinfo`, `zlib`, `ctype`, `iconv` (QR-Code der Zwei-Faktor-Anmeldung), `sodium` (Verschlüsselung der Authenticator-Geheimnisse; in PHP 8 meist enthalten); empfohlen `curl`, `bcmath` |
 | **Datenbank** | MySQL 8.0+ oder MariaDB 10.5+ |
 | **Webserver** | Apache oder Nginx mit PHP-FPM (für die mitgelieferte `.htaccess` Apache mit `mod_rewrite`, `mod_headers` und `AllowOverride All`) |
 | **Composer** | zum Installieren der Abhängigkeiten (mPDF, PhpSpreadsheet) |

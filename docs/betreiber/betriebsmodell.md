@@ -124,7 +124,7 @@ Wer sie erreicht, braucht deshalb einen Schutz. Standard ist der **Login** (`AUT
 
 | | **Modell A: ohne Login** (`AUTH_ENABLED=false`, Einzelbetrieb, bewusst gesetzt) | **Modell B: mit Login** (`AUTH_ENABLED=true`; im Mehrschul-Betrieb immer) |
 |---|---|---|
-| Schutz | allein das **Netz**: nur wer die Seite erreicht, darf alles | Benutzername und Passwort, Sitzung, Rollen (Platform-Admin, Schul-Admin) |
+| Schutz | allein das **Netz**: nur wer die Seite erreicht, darf alles | Benutzername und Passwort, Sitzung, Rollen (Platform-Admin, Schul-Admin); im Mehrschul-Betrieb für Platform-Admins zusätzlich ein zweiter Faktor ([zwei-faktor.md](zwei-faktor.md)) |
 | Geeignet für | **ausschließlich das Verwaltungsnetz** der Schule: das abgeschottete Netz, in dem **Sekretariat und (erweiterte) Schulleitung** arbeiten | jedes andere Netz; Pflicht, sobald das Backend nicht im Verwaltungsnetz steht |
 | Rechte | **alle** Nutzer des Netzes haben dieselben Rechte (Platform-Rolle: Anmeldungen, Export, Löschen, Formular-Editor) | getrennt nach Rolle |
 | Nachvollziehbarkeit | im Audit-Log steht **kein Benutzer** | Benutzername im Audit-Log |
@@ -157,7 +157,7 @@ Aussperrung: `PLATFORM_ADMIN_ALLOWED_NETWORKS` in der `.env` leeren ([Notfall](n
 1. Unter **Tenants** die Schule anlegen: Name, Slug, optional die Adresse des Frontends. Dabei **Formulare übernehmen von** einer bestehenden Schule wählen
    (ein neuer Tenant hat sonst keine Formulare).
 2. Das angezeigte **Secret sofort sichern** – es erscheint nur einmal. (Verloren? *API-Schlüssel erneuern*; das alte wird ungültig.)
-3. Auf der Tenant-Seite einen **Tenant-Admin** für die Schule anlegen (Benutzername, Passwort).
+3. Auf der Tenant-Seite einen **Tenant-Admin** für die Schule anlegen (Benutzername, Passwort). Optional dort auch die **Netze** der Schule eintragen, aus denen sich ihre Admins anmelden dürfen, und der Schule die freiwillige Zwei-Faktor-Anmeldung (*Mein Konto*) empfehlen.
 4. Der Schule **Backend-URL, Slug und Secret** auf einem sicheren Weg übermitteln (nicht unverschlüsselt per E-Mail) sowie die Zugangsdaten des Tenant-Admins
    getrennt davon.
 
@@ -178,7 +178,7 @@ Aussperrung: `PLATFORM_ADMIN_ALLOWED_NETWORKS` in der `.env` leeren ([Notfall](n
 - **Backend nicht erreichbar:** Das Frontend liefert das Formular aus seinem Cache weiter (höchstens 7 Tage alte Fassung). **Absenden braucht das Backend**;
   ohne Verbindung erhalten Besucher eine Fehlermeldung. Ohne Cache erscheint eine Wartungsseite.
 - **Secret erneuern** (z. B. nach Personalwechsel): im Backend *API-Schlüssel erneuern*, neuen Wert an die Schul-IT geben, dort eintragen. Bis dahin lehnt das Backend Anmeldungen ab.
-- **Updates:** Backend und Frontend lassen sich getrennt aktualisieren. Das Plugin 3.1 arbeitet mit Backend 3.0 und 3.1 zusammen; Funktionen wie Surveys aus dem Backend brauchen Backend 3.1
+- **Updates:** Backend und Frontend lassen sich getrennt aktualisieren, aber immer **das Backend zuerst**: Frontend und Plugin ab 3.1.2 signieren im neuen Format 2, das nur ein Backend ab 3.1.2 versteht (Notausstieg gegen ein älteres Backend: `API_SIGNATURE_VERSION=1`); ein Frontend 3.1.1 an einem Backend 3.1.2 funktioniert dagegen (Modus `compat`). Das Plugin 3.1 arbeitet mit Backend 3.0 und 3.1 zusammen; Funktionen wie Surveys aus dem Backend brauchen Backend 3.1
   ([MIGRATION-3.1.md](MIGRATION-3.1.md)). Das Backend zuerst, dann die Frontends.
 - **E-Mail-Benachrichtigung:** Sie wird vom **Server der Schule** versendet (PHP `mail()`) und enthält die Angaben der Anmeldung. Personenbezogene Daten laufen also
   nicht nur durch das Backend. Die Datenhaltung selbst (Datenbank, Uploads, PDFs) liegt ausschließlich im Backend.
