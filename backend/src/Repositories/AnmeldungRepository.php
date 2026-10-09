@@ -328,11 +328,58 @@ class AnmeldungRepository
     }
 
     /**
+     * Tenant for a write on one Anmeldung.
+     *
+     * Single-tenant context: the active tenant. All-tenants mode (platform admin): the tenant owning the row, so the
+     * UPDATE/DELETE stays filtered by tenant_id and getTenantId() is never called. Null = row does not exist.
+     */
+    private function tenantIdForWrite(int $id): ?int
+    {
+        if (!TenantContext::isAllTenants()) {
+            return TenantContext::getTenantId();
+        }
+
+        return $this->findTenantIdById($id);
+    }
+
+    /**
+     * Group IDs by the tenant a write must run as (see tenantIdForWrite()).
+     *
+     * @param int[] $ids
+     * @return array<int, int[]> tenant_id => ids
+     */
+    private function groupIdsByTenantForWrite(array $ids): array
+    {
+        $ids = array_map('intval', $ids);
+
+        if (!TenantContext::isAllTenants()) {
+            return [TenantContext::getTenantId() => $ids];
+        }
+
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->db->prepare("SELECT id, tenant_id FROM anmeldungen WHERE id IN ($placeholders)");
+        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $groups = [];
+        while ($row = $result->fetch_assoc()) {
+            if ($row['tenant_id'] !== null) {
+                $groups[(int)$row['tenant_id']][] = (int)$row['id'];
+            }
+        }
+        return $groups;
+    }
+
+    /**
      * Update status of a single Anmeldung
      */
     public function updateStatus(int $id, string $newStatus): bool
     {
-        $tenantId = TenantContext::getTenantId();
+        $tenantId = $this->tenantIdForWrite($id);
+        if ($tenantId === null) {
+            return false;
+        }
 
         $sql = "UPDATE anmeldungen
                 SET status = ?, updated_at = NOW()
@@ -355,28 +402,23 @@ class AnmeldungRepository
             return 0;
         }
 
-        $tenantId = TenantContext::getTenantId();
+        $affected = 0;
+        foreach ($this->groupIdsByTenantForWrite($ids) as $tenantId => $tenantIds) {
+            $placeholders = implode(',', array_fill(0, count($tenantIds), '?'));
 
-        // Sanitize IDs
-        $ids = array_map('intval', $ids);
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $sql = "UPDATE anmeldungen
+                    SET status = ?, updated_at = NOW()
+                    WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
 
-        $sql = "UPDATE anmeldungen
-                SET status = ?, updated_at = NOW()
-                WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $types = 's' . str_repeat('i', count($tenantIds)) . 'i';
+            $params = array_merge([$newStatus], $tenantIds, [$tenantId]);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $affected += $stmt->affected_rows;
+        }
 
-        $stmt = $this->db->prepare($sql);
-
-        // Build types string: 's' for status, then 'i' for each ID, then 'i' for tenant_id
-        $types = 's' . str_repeat('i', count($ids)) . 'i';
-
-        // Merge status, IDs, and tenant_id for bind_param
-        $params = array_merge([$newStatus], $ids, [$tenantId]);
-
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-
-        return $stmt->affected_rows;
+        return $affected;
     }
 
     /**
@@ -384,7 +426,10 @@ class AnmeldungRepository
      */
     public function softDelete(int $id): bool
     {
-        $tenantId = TenantContext::getTenantId();
+        $tenantId = $this->tenantIdForWrite($id);
+        if ($tenantId === null) {
+            return false;
+        }
 
         $sql = "UPDATE anmeldungen
                 SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
@@ -407,22 +452,23 @@ class AnmeldungRepository
             return 0;
         }
 
-        $tenantId = TenantContext::getTenantId();
+        $affected = 0;
+        foreach ($this->groupIdsByTenantForWrite($ids) as $tenantId => $tenantIds) {
+            $placeholders = implode(',', array_fill(0, count($tenantIds), '?'));
 
-        $ids = array_map('intval', $ids);
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $sql = "UPDATE anmeldungen
+                    SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
+                    WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
 
-        $sql = "UPDATE anmeldungen
-                SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
-                WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
+            $stmt = $this->db->prepare($sql);
+            $types = str_repeat('i', count($tenantIds)) . 'i';
+            $params = array_merge($tenantIds, [$tenantId]);
+            $stmt->bind_param($types, ...$params);
+            $stmt->execute();
+            $affected += $stmt->affected_rows;
+        }
 
-        $stmt = $this->db->prepare($sql);
-        $types = str_repeat('i', count($ids)) . 'i';
-        $params = array_merge($ids, [$tenantId]);
-        $stmt->bind_param($types, ...$params);
-        $stmt->execute();
-
-        return $stmt->affected_rows;
+        return $affected;
     }
 
     /**
@@ -430,7 +476,10 @@ class AnmeldungRepository
      */
     public function hardDelete(int $id): bool
     {
-        $tenantId = TenantContext::getTenantId();
+        $tenantId = $this->tenantIdForWrite($id);
+        if ($tenantId === null) {
+            return false;
+        }
 
         $sql = "DELETE FROM anmeldungen WHERE id = ? AND tenant_id = ?";
 
@@ -561,7 +610,10 @@ class AnmeldungRepository
      */
     public function restore(int $id): bool
     {
-        $tenantId = TenantContext::getTenantId();
+        $tenantId = $this->tenantIdForWrite($id);
+        if ($tenantId === null) {
+            return false;
+        }
 
         $sql = "UPDATE anmeldungen
                 SET deleted = 0, deleted_at = NULL, updated_at = NOW()

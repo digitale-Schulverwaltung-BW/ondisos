@@ -223,4 +223,52 @@ class AnmeldungRepositoryIsolationTest extends TestCase
             "Tenant A's record must still be accessible after Tenant B's failed delete attempt"
         );
     }
+
+    private function insertForTenantB(): int
+    {
+        TenantContext::initialize($this->tenantBId);
+        $id = $this->repo->insert([
+            'formular'         => 'bs',
+            'formular_version' => '1.0',
+            'name'             => 'Erika Muster',
+            'email'            => 'erika@example.com',
+            'status'           => 'neu',
+            'data'             => '{"name":"Erika Muster"}',
+            'pdf_config'       => null,
+        ]);
+        TenantContext::reset();
+
+        return $id;
+    }
+
+    /**
+     * Platform admin in "all tenants" mode (e.g. Excel export marking entries as exported):
+     * writes must not throw and must still hit exactly the tenant owning each row.
+     */
+    public function testAllTenantsModeWritesUseTheTenantOfEachRow(): void
+    {
+        $recordBId = $this->insertForTenantB();
+
+        TenantContext::initAllTenants();
+        $this->assertTrue($this->repo->updateStatus($this->recordAId, 'exportiert'));
+        $this->assertSame(1, $this->repo->bulkUpdateStatus([$recordBId, 999999999], 'archiviert'));
+        $this->assertSame(2, $this->repo->bulkSoftDelete([$this->recordAId, $recordBId]));
+        $this->assertTrue($this->repo->restore($this->recordAId));
+        TenantContext::reset();
+
+        TenantContext::initialize($this->tenantAId);
+        $this->assertSame('exportiert', $this->repo->findById($this->recordAId)?->status);
+        TenantContext::initialize($this->tenantBId);
+        $this->assertNull($this->repo->findById($recordBId), 'still in the trash');
+        TenantContext::reset();
+    }
+
+    public function testAllTenantsModeWriteOnUnknownIdReturnsFalse(): void
+    {
+        TenantContext::initAllTenants();
+
+        $this->assertFalse($this->repo->updateStatus(999999999, 'exportiert'));
+        $this->assertFalse($this->repo->softDelete(999999999));
+        $this->assertFalse($this->repo->hardDelete(999999999));
+    }
 }
