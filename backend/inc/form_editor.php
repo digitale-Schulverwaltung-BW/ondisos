@@ -32,7 +32,7 @@ if ($editorRole === null) {
 require_once __DIR__ . '/editor_rate_limit.php';
 editor_rate_limit();
 
-$editorNoTenant = TenantContext::isAllTenants();
+$editorNoTenant = !TenantContext::isInitialized();
 if (!$editorNoTenant) {
     $db       = Database::getConnection();
     $configs  = new FormConfigRepository($db);

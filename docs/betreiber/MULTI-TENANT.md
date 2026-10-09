@@ -87,7 +87,7 @@ docker compose up -d backend    # Container neu erstellen, damit die geänderte 
 ### 5. Als Platform-Admin einloggen
 
 `http://backend.example.com/login.php` mit dem konfigurierten Benutzernamen und Passwort.
-Der Platform-Admin sieht alle Tenants und kann zwischen ihnen wechseln.
+Der Platform-Admin verwaltet alle Tenants und arbeitet jeweils in **einer** Schule, die er im Menü der Kopfzeile wählt. Eine Liste der Anmeldungen über alle Schulen gibt es nicht.
 
 ---
 
@@ -236,11 +236,9 @@ Jedes Frontend hat eine eigene `.env` mit dem zugehörigen Slug und Secret.
 
 ## Tenant-Switcher (Platform-Admin)
 
-Der Platform-Admin wechselt im Backend über das Menü in der Kopfzeile (oder per URL) zwischen
-Tenants:
-
-- **Alle Tenants** anzeigen: `?switch_tenant=0`
-- **Bestimmten Tenant** anzeigen: `?switch_tenant=<id>`
+Der Platform-Admin wechselt im Backend über das Menü in der Kopfzeile zwischen den Tenants (ein Formular mit CSRF-Token, kein Link).
+Es gibt keine Ansicht „Alle Tenants“: Nach dem Login zeigt die Kopfzeile „Schule wählen“, bis ein Tenant gewählt ist; bis dahin sind nur die Tenant-Verwaltung (`tenants.php`), die Formular-Seiten und „Mein Konto“ erreichbar,
+Seiten mit Anmeldungen leiten auf `tenants.php` um.
 
 Der aktive Kontext wird in der Session gespeichert und in der Navigation angezeigt.
 

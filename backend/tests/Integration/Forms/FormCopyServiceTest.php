@@ -132,16 +132,6 @@ class FormCopyServiceTest extends FormEditorTestCase
         $this->assertSame(0, $this->countRows('form_resources', $this->tenantC));
     }
 
-    public function testContextIsRestoredToAllTenantsModeToo(): void
-    {
-        $this->seedSource();
-        TenantContext::initAllTenants();
-
-        $this->service()->copy($this->tenantA, $this->tenantB, null, false, S::ROLE_PLATFORM, 'root');
-
-        $this->assertTrue(TenantContext::isAllTenants());
-    }
-
     public function testSubmissionsDraftsAndHistoryOfTheSourceAreNotCopied(): void
     {
         $this->seedSource();

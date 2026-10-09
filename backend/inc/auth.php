@@ -84,3 +84,16 @@ if ($multiTenantEnabled) {
         exit;
     }
 }
+
+// Platform admin without a chosen school has no tenant context (there is no cross-tenant view).
+// Only pages that cope with that (tenant management, form editor shell, own account) are reachable;
+// everything else, i.e. all pages with Anmeldungen, sends the admin to the tenant list.
+if ($multiTenantEnabled && !empty($_SESSION['is_platform_admin']) && !\App\Config\TenantContext::isInitialized()) {
+    $scriptName = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    $withoutTenant = ['tenants.php', 'tenant_logo.php', 'account.php', 'two_factor_setup.php', 'logout.php',
+        'forms.php', 'form_edit.php', 'form_survey.php', 'form_preview.php', 'form_preview_frame.php', 'form_pdf_preview.php'];
+    if (!in_array($scriptName, $withoutTenant, true)) {
+        header('Location: tenants.php?choose=1');
+        exit;
+    }
+}

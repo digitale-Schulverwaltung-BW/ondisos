@@ -104,19 +104,6 @@ class AnmeldungRepositoryAdjacentIdsTest extends TestCase
         $this->assertSame(['bs', 5, 7, 'bs', 5, 7], $this->captured['params']);
     }
 
-    public function testSkipsTenantFilterInAllTenantsMode(): void
-    {
-        TenantContext::initAllTenants();
-        $repo = $this->makeRepo(['prev_id' => 1, 'next_id' => 3]);
-
-        $result = $repo->findAdjacentIds(2, 'vabo');
-
-        $this->assertSame(['prev' => 1, 'next' => 3], $result);
-        $this->assertStringNotContainsString('tenant_id', $this->captured['sql']);
-        $this->assertSame('sisi', $this->captured['types']);
-        $this->assertSame(['vabo', 2, 'vabo', 2], $this->captured['params']);
-    }
-
     public function testReturnsNullForMissingNeighbours(): void
     {
         TenantContext::initialize(1);

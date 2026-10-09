@@ -38,7 +38,7 @@ class UploadCleanupService
         try {
             $tenantId = TenantContext::getTenantId();
         } catch (\RuntimeException $e) {
-            // Uninitialized or all-tenants mode: no single tenant directory applies
+            // Uninitialized context: no tenant directory applies
             $this->logFailure($anmeldungId, '', 'no single tenant context: ' . $e->getMessage());
             return 0;
         }

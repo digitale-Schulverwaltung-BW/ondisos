@@ -27,15 +27,6 @@ class TenantContextRunAsTest extends TestCase
         $this->assertSame(1, TenantContext::getTenantId());
     }
 
-    public function testRestoresAllTenantsMode(): void
-    {
-        TenantContext::initAllTenants();
-        $inside = TenantContext::runAs(3, static fn () => [TenantContext::isAllTenants(), TenantContext::getTenantId()]);
-
-        $this->assertSame([false, 3], $inside);
-        $this->assertTrue(TenantContext::isAllTenants());
-    }
-
     public function testRestoresTheUninitializedState(): void
     {
         TenantContext::runAs(3, static fn () => null);

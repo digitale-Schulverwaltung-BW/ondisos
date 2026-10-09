@@ -6,10 +6,12 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Config\Config;
+use App\Config\TenantContext;
 
 class RequestExpungeService
 {
-    private const CACHE_FILE = __DIR__ . '/../../cache/last_expunge.txt';
+    /** One throttle marker per tenant: the cleanup runs for the active tenant only, never across tenants. */
+    private const CACHE_FILE_TEMPLATE = __DIR__ . '/../../cache/last_expunge_%d.txt';
     private const CHECK_INTERVAL_HOURS = 6; // Only run every 6 hours
 
     public function __construct(
@@ -23,7 +25,12 @@ class RequestExpungeService
     public function checkAndRun(): ?array
     {
         $config = Config::getInstance();
-        
+
+        // No active tenant (login, platform admin before choosing a school): nothing to clean
+        if (!TenantContext::isInitialized()) {
+            return null;
+        }
+
         // Check if expunge is enabled
         if ($config->autoExpungeDays <= 0) {
             return null;
@@ -69,23 +76,28 @@ class RequestExpungeService
         }
     }
 
+    private function cacheFile(): string
+    {
+        return sprintf(self::CACHE_FILE_TEMPLATE, TenantContext::getTenantId());
+    }
+
     /**
      * Check if expunge should run (throttling logic)
      */
     private function shouldRun(): bool
     {
         // Ensure cache directory exists
-        $cacheDir = dirname(self::CACHE_FILE);
+        $cacheDir = dirname($this->cacheFile());
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0755, true);
         }
 
         // Check last run timestamp
-        if (!file_exists(self::CACHE_FILE)) {
+        if (!file_exists($this->cacheFile())) {
             return true;
         }
 
-        $lastRun = (int)file_get_contents(self::CACHE_FILE);
+        $lastRun = (int)file_get_contents($this->cacheFile());
         $hoursSinceLastRun = (time() - $lastRun) / 3600;
 
         return $hoursSinceLastRun >= self::CHECK_INTERVAL_HOURS;
@@ -96,12 +108,12 @@ class RequestExpungeService
      */
     private function updateLastRun(): void
     {
-        $cacheDir = dirname(self::CACHE_FILE);
+        $cacheDir = dirname($this->cacheFile());
         if (!is_dir($cacheDir)) {
             mkdir($cacheDir, 0755, true);
         }
 
-        file_put_contents(self::CACHE_FILE, (string)time());
+        file_put_contents($this->cacheFile(), (string)time());
     }
 
     /**
@@ -109,7 +121,7 @@ class RequestExpungeService
      */
     public function getLastRunInfo(): array
     {
-        if (!file_exists(self::CACHE_FILE)) {
+        if (!TenantContext::isInitialized() || !file_exists($this->cacheFile())) {
             return [
                 'lastRun' => null,
                 'nextRun' => null,
@@ -117,7 +129,7 @@ class RequestExpungeService
             ];
         }
 
-        $lastRun = (int)file_get_contents(self::CACHE_FILE);
+        $lastRun = (int)file_get_contents($this->cacheFile());
         $nextRun = $lastRun + (self::CHECK_INTERVAL_HOURS * 3600);
 
         return [
@@ -133,6 +145,10 @@ class RequestExpungeService
      */
     public function forceRun(): array
     {
+        if (!TenantContext::isInitialized()) {
+            return ['deleted' => 0, 'ids' => []];
+        }
+
         $result = $this->expungeService->autoExpunge();
         $this->updateLastRun();
         

@@ -8,15 +8,8 @@ use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
 /**
- * Unit Tests for TenantContext — all-tenants mode extension.
- *
- * Covers the platform admin all-tenants mode added in Phase 2:
- * - initAllTenants() sets isAllTenants() to true without throwing
- * - getTenantId() throws in all-tenants mode (write guard enforced automatically)
- * - initialize() resets all-tenants flag to false
- * - reset() clears both $tenantId and $allTenants
- * - isAllTenants() returns false after initialize()
- * - isAllTenants() returns false on fresh static state
+ * There is deliberately no "all tenants" mode: without an active tenant the context
+ * throws instead of falling through to every school's data.
  */
 class TenantContextAllTenantsTest extends TestCase
 {
@@ -32,38 +25,9 @@ class TenantContextAllTenantsTest extends TestCase
         TenantContext::reset();
     }
 
-    public function testInitAllTenantsSetsFlagWithoutThrowing(): void
+    public function testFreshStateIsNotInitializedAndThrows(): void
     {
-        TenantContext::initAllTenants();
-
-        $this->assertTrue(TenantContext::isAllTenants());
-    }
-
-    public function testGetTenantIdThrowsInAllTenantsMode(): void
-    {
-        TenantContext::initAllTenants();
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessageMatches('/all.tenants mode/i');
-
-        TenantContext::getTenantId();
-    }
-
-    public function testInitializeResetsAllTenantsFlag(): void
-    {
-        TenantContext::initAllTenants();
-        TenantContext::initialize(2);
-
-        $this->assertFalse(TenantContext::isAllTenants());
-        $this->assertSame(2, TenantContext::getTenantId());
-    }
-
-    public function testResetClearsBothTenantIdAndAllTenantsFlag(): void
-    {
-        TenantContext::initAllTenants();
-        TenantContext::reset();
-
-        $this->assertFalse(TenantContext::isAllTenants());
+        $this->assertFalse(TenantContext::isInitialized());
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessageMatches('/not initialized/i');
@@ -71,16 +35,25 @@ class TenantContextAllTenantsTest extends TestCase
         TenantContext::getTenantId();
     }
 
-    public function testIsAllTenantsReturnsFalseAfterInitialize(): void
+    public function testInitializeActivatesTheTenant(): void
     {
         TenantContext::initialize(5);
 
-        $this->assertFalse(TenantContext::isAllTenants());
+        $this->assertTrue(TenantContext::isInitialized());
+        $this->assertSame(5, TenantContext::getTenantId());
     }
 
-    public function testIsAllTenantsReturnsFalseOnFreshState(): void
+    public function testResetClearsTheTenant(): void
     {
-        // No calls made — fresh static state after reset() in setUp()
-        $this->assertFalse(TenantContext::isAllTenants());
+        TenantContext::initialize(5);
+        TenantContext::reset();
+
+        $this->assertFalse(TenantContext::isInitialized());
+    }
+
+    public function testAllTenantsModeNoLongerExists(): void
+    {
+        $this->assertFalse(method_exists(TenantContext::class, 'initAllTenants'));
+        $this->assertFalse(method_exists(TenantContext::class, 'isAllTenants'));
     }
 }

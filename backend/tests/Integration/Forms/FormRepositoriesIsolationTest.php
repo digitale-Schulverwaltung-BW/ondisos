@@ -202,7 +202,7 @@ class FormRepositoriesIsolationTest extends FormEditorTestCase
 
     // ---- no tenant, no access ---------------------------------------------------------------
 
-    public function testAllTenantsModeAndUninitializedContextCannotUseTheRepositories(): void
+    public function testUninitializedContextCannotUseTheRepositories(): void
     {
         $calls = [
             fn () => $this->configs->find('bs'),
@@ -217,7 +217,7 @@ class FormRepositoriesIsolationTest extends FormEditorTestCase
             fn () => $this->revisions->find(1),
         ];
 
-        foreach (['all' => fn () => TenantContext::initAllTenants(), 'none' => fn () => TenantContext::reset()] as $label => $mode) {
+        foreach (['none' => fn () => TenantContext::reset()] as $label => $mode) {
             $mode();
             foreach ($calls as $i => $call) {
                 try {

@@ -159,14 +159,4 @@ class UploadCleanupServiceTest extends TestCase
         $this->assertSame(0, (new UploadCleanupService($this->base))->deleteForAnmeldung(5));
         $this->assertFileExists($this->base . '/tenant-1/5_a.pdf');
     }
-
-    public function testAllTenantsModeDoesNotDelete(): void
-    {
-        TenantContext::reset();
-        TenantContext::initAllTenants();
-        $this->touchFile('tenant-1/5_a.pdf');
-
-        $this->assertSame(0, (new UploadCleanupService($this->base))->deleteForAnmeldung(5));
-        $this->assertFileExists($this->base . '/tenant-1/5_a.pdf');
-    }
 }

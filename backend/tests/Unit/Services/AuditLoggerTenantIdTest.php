@@ -108,14 +108,4 @@ class AuditLoggerTenantIdTest extends TestCase
         $this->assertArrayHasKey('tenant_id', $entry);
         $this->assertNull($entry['tenant_id']);
     }
-
-    public function testLogEntryHasNullTenantIdInAllTenantsMode(): void
-    {
-        TenantContext::initAllTenants();
-
-        $entry = $this->captureLogEntry(fn() => AuditLogger::exportRun('all', 42));
-
-        $this->assertArrayHasKey('tenant_id', $entry);
-        $this->assertNull($entry['tenant_id']);
-    }
 }

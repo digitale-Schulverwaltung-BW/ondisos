@@ -74,12 +74,11 @@ if (!$multiTenantEnabled) {
     } else {
         // Browser request: resolve from session set by login.php
         if (!empty($_SESSION['is_platform_admin'])) {
-            // Platform admin: may be switched into a single tenant or viewing all
+            // Platform admin: works in the tenant chosen with the switcher. Without a choice the context stays
+            // uninitialized (no cross-tenant view); auth.php sends the admin to tenants.php.
             $switchedTenantId = $_SESSION['switched_tenant_id'] ?? null;
             if ($switchedTenantId !== null) {
                 App\Config\TenantContext::initialize((int)$switchedTenantId);
-            } else {
-                App\Config\TenantContext::initAllTenants();
             }
         } elseif (!empty($_SESSION['tenant_id'])) {
             // Tenant admin: scoped to their own tenant
@@ -102,12 +101,7 @@ if (($multiTenantEnabled ?? false) && !empty($_SESSION['is_platform_admin'])) {
             exit('Ungültiger Sicherheitstoken. Bitte laden Sie die Seite neu.');
         }
         $switchVal = (int)$_POST['switch_tenant'];
-        if ($switchVal === 0) {
-            // Switch to "All tenants" view
-            unset($_SESSION['switched_tenant_id']);
-            App\Config\TenantContext::initAllTenants();
-        } else {
-            // Switch to specific tenant
+        if ($switchVal > 0 && (new App\Repositories\TenantRepository())->findById($switchVal) !== null) {
             $_SESSION['switched_tenant_id'] = $switchVal;
             App\Config\TenantContext::initialize($switchVal);
         }

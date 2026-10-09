@@ -260,13 +260,10 @@ class AuditLogger
 
         // Resolve tenant_id from TenantContext.
         // - Initialized context   → inject integer tenant_id
-        // - All-tenants mode      → inject null (no single tenant applies)
         // - Uninitialized context → inject null (pre-auth events such as login)
         $tenantId = null;
         try {
-            if (!\App\Config\TenantContext::isAllTenants()) {
-                $tenantId = \App\Config\TenantContext::getTenantId();
-            }
+            $tenantId = \App\Config\TenantContext::getTenantId();
         } catch (\RuntimeException $e) {
             // TenantContext not initialized — log without tenant_id (pre-auth event)
         }

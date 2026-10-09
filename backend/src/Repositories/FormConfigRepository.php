@@ -13,7 +13,7 @@ use mysqli;
 /**
  * Read/write access to form_configs (the live configuration of a form), scoped to the current tenant.
  *
- * Every query filters by tenant_id from TenantContext. In all-tenants mode TenantContext::getTenantId()
+ * Every query filters by tenant_id from TenantContext. Without an active tenant TenantContext::getTenantId()
  * throws, so a platform admin must pick a tenant before editing — there is no "write to all" path.
  *
  * The "version token" of a config is the SHA-256 of the stored config_json string. Callers that

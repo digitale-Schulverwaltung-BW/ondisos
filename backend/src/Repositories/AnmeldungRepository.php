@@ -52,14 +52,12 @@ class AnmeldungRepository
         $sql = "SELECT id, formular, formular_version, name, email, status, created_at
                 FROM anmeldungen WHERE deleted = 0";
 
-        // Tenant isolation: skip filter only in all-tenants (platform admin) mode
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $countSql .= " AND tenant_id = ?";
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        // Tenant isolation: every query is filtered by the active tenant
+        $tenantId = TenantContext::getTenantId();
+        $countSql .= " AND tenant_id = ?";
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         if ($formularFilter !== null && $formularFilter !== '') {
             $countSql .= " AND formular = ?";
@@ -133,12 +131,10 @@ class AnmeldungRepository
         $params = [];
         $types = '';
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        $tenantId = TenantContext::getTenantId();
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         $sql .= " ORDER BY formular ASC";
 
@@ -167,22 +163,6 @@ class AnmeldungRepository
      */
     public function findById(int $id): ?Anmeldung
     {
-        // All-tenants mode: no tenant filter needed
-        if (TenantContext::isAllTenants()) {
-            $sql = "SELECT id, formular, formular_version, name, email, status, created_at, data, pdf_config
-                    FROM anmeldungen
-                    WHERE id = ?";
-
-            $stmt = $this->db->prepare($sql);
-            $stmt->bind_param('i', $id);
-            $stmt->execute();
-
-            $result = $stmt->get_result();
-            $row = $result->fetch_assoc();
-
-            return $row ? Anmeldung::fromArray($row) : null;
-        }
-
         $tenantId = TenantContext::getTenantId();
 
         // Query 1: check whether the record exists at all (cross-tenant)
@@ -247,12 +227,10 @@ class AnmeldungRepository
                 FROM anmeldungen
                 WHERE deleted = 0";
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        $tenantId = TenantContext::getTenantId();
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         if ($formularFilter !== null && $formularFilter !== '') {
             $sql .= " AND formular = ?";
@@ -294,26 +272,15 @@ class AnmeldungRepository
         $ids = array_map('intval', $ids);
         $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $types = 'i' . str_repeat('i', count($ids));
+        $tenantId = TenantContext::getTenantId();
+        $types = 'i' . str_repeat('i', count($ids));
 
-            $sql = "SELECT id, formular, formular_version, name, email, status, data, created_at
-                    FROM anmeldungen
-                    WHERE deleted = 0 AND tenant_id = ? AND id IN ($placeholders)
-                    ORDER BY created_at DESC";
+        $sql = "SELECT id, formular, formular_version, name, email, status, data, created_at
+                FROM anmeldungen
+                WHERE deleted = 0 AND tenant_id = ? AND id IN ($placeholders)
+                ORDER BY created_at DESC";
 
-            $params = array_merge([$tenantId], $ids);
-        } else {
-            $types = str_repeat('i', count($ids));
-
-            $sql = "SELECT id, formular, formular_version, name, email, status, data, created_at
-                    FROM anmeldungen
-                    WHERE deleted = 0 AND id IN ($placeholders)
-                    ORDER BY created_at DESC";
-
-            $params = $ids;
-        }
+        $params = array_merge([$tenantId], $ids);
 
         $stmt = $this->db->prepare($sql);
         $stmt->bind_param($types, ...$params);
@@ -328,58 +295,11 @@ class AnmeldungRepository
     }
 
     /**
-     * Tenant for a write on one Anmeldung.
-     *
-     * Single-tenant context: the active tenant. All-tenants mode (platform admin): the tenant owning the row, so the
-     * UPDATE/DELETE stays filtered by tenant_id and getTenantId() is never called. Null = row does not exist.
-     */
-    private function tenantIdForWrite(int $id): ?int
-    {
-        if (!TenantContext::isAllTenants()) {
-            return TenantContext::getTenantId();
-        }
-
-        return $this->findTenantIdById($id);
-    }
-
-    /**
-     * Group IDs by the tenant a write must run as (see tenantIdForWrite()).
-     *
-     * @param int[] $ids
-     * @return array<int, int[]> tenant_id => ids
-     */
-    private function groupIdsByTenantForWrite(array $ids): array
-    {
-        $ids = array_map('intval', $ids);
-
-        if (!TenantContext::isAllTenants()) {
-            return [TenantContext::getTenantId() => $ids];
-        }
-
-        $placeholders = implode(',', array_fill(0, count($ids), '?'));
-        $stmt = $this->db->prepare("SELECT id, tenant_id FROM anmeldungen WHERE id IN ($placeholders)");
-        $stmt->bind_param(str_repeat('i', count($ids)), ...$ids);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        $groups = [];
-        while ($row = $result->fetch_assoc()) {
-            if ($row['tenant_id'] !== null) {
-                $groups[(int)$row['tenant_id']][] = (int)$row['id'];
-            }
-        }
-        return $groups;
-    }
-
-    /**
      * Update status of a single Anmeldung
      */
     public function updateStatus(int $id, string $newStatus): bool
     {
-        $tenantId = $this->tenantIdForWrite($id);
-        if ($tenantId === null) {
-            return false;
-        }
+        $tenantId = TenantContext::getTenantId();
 
         $sql = "UPDATE anmeldungen
                 SET status = ?, updated_at = NOW()
@@ -402,23 +322,28 @@ class AnmeldungRepository
             return 0;
         }
 
-        $affected = 0;
-        foreach ($this->groupIdsByTenantForWrite($ids) as $tenantId => $tenantIds) {
-            $placeholders = implode(',', array_fill(0, count($tenantIds), '?'));
+        $tenantId = TenantContext::getTenantId();
 
-            $sql = "UPDATE anmeldungen
-                    SET status = ?, updated_at = NOW()
-                    WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
+        // Sanitize IDs
+        $ids = array_map('intval', $ids);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-            $stmt = $this->db->prepare($sql);
-            $types = 's' . str_repeat('i', count($tenantIds)) . 'i';
-            $params = array_merge([$newStatus], $tenantIds, [$tenantId]);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $affected += $stmt->affected_rows;
-        }
+        $sql = "UPDATE anmeldungen
+                SET status = ?, updated_at = NOW()
+                WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
 
-        return $affected;
+        $stmt = $this->db->prepare($sql);
+
+        // Build types string: 's' for status, then 'i' for each ID, then 'i' for tenant_id
+        $types = 's' . str_repeat('i', count($ids)) . 'i';
+
+        // Merge status, IDs, and tenant_id for bind_param
+        $params = array_merge([$newStatus], $ids, [$tenantId]);
+
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+
+        return $stmt->affected_rows;
     }
 
     /**
@@ -426,10 +351,7 @@ class AnmeldungRepository
      */
     public function softDelete(int $id): bool
     {
-        $tenantId = $this->tenantIdForWrite($id);
-        if ($tenantId === null) {
-            return false;
-        }
+        $tenantId = TenantContext::getTenantId();
 
         $sql = "UPDATE anmeldungen
                 SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
@@ -452,23 +374,22 @@ class AnmeldungRepository
             return 0;
         }
 
-        $affected = 0;
-        foreach ($this->groupIdsByTenantForWrite($ids) as $tenantId => $tenantIds) {
-            $placeholders = implode(',', array_fill(0, count($tenantIds), '?'));
+        $tenantId = TenantContext::getTenantId();
 
-            $sql = "UPDATE anmeldungen
-                    SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
-                    WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
+        $ids = array_map('intval', $ids);
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
 
-            $stmt = $this->db->prepare($sql);
-            $types = str_repeat('i', count($tenantIds)) . 'i';
-            $params = array_merge($tenantIds, [$tenantId]);
-            $stmt->bind_param($types, ...$params);
-            $stmt->execute();
-            $affected += $stmt->affected_rows;
-        }
+        $sql = "UPDATE anmeldungen
+                SET deleted = 1, deleted_at = NOW(), updated_at = NOW()
+                WHERE id IN ($placeholders) AND deleted = 0 AND tenant_id = ?";
 
-        return $affected;
+        $stmt = $this->db->prepare($sql);
+        $types = str_repeat('i', count($ids)) . 'i';
+        $params = array_merge($ids, [$tenantId]);
+        $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+
+        return $stmt->affected_rows;
     }
 
     /**
@@ -476,10 +397,7 @@ class AnmeldungRepository
      */
     public function hardDelete(int $id): bool
     {
-        $tenantId = $this->tenantIdForWrite($id);
-        if ($tenantId === null) {
-            return false;
-        }
+        $tenantId = TenantContext::getTenantId();
 
         $sql = "DELETE FROM anmeldungen WHERE id = ? AND tenant_id = ?";
 
@@ -505,12 +423,10 @@ class AnmeldungRepository
                   AND deleted = 0
                   AND updated_at < DATE_SUB(NOW(), INTERVAL ? DAY)";
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        $tenantId = TenantContext::getTenantId();
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         $sql .= " ORDER BY updated_at ASC";
 
@@ -542,12 +458,10 @@ class AnmeldungRepository
         $params = [];
         $types = '';
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        $tenantId = TenantContext::getTenantId();
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         $sql .= " GROUP BY status";
 
@@ -581,12 +495,10 @@ class AnmeldungRepository
         $params = [];
         $types = '';
 
-        if (!TenantContext::isAllTenants()) {
-            $tenantId = TenantContext::getTenantId();
-            $sql .= " AND tenant_id = ?";
-            $params[] = $tenantId;
-            $types .= 'i';
-        }
+        $tenantId = TenantContext::getTenantId();
+        $sql .= " AND tenant_id = ?";
+        $params[] = $tenantId;
+        $types .= 'i';
 
         $sql .= " ORDER BY deleted_at DESC";
 
@@ -610,10 +522,7 @@ class AnmeldungRepository
      */
     public function restore(int $id): bool
     {
-        $tenantId = $this->tenantIdForWrite($id);
-        if ($tenantId === null) {
-            return false;
-        }
+        $tenantId = TenantContext::getTenantId();
 
         $sql = "UPDATE anmeldungen
                 SET deleted = 0, deleted_at = NULL, updated_at = NOW()
@@ -632,15 +541,9 @@ class AnmeldungRepository
      */
     public function findAdjacentIds(int $id, string $formular): array
     {
-        // Tenant isolation: skip filter only in all-tenants (platform admin) mode
-        $tenantSql = '';
-        $tenantParams = [];
-        $tenantTypes = '';
-        if (!TenantContext::isAllTenants()) {
-            $tenantSql = ' AND tenant_id = ?';
-            $tenantParams = [TenantContext::getTenantId()];
-            $tenantTypes = 'i';
-        }
+        $tenantSql = ' AND tenant_id = ?';
+        $tenantParams = [TenantContext::getTenantId()];
+        $tenantTypes = 'i';
 
         $sql = "SELECT
                     (SELECT id FROM anmeldungen WHERE deleted = 0 AND formular = ? AND id < ?$tenantSql ORDER BY id DESC LIMIT 1) AS prev_id,

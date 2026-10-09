@@ -8,65 +8,39 @@ use RuntimeException;
 /**
  * TenantContext — static singleton for request-scoped tenant identity.
  *
- * Every PHP request MUST call either initialize() or initAllTenants() exactly once
+ * Every request that touches tenant data MUST call initialize() exactly once
  * (typically in bootstrap.php) before any repository or service calls getTenantId().
  * Failure to initialize will throw a RuntimeException, making initialization bugs
  * immediately visible rather than causing silent cross-tenant data leakage.
+ * There is deliberately no "all tenants" mode: a platform admin works in one tenant at a time.
  *
  * Usage (normal tenant request):
  *   TenantContext::initialize($tenantId);
  *   $tenantId = TenantContext::getTenantId();
- *
- * Usage (platform admin all-tenants view):
- *   TenantContext::initAllTenants();
- *   // getTenantId() is NOT available — use isAllTenants() guard before calling
- *   if (!TenantContext::isAllTenants()) {
- *       $id = TenantContext::getTenantId();
- *   }
  *
  * Note: reset() is intended for test teardown only.
  */
 class TenantContext
 {
     private static ?int $tenantId = null;
-    private static bool $allTenants = false;
 
     private function __construct() {}
 
     public static function initialize(int $tenantId): void
     {
         self::$tenantId = $tenantId;
-        self::$allTenants = false;
     }
 
     /**
-     * Activate platform-admin all-tenants mode.
-     *
-     * After calling this, isAllTenants() returns true and getTenantId() throws.
-     * Callers (e.g. AnmeldungRepository) must guard with isAllTenants() before
-     * calling getTenantId() to avoid erroneous single-tenant queries.
+     * True once a tenant is active (platform admin before choosing a school, login and 401 API requests: false).
      */
-    public static function initAllTenants(): void
+    public static function isInitialized(): bool
     {
-        self::$allTenants = true;
-        self::$tenantId = null;
-    }
-
-    /**
-     * Returns true when the context is in all-tenants mode (platform admin view).
-     */
-    public static function isAllTenants(): bool
-    {
-        return self::$allTenants;
+        return self::$tenantId !== null;
     }
 
     public static function getTenantId(): int
     {
-        if (self::$allTenants) {
-            throw new RuntimeException(
-                'TenantContext is in all-tenants mode. getTenantId() is not available.'
-            );
-        }
         if (self::$tenantId === null) {
             throw new RuntimeException(
                 'TenantContext not initialized. Call TenantContext::initialize() first.'
@@ -76,7 +50,7 @@ class TenantContext
     }
 
     /**
-     * Run $fn as another tenant, then restore the previous context exactly (including "all tenants" and "not initialized").
+     * Run $fn as another tenant, then restore the previous context exactly (including "not initialized").
      *
      * For the few operations that must read one tenant and write another (copying forms). Everything inside $fn still goes
      * through the tenant-filtered repositories; this only changes which tenant they see.
@@ -88,21 +62,17 @@ class TenantContext
     public static function runAs(int $tenantId, callable $fn): mixed
     {
         $previousTenant = self::$tenantId;
-        $previousAll    = self::$allTenants;
 
-        self::$tenantId   = $tenantId;
-        self::$allTenants = false;
+        self::$tenantId = $tenantId;
         try {
             return $fn();
         } finally {
-            self::$tenantId   = $previousTenant;
-            self::$allTenants = $previousAll;
+            self::$tenantId = $previousTenant;
         }
     }
 
     public static function reset(): void
     {
         self::$tenantId = null;
-        self::$allTenants = false;
     }
 }

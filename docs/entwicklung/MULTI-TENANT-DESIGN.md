@@ -90,14 +90,14 @@ The platform admin creates and manages tenants and tenant admins in `tenants.php
 
 `TenantContext` (request-scoped static singleton) is initialized once per request in `inc/bootstrap.php`; services and repositories read
 `TenantContext::getTenantId()` instead of threading ids through signatures. An uninitialized context throws — it never silently falls back to
-"all tenants". All-tenants mode (platform admin) is explicit (`isAllTenants()`).
+"all tenants". There is no all-tenants mode: a platform admin works in one tenant at a time (`TenantContext::isInitialized()` tells whether one is chosen).
 
 | Situation | Tenant |
 |---|---|
 | `MULTI_TENANT_ENABLED=false` | always tenant 1 |
 | API request (`?tenant=<slug>`) | tenant of the slug; unknown/inactive ⇒ uninitialized ⇒ 401 |
 | Browser, tenant admin | from the session |
-| Browser, platform admin | switched tenant or all tenants (`?switch_tenant=`) |
+| Browser, platform admin | the switched tenant (POST `switch_tenant`); none chosen ⇒ uninitialized context |
 | `pdf/download.php` (token) | tenant of the Anmeldung the token authorizes (`findTenantIdById()`) |
 
 ## Backend
@@ -106,12 +106,12 @@ Multi-tenant operation is enabled with `MULTI_TENANT_ENABLED=true`; this **force
 
 ### Authentication and roles
 
-- **Platform admin:** credentials in `.env` (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`). Manages all tenants, creates tenant admins, may see all data or switch into one tenant.
+- **Platform admin:** credentials in `.env` (`ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH`). Manages all tenants, creates tenant admins, switches into one tenant to see its data (no cross-tenant list).
 - **Tenant admin:** stored in `tenant_admins`, created by the platform admin. Sees only their own tenant.
 
 ### Repository layer
 
-All `AnmeldungRepository` methods filter by `tenant_id` (from `TenantContext`; skipped only in all-tenants mode). `findById()` distinguishes
+All `AnmeldungRepository` methods filter by `tenant_id` (from `TenantContext`, never skipped). `findById()` distinguishes
 "does not exist" from "belongs to another tenant" and logs the latter as an IDOR attempt.
 
 ### File upload isolation

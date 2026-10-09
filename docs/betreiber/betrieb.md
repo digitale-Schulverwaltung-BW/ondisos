@@ -229,7 +229,7 @@ Sie gilt nicht für `/api/*` (durch Signatur geschützt) und den PDF-Download pe
 Eine Überwachung (z. B. Uptime-Check auf `/api/health.php`) ist sinnvoll; sie gehört zum Betreiber, nicht zum Projekt.
 
 **Automatisches Aufräumen:** Archivierte Anmeldungen werden nach `AUTO_EXPUNGE_DAYS` (Standard 90) **samt Uploads endgültig gelöscht**. Der Lauf passiert „bei Gelegenheit" (alle 6 Stunden, ausgelöst durch Seitenaufrufe);
-Status und nächster Lauf stehen im Dashboard. Dieselbe Frist gilt für alle Schulen; stimmen Sie sie mit den Schulen ab, bevor Sie sie ändern.
+Der Lauf gilt immer für die Schule, in der gerade jemand angemeldet ist (jede Schule hat ihren eigenen 6-Stunden-Takt); es gibt keinen schulübergreifenden Lauf. Status und nächster Lauf stehen im Dashboard. Dieselbe Frist gilt für alle Schulen; stimmen Sie sie mit den Schulen ab, bevor Sie sie ändern.
 
 ## Docker aufräumen
 
@@ -246,7 +246,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 |---|---|
 | `Unknown column 'tenant_id'` | Die Migration ist nicht gelaufen: `php backend/migrate.php` (Docker: läuft bei jedem Start, `docker compose logs backend` prüfen) |
 | `Class not found` | Abhängigkeiten fehlen: ohne Docker `composer install --no-dev --optimize-autoloader` im `backend/` |
-| Auto-Expunge läuft nicht | `AUTO_EXPUNGE_DAYS` muss größer 0 sein, `cache/` beschreibbar (dort liegt `last_expunge.txt`); das Dashboard zeigt Status und nächsten Lauf |
+| Auto-Expunge läuft nicht | `AUTO_EXPUNGE_DAYS` muss größer 0 sein, `cache/` beschreibbar (dort liegt je Schule `last_expunge_<Tenant-ID>.txt`); das Dashboard zeigt Status und nächsten Lauf |
 | Excel-Export zeigt die Spalte „Formular“ | Der Export war nicht auf ein Formular gefiltert (`?form=bs`); beim Export eines einzelnen Formulars entfällt die Spalte |
 | Datumsfelder im Export falsch | Der Export wandelt Werte der Form `YYYY-MM-DD` in `dd.mm.yyyy` um; das Feld muss ISO-Format enthalten |
 | Browser meldet CORS-Fehler | Betrifft nur Browser-Aufrufe direkt am Backend (normalerweise ruft das Frontend serverseitig auf): `origin` der Schule unter *Tenants* bzw. `ALLOWED_ORIGINS` prüfen |

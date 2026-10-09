@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Tests\Unit\Services;
 
 use App\Config\Config;
+use App\Config\TenantContext;
 use App\Services\ExpungeService;
 use App\Services\RequestExpungeService;
 use PHPUnit\Framework\TestCase;
@@ -30,7 +31,8 @@ class RequestExpungeServiceTest extends TestCase
 
         // Resolve the actual cache file path via Reflection
         $ref = new ReflectionClass(RequestExpungeService::class);
-        $this->cacheFile = $ref->getConstant('CACHE_FILE');
+        TenantContext::initialize(1);
+        $this->cacheFile = sprintf($ref->getConstant('CACHE_FILE_TEMPLATE'), 1);
 
         // Save and remove any existing cache file
         if (file_exists($this->cacheFile)) {
@@ -48,6 +50,7 @@ class RequestExpungeServiceTest extends TestCase
     protected function tearDown(): void
     {
         parent::tearDown();
+        TenantContext::reset();
 
         // Restore cache file to original state
         if ($this->savedCacheContent !== null) {
@@ -297,5 +300,37 @@ class RequestExpungeServiceTest extends TestCase
             ->willReturn(['deleted' => 0, 'ids' => []]);
 
         $this->service->forceRun();
+    }
+
+    public function testDoesNothingWithoutActiveTenant(): void
+    {
+        putenv('AUTO_EXPUNGE_DAYS=30');
+        $this->resetConfigSingleton();
+        TenantContext::reset();
+
+        $this->mockExpunge->expects($this->never())->method('autoExpunge');
+
+        $this->assertNull($this->service->checkAndRun());
+        $this->assertSame(['deleted' => 0, 'ids' => []], $this->service->forceRun());
+    }
+
+    public function testThrottleIsKeptPerTenant(): void
+    {
+        putenv('AUTO_EXPUNGE_DAYS=30');
+        $this->resetConfigSingleton();
+        $otherFile = sprintf((new ReflectionClass(RequestExpungeService::class))->getConstant('CACHE_FILE_TEMPLATE'), 987654);
+        @unlink($otherFile);
+
+        $this->mockExpunge->expects($this->exactly(2))->method('autoExpunge')->willReturn(['deleted' => 0, 'ids' => []]);
+
+        try {
+            $this->assertNotNull($this->service->checkAndRun());   // tenant 1 runs
+            $this->assertNull($this->service->checkAndRun());      // tenant 1 throttled
+
+            TenantContext::initialize(987654);
+            $this->assertNotNull($this->service->checkAndRun());   // other tenant is not blocked by tenant 1
+        } finally {
+            @unlink($otherFile);
+        }
     }
 }

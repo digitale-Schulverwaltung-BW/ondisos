@@ -115,10 +115,10 @@ projekt/
 | `MULTI_TENANT_ENABLED=false` | immer Tenant 1 |
 | API-Request (`API_REQUEST`) | aus `?tenant=<slug>`; unbekannt/inaktiv ⇒ uninitialisiert ⇒ `401` |
 | Browser, Tenant-Admin | aus der Session (`tenant_id`) |
-| Browser, Platform-Admin | `switch_tenant`: ein Tenant oder „alle" (`isAllTenants()`) |
+| Browser, Platform-Admin | `switch_tenant`: genau ein Tenant; ohne Wahl uninitialisiert, `auth.php` leitet Seiten mit Anmeldungen auf `tenants.php` um |
 | Token-Endpoint (`pdf/download.php`) | Tenant der per Token autorisierten Anmeldung (`findTenantIdById()`) |
 
-Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen auf „alle Daten"). Repositories filtern **jede** Abfrage nach `tenant_id` (außer im All-Tenants-Modus); `AnmeldungRepository::findById()` protokolliert fremde IDs als `idor_attempt`.
+Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen auf „alle Daten"). Repositories filtern **jede** Abfrage nach `tenant_id` (einen All-Tenants-Modus gibt es nicht); `AnmeldungRepository::findById()` protokolliert fremde IDs als `idor_attempt`.
 
 ---
 
@@ -178,7 +178,7 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 
 ```
 1. Login (Pflicht bei MULTI_TENANT_ENABLED=true, sonst optional via AUTH_ENABLED)
-   - Platform-Admin (ADMIN_USERNAME/ADMIN_PASSWORD_HASH): sieht alle Tenants, wechselt per Tenant-Switcher,
+   - Platform-Admin (ADMIN_USERNAME/ADMIN_PASSWORD_HASH): verwaltet alle Tenants, arbeitet per Tenant-Switcher in jeweils einem Tenant,
      verwaltet Tenants unter tenants.php
    - Tenant-Admin (Tabelle tenant_admins): sieht nur den eigenen Tenant
    ↓

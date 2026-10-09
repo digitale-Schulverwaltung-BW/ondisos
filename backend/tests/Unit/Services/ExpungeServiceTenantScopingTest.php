@@ -97,29 +97,6 @@ class ExpungeServiceTenantScopingTest extends TestCase
     // ISOL-04 — Test 2: all-tenants mode does not crash and still calls repo
     // =========================================================================
 
-    /**
-     * When TenantContext is in all-tenants mode (platform admin), autoExpunge()
-     * must NOT crash or silently skip. It must call findExpiredArchived() and
-     * complete normally. The repository layer will omit the tenant filter in this
-     * mode (platform admin can expunge across all tenants).
-     */
-    public function testAutoExpungeInAllTenantsContextStillRunsForEachTenant(): void
-    {
-        TenantContext::initAllTenants();
-        putenv('AUTO_EXPUNGE_DAYS=30');
-
-        $this->mockRepo
-            ->expects($this->once())
-            ->method('findExpiredArchived')
-            ->with(30)
-            ->willReturn([]);
-
-        $result = $this->service->autoExpunge();
-
-        $this->assertSame(0, $result['deleted']);
-        $this->assertSame([], $result['ids']);
-    }
-
     // =========================================================================
     // ISOL-04 — Test 3: expunge disabled means repo is never called
     // =========================================================================

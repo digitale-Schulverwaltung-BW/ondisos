@@ -45,10 +45,10 @@ Genauer (Dateiliste, Datenfluss, Schema, Status-Ablauf): [docs/entwicklung/archi
 | `MULTI_TENANT_ENABLED=false` | immer Tenant 1 |
 | API-Request (`API_REQUEST`) | aus `?tenant=<slug>`; unbekannt/inaktiv ⇒ uninitialisiert ⇒ `401` |
 | Browser, Tenant-Admin | aus der Session (`tenant_id`) |
-| Browser, Platform-Admin | `switch_tenant`: ein Tenant oder „alle" (`isAllTenants()`) |
+| Browser, Platform-Admin | `switch_tenant`: genau ein Tenant; ohne Wahl uninitialisiert (`auth.php` leitet auf `tenants.php`), keine „Alle Tenants“-Ansicht |
 | Token-Endpoint (`pdf/download.php`) | Tenant der per Token autorisierten Anmeldung (`findTenantIdById()`) |
 
-Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen auf „alle Daten"). Repositories filtern **jede** Abfrage nach `tenant_id` (außer im All-Tenants-Modus);
+Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen auf „alle Daten"). Repositories filtern **jede** Abfrage nach `tenant_id` (einen All-Tenants-Modus gibt es nicht);
 `AnmeldungRepository::findById()` protokolliert fremde IDs als `idor_attempt`.
 
 ## Befehle

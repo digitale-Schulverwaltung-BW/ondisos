@@ -80,7 +80,7 @@ require_once __DIR__ . '/csrf.php';
                     $tenantRepo = new \App\Repositories\TenantRepository();
                     $allTenants = $tenantRepo->findAll();
                     $switchedId  = $_SESSION['switched_tenant_id'] ?? null;
-                    $activeLabel = 'Alle Tenants';
+                    $activeLabel = 'Schule wählen';
                     if ($switchedId !== null) {
                         foreach ($allTenants as $t) {
                             if ((int)$t['id'] === (int)$switchedId) {
@@ -97,17 +97,7 @@ require_once __DIR__ . '/csrf.php';
                             <?= $activeLabel ?>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <form method="POST" action="<?= htmlspecialchars($currentPage) ?>" class="m-0">
-                                    <?php csrf_field(); ?>
-                                    <button type="submit" name="switch_tenant" value="0"
-                                            class="dropdown-item<?= $switchedId === null ? ' active' : '' ?>">
-                                        Alle Tenants
-                                    </button>
-                                </form>
-                            </li>
                             <?php if (!empty($allTenants)): ?>
-                                <li><hr class="dropdown-divider"></li>
                                 <?php foreach ($allTenants as $t): ?>
                                     <li>
                                         <form method="POST" action="<?= htmlspecialchars($currentPage) ?>" class="m-0">

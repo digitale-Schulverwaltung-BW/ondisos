@@ -343,6 +343,9 @@ if ($id !== null && $id > 0):
     $tenantForms = \App\Config\TenantContext::runAs($id, static fn (): array => (new \App\Repositories\FormConfigRepository())->listKeys());
     $copySources = array_values(array_filter($tenantRepo->findAll(), static fn (array $t): bool => (int)$t['id'] !== $id));
     ?>
+    <?php if (isset($_GET['choose']) && !\App\Config\TenantContext::isInitialized()): ?>
+        <div class="alert alert-info">Bitte wählen Sie oben rechts zuerst eine Schule (Tenant). Anmeldungen werden immer nur für eine Schule angezeigt.</div>
+    <?php endif; ?>
     <?php if ($copyFlash !== null): ?><div class="alert alert-<?= htmlspecialchars($copyFlash[0]) ?>"><?= htmlspecialchars($copyFlash[1]) ?></div><?php endif; ?>
     <?php if ($copyReport !== null): echo form_copy_report_html($copyReport); endif; ?>
     <?php if ($tenantForms === []): ?>
