@@ -62,14 +62,21 @@ class SurveyLinterTest extends TestCase
         $this->assertCount(4, $result->warnings());
     }
 
-    public function testMissingEmailFieldWarnsOnlyWhenSubmissionsAreStored(): void
+    public function testMissingNameAndEmailWarnsOnlyWhenSubmissionsAreStored(): void
     {
-        $survey = $this->raw([['type' => 'text', 'name' => 'Name', 'isRequired' => true], ['type' => 'text', 'name' => 'Vorname', 'isRequired' => true]]);
+        $survey = $this->raw([['type' => 'text', 'name' => 'Vorname', 'isRequired' => true]]);
         $linter = new SurveyLinter();
 
-        $this->assertSame(['email'], array_column($linter->lint(['db' => true], $survey)->warnings(), 'path'));
-        $this->assertSame(['email'], array_column($linter->lint([], $survey)->warnings(), 'path'), 'db defaults to true');
+        $this->assertSame(['name_or_email'], array_column($linter->lint(['db' => true], $survey)->warnings(), 'path'));
+        $this->assertSame(['name_or_email'], array_column($linter->lint([], $survey)->warnings(), 'path'), 'db defaults to true');
         $this->assertSame([], $linter->lint(['db' => false, 'notify_email' => 'sekretariat@example.de'], $survey)->warnings());
+    }
+
+    public function testFormWithoutEmailFieldIsAcceptedForDataMinimisation(): void
+    {
+        $survey = $this->raw([['type' => 'text', 'name' => 'Name', 'isRequired' => true], ['type' => 'text', 'name' => 'Vorname', 'isRequired' => true]]);
+
+        $this->assertSame([], (new SurveyLinter())->lint(['db' => true], $survey)->warnings());
     }
 
     /** @return array<string,array{0:array<string,mixed>,1:bool}> */
@@ -121,13 +128,18 @@ class SurveyLinterTest extends TestCase
         $this->assertSame([], $result->errors());
     }
 
-    public function testMissingNameFieldWarnsLikeAMissingEmailField(): void
+    public function testMissingNameFieldIsAcceptedWhenEmailIsRequired(): void
     {
         $survey = $this->raw([['type' => 'text', 'name' => 'Vorname', 'isRequired' => true], ['type' => 'text', 'name' => 'email', 'isRequired' => true]]);
 
-        $r = (new SurveyLinter())->lint(['db' => true], $survey);
+        $this->assertSame([], (new SurveyLinter())->lint(['db' => true], $survey)->warnings());
+    }
 
-        $this->assertSame(['name'], array_column($r->warnings(), 'path'));
+    public function testNoRequiredNameOrEmailIsAWarningNotAnError(): void
+    {
+        $r = (new SurveyLinter())->lint(['db' => true], $this->raw([['type' => 'text', 'name' => 'Vorname']]));
+
+        $this->assertSame(['name_or_email'], array_column($r->warnings(), 'path'));
         $this->assertStringContainsString('Name', $r->warnings()[0]['message']);
         $this->assertTrue($r->isValid(), 'a warning, not an error: drafts may be unfinished');
     }
@@ -138,25 +150,29 @@ class SurveyLinterTest extends TestCase
         $f = static fn (string $n, array $extra = []): array => ['type' => 'text', 'name' => $n] + $extra;
         return [
             'both required'              => [[$f('Name', ['isRequired' => true]), $f('email', ['isRequired' => true])], []],
-            'name not required'          => [[$f('Name'), $f('email', ['isRequired' => true])], ['name']],
-            'email not required'         => [[$f('Name', ['isRequired' => true]), $f('E-Mail')], ['email']],
-            'required only conditionally' => [[$f('Name', ['isRequired' => true, 'visibleIf' => '{x} = 1']), $f('email', ['isRequired' => true, 'requiredIf' => '{x} = 1'])], ['name', 'email']],
-            'isRequired as string'       => [[$f('Name', ['isRequired' => 'true']), $f('email', ['isRequired' => true])], ['name']],
+            'name not required, email required' => [[$f('Name'), $f('email', ['isRequired' => true])], []],
+            'email not required, name required' => [[$f('Name', ['isRequired' => true]), $f('E-Mail')], []],
+            'neither required'           => [[$f('Name'), $f('E-Mail')], ['name_or_email']],
+            'only name, required'        => [[$f('Name', ['isRequired' => true])], []],
+            'only email, required'       => [[$f('email', ['isRequired' => true])], []],
+            'only name, not required'    => [[$f('Name')], ['name_or_email']],
+            'required only conditionally' => [[$f('Name', ['isRequired' => true, 'visibleIf' => '{x} = 1']), $f('email', ['isRequired' => true, 'requiredIf' => '{x} = 1'])], ['name_or_email']],
+            'isRequired as string'       => [[$f('Name', ['isRequired' => 'true']), $f('email')], ['name_or_email']],
             'lower case name'            => [[$f('name', ['isRequired' => true]), $f('Email', ['isRequired' => true])], []],
-            'neither present'            => [[$f('Vorname', ['isRequired' => true])], ['name', 'email']],
+            'neither present'            => [[$f('Vorname', ['isRequired' => true])], ['name_or_email']],
             'nested in a panel'          => [[['type' => 'panel', 'name' => 'p', 'elements' => [$f('Name', ['isRequired' => true]), $f('email1', ['isRequired' => true])]]], []],
         ];
     }
 
     /**
      * @param list<array<string,mixed>> $elements
-     * @param list<string> $warnedSlots
+     * @param list<string> $warnedPaths
      */
     #[\PHPUnit\Framework\Attributes\DataProvider('requiredCases')]
-    public function testNameAndEmailMustBePresentAndAlwaysRequired(array $elements, array $warnedSlots): void
+    public function testAtLeastOneOfNameAndEmailMustBePresentAndAlwaysRequired(array $elements, array $warnedPaths): void
     {
         $r = (new SurveyLinter())->lint(['db' => true], ['pages' => [['elements' => $elements]]]);
-        $this->assertSame($warnedSlots, array_column($r->warnings(), 'path'));
+        $this->assertSame($warnedPaths, array_column($r->warnings(), 'path'));
     }
 
     public function testNoNameOrEmailRulesWhenTheFormStoresNothingInTheBackend(): void

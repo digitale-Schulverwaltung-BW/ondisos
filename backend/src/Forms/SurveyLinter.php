@@ -40,15 +40,16 @@ final class SurveyLinter
         }
 
         if ($config['db'] ?? true) {
-            foreach ($this->requiredFields($survey) as $slot => $info) {
-                $label = $slot === 'name' ? 'Name' : 'E-Mail-Adresse';
-                $target = $slot === 'name' ? 'den Namen' : 'die E-Mail-Adresse';
-                if (!$info['present']) {
-                    $result->addWarning($slot, "Die Survey hat kein Feld für {$target} (erwartet: " . implode(', ', $slot === 'name' ? self::NAME_FIELDS : self::EMAIL_FIELDS)
-                        . "): beim Speichern der Anmeldung wird sie verlangt, sonst wird die Anmeldung abgelehnt");
-                } elseif (!$info['required']) {
-                    $result->addWarning($slot, "Das Feld \"{$info['field']}\" ({$label}) ist nicht als Pflichtfeld markiert: bleibt es leer, wird die Anmeldung beim Speichern abgelehnt");
-                }
+            $needed = $this->requiredFields($survey);
+            $present = $needed['name']['present'] || $needed['email']['present'];
+            $always  = $needed['name']['required'] || $needed['email']['required'];
+            if (!$present) {
+                $result->addWarning('name_or_email', 'Die Survey hat weder ein Feld für den Namen (erwartet: ' . implode(', ', self::NAME_FIELDS)
+                    . ') noch eines für die E-Mail-Adresse (erwartet: ' . implode(', ', self::EMAIL_FIELDS)
+                    . '): beim Speichern braucht eine Anmeldung mindestens eines von beiden, sonst wird sie abgelehnt');
+            } elseif (!$always) {
+                $result->addWarning('name_or_email', 'Weder der Name noch die E-Mail-Adresse ist als Pflichtfeld markiert: bleiben beide leer, wird die Anmeldung beim Speichern abgelehnt. '
+                    . 'Ein Pflichtfeld genügt; Anmeldungen sollten aber beides verlangen');
             }
         }
 
@@ -65,8 +66,8 @@ final class SurveyLinter
     }
 
     /**
-     * The two fields Ondisos needs from every form that stores its submissions: the registrant's name and e-mail address
-     * (submit.php rejects a submission without them).
+     * The two fields Ondisos looks for in every form that stores its submissions: the registrant's name and e-mail address
+     * (submit.php rejects a submission with neither; the standard registration asks for both).
      *
      * @param array<string,mixed> $survey
      * @return array{name: array{present:bool, field:?string, required:bool}, email: array{present:bool, field:?string, required:bool}}

@@ -93,31 +93,45 @@ class AnmeldungFormValidatorTest extends TestCase
         $this->assertArrayHasKey('formular', $this->validator->getErrors());
     }
 
-    public function testValidateFailsWhenNameMissing(): void
+    public function testValidateAcceptsEmailWithoutName(): void
     {
-        $data = ['formular' => 'bs', 'email' => 'max@example.com'];
-
-        $result = $this->validator->validate($data);
-
-        $this->assertFalse($result);
-        $this->assertArrayHasKey('name', $this->validator->getErrors());
+        $this->assertTrue($this->validator->validate(['formular' => 'grillfest', 'email' => 'max@example.com']));
     }
 
-    public function testValidateFailsWhenNameIsEmpty(): void
+    public function testValidateAcceptsNameWithoutEmail(): void
     {
-        $data = ['formular' => 'bs', 'name' => '', 'email' => 'max@example.com'];
-
-        $result = $this->validator->validate($data);
-
-        $this->assertFalse($result);
-        $this->assertArrayHasKey('name', $this->validator->getErrors());
+        $this->assertTrue($this->validator->validate(['formular' => 'grillfest', 'name' => 'Max']));
     }
 
-    public function testValidateFailsWhenEmailMissing(): void
+    public function testValidateAcceptsNameWithEmptyEmail(): void
     {
-        $data = ['formular' => 'bs', 'name' => 'Max'];
+        $this->assertTrue($this->validator->validate(['formular' => 'grillfest', 'name' => 'Max', 'email' => '']));
+    }
 
-        $result = $this->validator->validate($data);
+    public function testValidateAcceptsEmailWithNullName(): void
+    {
+        $this->assertTrue($this->validator->validate(['formular' => 'grillfest', 'name' => null, 'email' => 'max@example.com']));
+    }
+
+    public function testValidateFailsWhenNameAndEmailAreMissing(): void
+    {
+        $result = $this->validator->validate(['formular' => 'bs']);
+
+        $this->assertFalse($result);
+        $this->assertArrayHasKey('name_or_email', $this->validator->getErrors());
+    }
+
+    public function testValidateFailsWhenNameAndEmailAreBlank(): void
+    {
+        $result = $this->validator->validate(['formular' => 'bs', 'name' => '', 'email' => '   ']);
+
+        $this->assertFalse($result);
+        $this->assertArrayHasKey('name_or_email', $this->validator->getErrors());
+    }
+
+    public function testValidateStillRejectsInvalidEmailWhenNameIsGiven(): void
+    {
+        $result = $this->validator->validate(['formular' => 'bs', 'name' => 'Max', 'email' => 'kein-mail']);
 
         $this->assertFalse($result);
         $this->assertArrayHasKey('email', $this->validator->getErrors());
@@ -130,8 +144,7 @@ class AnmeldungFormValidatorTest extends TestCase
         $this->assertFalse($result);
         $errors = $this->validator->getErrors();
         $this->assertArrayHasKey('formular', $errors);
-        $this->assertArrayHasKey('name', $errors);
-        $this->assertArrayHasKey('email', $errors);
+        $this->assertArrayHasKey('name_or_email', $errors);
     }
 
     // =========================================================================
@@ -280,7 +293,7 @@ class AnmeldungFormValidatorTest extends TestCase
         $errors = $this->validator->getErrors();
 
         $this->assertIsArray($errors);
-        $this->assertGreaterThanOrEqual(3, count($errors)); // formular, name, email
+        $this->assertGreaterThanOrEqual(2, count($errors)); // formular, name_or_email
     }
 
     public function testGetFirstErrorReturnsNullWhenNoErrors(): void

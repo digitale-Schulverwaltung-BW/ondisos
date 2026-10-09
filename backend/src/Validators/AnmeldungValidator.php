@@ -36,8 +36,11 @@ class AnmeldungValidator
 
         // Required fields
         $this->validateRequired($data, 'formular', M::get('validation.required_formular'));
-        $this->validateRequired($data, 'name', M::get('validation.required_name'));
-        $this->validateRequired($data, 'email', M::get('validation.required_email'));
+        // An entry needs a name or an e-mail address, at least one of them (data minimisation: a form may
+        // leave one out). The survey linter points editors to forms where the default "both" is missing.
+        if (self::isBlank($data['name'] ?? null) && self::isBlank($data['email'] ?? null)) {
+            $this->errors['name_or_email'] = M::get('validation.required_name_or_email');
+        }
 
         $mail=$data['email'] ?? $data['email1'] ?? $data['Email'] ?? $data['E-mail'] ?? $data['E-Mail'] ?? null;
         // Email format
@@ -61,6 +64,11 @@ class AnmeldungValidator
         }
 
         return empty($this->errors);
+    }
+
+    private static function isBlank(mixed $value): bool
+    {
+        return $value === null || trim((string)$value) === '';
     }
 
     /**

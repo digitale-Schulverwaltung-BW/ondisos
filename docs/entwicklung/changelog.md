@@ -28,6 +28,7 @@ Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1
 **Funktionen**
 - ✅ Tenant löschen (Plattform-Admin, `tenants.php`): nur inaktiv, ohne Formulare und ohne Anmeldungen (auch Papierkorb; die Fremdschlüssel kaskadieren), Tenant 1 nie. Prüfung unter Zeilensperre in `TenantRepository::delete()` (`TenantDeletionPolicy`), danach Upload-Verzeichnis entfernen (`TenantUploadCleaner`) und Audit-Ereignis `tenant_deleted`
 - ✅ Unterschriftsfelder (SurveyJS `signaturepad`, Wert als PNG/JPEG-Data-URI): Detailansicht und PDF zeigen das Bild, Excel und Benachrichtigungs-Mail den Platzhalter „[Unterschrift]“; `submit.php` lehnt andere `data:`-Werte in Feldern ab (`DataFormatter::isImageDataUri()`, höchstens 500.000 Zeichen, kein SVG)
+- ✅ Name **oder** E-Mail genügt: `AnmeldungValidator` verlangt nur noch mindestens eines von beiden (Fehler `name_or_email`; beides leer wird weiter abgelehnt), damit Formulare wie eine Rückmeldung zum Grillfest aus Datensparsamkeit keine E-Mail-Adresse abfragen müssen. Der Survey-Editor warnt nur noch, wenn weder Name noch E-Mail als Pflichtfeld da sind; die Checkliste „Pflichtfelder für Ondisos“ zeigt das jeweils andere Feld als verzichtbar. Die Standard-Anmeldung soll weiter beides abfragen
 
 **Korrekturen**
 - ✅ Survey-Prüfung: Der Feldname `website_url` (Honeypot-Feld) ist reserviert; eine Frage mit diesem Namen wurde still als Bot verworfen

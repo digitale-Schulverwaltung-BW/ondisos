@@ -19,6 +19,7 @@ return [
         'required_formular' => 'Formular ist erforderlich',
         'required_name' => 'Name ist erforderlich',
         'required_email' => 'E-Mail ist erforderlich',
+        'required_name_or_email' => 'Name oder E-Mail ist erforderlich',
         'invalid_email' => 'Ungültige E-Mail-Adresse',
         'name_too_long' => 'Name ist zu lang (max. 255 Zeichen)',
         'email_too_long' => 'E-Mail ist zu lang (max. 255 Zeichen)',
@@ -513,7 +514,9 @@ return [
             'ok' => 'Feld „{{field}}" vorhanden, Pflichtfeld',
             'not_required' => 'Feld „{{field}}" vorhanden, aber nicht als Pflichtfeld markiert',
             'missing' => 'Es fehlt ein Feld dafür',
-            'help' => 'Gespeicherte Anmeldungen brauchen Name (Feld „Name") und E-Mail (Feld „email"): sie erscheinen in der Übersicht, im Excel-Export und in Benachrichtigungen.',
+            'optional_present' => 'Feld „{{field}}" vorhanden, nicht als Pflichtfeld markiert: bei diesem Formular verzichtbar',
+            'optional_missing' => 'Kein Feld dafür: bei diesem Formular verzichtbar (z. B. aus Datensparsamkeit)',
+            'help' => 'Gespeicherte Anmeldungen brauchen Name (Feld „Name") oder E-Mail (Feld „email"), mindestens eines davon als Pflichtfeld. Anmeldungen sollten beides abfragen; bei Rückmeldungen ohne Rückfragebedarf genügt eines. Beide erscheinen in der Übersicht, im Excel-Export und in Benachrichtigungen.',
             'not_needed' => 'Dieses Formular speichert nicht im Backend; Name und E-Mail sind dafür nicht nötig.',
         ],
         'fields' => [
