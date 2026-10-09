@@ -83,7 +83,7 @@ Wurde die Survey zwischenzeitlich von jemand anderem veröffentlicht, bleibt Ihr
 
 | Bereich | Bedeutung |
 |---|---|
-| **Fehler** (blockieren Speichern und Veröffentlichen) | kein gültiges JSON (mit **Zeile und Spalte** und einem Link zur Stelle im Editor), zu groß, keine Fragen, Frage ohne `name`, doppelte oder reservierte Feldnamen, HTML außerhalb der erlaubten Auswahl, `javascript:`-Links |
+| **Fehler** (blockieren Speichern und Veröffentlichen) | kein gültiges JSON (mit **Zeile und Spalte** und einem Link zur Stelle im Editor), zu groß, keine Fragen, Frage ohne `name`, doppelte oder reservierte Feldnamen (`_fieldTypes` und `website_url` nutzt das System selbst; `website_url` ist das unsichtbare Spamschutz-Feld, eine Frage mit diesem Namen würde nie ankommen), HTML außerhalb der erlaubten Auswahl, `javascript:`-Links |
 | **Pflichtfelder für Ondisos** | Gespeicherte Anmeldungen brauchen einen **Namen** (Feld `Name` oder `name`) und eine **E-Mail-Adresse** (`email`, `email1`, `Email`, `E-mail` oder `E-Mail`); sie erscheinen in Übersicht, Excel-Export und Benachrichtigungen. Fehlt eines, gibt es eine **Warnung**, aber keinen Fehler. Beim Absenden würde die Anmeldung dann **abgelehnt** |
 | **Hinweise** | Warnungen, die nichts blockieren, z. B. Feldnamen im PDF-Filter, in Vorausfüll-Links oder im Mailtext, die es in der Survey nicht gibt (meist ein Tippfehler) |
 | **Änderungen an den Feldern** | neue sowie entfernte oder umbenannte Felder. Fehlende Felder fehlen künftig in neuen Anmeldungen, im Excel-Export, in Vorausfüll-Links und im PDF; bereits gespeicherte Anmeldungen behalten ihre Daten |

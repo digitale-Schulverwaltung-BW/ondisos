@@ -35,7 +35,7 @@ Diese Anleitung beschreibt die Installation mit der **fertigen ZIP-Datei**, ohne
 - den **Schlüssel** der Formulare, die Sie einbinden wollen, z. B. `bs` (nennt Ihnen die Redaktion Ihrer Schule)
 
 **Auf Ihrer Website:** WordPress 5.8 oder neuer, PHP 8.1 oder neuer mit der Erweiterung `curl`. Der **WordPress-Server muss das Backend erreichen können** (die Anfragen kommen vom Server, nicht aus dem Browser der Besucher).
-Das Plugin benötigt ein Ondisos-Backend ab Version 3.0; Surveys aus dem Backend und der erweiterte Verbindungsstatus brauchen Backend 3.1. Aktuelle Plugin-Version: **3.1.0**.
+Das Plugin benötigt ein Ondisos-Backend ab Version 3.0; Surveys aus dem Backend und der erweiterte Verbindungsstatus brauchen Backend 3.1. Aktuelle Plugin-Version: **3.1.2** (braucht für das neue Signaturformat ein Backend ab 3.1.2; **zuerst das Backend aktualisieren**). Die Uhr des WordPress-Servers muss stimmen (NTP): bei mehr als 5 Minuten Abweichung zum Backend lehnt dieses die Anfragen ab.
 
 ## Installieren
 
@@ -106,7 +106,7 @@ Checkliste:
 2. *Plugins → Installieren → Plugin hochladen*, die ZIP wählen und, wenn WordPress nachfragt, **Aktuelles durch hochgeladenes ersetzen**.
 3. Bei aktiven Cache-Plugins den Cache leeren.
 
-Ihre Einstellungen bleiben erhalten (sie liegen in der WordPress-Datenbank). Das Backend sollte zuerst aktualisiert sein; das Plugin 3.1 arbeitet mit Backend 3.0 und 3.1 zusammen.
+Ihre Einstellungen bleiben erhalten (sie liegen in der WordPress-Datenbank). Das Backend muss zuerst aktualisiert sein: Das Plugin 3.1.2 signiert im neuen Format, das erst ein Backend ab 3.1.2 versteht (ein Plugin bis 3.1.1 läuft dagegen auch an einem Backend 3.1.2 weiter).
 Beim Wechsel von einer 2.x-Installation: [MIGRATION-3.0.md](../docs/betreiber/MIGRATION-3.0.md) (Tenant-Slug und Secret eintragen).
 
 ## Fehlersuche
@@ -118,7 +118,9 @@ Zusätzlich zeigt *Einstellungen → Ondisos* den Verbindungsstatus.
 |---|---|
 | `Error: The form is currently unavailable` (Besucher) bzw. `Error (shown to administrators only): …` | Backend nicht erreichbar, Schule abgelehnt oder unerwartete Antwort. Backend-URL und Slug prüfen; vom **WordPress-Server** aus testen: `curl "<Backend-URL>/health.php"` |
 | `Error: Unknown form "bs"` | Das Backend kennt das Formular für Ihre Schule nicht: Schlüssel im Shortcode richtig? Wurde das Formular angelegt? (Redaktion oder Betreiber fragen) |
-| Absenden: „Unauthorized“ | Tenant-API-Secret fehlt oder passt nicht zum Backend; ggf. wurde der Schlüssel erneuert, dann neuen Wert beim Betreiber erfragen |
+| Absenden: „Unauthorized“ | Tenant-API-Secret fehlt oder passt nicht zum Backend; ggf. wurde der Schlüssel erneuert, dann neuen Wert beim Betreiber erfragen. Ab 3.1.2 auch: die **Uhr des WordPress-Servers** weicht um mehr als 5 Minuten vom Backend ab, oder das Backend ist älter als 3.1.2 |
+| Besucher sehen „Erfolg“, die Anmeldung fehlt im Backend | Der Spamschutz hat ausgelöst (`ondisos - honeypot triggered` im `debug.log`): Bot, ein Browser-Plugin, das alle Felder ausfüllt, oder eine Survey-Frage mit dem Feldnamen `website_url` (Redaktion muss sie umbenennen) |
+| `Error: the shortcode could not be read, probably a missing or doubled quotation mark` | Der Shortcode ist falsch geschrieben, z. B. `[ondisos form=""bs]`: die Meldung zeigt den empfangenen Text; richtig ist `[ondisos form="bs"]` |
 | Absenden: „Backend-Zugang nicht konfiguriert“ | Es ist kein Tenant-API-Secret eingetragen |
 | Formular lädt, PDF-Link schlägt fehl | Backend-URL und Erreichbarkeit vom WordPress-Server aus prüfen |
 | Formular zeigt eine alte Fassung | Das Plugin fragt bei jedem Aufruf das Backend ab; eine alte Fassung erscheint nur, solange das Backend nicht erreichbar ist (der Cache hält bis zu 7 Tage). Erreichbarkeit prüfen; im Zweifel `wp-content/uploads/ondisos-cache/` leeren |

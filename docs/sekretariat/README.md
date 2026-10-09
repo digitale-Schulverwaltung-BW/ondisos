@@ -15,8 +15,13 @@ Das Backend ist in der Regel nur im Schulnetz oder über das Netz des Schulträg
 
 1. Öffnen Sie die Adresse des Backends im Browser.
 2. Tragen Sie **Benutzername** und **Passwort** ein und klicken Sie auf **Anmelden**.
-3. Sie landen auf der Seite **Anmeldungen**. Mit **Abmelden** oben rechts beenden Sie die Sitzung.
+3. Ist für Ihr Konto die **Zwei-Faktor-Anmeldung** eingerichtet, fragt das System danach nach einem **6-stelligen Code** aus Ihrer Authenticator-App auf dem Handy (alternativ nach einem Ihrer Recovery-Codes). Der Code ändert sich alle 30 Sekunden und gilt nur einmal.
+   Haben Sie sich eben erst abgemeldet und wieder angemeldet, warten Sie auf den nächsten Code.
+4. Sie landen auf der Seite **Anmeldungen**. Mit **Abmelden** oben rechts beenden Sie die Sitzung.
    Nach längerer Untätigkeit (Standard: 1 Stunde) werden Sie automatisch abgemeldet und müssen sich neu anmelden.
+
+**Mein Konto:** Der Menüpunkt oben rechts zeigt, ob die Zwei-Faktor-Anmeldung aktiv ist, und führt durch die Einrichtung (QR-Code mit der Authenticator-App scannen, Code eingeben, **Recovery-Codes ausdrucken oder speichern und getrennt vom Handy aufbewahren**). Die Einrichtung ist freiwillig, sofern Ihre IT sie nicht vorschreibt; sie schützt die personenbezogenen Daten in den Anmeldungen deutlich besser. Neue Recovery-Codes und das Entfernen verlangen Ihr Passwort.
+Ist die Einrichtung für Ihr Konto vorgeschrieben, erscheint nach der Anmeldung ein Hinweis „Zwei-Faktor-Anmeldung einrichten“. Sie können zunächst noch einige Male „später“ wählen (die Zahl steht im Hinweis); danach führt die Anmeldung immer zuerst durch die Einrichtung.
 
 Die Menüpunkte **Formulare** und **Tenants** brauchen Sie für die tägliche Arbeit nicht (sie sind für Formularpflege und Einrichtung gedacht).
 
@@ -103,6 +108,8 @@ Vor jedem Archivieren, Löschen und Statuswechsel mehrerer Einträge fragt das S
 
 ## Hilfe
 
-- Passwort vergessen oder Zugang gesperrt → Ihre Schul-IT bzw. der Betreiber des Backends.
+- Passwort vergessen oder Zugang gesperrt → Ihre Schul-IT bzw. der Betreiber des Backends. Nach mehreren Fehlversuchen sperrt das System die Anmeldung für etwa 15 Minuten.
+- „Benutzername oder Passwort falsch“, obwohl beides stimmt → möglicherweise melden Sie sich aus einem Netz an, aus dem der Zugang nicht erlaubt ist (z. B. von zu Hause oder per WLAN); die IT kann das prüfen. Dasselbe gilt für „Ihre Sitzung wurde beendet, weil der Zugriff aus diesem Netz nicht zulässig ist“.
+- Handy verloren oder neu und der Code funktioniert nicht → mit einem **Recovery-Code** anmelden und unter *Mein Konto* den neuen Authenticator einrichten; sind die Codes weg, setzt Ihre IT bzw. der Betreiber die Zwei-Faktor-Anmeldung zurück. Geht der Code nicht: Uhrzeit des Handys prüfen (automatisch einstellen) und auf den nächsten Code warten.
 - Formular ändern (neue Felder, Texte, Empfänger der Benachrichtigung) → Redaktion, siehe [Formulare pflegen](../redaktion/SURVEYJS.md).
 - Eine Anmeldung fehlt oder das Formular zeigt eine Wartungsmeldung → Schul-IT: Frontend und Backend müssen sich erreichen können.

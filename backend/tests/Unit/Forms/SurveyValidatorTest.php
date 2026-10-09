@@ -137,6 +137,12 @@ class SurveyValidatorTest extends TestCase
         $this->assertTrue($result->hasErrorAt('pages[0].elements[0].name'));
     }
 
+    public function testHoneypotFieldNameIsReserved(): void
+    {
+        $result = $this->validate($this->survey(['type' => 'text', 'name' => 'website_url']));
+        $this->assertTrue($result->hasErrorAt('pages[0].elements[0].name'));
+    }
+
     /** @return array<string,array{0:string}> */
     public static function dangerousHtml(): array
     {

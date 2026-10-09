@@ -6,10 +6,11 @@ auf einem eigenen Webserver anzeigt (z. B. `anmeldung.meineschule.de`). Es speic
 
 ## Voraussetzungen
 
-- Webserver (Apache oder Nginx) mit **PHP 8.0+** (Erweiterung `curl`), mit HTTPS
+- Webserver (Apache oder Nginx) mit **PHP 8.1+** (Erweiterung `curl`), mit HTTPS
 - Vom Webserver aus erreichbar: das **Backend** (URL, Tenant-Slug und Tenant-Secret erhalten Sie vom Betreiber)
 - Schreibrecht des Webserver-Benutzers auf das Verzeichnis `frontend/cache`
 - Kein Composer, keine Datenbank nötig
+- **Richtige Uhrzeit:** Der Server synchronisiert seine Uhr (NTP). Die Anfragen ans Backend tragen einen Zeitstempel und werden bei mehr als 5 Minuten Abweichung abgelehnt.
 
 ## Installation
 
@@ -45,6 +46,9 @@ auf einem eigenen Webserver anzeigt (z. B. `anmeldung.meineschule.de`). Es speic
    | `TENANT_API_SECRET` | Secret Ihrer Schule (nur serverseitig, nie weitergeben) |
    | `FROM_EMAIL` | Absender der Benachrichtigungs-E-Mails |
    | `UPLOAD_MAX_SIZE`, `UPLOAD_ALLOWED_TYPES` | Upload-Grenzen (höchstens so groß wie im Backend) |
+   | `TRUSTED_PROXIES` | nur wenn ein Reverse-Proxy vor dem Frontend steht: dessen Adresse(n), damit die IP der Besucher richtig erkannt wird ([betrieb.md](../betreiber/betrieb.md#reverse-proxy-client-ip-und-rate-limit)) |
+   | `CSP_MODE` | Content-Security-Policy der Formularseite: `enforce` (Standard), `report-only` (nur melden, zum Diagnostizieren), `off`. In der `.htaccess` bzw. im Webserver **keine zweite** Richtlinie setzen |
+   | `API_SIGNATURE_VERSION` | nur als Notausstieg: `1` sendet das alte Signaturformat, solange das Backend noch älter als 3.1.2 ist (Standard `2`) |
 
 4. Cache-Verzeichnis beschreibbar machen:
 
@@ -76,7 +80,7 @@ Meldungen und Beschriftungen des Frontends stehen in `config/messages.php`. Eige
 ## Aktualisieren
 
 Neuen Stand ins Verzeichnis holen (`git pull` bzw. Release entpacken). `.env` und `config/messages.local.php` bleiben unberührt, ein Neustart ist nicht nötig.
-Das Backend sollte zuerst aktualisiert werden (siehe [Betriebsmodell](../betreiber/betriebsmodell.md#betrieb-im-alltag)).
+Das Backend muss **zuerst** aktualisiert werden (siehe [Betriebsmodell](../betreiber/betriebsmodell.md#betrieb-im-alltag)): Das Frontend 3.1.2 signiert im neuen Format, das erst ein Backend ab 3.1.2 versteht.
 
 ## Fehlersuche
 
@@ -84,6 +88,8 @@ Das Backend sollte zuerst aktualisiert werden (siehe [Betriebsmodell](../betreib
 |---|---|
 | **Wartungsseite (503)** | Backend nicht erreichbar oder Tenant abgelehnt. Die Ursache steht im PHP-Fehlerlog (`FormConfigLoader: form "…" not loaded (unreachable\|unauthorized\|error)`). `BACKEND_API_URL` und `TENANT_SLUG` prüfen; vom Server aus `curl "$BACKEND_API_URL/health.php"` |
 | **404 „Formular nicht gefunden"** | Das Backend kennt das Formular für Ihre Schule nicht: Schlüssel richtig geschrieben? Wurde es angelegt? (Redaktion bzw. Betreiber fragen) |
-| **Absenden: „Unauthorized" / 401** | `TENANT_API_SECRET` passt nicht zum Tenant, oder das Secret wurde im Backend neu erzeugt. Neues Secret beim Betreiber erfragen |
+| **Absenden: „Unauthorized" / 401** | `TENANT_API_SECRET` passt nicht zum Tenant, oder das Secret wurde im Backend neu erzeugt (neues Secret beim Betreiber erfragen). Ab 3.1.2 auch: **Uhr des Servers geht falsch** (mehr als 5 Minuten Abweichung zum Backend; im Fehlerlog des Backends steht `timestamp_skew`) oder das Frontend ist neuer als das Backend (Backend zuerst aktualisieren) |
+| **Besucher sehen „Erfolg“, aber im Backend fehlt die Anmeldung** | Der Spamschutz (unsichtbares Feld `website_url`) hat ausgelöst: Im PHP-Fehlerlog steht `Honeypot triggered`. Ursachen: ein Bot, ein Browser-Plugin, das alle Felder automatisch ausfüllt, oder eine Survey-Frage mit dem Namen `website_url` (die Redaktion muss sie umbenennen; neue Surveys lassen den Namen nicht mehr zu) |
+| **Absenden scheitert bei vielen Besuchern, im Fehlerlog `Backend API returned HTTP 429`** | Das Limit je Besucher im Backend ist erreicht. Steht ein Reverse-Proxy vor dem Frontend, muss `TRUSTED_PROXIES` stimmen, sonst gelten alle Besucher als dieselbe Adresse |
 | **Formular erscheint nicht, obwohl das Backend läuft** | Formular ohne Speicherung im Backend und ohne gültige Empfänger-Adresse wird nicht angezeigt; Redaktion trägt unter *Formulare* eine Empfänger-Adresse ein |
 | **Upload scheitert** | Dateityp bzw. -größe gegen `UPLOAD_ALLOWED_TYPES` / `UPLOAD_MAX_SIZE` im Frontend **und** Backend prüfen; Virenfund wird abgelehnt |
