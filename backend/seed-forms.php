@@ -253,7 +253,7 @@ NEXT STEPS:
 3. The forms-config.php file is only an import source now — the frontend never reads it. You may delete it (also any copy
    at backend/config/forms-config.php). Running this script again is harmless: it adds new forms and never overwrites.
 
-4. To change an existing form later, edit form_configs.config_json (SQL; the form editor of 3.1 will do this in the backend);
+4. To change an existing form later, use the form editor in the backend (menu "Formulare"), or edit form_configs.config_json (SQL);
    re-seeding does not overwrite it.
 
 EOT;

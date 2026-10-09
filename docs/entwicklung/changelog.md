@@ -1,6 +1,6 @@
 # Änderungshistorie
 
-Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
+Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1.2.md). Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
 ## 3.1.2

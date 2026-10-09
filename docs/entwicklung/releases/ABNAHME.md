@@ -1,4 +1,4 @@
-# Abnahmeprotokolle 3.0.0 und 3.1.0
+# Abnahmeprotokolle 3.0.0, 3.1.0 und 3.1.2
 
 Was vor den Releases in einer Demo-Umgebung (WordPress, Standalone-Frontend und Backend im Multi-Tenant-Modus) und im Browser geprüft wurde.
 Die zum jeweiligen Zeitpunkt noch offenen manuellen Prüfungen stehen unverändert dabei; was davon heute noch aussteht, führt [TODO.md](../TODO.md).
@@ -47,3 +47,34 @@ Zum Zeitpunkt der Abnahme noch offen (nur manuell prüfbar):
 - [ ] Breitenumschalter der Vorschau (Handy/Tablet) in einem echten Browser
 - [ ] Docker-Image neu bauen und Vorschau gegen das frisch gebaute Image prüfen (in der Demo wurde die Apache-Konfiguration im laufenden Container ersetzt)
 - [ ] Endpoint-Skripte `forms.php` und `form-config.php?with=survey` haben keine Unit-Tests (ihre Logik liegt in getesteten Services; strukturelle Tests prüfen Reihenfolge und Abhängigkeiten)
+
+## v3.1.2
+
+Automatisiert: 1194 Unit-Tests (`vendor/bin/phpunit --testsuite=Unit`), dazu die neuen Integrationstests `TwoFactorRepositoryTest` (10) und `TwoFactorLoginTest` (7) gegen MySQL 8. Release Notes: [RELEASE-NOTES-3.1.2.md](RELEASE-NOTES-3.1.2.md).
+
+**Neuinstallation nach [installation.md](../../betreiber/installation.md)** (frischer Klon, Produktions-Overlay, Mehrschul-Betrieb, Port 9180; Schritte 1 bis 6) und danach im Ablauf geprüft:
+
+- [x] Image baut mit den neuen Composer-Paketen; Migration legt alle 9 Tabellen an (inkl. `admin_two_factor`, `admin_recovery_codes`, Spalte `admin_allowed_networks`); zweiter Lauf ohne Änderung; Health, `401` ohne Signatur, `form-config`, `302` auf `login.php`, CSP-Header
+- [x] Admin-Hash aus `generate-password-hash.php` kommt mit 60 Zeichen im Container an
+- [x] **Fund:** Nach `import-surveys.php` als `root` war `logs/audit.log` für den Webserver nicht beschreibbar, jede Anmeldung endete mit Fehler 500. Behoben (`AuditLogger`), danach mit einem als `root` ausgelösten Audit-Eintrag wiederholt: Datei gehört `www-data`, Anmeldung funktioniert
+- [x] Schonfrist: Logins 1 bis 10 ohne Zwang, Login 11 führt in den Assistenten; `index.php`, `tenants.php`, `account.php` bleiben im Zwischenzustand geschlossen (`302` auf `login.php`)
+- [x] Assistent (Sitzungs- und Zwischenzustand): falscher Code abgelehnt, richtiger Code, 10 Recovery-Codes, „Fertig“ ohne Haken abgelehnt; Hinweis erscheint einmal je Anmeldung mit der Restzahl
+- [x] Anmeldung mit Code, falscher Code, Wiederverwendung desselben Codes abgelehnt, Recovery-Code einmalig (zweite Verwendung abgelehnt, Hinweis nach der Anmeldung), fünf falsche Codes beenden den Zwischenzustand
+- [x] „Mein Konto“: Entfernen bei Pflicht verweigert, Recovery-Codes erneuern mit falschem/richtigem Passwort
+- [x] Tenant anlegen, Schul-Admin anlegen: keine Pflicht für Schul-Admins; freiwillige Einrichtung, Entfernen, erneut einrichten; Anmeldung verlangt danach den Code; Zurücksetzen durch den Platform-Admin (Spalte „2FA“, Audit)
+- [x] Netz-Allowlist je Tenant: ungültiger Eintrag abgelehnt; fremdes Netz ⇒ gleiche Meldung wie bei falschem Passwort (auch mit gefälschtem `X-Forwarded-For`); eigenes Netz ⇒ Anmeldung; laufende Sitzung endet nach Änderung der Liste (`login.php?network=1`)
+- [x] `PLATFORM_ADMIN_ALLOWED_NETWORKS` mit fremdem Netz: Platform-Admin abgewiesen, Schul-Admin unberührt; Audit `login_network_denied`
+- [x] `TWO_FACTOR_KEY` fehlt: in der Schonfrist Anmeldung mit Hinweis ohne Verbrauch, danach klare Ablehnung; `TWO_FACTOR_REQUIRED=off` hebt auf
+- [x] Signierte API: Anmeldung mit Format 2 und mit Format 1 (`compat`, Audit `api_legacy_signature`), falsches Secret `401`, `forms.php`
+
+**Auf einer bestehenden Instanz zu prüfen** (Upgrade von 3.1.1, im Browser; abhaken):
+
+- [ ] Update nach den Release Notes: `Migration complete`, vorhandene Daten und Anmeldungen unverändert, bestehende Sitzungen/Zugänge funktionieren
+- [ ] Platform-Admin im Mehrschul-Betrieb: Hinweis, Einrichtung mit **echter Authenticator-App** (QR-Code scannen), Anmeldung mit Code; Recovery-Code und `reset-2fa.php`
+- [ ] Netz-Allowlist hinter dem **echten Reverse-Proxy** (mit und ohne `TRUSTED_PROXIES`): erlaubtes und gesperrtes Netz; Hinweis in *Tenants*, wenn `X-Forwarded-For` ignoriert wird
+- [ ] Betrieb ohne Login (`AUTH_ENABLED=false`) mit `PLATFORM_ADMIN_ALLOWED_NETWORKS`: Zugriff aus Verwaltungsnetz und von außen
+- [ ] Layout und Bedienbarkeit der neuen Seiten im Browser (Assistent, „Mein Konto“, Karte in *Tenants*), auch auf dem Handy; Druck der Recovery-Codes
+- [ ] Content-Security-Policy: keine Verstöße in der Browser-Konsole auf den Backend-Seiten und der Formularseite (sonst `CSP_MODE=report-only`)
+- [ ] Frontend/Plugin 3.1.2 gegen Backend 3.1.2: Anmeldung absenden, Upload, PDF-Download; danach `api_legacy_signature` im Audit-Log prüfen
+- [ ] WordPress-Plugin: Verbindungsstatus-Seite, Formular mit Honeypot, Absenden
+

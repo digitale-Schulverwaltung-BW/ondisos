@@ -60,6 +60,7 @@ php scripts/generate-password-hash.php "Ihr-Passwort"
 AUTH_ENABLED=true
 ADMIN_USERNAME=admin
 ADMIN_PASSWORD_HASH='$2y$10$…'      # in einfachen Anführungszeichen
+TWO_FACTOR_KEY=…                    # openssl rand -hex 32; Zwei-Faktor-Anmeldung, siehe zwei-faktor.md
 ```
 
 ## 4. Migration und Formulare

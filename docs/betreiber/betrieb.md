@@ -17,7 +17,7 @@ docker compose logs backend | grep "Migration complete"
 curl http://localhost:9080/api/health.php
 ```
 
-Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.1.md](MIGRATION-3.1.md).
+Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.1.md](MIGRATION-3.1.md), [Upgrade auf 3.1.2](../entwicklung/releases/RELEASE-NOTES-3.1.2.md#upgrade-von-311).
 Ändert sich das Compose-File, genügt `docker compose up -d` (nicht `restart`). Nach einem Update des Basis-Images oder von PHP: `docker compose build --no-cache backend`.
 
 **Zurückrollen:** `git checkout <vorherige-version>` und `docker compose up -d --build backend`. Die Migrationen sind **nur vorwärts**: Hat die neue Version das Schema verändert,

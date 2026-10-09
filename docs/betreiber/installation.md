@@ -40,6 +40,7 @@ Die **Root-`.env`** ist die einzige Stelle für Zugangsdaten und Secrets:
 cp .env.example .env
 sed -i.bak "s/^PDF_TOKEN_SECRET=.*/PDF_TOKEN_SECRET=$(openssl rand -hex 32)/" .env
 sed -i.bak "s/^API_SECRET_KEY=.*/API_SECRET_KEY=$(openssl rand -hex 32)/"   .env
+echo "TWO_FACTOR_KEY=$(openssl rand -hex 32)" >> .env        # verschlüsselt die Authenticator-Secrets (Zwei-Faktor-Anmeldung)
 nano .env       # DB_PASS und MYSQL_ROOT_PASSWORD setzen
 ```
 
@@ -49,6 +50,7 @@ nano .env       # DB_PASS und MYSQL_ROOT_PASSWORD setzen
 | `PDF_TOKEN_SECRET` | signiert die PDF-Download-Links, mindestens 32 Zeichen |
 | `API_SECRET_KEY` | wird beim Migrieren das Secret der ersten Schule (Tenant 1); das Frontend signiert damit seine Anfragen |
 | `ADMIN_USERNAME`, `ADMIN_PASSWORD_HASH` | Zugang des Plattform-Admins (Schritt 4) |
+| `TWO_FACTOR_KEY` | Schlüssel (64 Hex-Zeichen) für die Zwei-Faktor-Anmeldung; **sichern und nicht mehr ändern**. Im Mehrschul-Betrieb ist sie für Platform-Admins Pflicht, siehe [zwei-faktor.md](zwei-faktor.md) |
 | `MULTI_TENANT_ENABLED` | `true` für mehrere Schulen, siehe [MULTI-TENANT.md](MULTI-TENANT.md) |
 
 `DB_USER` und `DB_NAME` müssen Sie nicht ändern; Docker Compose übernimmt sie automatisch für die Datenbank (`MYSQL_USER` usw.).
