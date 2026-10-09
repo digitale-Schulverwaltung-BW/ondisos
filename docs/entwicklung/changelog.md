@@ -20,6 +20,8 @@ Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1
 - ✅ Excel-Export schreibt Eingaben immer als Text (keine Formel-Injection); CSRF-Token für „Jetzt manuell ausführen“ im Dashboard; SVG-Uploads nicht mehr erlaubt; Downloads mit `nosniff`, Inline-Anzeige nur für PDF und Bilder
 - ✅ `AUTH_ENABLED=true` ist Standard in `.env.example` und im Docker-Entrypoint (ändert keine bestehende `.env`); wer ohne Login arbeitet, setzt `false` bewusst und sollte `PLATFORM_ADMIN_ALLOWED_NETWORKS` auf das Verwaltungsnetz setzen
 
+- ✅ Abhängigkeiten aktualisiert, `composer audit` meldet keine Advisories mehr: `phpoffice/phpspreadsheet` 3.10.3 → 3.10.8 (u. a. XLS/OLE-Speicher-DoS, Gnumeric-gzip, SSRF in `WEBSERVICE()`, Zeilenindex-DoS in XLSX/XML, SSRF/RCE in `IOFactory::load`, XSS im HTML-Writer) und `setasign/fpdi` 2.6.4 → 2.6.8 (Speicher-/Endlosschleife; Abhängigkeit von `mpdf/mpdf`, das auf 8.3.1 mitzieht). Ondisos nutzt PhpSpreadsheet nur zum Schreiben des Excel-Exports, die Reader-Schwachstellen waren dort nicht erreichbar; die Constraints in `composer.json` blieben unverändert (`composer update … --with-all-dependencies`)
+
 **Hilfe**
 - ✅ Hilfe-Button „?“ in der Navigationsleiste des Backends: öffnet die zur Seite passende Dokumentation (Anmeldeliste → Handreichung und ASV, Formulare → Formulare pflegen, Tenants → Multi-Tenant usw.). Standardziel ist GitHub in der installierten Version (`blob/v<Version>/`); Betreiber können mit `HELP_BASE_URL` eine eigene Kopie angeben (`App\Utils\HelpLinks`, `App\Config\Version`). Ein Test prüft, dass jedes Ziel samt Anker existiert
 
