@@ -19,6 +19,7 @@ Neue Funktionen für Sekretariat oder Redaktion gibt es kaum; die Änderungen be
 - Nicht betroffen: die signierte API für die Frontends (`/api/*`) und der PDF-Download per Token. Notausstieg: `.env` leeren bzw. `php clear-network-restriction.php <slug>`.
 
 **Weiteres**
+- **Name oder E-Mail genügt:** Eine Anmeldung braucht mindestens eines von beiden (bisher beides), damit Formulare ohne Rückfragebedarf aus Datensparsamkeit keine E-Mail-Adresse abfragen müssen. Beides leer wird weiter abgelehnt (`name_or_email`). Der Survey-Editor warnt nur noch, wenn weder Name noch E-Mail als Pflichtfeld vorhanden ist. Die Standard-Anmeldung fragt weiter beides ab.
 - Hilfe-Button „?“ in der Navigationsleiste: öffnet die zur Seite passende Dokumentation (`HELP_BASE_URL` für eine eigene Kopie).
 - Unterschriftsfelder (SurveyJS `signaturepad`) erscheinen als Bild in Detailansicht und PDF, in Excel und Mail als „[Unterschrift]“.
 - Tenants lassen sich löschen (nur inaktive, ohne Formulare und Anmeldungen).
