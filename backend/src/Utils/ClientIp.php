@@ -49,8 +49,9 @@ final class ClientIp
         }
 
         $forwarded = $server['HTTP_X_FORWARDED_FOR'] ?? null;
-        if ($trustedProxies === [] || !is_string($forwarded) || trim($forwarded) === ''
-            || !self::isTrusted($remoteIp, $trustedProxies)) {
+        $trusted = CidrList::parse(implode(',', $trustedProxies));
+        if ($trusted->isEmpty() || !is_string($forwarded) || trim($forwarded) === ''
+            || !$trusted->contains($remoteIp)) {
             return $remoteIp;
         }
 
@@ -63,7 +64,7 @@ final class ClientIp
                 return $remoteIp;
             }
             $client = $ip;
-            if (!self::isTrusted($ip, $trustedProxies)) {
+            if (!$trusted->contains($ip)) {
                 break;
             }
         }
@@ -72,35 +73,13 @@ final class ClientIp
     }
 
     /**
-     * Parses a comma-separated list of IPs/CIDR ranges; invalid entries are dropped.
+     * Parses a list of IPs/CIDR ranges; invalid entries are dropped (see CidrList::parse() to report them).
      *
      * @return list<string> normalized entries ("1.2.3.4", "10.0.0.0/8", "2001:db8::/32")
      */
     public static function parseTrustedProxies(string $value): array
     {
-        $result = [];
-        foreach (explode(',', $value) as $item) {
-            $item = trim($item);
-            if ($item === '') {
-                continue;
-            }
-            $parts = explode('/', $item, 2);
-            $ip = self::normalize($parts[0]);
-            if ($ip === null) {
-                continue;
-            }
-            if (count($parts) === 1) {
-                $result[] = $ip;
-                continue;
-            }
-            $max = str_contains($ip, ':') ? 128 : 32;
-            if (!ctype_digit($parts[1]) || (int)$parts[1] > $max) {
-                continue;
-            }
-            $result[] = $ip . '/' . (int)$parts[1];
-        }
-
-        return $result;
+        return CidrList::parse($value)->entries();
     }
 
     /**
@@ -108,54 +87,6 @@ final class ClientIp
      */
     public static function normalize(string $ip): ?string
     {
-        $bin = filter_var($ip, FILTER_VALIDATE_IP) !== false ? @inet_pton($ip) : false;
-        if ($bin === false) {
-            return null;
-        }
-        if (strlen($bin) === 16 && str_starts_with($bin, str_repeat("\0", 10) . "\xff\xff")) {
-            $bin = substr($bin, 12);
-        }
-
-        return inet_ntop($bin) ?: null;
-    }
-
-    /**
-     * @param list<string> $trustedProxies
-     */
-    private static function isTrusted(string $ip, array $trustedProxies): bool
-    {
-        foreach ($trustedProxies as $entry) {
-            if (self::matches($ip, $entry)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private static function matches(string $ip, string $entry): bool
-    {
-        [$net, $bits] = array_pad(explode('/', $entry, 2), 2, null);
-        $a = inet_pton($ip);
-        $b = inet_pton((string)$net);
-        if ($a === false || $b === false || strlen($a) !== strlen($b)) {
-            return false;
-        }
-        if ($bits === null) {
-            return $a === $b;
-        }
-
-        $bits = (int)$bits;
-        $bytes = intdiv($bits, 8);
-        if (substr($a, 0, $bytes) !== substr($b, 0, $bytes)) {
-            return false;
-        }
-        $rest = $bits % 8;
-        if ($rest === 0) {
-            return true;
-        }
-        $mask = (0xFF << (8 - $rest)) & 0xFF;
-
-        return (ord($a[$bytes]) & $mask) === (ord($b[$bytes]) & $mask);
+        return CidrList::normalize($ip);
     }
 }
