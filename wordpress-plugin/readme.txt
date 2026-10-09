@@ -101,6 +101,7 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Anfragen an das Backend werden im neuen Signaturformat 2 signiert (Zeitstempel, Nonce, Inhaltshash; bei Uploads Hash der Datei). Das Backend nimmt das alte Format in der Umstellungsphase weiter an
 * Missbrauchsschutz: Honeypot-Feld im Formular, Rate-Limit je Besucher statt je Webserver, Nonce wird vor dem Formularschlüssel geprüft
 * Content-Security-Policy-Unterstützung: das Formular-JavaScript braucht keine Inline-Handler mehr
+* Fehlermeldung bei kaputtem Shortcode (z. B. fehlendes Anführungszeichen: `[ondisos form=""bs]`) nennt jetzt den empfangenen Text und den wahrscheinlichen Grund statt „form parameter is required“; ein ungültiger Formularschlüssel wird als solcher benannt
 
 = 3.1.1 =
 * Neue Einstellung „Vertrauenswürdige Proxys“ (Einstellungen → Ondisos): Nur von dort wird die Client-IP aus X-Forwarded-For übernommen; bisher wurden Client-IP-Header ungeprüft verwendet

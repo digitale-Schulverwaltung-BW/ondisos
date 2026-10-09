@@ -40,6 +40,9 @@ class Shortcode
      */
     public function render($atts): string
     {
+        // WordPress keeps attributes it cannot parse (e.g. form=""bs, a missing quote) as numbered entries
+        $stray = is_array($atts) ? array_filter($atts, 'is_int', ARRAY_FILTER_USE_KEY) : [];
+
         // Parse attributes
         $atts = shortcode_atts([
             'form' => '',
@@ -48,7 +51,7 @@ class Shortcode
         // Validate form parameter (mandatory)
         $form_key = sanitize_key($atts['form']);
         if (empty($form_key)) {
-            return $this->render_error('Error: form parameter is required. Usage: [ondisos form="bs"]');
+            return $this->render_error(self::missing_form_message($atts['form'], $stray));
         }
 
         // Check if form exists
@@ -237,6 +240,29 @@ class Shortcode
                 $prefix, $url, $failure['detail'] ?? ''
             ),
         };
+    }
+
+    /**
+     * Error text for a missing or unusable form attribute.
+     *
+     * A broken quotation mark (form=""bs, form="bs) is the usual cause, so say what was received
+     * and that the quotes are to blame instead of claiming the parameter is absent.
+     *
+     * @param mixed $form  value of the form attribute (may be empty)
+     * @param array<int,mixed> $stray attributes WordPress could not parse
+     */
+    public static function missing_form_message($form, array $stray): string
+    {
+        $usage = 'Usage: [ondisos form="bs"]';
+        if ($stray !== []) {
+            return 'Error: the shortcode could not be read, probably a missing or doubled quotation mark. Received: '
+                . implode(' ', array_map('strval', $stray)) . '. ' . $usage;
+        }
+        if (trim((string)$form) !== '') {
+            return 'Error: "' . trim((string)$form) . '" is not a valid form key (lowercase letters, digits, hyphen and underscore only). ' . $usage;
+        }
+
+        return 'Error: form parameter is required. ' . $usage;
     }
 
     private function render_error(string $message): string
