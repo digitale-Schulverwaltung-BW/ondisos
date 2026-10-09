@@ -392,6 +392,30 @@ try {
         echo "SKIPPED (already exists)\n";
     }
 
+    // Step 12: Second factor (TOTP) and recovery codes of admins (3.1.2)
+    echo "Step 12: Create admin_two_factor table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS admin_two_factor (
+    admin_key         VARCHAR(150) NOT NULL PRIMARY KEY,
+    totp_secret_enc   TEXT         NULL,
+    totp_confirmed_at DATETIME     NULL,
+    last_totp_step    BIGINT       NULL,
+    grace_logins_used INT          NOT NULL DEFAULT 0,
+    created_at        DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
+    echo "Step 13: Create admin_recovery_codes table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS admin_recovery_codes (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    admin_key  VARCHAR(150) NOT NULL,
+    code_hash  CHAR(64)     NOT NULL,
+    used_at    DATETIME     NULL,
+    created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin_key (admin_key, code_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
     echo "Migration complete.\n";
 } catch (\Throwable $e) {
     fwrite(STDERR, "Migration failed: {$e->getMessage()}\n");

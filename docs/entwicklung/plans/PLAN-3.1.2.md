@@ -1,6 +1,6 @@
 # PLAN 3.1.2 – Härtung der Admin-Anmeldung: Netz-Allowlist und Zwei-Faktor-Anmeldung
 
-**Status:** in Umsetzung. AP1, AP2, AP2b, AP5 und AP6 sind umgesetzt; offen sind AP3 (TOTP) und AP4 (Passkeys). Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
+**Status:** in Umsetzung. AP1, AP2, AP2b, AP3, AP5 und AP6 sind umgesetzt; offen ist AP4 (Passkeys). Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
 
 **Stand der Voraussetzungen:** Die Client-IP wird zentral über `App\Utils\ClientIp` ermittelt (`X-Forwarded-For` nur hinter Proxys aus `TRUSTED_PROXIES`, siehe [sicherheit.md](../sicherheit.md) und [konfiguration.md](../konfiguration.md)).
 `AuditLogger`, `RateLimiter`, `editor_rate_limit.php` und `download.php` nutzen sie bereits. Damit ist die Grundlage für die Netz-Allowlist (AP2) geschaffen.
@@ -21,9 +21,9 @@
 
 Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung der signierten Frontend-API (`/api/*`; sie ist durch HMAC und CORS geschützt und kommt von Schul-Webservern, nicht von Admin-Arbeitsplätzen).
 
-## Übergabe an die 2FA-Sitzung (AP3 und AP4)
+## Übergabe an die 2FA-Sitzung (AP3 umgesetzt, AP4 offen)
 
-AP1 (CIDR-Hilfsklasse) sowie AP2 und AP2b (Netz-Allowlist, auch ohne Login) sind umgesetzt (`App\Utils\CidrList`, `App\Services\AdminNetworkPolicy`, Prüfung in `inc/auth.php` und `login.php`). AP3 (TOTP, Wizard, Recovery) und AP4 (Passkeys) folgen, weil sie `inc/auth.php` und `login.php` erneut anfassen. AP5 und AP6 sind umgesetzt.
+AP1 (CIDR-Hilfsklasse) sowie AP2 und AP2b (Netz-Allowlist, auch ohne Login) sind umgesetzt (`App\Utils\CidrList`, `App\Services\AdminNetworkPolicy`, Prüfung in `inc/auth.php` und `login.php`). AP3 (TOTP, Wizard, Recovery) ist umgesetzt, AP4 (Passkeys) folgt. AP5 und AP6 sind umgesetzt.
 
 **Entscheidungen für AP3/AP4:**
 
@@ -90,7 +90,16 @@ Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in
 - **Selbstaussperrung:** Die Variable steht in der `.env` (nicht in der Oberfläche); Notausstieg ist, sie dort zu leeren. Im Hinweis- und Setup-Text das Verwaltungsnetz als Beispiel nennen (`10.10.0.0/24`).
 - **Tests:** Modell A mit leerer Liste (alles erlaubt), mit Liste (fremde Adresse ⇒ 403, API und PDF-Token unberührt), `X-Forwarded-For` ohne `TRUSTED_PROXIES` wirkungslos, Mehrschul-Betrieb unverändert.
 
-### AP3 – Zugangsdaten-Tabelle und TOTP
+### AP3 – Zugangsdaten-Tabelle und TOTP – umgesetzt
+
+**Umgesetzt wie geplant, mit diesen Abweichungen und Ergänzungen:**
+
+- Tabellen `admin_two_factor` (mit `last_totp_step`) und `admin_recovery_codes`, Admin-Schlüssel `tenant:<id>` / `platform:<ADMIN_USERNAME>`; Klassen `TwoFactorPolicy`, `TwoFactorLogin`, `TwoFactorSession`, `TwoFactorCrypto`, `TotpService`, `RecoveryCodes`, `LoginSession`, `TwoFactorRepository`; Seiten `two_factor.php`, `two_factor_setup.php`, `account.php`; Skript `reset-2fa.php`. Betrieb und Wiederherstellung: [zwei-faktor.md](../../betreiber/zwei-faktor.md).
+- **Wizard speichert erst im letzten Schritt.** Secret und Recovery-Codes liegen bis „Fertig“ nur in der Sitzung; wer abbricht, hinterlässt keinen halb eingerichteten Faktor. Der Schritt „Methode wählen“ entfällt, solange es nur den Authenticator gibt (AP4).
+- **Mein Konto:** ein Faktor je Konto (Status, Recovery-Codes erneuern, Entfernen nur, wo er nicht vorgeschrieben ist; beides mit Passwort). „Faktor hinzufügen“ kommt mit den Passkeys.
+- **Schonfrist-Hinweis** erscheint einmal pro Anmeldung („Später“ = weiterarbeiten). Ohne `TWO_FACTOR_KEY` verbraucht eine Anmeldung keine Schonfrist; nach Ablauf wird abgelehnt.
+- **Zurücksetzen:** `reset-2fa.php <benutzer>` setzt alle Konten dieses Namens zurück (Platform-Admin und gleichnamige Schul-Admins); Platform-Admins setzen Schul-Admins unter *Tenants* zurück.
+- **Test:** `TwoFactorScriptsTest` stellt statisch sicher, dass kein Skript außer den bekannten Ausnahmen `inc/auth.php` auslässt und nur Login und die beiden 2FA-Seiten den Zwischenzustand lesen; der Ablauf wurde zusätzlich Ende-zu-Ende gegen einen Wegwerf-Server geprüft (Schonfrist, Wizard, Codes, Replay, Recovery-Code, Abbruch nach 5 Fehlversuchen).
 
 **Datenmodell** (Migration, tenant-sicher dokumentieren)
 

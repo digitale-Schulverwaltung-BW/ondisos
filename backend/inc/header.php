@@ -151,6 +151,9 @@ require_once __DIR__ . '/csrf.php';
                     <span class="navbar-text text-light me-3">
                         <small>Angemeldet als: <?= htmlspecialchars($_SESSION['admin_username'] ?? 'Admin') ?></small>
                     </span>
+                    <?php if (!empty($_SESSION['admin_key'])): ?>
+                    <a href="account.php" class="btn btn-outline-light btn-sm">Mein Konto</a>
+                    <?php endif; ?>
                     <a href="logout.php" class="btn btn-outline-light btn-sm">
                         Abmelden
                     </a>
@@ -163,3 +166,24 @@ require_once __DIR__ . '/csrf.php';
         </div>
     </div>
 </nav>
+
+<?php
+// Shown once after the login: grace logins without second factor / notices about the second factor
+$tfGraceLeft = $_SESSION['two_factor_grace_left'] ?? null;
+$tfNotice = $_SESSION['two_factor_notice'] ?? null;
+unset($_SESSION['two_factor_grace_left'], $_SESSION['two_factor_notice']);
+if ($tfGraceLeft !== null || $tfNotice !== null):
+?>
+<div class="container mt-2">
+    <?php if ($tfGraceLeft !== null): ?>
+    <div class="alert alert-warning mb-2">
+        <strong>Zwei-Faktor-Anmeldung einrichten.</strong>
+        Für Ihr Konto ist ein zweiter Faktor vorgeschrieben. Sie können sich noch <?= (int)$tfGraceLeft ?>&nbsp;Mal ohne anmelden.
+        <a href="two_factor_setup.php" class="alert-link">Jetzt einrichten</a> oder später (unter „Mein Konto“).
+    </div>
+    <?php endif; ?>
+    <?php if ($tfNotice !== null): ?>
+    <div class="alert alert-info mb-2"><?= htmlspecialchars((string)$tfNotice) ?></div>
+    <?php endif; ?>
+</div>
+<?php endif; ?>

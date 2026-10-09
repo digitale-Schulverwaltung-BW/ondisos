@@ -216,6 +216,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // ------------------------------------------------------------------
+    // 6b. Reset the second factor of a tenant admin (lost device and recovery codes)
+    //     Platform admins may do this for tenant admins, never the other way round.
+    // ------------------------------------------------------------------
+    elseif ($action === 'reset_2fa' && $id !== null) {
+        $adminId = (int)($_POST['admin_id'] ?? 0);
+        $target  = null;
+        foreach ($adminRepo->findByTenantId($id) as $row) {
+            if ((int)$row['id'] === $adminId) {
+                $target = $row;
+            }
+        }
+        if ($target !== null) {
+            (new \App\Repositories\TwoFactorRepository())->remove(\App\Services\AdminKey::forTenantAdmin($adminId), true);
+            AuditLogger::twoFactorEvent('two_factor_reset', (string)($_SESSION['admin_username'] ?? ''), [
+                'target' => (string)$target['username'],
+                'target_tenant_id' => $id,
+            ]);
+        }
+        header('Location: tenants.php?id=' . $id . '&saved=1');
+        exit;
+    }
+
+    // ------------------------------------------------------------------
     // 7. Delete tenant (inactive, no forms, no submissions)
     // ------------------------------------------------------------------
     elseif ($action === 'delete_tenant' && $id !== null) {
@@ -260,6 +283,7 @@ if ($id !== null && $id > 0):
     }
 
     $admins     = $adminRepo->findByTenantId($id);
+    $twoFactorRepo = new \App\Repositories\TwoFactorRepository();
     $savedOk    = !empty($_GET['saved']);
     $createdOk  = !empty($_GET['created']);
     $secretRegen = !empty($_GET['secret_regenerated']);
@@ -489,6 +513,7 @@ if ($id !== null && $id > 0):
                         <tr>
                             <th>Benutzername</th>
                             <th>Status</th>
+                            <th>2FA</th>
                             <th>Aktionen</th>
                         </tr>
                     </thead>
@@ -501,6 +526,20 @@ if ($id !== null && $id > 0):
                                         <span class="badge bg-success">Aktiv</span>
                                     <?php else: ?>
                                         <span class="badge bg-secondary">Inaktiv</span>
+                                    <?php endif; ?>
+                                </td>
+                                <td>
+                                    <?php
+                                    try {
+                                        $adminHasFactor = $twoFactorRepo->hasFactor(\App\Services\AdminKey::forTenantAdmin((int)$admin['id']));
+                                    } catch (\Throwable) {
+                                        $adminHasFactor = false;
+                                    }
+                                    ?>
+                                    <?php if ($adminHasFactor): ?>
+                                        <span class="badge bg-success">aktiv</span>
+                                    <?php else: ?>
+                                        <span class="text-muted">–</span>
                                     <?php endif; ?>
                                 </td>
                                 <td>
@@ -524,6 +563,16 @@ if ($id !== null && $id > 0):
                                             Passwort zurücksetzen
                                         </button>
                                     </form>
+                                    <?php if ($adminHasFactor): ?>
+                                    <!-- Reset second factor -->
+                                    <form method="POST" action="tenants.php?id=<?= $id ?>" class="d-inline"
+                                          data-confirm="Zwei-Faktor-Anmeldung von <?= htmlspecialchars($admin['username']) ?> zurücksetzen? Danach gelten wieder die Schonfrist-Anmeldungen.">
+                                        <?php csrf_field(); ?>
+                                        <input type="hidden" name="action" value="reset_2fa">
+                                        <input type="hidden" name="admin_id" value="<?= (int)$admin['id'] ?>">
+                                        <button type="submit" class="btn btn-sm btn-outline-warning">2FA zurücksetzen</button>
+                                    </form>
+                                    <?php endif; ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

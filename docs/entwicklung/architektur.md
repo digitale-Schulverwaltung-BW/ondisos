@@ -67,6 +67,8 @@ projekt/
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
     │   ├── login.php · logout.php
+    │   ├── two_factor.php · two_factor_setup.php   # Zweiter Faktor (3.1.2): Code-Prüfung und Einrichtungs-Assistent, laufen auf dem Zwischenzustand pending_2fa
+    │   ├── account.php           # „Mein Konto“: Status, Recovery-Codes erneuern, Faktor entfernen
     │   ├── tenants.php           # Tenant-Verwaltung (Platform-Admin), u. a. Netz-Allowlist je Tenant
     │   ├── pdf/
     │   │   ├── download.php          # PDF per Token (ohne Session)
@@ -224,6 +226,11 @@ CREATE TABLE form_configs (        -- Formular-Konfiguration je Tenant
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP, updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP,
     UNIQUE KEY uq_tenant_form (tenant_id, form_key)
 );
+
+-- 3.1.2 (Zwei-Faktor-Anmeldung). admin_key = 'tenant:<tenant_admins.id>' oder 'platform:<ADMIN_USERNAME>' (der Platform-Admin liegt in der .env), kein FK
+-- admin_two_factor:     totp_secret_enc (libsodium, Schlüssel TWO_FACTOR_KEY), totp_confirmed_at, last_totp_step (Replay-Schutz), grace_logins_used
+-- admin_recovery_codes: nur SHA-256-Hashes, used_at = einmal verwendet
+-- (Gelöschte Admins/Tenants hinterlassen unbenutzte Zeilen; die Schlüssel werden nie wiederverwendet.)
 
 -- 3.1 (Formular-Editor, Details: docs/entwicklung/plans/PLAN-3.1.md). Alle drei sind tenant-isoliert (FK → tenants, ON DELETE CASCADE).
 -- form_resources:  veröffentlichte Surveys/Themes je Tenant, UNIQUE (tenant_id, kind, name), sha256 = Versions-Token

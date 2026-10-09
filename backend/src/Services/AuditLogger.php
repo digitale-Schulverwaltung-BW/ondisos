@@ -82,6 +82,17 @@ class AuditLogger
         self::log('admin_networks_changed', ['target_tenant_id' => $tenantId, 'old' => $old, 'new' => $new]);
     }
 
+    /**
+     * Events around the second factor: two_factor_success, two_factor_failed, recovery_code_used,
+     * two_factor_enabled, two_factor_removed, two_factor_reset, recovery_codes_regenerated.
+     *
+     * @param array<string,mixed> $details no codes, no secrets
+     */
+    public static function twoFactorEvent(string $event, string $username, array $details = []): void
+    {
+        self::log($event, ['username' => $username] + $details);
+    }
+
     public static function logout(string $username): void
     {
         self::log('logout', ['username' => $username]);

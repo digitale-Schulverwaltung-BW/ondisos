@@ -5,6 +5,7 @@
  *   <button data-confirm="Wirklich?">              Bestätigung vor dem Klick (Formular-Button, Link)
  *   <select data-autosubmit>                       Formular beim Ändern absenden
  *   <button data-reload>                           Seite neu laden
+ *   <button data-print>                            Seite drucken
  */
 (function () {
     'use strict';
@@ -17,8 +18,12 @@
     });
 
     document.addEventListener('click', function (event) {
-        var el = event.target.closest ? event.target.closest('[data-confirm], [data-reload]') : null;
+        var el = event.target.closest ? event.target.closest('[data-confirm], [data-reload], [data-print]') : null;
         if (!el) {
+            return;
+        }
+        if (el.hasAttribute('data-print')) {
+            window.print();
             return;
         }
         if (el.hasAttribute('data-reload')) {

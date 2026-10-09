@@ -52,6 +52,10 @@ Die Anmeldung wird mit „Benutzername oder Passwort falsch“ abgelehnt oder di
 - **Schul-Admin:** Auf dem Server `docker compose exec backend php clear-network-restriction.php <slug>` (hebt die Einschränkung des Tenants auf); ein Platform-Admin kann die Liste auch unter *Tenants* ändern.
 - Steht ein Reverse-Proxy davor, prüfen Sie `TRUSTED_PROXIES`: Fehlt der Eintrag, sieht das Backend nur die Proxy-Adresse ([Reverse-Proxy](betrieb.md#reverse-proxy-client-ip-und-rate-limit)).
 
+### Aussperrung durch die Zwei-Faktor-Anmeldung
+
+Gerät und Recovery-Codes sind weg, oder `TWO_FACTOR_KEY` ging verloren? Vorgehen: [zwei-faktor.md](zwei-faktor.md#wiederherstellung). Kurz: `docker compose exec backend php reset-2fa.php <benutzer>`; ohne Zugriff auf einen Platform-Admin zuerst `TWO_FACTOR_REQUIRED=off` in der `.env` setzen und das Backend neu starten.
+
 ## 2. Datenbank defekt oder leer
 
 Ondisos verwendet InnoDB. Die früher übliche „Reparatur" mit `mysqlcheck --auto-repair` greift bei InnoDB nicht; der sichere Weg ist die **Wiederherstellung aus dem Dump**.

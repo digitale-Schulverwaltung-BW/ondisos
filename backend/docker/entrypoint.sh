@@ -58,6 +58,11 @@ TRUSTED_PROXIES=${TRUSTED_PROXIES:-}
 # Admin network allowlist (empty = no restriction)
 PLATFORM_ADMIN_ALLOWED_NETWORKS=${PLATFORM_ADMIN_ALLOWED_NETWORKS:-}
 
+# Two-factor login (platform | tenants | all | off); key = 64 hex characters (openssl rand -hex 32)
+TWO_FACTOR_REQUIRED=${TWO_FACTOR_REQUIRED:-platform}
+TWO_FACTOR_GRACE_LOGINS=${TWO_FACTOR_GRACE_LOGINS:-10}
+TWO_FACTOR_KEY=${TWO_FACTOR_KEY:-}
+
 # Base URL of the documentation behind the "?" button (empty = GitHub, pinned to the installed version)
 HELP_BASE_URL=${HELP_BASE_URL:-}
 

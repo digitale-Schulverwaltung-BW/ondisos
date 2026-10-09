@@ -7,6 +7,7 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 
 **Sicherheit**
 - ✅ Netz-Allowlist für Admin-Zugänge (AP1, AP2, AP2b): `PLATFORM_ADMIN_ALLOWED_NETWORKS` (`.env`) und `tenants.admin_allowed_networks` (je Tenant unter `tenants.php`); Prüfung beim Login und bei jedem Seitenaufruf, ohne Login (`AUTH_ENABLED=false`) für jede Browser-Anfrage. Neue Klassen `App\Utils\CidrList` (aus `ClientIp` herausgelöst) und `App\Services\AdminNetworkPolicy`; Audit-Ereignisse `login_network_denied`, `admin_network_denied`, `admin_networks_changed`; Notausstieg `clear-network-restriction.php`. Migration: Spalte `tenants.admin_allowed_networks` (`php migrate.php`). Details: [sicherheit.md](sicherheit.md)
+- ✅ Zwei-Faktor-Anmeldung mit Authenticator-App (AP3): TOTP (`spomky-labs/otphp`, QR-Code als SVG mit `bacon/bacon-qr-code`), Pflicht für Platform-Admins im Mehrschul-Betrieb mit Schonfrist, Einrichtungs-Assistent mit Recovery-Codes, „Mein Konto“, Zurücksetzen durch Platform-Admin oder `reset-2fa.php`. Neue `.env`-Werte `TWO_FACTOR_REQUIRED`, `TWO_FACTOR_GRACE_LOGINS`, `TWO_FACTOR_KEY` (Pflicht, wenn 2FA genutzt wird), neue Tabellen `admin_two_factor` und `admin_recovery_codes` (`php migrate.php`). Betrieb: [zwei-faktor.md](../betreiber/zwei-faktor.md)
 
 
 ## 3.1.1

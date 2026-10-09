@@ -5,10 +5,15 @@ declare(strict_types=1);
 define('SKIP_AUTH_CHECK', true);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
+use App\Services\AdminKey;
 use App\Services\AdminNetworkPolicy;
 use App\Services\AuditLogger;
 use App\Services\LoginService;
+use App\Services\LoginSession;
 use App\Services\LoginThrottle;
+use App\Services\TwoFactorLogin;
+use App\Services\TwoFactorPolicy;
+use App\Services\TwoFactorSession;
 use App\Utils\ClientIp;
 use App\Config\Database;
 
@@ -32,6 +37,11 @@ $info = null;
 if (isset($_GET['expired'])) {
     $info = 'Ihre Sitzung ist abgelaufen. Bitte melden Sie sich erneut an.';
 }
+// Second factor abandoned (too many wrong codes)
+if (isset($_GET['twofactor'])) {
+    $error = 'Zu viele falsche Codes. Bitte melden Sie sich erneut an.';
+}
+
 // Session ended because the request came from a network outside the admin allowlist
 if (isset($_GET['network'])) {
     $info = 'Ihre Sitzung wurde beendet, weil der Zugriff aus diesem Netz nicht zulässig ist.';
@@ -101,27 +111,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($loggedIn) {
-            // Regenerate session ID to prevent session fixation
-            session_regenerate_id(true);
-
-            // Core session keys (existing)
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_username'] = $username;
-            $_SESSION['login_time'] = time();
-
-            // Phase 2: multi-tenant session keys
-            $_SESSION['is_platform_admin'] = $isPlatformAdmin;
-            if (!$isPlatformAdmin && $tenantId !== null) {
-                $_SESSION['tenant_id'] = $tenantId;
-            }
-
             $throttle->recordSuccess($clientIp, $username);
-            AuditLogger::loginSuccess($username);
 
-            // Redirect to index
-            header('Location: index.php');
-            exit;
-        } else {
+            // Second factor: only now, after password and network check. The session is created
+            // (session_regenerate_id) only when the login is complete.
+            $adminKey = $isPlatformAdmin
+                ? AdminKey::forPlatform($username)
+                : AdminKey::forTenantAdmin((int)$tenantRow['id']);
+            $twoFactor = TwoFactorLogin::fromEnvironment()->evaluate($adminKey, $isPlatformAdmin);
+
+            if ($twoFactor['outcome'] === TwoFactorLogin::OUTCOME_ERROR) {
+                $error = $twoFactor['message'];
+            } elseif ($twoFactor['outcome'] === TwoFactorPolicy::OUTCOME_CODE
+                || $twoFactor['outcome'] === TwoFactorPolicy::OUTCOME_SETUP_REQUIRED) {
+                $needsCode = $twoFactor['outcome'] === TwoFactorPolicy::OUTCOME_CODE;
+                session_regenerate_id(true);
+                TwoFactorSession::begin(
+                    $adminKey,
+                    $username,
+                    $isPlatformAdmin,
+                    $tenantId,
+                    $needsCode ? TwoFactorSession::MODE_CODE : TwoFactorSession::MODE_SETUP
+                );
+                header('Location: ' . ($needsCode ? 'two_factor.php' : 'two_factor_setup.php'));
+                exit;
+            } else {
+                LoginSession::establish($username, $isPlatformAdmin, $tenantId, $adminKey);
+                if ($twoFactor['outcome'] === TwoFactorPolicy::OUTCOME_GRACE) {
+                    $_SESSION['two_factor_grace_left'] = $twoFactor['graceLeft'];
+                } elseif ($twoFactor['message'] !== null) {
+                    $_SESSION['two_factor_notice'] = $twoFactor['message'];
+                }
+                AuditLogger::loginSuccess($username);
+
+                header('Location: index.php');
+                exit;
+            }
+        }
+        if (!$loggedIn) {
             $error = 'Benutzername oder Passwort falsch.';
             $throttle->recordFailure($clientIp, $username);
             if ($networkDenied) {

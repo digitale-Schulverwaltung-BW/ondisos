@@ -25,6 +25,7 @@ final class HelpLinks
     private const PDF         = 'docs/redaktion/pdf-bestaetigung.md';
     private const TENANTS     = 'docs/betreiber/MULTI-TENANT.md';
     private const INDEX       = 'docs/README.md';
+    private const TWO_FACTOR  = 'docs/betreiber/zwei-faktor.md';
 
     /**
      * Help topics per page script: label and repository path (with anchor). The first entry is the main topic.
@@ -70,6 +71,10 @@ final class HelpLinks
             ],
             'form_pdf_preview.php' => [
                 ['label' => 'PDF-Bestätigung gestalten', 'path' => self::PDF],
+            ],
+            'account.php' => [
+                ['label' => 'Zwei-Faktor-Anmeldung', 'path' => self::TWO_FACTOR],
+                ['label' => 'Wiederherstellung', 'path' => self::TWO_FACTOR . '#wiederherstellung'],
             ],
             'tenants.php' => [
                 ['label' => 'Tenant anlegen', 'path' => self::TENANTS . '#tenant-anlegen-platform-admin'],

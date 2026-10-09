@@ -47,6 +47,11 @@ TRUSTED_PROXIES=
 # Tenant-Admins: Liste je Tenant unter „Tenants“. Nicht für /api/* und pdf/download.php.
 PLATFORM_ADMIN_ALLOWED_NETWORKS=
 
+# Zwei-Faktor-Anmeldung (3.1.2, TOTP): platform (Standard, nur Platform-Admins im Mehrmandantenbetrieb) | tenants | all | off
+TWO_FACTOR_REQUIRED=platform
+TWO_FACTOR_GRACE_LOGINS=10      # Anmeldungen ohne zweiten Faktor, bevor der Wizard Pflicht wird
+TWO_FACTOR_KEY=                 # 64 Hex-Zeichen (openssl rand -hex 32); verschlüsselt die Authenticator-Secrets, nachträglich nicht ändern
+
 # Hilfe-Button „?“: Basis-URL der Doku (leer = GitHub in der installierten Version)
 HELP_BASE_URL=
 

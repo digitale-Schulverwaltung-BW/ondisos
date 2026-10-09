@@ -117,4 +117,35 @@ class LoginService
 
         return $row;
     }
+
+    /**
+     * Re-checks the password of the logged-in admin (before sensitive account changes).
+     * The key is the one from AdminKey: `platform:<name>` or `tenant:<tenant_admins.id>`.
+     */
+    public function verifyPasswordForKey(string $adminKey, string $password, ?mysqli $db = null): bool
+    {
+        if (str_starts_with($adminKey, 'platform:')) {
+            return $this->attemptPlatformAdminLogin(substr($adminKey, strlen('platform:')), $password);
+        }
+        if (!str_starts_with($adminKey, 'tenant:') || $db === null) {
+            return false;
+        }
+
+        $id = (int)substr($adminKey, strlen('tenant:'));
+        $stmt = $db->prepare(
+            'SELECT ta.password_hash FROM tenant_admins ta JOIN tenants t ON ta.tenant_id = t.id
+             WHERE ta.id = ? AND t.active = 1 LIMIT 1'
+        );
+        $stmt->bind_param('i', $id);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+        if ($row === null) {
+            password_verify($password, self::DUMMY_HASH);
+
+            return false;
+        }
+
+        return password_verify($password, (string)$row['password_hash']);
+    }
 }

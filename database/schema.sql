@@ -123,3 +123,24 @@ CREATE TABLE IF NOT EXISTS anmeldungen (
 -- API_SECRET_KEY. Run migrate.php (or set a real secret) before accepting submissions.
 INSERT IGNORE INTO tenants (id, name, slug, api_secret, active, created_at)
 VALUES (1, 'Default', 'default', 'CHANGE_ME_IN_PRODUCTION', 1, NOW());
+
+-- Second factor (TOTP) and recovery codes of admins (3.1.2)
+-- admin_key: 'tenant:<tenant_admins.id>' or 'platform:<ADMIN_USERNAME>'
+CREATE TABLE IF NOT EXISTS admin_two_factor (
+    admin_key         VARCHAR(150) NOT NULL PRIMARY KEY,
+    totp_secret_enc   TEXT         NULL,
+    totp_confirmed_at DATETIME     NULL,
+    last_totp_step    BIGINT       NULL,
+    grace_logins_used INT          NOT NULL DEFAULT 0,
+    created_at        DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    updated_at        DATETIME     NULL ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS admin_recovery_codes (
+    id         INT AUTO_INCREMENT PRIMARY KEY,
+    admin_key  VARCHAR(150) NOT NULL,
+    code_hash  CHAR(64)     NOT NULL,
+    used_at    DATETIME     NULL,
+    created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin_key (admin_key, code_hash)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
