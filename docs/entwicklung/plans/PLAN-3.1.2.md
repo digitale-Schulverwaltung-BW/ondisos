@@ -1,6 +1,6 @@
 # PLAN 3.1.2 – Härtung der Admin-Anmeldung: Netz-Allowlist und Zwei-Faktor-Anmeldung
 
-**Status:** in Umsetzung. AP1, AP2, AP2b, AP3, AP5 und AP6 sind umgesetzt; offen ist AP4 (Passkeys). Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
+**Status:** in Umsetzung. AP1, AP2, AP2b, AP3, AP5 und AP6 sind umgesetzt; AP4 (Passkeys) ist auf **3.1.3** verschoben. Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
 
 **Stand der Voraussetzungen:** Die Client-IP wird zentral über `App\Utils\ClientIp` ermittelt (`X-Forwarded-For` nur hinter Proxys aus `TRUSTED_PROXIES`, siehe [sicherheit.md](../sicherheit.md) und [konfiguration.md](../konfiguration.md)).
 `AuditLogger`, `RateLimiter`, `editor_rate_limit.php` und `download.php` nutzen sie bereits. Damit ist die Grundlage für die Netz-Allowlist (AP2) geschaffen.
@@ -17,11 +17,11 @@
 ## Ziel
 
 1. **Netz-Allowlist:** Admin-Anmeldung und Admin-Sitzungen nur aus zulässigen Netzen, pro Tenant einstellbar; für Platform-Admins eine eigene, globale Liste. Dieselbe Liste begrenzt auch den **Betrieb ohne Login** (Modell A) auf das Verwaltungsnetz (AP2b).
-2. **Zwei-Faktor-Anmeldung:** verpflichtend für Platform-Admins im Mehrmandantenbetrieb; TOTP (QR-Code) und Passkeys; Einführung mit Schonfrist und Wizard.
+2. **Zwei-Faktor-Anmeldung:** verpflichtend für Platform-Admins im Mehrmandantenbetrieb; TOTP (QR-Code); Einführung mit Schonfrist und Wizard. Passkeys folgen in 3.1.3 (AP4).
 
 Nicht Ziel: Single Sign-on (SAML, OIDC), E-Mail- oder SMS-Codes, Einschränkung der signierten Frontend-API (`/api/*`; sie ist durch HMAC und CORS geschützt und kommt von Schul-Webservern, nicht von Admin-Arbeitsplätzen).
 
-## Übergabe an die 2FA-Sitzung (AP3 umgesetzt, AP4 offen)
+## Übergabe an die 2FA-Sitzung (AP3 umgesetzt, AP4 in 3.1.3)
 
 AP1 (CIDR-Hilfsklasse) sowie AP2 und AP2b (Netz-Allowlist, auch ohne Login) sind umgesetzt (`App\Utils\CidrList`, `App\Services\AdminNetworkPolicy`, Prüfung in `inc/auth.php` und `login.php`). AP3 (TOTP, Wizard, Recovery) ist umgesetzt, AP4 (Passkeys) folgt. AP5 und AP6 sind umgesetzt.
 
@@ -134,16 +134,16 @@ Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in
 - CLI-Skript `backend/reset-2fa.php <benutzer>`: setzt die Faktoren zurück und gibt dem Admin erneut Schonfrist-Logins (Audit-Eintrag). Wer die Shell hat, hat ohnehin Datenbankzugriff; das ist ein bewusster Notausstieg.
 - Ein Platform-Admin kann die Faktoren eines Tenant-Admins zurücksetzen (Audit-Eintrag), nie umgekehrt.
 
-### AP4 – Passkeys (WebAuthn)
+### AP4 – Passkeys (WebAuthn): verschoben auf 3.1.3
 
-Erst nach stabilem AP3.
+Erst nach stabilem AP3; bewusst nicht Teil von 3.1.2, damit die erste Ausgabe der Zwei-Faktor-Anmeldung klein und überprüfbar bleibt.
 
 - Bibliothek: `web-auth/webauthn-lib` (Prüfung auf PHP 8.2+, Abhängigkeitsumfang). Alternativ eigene, schlanke Implementierung nur, wenn die Bibliothek unverhältnismäßig groß ist (nicht empfohlen: kryptografischer Code).
 - Relying-Party-ID und Origin aus der Backend-URL (`APP_URL`); bei Betrieb hinter Proxy muss die öffentliche URL stimmen, sonst scheitert die Registrierung. Dokumentieren.
 - Tabelle `admin_passkeys` (Credential-ID, Public Key, Signaturzähler, Bezeichnung, `last_used_at`, Transporte).
 - Ablauf: Registrierung im Wizard und unter „Mein Konto"; beim Login als zweiter Faktor (Zustand `pending_2fa` wie bei TOTP); bei mehreren Faktoren Auswahl auf der Prüfseite.
 - Vanilla JavaScript (`navigator.credentials`), keine Frontend-Frameworks, passend zum Stack. Fehlertexte über `MessageService`.
-- Später möglich: Passkey statt Passwort (passwortloser Login). Ausdrücklich nicht in 3.1.2.
+- Später möglich: Passkey statt Passwort (passwortloser Login). Ausdrücklich weder in 3.1.2 noch in 3.1.3.
 
 ### AP5 – Begleitende Härtung (umgesetzt)
 
@@ -171,7 +171,7 @@ Erst nach stabilem AP3.
 | Platform-Admin langfristig in die Datenbank? | bei `.env` bleiben; in `tenant_admins`/eigene Tabelle überführen | Später überführen; für 3.1.2 mit fester Kennung auskommen, damit der Umbau nicht den Login-Kern berührt |
 | Speicherort der Allowlist | Datenbank (`tenants`); Konfigurationsdatei | Datenbank für Tenants, `.env` für die Platform-Liste |
 | TOTP-Secret-Schlüssel | `.env`; abgeleitet aus bestehendem Secret | eigener Wert in `.env`, Pflicht bei aktiver 2FA |
-| Passkey als alleiniger Faktor oder zusätzlich | zusätzlich zum Passwort; Passwort ersetzen | zusätzlich zum Passwort, in 3.1.2 nichts anderes |
+| Passkey als alleiniger Faktor oder zusätzlich | zusätzlich zum Passwort; Passwort ersetzen | zusätzlich zum Passwort, in 3.1.3 nichts anderes |
 | Schonfrist-Zähler | Anzahl Logins; Zeitraum (z. B. 14 Tage); beides | Anzahl Logins (wie angedacht), Zeitgrenze optional später |
 
 ## Reihenfolge
@@ -183,14 +183,14 @@ Erst nach stabilem AP3.
 5. AP3 (2FA mit TOTP, Schonfrist, Wizard, Recovery)
 6. AP4 (Passkeys)
 
-AP1 bis AP3 können als **3.1.2** erscheinen; AP4 darf bei Bedarf in 3.1.3 wandern, ohne dass AP3 betroffen ist.
+AP1 bis AP3 erscheinen als **3.1.2**; AP4 (Passkeys) ist auf **3.1.3** verschoben, AP3 ist davon nicht betroffen.
 
 ## Tests und Abnahme
 
 - **Unit:** `CidrListTest` (IPv4/IPv6, Randfälle der Präfixlängen, ungültige Einträge, IPv4-mapped); `AdminNetworkPolicyTest` (leer = alles erlaubt, Tenant-Grenzen, Platform-Liste, „Alle Tenants"); TOTP-Prüfung (Zeitfenster, Replay, falscher Code); Schonfrist-Zähler (steigt nur bei erfolgreichem Passwort-Login, Wizard-Pflicht ab dem 11.); Recovery-Codes (einmalig, Hash); Verschlüsselung des Secrets (Roundtrip, manipulierter Chiffretext).
 - **Integration (Datenbank):** Migration idempotent; Tenant-Filter bei Allowlist und Faktoren; Rücksetzen von Faktoren; Audit-Einträge.
 - **Sicherheitstest auf Skriptebene:** kein geschütztes Skript antwortet im Zustand `pending_2fa` mit Inhalt; Session-ID wechselt beim Übergang; Sitzung wird bei Netzwechsel beendet.
-- **Manuell** (in [../tests.md](../tests.md) und in den Abnahmeprotokollen ergänzen): Login aus erlaubtem und gesperrtem Netz (Proxy mit und ohne `TRUSTED_PROXIES`); Selbstaussperrungs-Warnung; Wizard mit Authenticator-App und mit Passkey (Safari/iOS, Chrome, Firefox); Schonfrist über Login 1 bis 11; Wiederherstellung mit Recovery-Code und mit `reset-2fa.php`.
+- **Manuell** (in [../tests.md](../tests.md) und in den Abnahmeprotokollen ergänzen): Login aus erlaubtem und gesperrtem Netz (Proxy mit und ohne `TRUSTED_PROXIES`); Selbstaussperrungs-Warnung; Wizard mit Authenticator-App (Passkey: mit AP4 in 3.1.3); Schonfrist über Login 1 bis 11; Wiederherstellung mit Recovery-Code und mit `reset-2fa.php`.
 - **Negativtests:** IP per `X-Forwarded-For` fälschen (ohne Vertrauenseintrag wirkungslos), abgelaufenes `pending_2fa`, wiederverwendeter Code, manipulierter Passkey-Zähler, Wizard ohne JavaScript.
 
 ## Dokumentation

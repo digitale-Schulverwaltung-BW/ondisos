@@ -85,7 +85,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 
 - Der E-Mail-Versand nutzt PHP `mail()` (SMTP ist geplant); die Benachrichtigung geht vom **Frontend-Server** aus und enthält die Angaben der Anmeldung.
 - `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar (liefert z. B. `notify_email`): keine Geheimnisse in `config_json`.
-- Ohne Login (`AUTH_ENABLED=false`, Einzelbetrieb) haben alle Nutzer des Netzes die Platform-Rolle und das Audit-Log nennt keinen Benutzer: nur im **Verwaltungsnetz** (Sekretariat/Schulleitung) zulässig, sonst Login ([Betriebsmodell](docs/betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)); die Allowlist ohne Login ist für 3.1.2 geplant (AP2b).
+- Ohne Login (`AUTH_ENABLED=false`, Einzelbetrieb) haben alle Nutzer des Netzes die Platform-Rolle und das Audit-Log nennt keinen Benutzer: nur im **Verwaltungsnetz** (Sekretariat/Schulleitung) zulässig, sonst Login ([Betriebsmodell](docs/betreiber/betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login)); `PLATFORM_ADMIN_ALLOWED_NETWORKS` begrenzt auch den Betrieb ohne Login auf das Verwaltungsnetz (leer = keine Einschränkung).
 - Signaturformat 2 (Zeitstempel, Nonce, Dateihash) ist Standard, Format 1 wird im Modus `API_SIGNATURE_MODE=compat` noch akzeptiert (Replay möglich); HTTPS zwischen Frontend und Backend ist Pflicht. Die Uhren beider Server dürfen höchstens 5 Minuten abweichen ([sicherheit.md](docs/entwicklung/sicherheit.md#signierte-api-signaturformat-2-312)).
 - `seed-forms.php` überschreibt vorhandene Einträge nie; bestehende Formulare ändern die Schulen im Backend.
 - Surveys liegen im Backend (`form_resources`) **oder** als Datei im Frontend (Fallback, Abschaffung ohne Termin); wer beides pflegt, sieht die Datenbank-Fassung. `import-surveys.php` überträgt die Dateien.
@@ -95,7 +95,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 - Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale eingebunden).
 - Mehrere Docker-Stacks aus demselben Verzeichnis teilen sich `backend/.env`, die der Entrypoint bei jedem Start neu schreibt ([docker-entwicklung.md](docs/entwicklung/docker-entwicklung.md)).
 
-**Geplant:** WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
+**Geplant:** Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
 Monitoring, OpenAPI-Beschreibung. *Option, nicht geplant:* Managed Multi-Frontend (ein Frontend für mehrere Tenants; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen).
 
 ## Dokumentationskarte

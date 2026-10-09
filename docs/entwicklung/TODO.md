@@ -8,7 +8,7 @@ behobene Sicherheitsbefunde in [sicherheit.md](sicherheit.md), Teststand und Pip
 | Punkt | Hintergrund |
 |---|---|
 | **WordPress-Plugin ohne Shell, Rest** | Verbindungscode und Update-Prüfung; die ZIP ist umgesetzt. Entwurf: [PLAN-3.1.1.md](plans/PLAN-3.1.1.md) |
-| **Härtung der Admin-Anmeldung** | Netz-Allowlist pro Tenant (auch für den Betrieb ohne Login, AP2b), Zwei-Faktor-Anmeldung (TOTP, Passkeys) für Platform-Admins, Login-Rate-Limit. Entwurf: [PLAN-3.1.2.md](plans/PLAN-3.1.2.md) |
+| **Passkeys (WebAuthn) als zweiter Faktor (3.1.3)** | Netz-Allowlist, Zwei-Faktor mit TOTP und Login-Rate-Limit sind mit 3.1.2 umgesetzt. Offen: Passkeys (AP4), `web-auth/webauthn-lib`, Registrierung im Wizard und unter „Mein Konto“, Auswahl der Methode auf der Prüfseite. [PLAN-3.1.2.md](plans/PLAN-3.1.2.md#ap4--passkeys-webauthn-verschoben-auf-313) |
 | **Signaturformat: `strict` als Standard (ab 3.1.3)** | Mit 3.1.2 ist `API_SIGNATURE_MODE=compat` Standard (Umstellungsphase). Im Folgerelease `SignatureVerifier::DEFAULT_MODE`, `.env.example` und Doku auf `strict` stellen, später Format 1 entfernen. `SignatureModeDefaultTest` schlägt ab Version 3.1.3 fehl, bis das erledigt ist. [PLAN-3.1.2.md](plans/PLAN-3.1.2.md#ap6--signaturformat-2-für-die-api-umgesetzt-festschreibung-offen) |
 | **SMTP-Versand** statt PHP `mail()` | Die Benachrichtigung geht vom Frontend-Server aus |
 | **Datei-Fallback für Surveys abschaffen** | `frontend/surveys/` nur noch als Importquelle (`import-surveys.php`); ohne Termin |

@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.1.1
+Stable tag: 3.1.2
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -97,6 +97,11 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 
 == Changelog ==
 
+= 3.1.2 =
+* Anfragen an das Backend werden im neuen Signaturformat 2 signiert (Zeitstempel, Nonce, Inhaltshash; bei Uploads Hash der Datei). Das Backend nimmt das alte Format in der Umstellungsphase weiter an
+* Missbrauchsschutz: Honeypot-Feld im Formular, Rate-Limit je Besucher statt je Webserver, Nonce wird vor dem Formularschlüssel geprüft
+* Content-Security-Policy-Unterstützung: das Formular-JavaScript braucht keine Inline-Handler mehr
+
 = 3.1.1 =
 * Neue Einstellung „Vertrauenswürdige Proxys“ (Einstellungen → Ondisos): Nur von dort wird die Client-IP aus X-Forwarded-For übernommen; bisher wurden Client-IP-Header ungeprüft verwendet
 * Die Überschrift „Verfügbare Formulare“ in den Einstellungen erscheint nur noch einmal
@@ -120,6 +125,9 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
+
+= 3.1.2 =
+Zuerst das Backend auf 3.1.2 aktualisieren, danach das Plugin. Die Uhren von WordPress-Server und Backend dürfen höchstens 5 Minuten voneinander abweichen (Signaturformat 2). Notausstieg gegen ein älteres Backend: Umgebungsvariable API_SIGNATURE_VERSION=1 (siehe docs/entwicklung/sicherheit.md im Ondisos-Repository).
 
 = 3.1.1 =
 Keine Konfigurationsänderung nötig. Steht ein Reverse-Proxy vor WordPress, dessen Adresse unter Einstellungen → Ondisos → „Vertrauenswürdige Proxys“ eintragen; ohne Eintrag wird X-Forwarded-For ignoriert.

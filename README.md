@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://php.net"><img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4"></a>
   <a href="LICENSE"><img alt="Lizenz MIT" src="https://img.shields.io/badge/Lizenz-MIT-green"></a>
-  <img alt="Version 3.1.1" src="https://img.shields.io/badge/Version-3.1.1-blue">
+  <img alt="Version 3.1.2" src="https://img.shields.io/badge/Version-3.1.2-blue">
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Pipeline" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg"></a>
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Coverage" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg"></a>
 </p>

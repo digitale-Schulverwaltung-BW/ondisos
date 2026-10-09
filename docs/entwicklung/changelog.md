@@ -3,25 +3,11 @@
 Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
-## 3.1.2 (in Arbeit, [PLAN-3.1.2.md](plans/PLAN-3.1.2.md))
+## 3.1.2
 
 **Sicherheit**
 - ✅ Netz-Allowlist für Admin-Zugänge (AP1, AP2, AP2b): `PLATFORM_ADMIN_ALLOWED_NETWORKS` (`.env`) und `tenants.admin_allowed_networks` (je Tenant unter `tenants.php`); Prüfung beim Login und bei jedem Seitenaufruf, ohne Login (`AUTH_ENABLED=false`) für jede Browser-Anfrage. Neue Klassen `App\Utils\CidrList` (aus `ClientIp` herausgelöst) und `App\Services\AdminNetworkPolicy`; Audit-Ereignisse `login_network_denied`, `admin_network_denied`, `admin_networks_changed`; Notausstieg `clear-network-restriction.php`. Migration: Spalte `tenants.admin_allowed_networks` (`php migrate.php`). Details: [sicherheit.md](sicherheit.md)
 - ✅ Zwei-Faktor-Anmeldung mit Authenticator-App (AP3): TOTP (`spomky-labs/otphp`, QR-Code als SVG mit `bacon/bacon-qr-code`), Pflicht für Platform-Admins im Mehrschul-Betrieb mit Schonfrist, Einrichtungs-Assistent mit Recovery-Codes, „Mein Konto“, Zurücksetzen durch Platform-Admin oder `reset-2fa.php`. Neue `.env`-Werte `TWO_FACTOR_REQUIRED`, `TWO_FACTOR_GRACE_LOGINS`, `TWO_FACTOR_KEY` (Pflicht, wenn 2FA genutzt wird), neue Tabellen `admin_two_factor` und `admin_recovery_codes` (`php migrate.php`). Betrieb: [zwei-faktor.md](../betreiber/zwei-faktor.md)
-
-
-## 3.1.1
-
-**Hilfe**
-- ✅ Hilfe-Button „?“ in der Navigationsleiste des Backends: öffnet die zur Seite passende Dokumentation (Anmeldeliste → Handreichung und ASV, Formulare → Formulare pflegen, Tenants → Multi-Tenant usw.). Standardziel ist GitHub in der installierten Version (`blob/v<Version>/`); Betreiber können mit `HELP_BASE_URL` eine eigene Kopie angeben (`App\Utils\HelpLinks`, `App\Config\Version`). Ein Test prüft, dass jedes Ziel samt Anker existiert
-
-**Betrieb und Sicherheit**
-- ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`, im Frontend `Frontend\Utils\ClientIp` für die IP in der Anmeldung; im WordPress-Plugin als Einstellung *Vertrauenswürdige Proxys* (`ondisos_trusted_proxies`); dort wurden bisher `Client-IP`/`X-Forwarded-For` u. a. ungeprüft übernommen), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
-- ✅ Docker: MySQL wird im Produktions-Overlay nicht mehr auf dem Host-Port veröffentlicht (das `3306:3306` der Basisdatei wurde beim Zusammenführen nur ergänzt, nicht ersetzt)
-- ✅ Docker: `SESSION_SECURE` und `FORCE_HTTPS` lassen sich über die Root-`.env` schalten; `BACKEND_BIND` und `BACKEND_PORT` binden das Backend an localhost, wenn ein Reverse-Proxy auf demselben Server davor steht
-- ✅ Dokumentation: Reverse-Proxy ist Pflicht, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist))
-
-**Sicherheit (Audit)**
 - ✅ Content-Security-Policy für die Verwaltungsoberfläche und die Standalone-Formularseite (Skripte nur mit Nonce, `CSP_MODE=enforce|report-only|off`): die Seiten haben keine Inline-Handler mehr (`data-confirm`, `data-autosubmit`, `assets/js/admin-ui.js`). Details: [sicherheit.md](sicherheit.md#content-security-policy-312)
 - ✅ Signaturformat 2 für die API (`X-Timestamp`, `X-Nonce`, Inhaltshash, auch für Dateien): Replay-Schutz und Zeitfenster von 5 Minuten; `API_SIGNATURE_MODE=compat` nimmt das alte Format noch an und protokolliert es (`api_legacy_signature`), `strict` schaltet es ab. Hinweis: Uhren von Frontend und Backend müssen übereinstimmen. Details: [sicherheit.md](sicherheit.md#signierte-api-signaturformat-2-312)
 - ✅ Missbrauchsschutz der Anmeldung: Rate-Limit je Besucher statt je Frontend-Server (`X-Ondisos-Client`), Honeypot-Feld in beiden Frontends, Upload-Rate-Limit, Prüfung des Upload-Feldnamens gegen die Survey und Grenzen je Anmeldung (20 Dateien, 50 MB; `UPLOAD_MAX_*_PER_ANMELDUNG`). Details: [sicherheit.md](sicherheit.md#missbrauchsschutz-der-öffentlichen-anmeldung-312)
@@ -32,12 +18,33 @@ Versionsübersicht. Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0
 - ✅ PDF-Logo nur aus `templates/pdf/assets` und `uploads` (kein beliebiges Bild des Servers); `uploads/.htaccess` und Apache-Konfiguration sperren direkten Zugriff
 - ✅ Docker: MySQL und phpMyAdmin nur an `127.0.0.1`; `php.ini` ist auf Produktion ausgelegt (keine Fehleranzeige, OPcache ohne Zeitstempelprüfung), die Entwicklungswerte setzt der Entrypoint bei `APP_ENV=development`
 - ✅ Excel-Export schreibt Eingaben immer als Text (keine Formel-Injection); CSRF-Token für „Jetzt manuell ausführen“ im Dashboard; SVG-Uploads nicht mehr erlaubt; Downloads mit `nosniff`, Inline-Anzeige nur für PDF und Bilder
+- ✅ `AUTH_ENABLED=true` ist Standard in `.env.example` und im Docker-Entrypoint (ändert keine bestehende `.env`); wer ohne Login arbeitet, setzt `false` bewusst und sollte `PLATFORM_ADMIN_ALLOWED_NETWORKS` auf das Verwaltungsnetz setzen
+
+**Hilfe**
+- ✅ Hilfe-Button „?“ in der Navigationsleiste des Backends: öffnet die zur Seite passende Dokumentation (Anmeldeliste → Handreichung und ASV, Formulare → Formulare pflegen, Tenants → Multi-Tenant usw.). Standardziel ist GitHub in der installierten Version (`blob/v<Version>/`); Betreiber können mit `HELP_BASE_URL` eine eigene Kopie angeben (`App\Utils\HelpLinks`, `App\Config\Version`). Ein Test prüft, dass jedes Ziel samt Anker existiert
 
 **Funktionen**
 - ✅ Tenant löschen (Plattform-Admin, `tenants.php`): nur inaktiv, ohne Formulare und ohne Anmeldungen (auch Papierkorb; die Fremdschlüssel kaskadieren), Tenant 1 nie. Prüfung unter Zeilensperre in `TenantRepository::delete()` (`TenantDeletionPolicy`), danach Upload-Verzeichnis entfernen (`TenantUploadCleaner`) und Audit-Ereignis `tenant_deleted`
-- ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
-
 - ✅ Unterschriftsfelder (SurveyJS `signaturepad`, Wert als PNG/JPEG-Data-URI): Detailansicht und PDF zeigen das Bild, Excel und Benachrichtigungs-Mail den Platzhalter „[Unterschrift]“; `submit.php` lehnt andere `data:`-Werte in Feldern ab (`DataFormatter::isImageDataUri()`, höchstens 500.000 Zeichen, kein SVG)
+
+**Korrekturen**
+- ✅ Excel-Export ohne CSRF-Token liefert 403 statt eines Fehlers 500; das Slug-Muster im Formular zum Anlegen eines Tenants ist für aktuelle Browser gültig (`[a-z0-9\-]+`)
+
+**Betrieb**
+- ✅ Neue Werte in der `.env`: `PLATFORM_ADMIN_ALLOWED_NETWORKS`, `TWO_FACTOR_REQUIRED`, `TWO_FACTOR_GRACE_LOGINS`, `TWO_FACTOR_KEY` (auch in `docker-compose.yml` und im Entrypoint); `API_SIGNATURE_MODE`, `CSP_MODE`, `UPLOAD_MAX_*_PER_ANMELDUNG`
+- ✅ Neue Skripte: `clear-network-restriction.php <slug>`, `reset-2fa.php <benutzer>`; neue Composer-Pakete `spomky-labs/otphp` und `bacon/bacon-qr-code` (mit vier kleinen Abhängigkeiten)
+- ✅ Migration `php migrate.php` (Docker: beim Start): Spalte `tenants.admin_allowed_networks`, Tabellen `admin_two_factor` und `admin_recovery_codes`
+
+## 3.1.1
+
+**Betrieb und Sicherheit**
+- ✅ Reverse-Proxy: `TRUSTED_PROXIES` (IPs/CIDR); nur von dort wird `X-Forwarded-For` für Rate-Limit und Audit-Log ausgewertet (`App\Utils\ClientIp`, im Frontend `Frontend\Utils\ClientIp` für die IP in der Anmeldung; im WordPress-Plugin als Einstellung *Vertrauenswürdige Proxys* (`ondisos_trusted_proxies`); dort wurden bisher `Client-IP`/`X-Forwarded-For` u. a. ungeprüft übernommen), leer = Header ignoriert. Zuvor vertraute das Audit-Log dem Header bedingungslos, und hinter einem Proxy teilten sich alle Schulen ein Rate-Limit
+- ✅ Docker: MySQL wird im Produktions-Overlay nicht mehr auf dem Host-Port veröffentlicht (das `3306:3306` der Basisdatei wurde beim Zusammenführen nur ergänzt, nicht ersetzt)
+- ✅ Docker: `SESSION_SECURE` und `FORCE_HTTPS` lassen sich über die Root-`.env` schalten; `BACKEND_BIND` und `BACKEND_PORT` binden das Backend an localhost, wenn ein Reverse-Proxy auf demselben Server davor steht
+- ✅ Dokumentation: Reverse-Proxy ist Pflicht, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist))
+
+**Funktionen**
+- ✅ Sammelaktionen in der Anmeldungsliste: Die Statusbuttons der Detailansicht (📝 In Bearbeitung, ☑️ Akzeptiert, 👎 Abgelehnt) gibt es auch für die Auswahl (zwischen „Archivieren“ und „Löschen“); `BulkActionsController`, `StatusService::bulkUpdateStatus()`, Audit-Ereignisse `bulk_in_bearbeitung`, `bulk_akzeptiert`, `bulk_abgelehnt`
 
 **Korrekturen**
 - ✅ Sicherheit: Open Redirect in `change_status.php` behoben: `return_url` wird über `App\Utils\SafeRedirect::local()` auf Seiten der Oberfläche (`name.php?query`) beschränkt, alles andere führt auf `index.php`
