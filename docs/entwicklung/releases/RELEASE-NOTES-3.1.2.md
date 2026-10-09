@@ -36,6 +36,7 @@ Neue Funktionen für Sekretariat oder Redaktion gibt es kaum; die Änderungen be
 ## Korrekturen
 
 - Das Audit-Log war nach einem CLI-Aufruf als `root` (`docker compose exec backend php import-surveys.php …`, wie in der Installationsanleitung) für den Webserver nicht mehr beschreibbar, und **jede Anmeldung endete mit Fehler 500**. Das Log wird jetzt für `www-data` angelegt, und ein nicht schreibbares Log legt die Anwendung nicht mehr lahm (Meldung im PHP-Fehlerlog).
+- Der Feldname `website_url` ist in Surveys reserviert (Fehler beim Prüfen): So heißt das unsichtbare Spamschutz-Feld, eine Frage mit diesem Namen würde als Bot verworfen, obwohl der Besucher „Erfolg“ sieht. Bestehende Surveys mit diesem Namen bitte umbenennen.
 - WordPress-Plugin: Bei einem kaputten Shortcode (z. B. `[ondisos form=""bs]`) nennt die Fehlermeldung den empfangenen Text und den wahrscheinlichen Grund (Anführungszeichen), statt zu behaupten, der Parameter fehle.
 - Excel-Export ohne CSRF-Token liefert `403` statt `500`; das Slug-Muster beim Anlegen eines Tenants ist für aktuelle Browser gültig.
 

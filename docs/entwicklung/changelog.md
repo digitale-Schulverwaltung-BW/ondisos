@@ -30,6 +30,7 @@ Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1
 - ✅ Unterschriftsfelder (SurveyJS `signaturepad`, Wert als PNG/JPEG-Data-URI): Detailansicht und PDF zeigen das Bild, Excel und Benachrichtigungs-Mail den Platzhalter „[Unterschrift]“; `submit.php` lehnt andere `data:`-Werte in Feldern ab (`DataFormatter::isImageDataUri()`, höchstens 500.000 Zeichen, kein SVG)
 
 **Korrekturen**
+- ✅ Survey-Prüfung: Der Feldname `website_url` (Honeypot-Feld) ist reserviert; eine Frage mit diesem Namen wurde still als Bot verworfen
 - ✅ Excel-Export ohne CSRF-Token liefert 403 statt eines Fehlers 500; WordPress-Plugin: Die Fehlermeldung bei einem kaputten Shortcode (`[ondisos form=""bs]`, fehlendes oder doppeltes Anführungszeichen) nennt den empfangenen Text und den wahrscheinlichen Grund statt „form parameter is required“; ein ungültiger Formularschlüssel wird als solcher benannt. Das Slug-Muster im Formular zum Anlegen eines Tenants ist für aktuelle Browser gültig (`[a-z0-9\-]+`)
 
 **Betrieb**
