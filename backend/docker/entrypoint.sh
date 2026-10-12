@@ -117,8 +117,10 @@ if [ -n "${ADMIN_PASSWORD_HASH:-}" ] \
 fi
 
 # Login is on by default: without a password hash nobody can sign in. Say so instead of failing silently.
-if [ "${AUTH_ENABLED:-true}" = "true" ] && [ -z "${ADMIN_PASSWORD_HASH:-}" ]; then
-    echo "⚠️  AUTH_ENABLED=true but ADMIN_PASSWORD_HASH is empty: nobody can log in to the admin interface."
+# MULTI_TENANT_ENABLED=true forces the login on whatever AUTH_ENABLED says (the dev compose file sets it to false).
+if { [ "${AUTH_ENABLED:-true}" = "true" ] || [ "${MULTI_TENANT_ENABLED:-false}" = "true" ]; } && [ -z "${ADMIN_PASSWORD_HASH:-}" ]; then
+    echo "⚠️  Login is required (AUTH_ENABLED=true or MULTI_TENANT_ENABLED=true) but ADMIN_PASSWORD_HASH is empty:"
+    echo "    the platform admin cannot log in (school admins created in the backend still can)."
     echo "    Create a hash: docker compose exec backend php scripts/generate-password-hash.php \"your-password\""
     echo "    and set ADMIN_PASSWORD_HASH='...' (single quotes) in the root .env."
 fi

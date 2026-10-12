@@ -45,6 +45,9 @@ class LoginService
         $adminPasswordHash = \App\Config\EnvLoader::get('ADMIN_PASSWORD_HASH', '');
 
         if ($adminUsername === '' || $adminPasswordHash === '') {
+            // Say why the platform admin can never log in (the login page only shows "wrong username or password")
+            error_log('Platform admin login attempted, but ADMIN_USERNAME or ADMIN_PASSWORD_HASH is not set - the platform admin cannot log in.');
+
             return false;
         }
 

@@ -228,6 +228,8 @@ Wer sie später ändert (oder den Stack einmal mit den Beispielwerten gestartet 
 
 ### Login abgelehnt, obwohl das Passwort stimmt
 
+**Zuerst nachsehen:** `docker compose logs backend | grep -i -B1 -A2 "ADMIN_PASSWORD_HASH\|Login is required"` zeigt beim Start, ob der Hash fehlt oder beschädigt ist, und `docker compose exec backend printenv ADMIN_PASSWORD_HASH | tr -d '\n' | wc -c` muss 60 ergeben. Meldet Docker Compose bei jedem Aufruf Zeilen wie `The "…" variable is not set. Defaulting to a blank string`, steht der Hash ohne einfache Anführungszeichen in der `.env`. Fehlt er ganz (z. B. nach einer frisch aus `.env.example` kopierten `.env`), ist der Platform-Admin-Login nicht möglich; im PHP-Fehlerlog steht dann `Platform admin login attempted, but …`.
+
 Fast immer ist der Hash beschädigt: In der Root-`.env` zerlegt Docker Compose jedes `$…` eines **nicht** in einfache Anführungszeichen gesetzten Hashes (aus 60 Zeichen werden etwa 35).
 Sonderzeichen im *Passwort* sind unkritisch. Länge wie in Schritt 4 prüfen; bei einem Wert ≠ 60 den Hash in einfache Anführungszeichen setzen und `docker compose up -d backend` wiederholen.
 Das Backend meldet den Fall beim Start (`⚠️ ADMIN_PASSWORD_HASH looks damaged`, `docker compose logs backend`).
