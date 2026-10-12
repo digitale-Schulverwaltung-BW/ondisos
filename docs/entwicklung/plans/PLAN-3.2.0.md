@@ -1,6 +1,6 @@
 # PLAN 3.2.0 – Grafischer Survey-Editor im Backend
 
-**Status:** Entwurf (Stand 2026-10-12), noch keine Zeile Code. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
+**Status:** Entwurf (Stand 2026-10-12); AP0 läuft. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -35,9 +35,26 @@ Was die Oberfläche nicht kann, bleibt im JSON-Editor erreichbar (Expertenmodus)
 2. **Verlustfreier Round-Trip.** Der Editor ändert nur, was der Benutzer anfasst. Unbekannte Eigenschaften, unbekannte Elementtypen und Logik, die er nicht darstellen kann, bleiben unverändert im Dokument (Registry-Prinzip: *unterstützt* heißt „bearbeitbar", nicht „erlaubt"). Das ist die wichtigste Anforderung; ohne sie zerstört die Oberfläche handgeschriebene Surveys.
 3. **Expertenmodus bleibt.** Umschalter *Grafisch* / *JSON*; beide arbeiten auf demselben Text. Der JSON-Editor ist der Rückfall für alles Unterstützte-nicht.
 4. **Tabellengesteuert statt Handarbeit.** Eine **Element-Registry** beschreibt je Typ die bearbeitbaren Eigenschaften (Name, Typ des Eingabefelds, Vorgabewert, Hilfetext). Das Eigenschaften-Panel wird daraus erzeugt; ein neuer Typ ist ein Registry-Eintrag.
-5. **Kein Code, keine Texte, keine Icons aus dem Creator.** Clean-Room-Nachbau gegen das offene JSON-Format und die MIT-Bibliothek. **Vor AP1** die Lizenzbedingungen auf Einschränkungen für kompatible Editoren prüfen (AP0).
+5. **Kein Code, keine Texte, keine Icons aus dem Creator.** Clean-Room-Nachbau gegen das offene JSON-Format und die MIT-Bibliothek. Lizenzbefund und Regeln: Abschnitt [Lizenz und Clean-Room](#lizenz-und-clean-room).
 6. **Stack bleibt:** Vanilla JavaScript, Bootstrap 5, keine Build-Kette als Pflicht. Für Drag-and-drop höchstens eine kleine MIT-Bibliothek (z. B. SortableJS), Lizenz und Größe vorher prüfen und in `LICENSES.txt` eintragen (wie bei CodeMirror).
 7. **Standard bleibt streng:** Der grafische Editor schlägt für neue Formulare Name **und** E-Mail als Pflichtfelder vor (3.1.2: mindestens eines genügt serverseitig, die Standard-Anmeldung soll beides abfragen). Verzicht auf die E-Mail ist eine bewusste Handlung (Datensparsamkeit).
+
+## Lizenz und Clean-Room
+
+Befund (Lizenzseite und Developer License Agreement von SurveyJS, gelesen am 2026-10-12; keine Rechtsberatung):
+
+- Das Agreement gilt für die **kommerziellen Pakete** (Creator, PDF Generator, Dashboard). Die Form Library (`survey-core`, `survey-js-ui`) steht unter MIT.
+- Kernklausel: *„At no time may licensee create any tool, redistributable, or product that directly or indirectly competes with the software development product(s) by utilizing all or any portion of the Devsoft Baltic software development product(s)."* Sie richtet sich an den **Lizenznehmer** und verbietet das Konkurrenzprodukt **unter Verwendung** der Software.
+- Ein Editor, der nur das offene SurveyJS-JSON erzeugt und nichts vom Creator nutzt, fällt nach Wortlaut wohl nicht darunter. Der Begriff „indirectly competes" ist unscharf; ob SurveyJS einen Ondisos-Editor als Wettbewerb sieht, ist offen.
+
+Regeln für die Umsetzung (gelten auch für KI-Assistenten):
+
+1. Kein Blick in Creator-Quelltext oder -Bundles (auch nicht in `survey-creator-*` aus npm), keine Übernahme von Code, Texten, Icons oder Layout-Details.
+2. Keine Creator-Lizenz und keine Testversion in der Entwicklung: wer lizenziert ist, ist „Licensee", dann greift die Klausel unmittelbar.
+3. Der Editor trägt keinen Namen und keine Marken von SurveyJS („Creator", „Survey Creator" o. ä.).
+4. Grundlage sind allein das JSON-Format (dokumentiert, von der MIT-Library gelesen) und die MIT-Library selbst.
+
+**Empfehlung, offen:** schriftliche Anfrage an SurveyJS (Support/Sales): *„Ondisos ist eine freie Schulanmeldung. Wir planen einen eigenen, quelloffenen Formular-Editor, der ausschließlich das offene SurveyJS-JSON erzeugt, ohne Code des Creators. Ist das zulässig?"* Die Antwort hier eintragen. Bis dahin ist AP0 (Spike) unbedenklich, vor einer Veröffentlichung des Editors sollte sie vorliegen.
 
 ## Randbedingungen aus dem bestehenden Code
 
@@ -52,13 +69,15 @@ Was die Oberfläche nicht kann, bleibt im JSON-Editor erreichbar (Expertenmodus)
 
 ```
 backend/public/assets/survey-builder/
-  model.js            Dokumentmodell auf dem geparsten JSON (Seiten, Elemente, Pfade); reine Logik, ohne DOM
+  json-doc.js         verlustfreie JSON-Schicht: Parser mit Textpositionen, Änderungen als Textersetzung (AP0, fertig)
+  model.js            Dokumentmodell auf dieser Schicht (Seiten, Elemente, Pfade, Titel); reine Logik, ohne DOM
   registry.js         Elementtypen und Eigenschaften (Tabelle)
   conditions.js       einfache Bedingungen ⇄ Ausdruck (visibleIf / requiredIf); erkennt „zu komplex"
   ui.js               Seitenliste, Elementliste, Palette, Eigenschaften-Panel
   history.js          Undo/Redo (Schnappschüsse des JSON)
 backend/public/form_survey.php      Umschalter Grafisch/JSON, Einbindung
-backend/tests/…                     PHP-Tests für serverseitige Teile; JS-Tests siehe offene Fragen
+backend/tests/js/                   JS-Tests (`node --test`, Job `test_js`); PHP-Tests für serverseitige Teile unter backend/tests/
+backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entfällt mit AP2)
 ```
 
 `model.js` ist von der Oberfläche getrennt, damit der Round-Trip ohne Browser testbar ist. Der Server ändert sich kaum: höchstens Registry-Daten (z. B. erlaubte HTML-Tags) als JSON-Einbettung und neue Meldungstexte.
@@ -77,6 +96,33 @@ backend/tests/…                     PHP-Tests für serverseitige Teile; JS-Tes
 | **AP7** Doku und Abschluss | Redaktions-Doku neu ordnen ([SURVEYJS.md](../../redaktion/SURVEYJS.md)), `HelpLinks`-Ziele, Meldungstexte (`messages.php`, auch `messages.example.php`), Changelog, Release Notes, manuelle Tests, Version 3.2.0 an den vier Stellen | 1 Woche | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
 **Kern (MVP): AP0–AP3**, etwa **6–10 Wochen**. **AP4–AP7** machen daraus ein gut nutzbares Werkzeug (zusammen weitere **2–4 Monate**). AP5 ist der unsicherste Teil und kann bei Bedarf zuerst entfallen; Bedingungen bleiben dann im JSON-Editor.
+
+## AP0-Ergebnis (2026-10-12)
+
+**Lizenz:** geprüft, siehe [Lizenz und Clean-Room](#lizenz-und-clean-room); die schriftliche Bestätigung von SurveyJS steht aus.
+
+**Messung an den vorhandenen Surveys** (7 Surveys, zusammen 4003 Zeichenketten, 22 Seiten, 247 Elemente einschließlich Panels; keine doppelten Schlüssel):
+
+| Befund | Folge |
+|---|---|
+| `ausbildernachmittag`, `gs`, `pdf`, `prefill`, `zq` sind byte-identisch mit `JSON.stringify(…, null, 2)` (Creator-Export) | Neu serialisieren wäre dort verlustfrei |
+| `bs` ist von Hand formatiert (kompakte Auswahllisten): neu serialisiert wüchse der Text von 1440 auf 2817 Zeilen | Jede Änderung würde den Verlauf (`form_resources`) mit Rauschen füllen |
+| `vabo` mischt Tabs und Leerzeichen in zwei Zeilen | dito, im Kleinen |
+| Parsen und Ändern: 2 ms bei 54 KB, 41–46 ms bei 1,3 MB (Limit des Servers: 512 KB) | Vollständiges Neu-Parsen nach jeder Änderung genügt |
+
+**Entscheidung:** Der Editor schreibt **nie** das ganze Dokument neu, sondern ersetzt nur die betroffene Textstelle (`json-doc.js`). Damit bleibt alles andere Byte für Byte erhalten: Einrückung, Tabs, CRLF, kompakte Listen, Schlüsselreihenfolge. Das erfüllt die Anforderung „verlustfreier Round-Trip" auf Textebene, nicht nur strukturell.
+
+**Nachgewiesen** (`backend/tests/js`, 25 Tests, alle grün):
+- Der Parser stimmt mit `JSON.parse` überein (alle Surveys, dazu gültige und ungültige Grenzfälle, BOM, Tiefe); doppelte Schlüssel werden gemeldet, `__proto__` bleibt ein gewöhnlicher Schlüssel.
+- Jede der 4003 Zeichenketten lässt sich einzeln ersetzen, ohne dass sich außerhalb der Stelle ein Byte ändert; zurückschreiben stellt den Originaltext her (Stichprobe jede 7.).
+- Titel aller 22 Seiten und 247 Elemente: ändern und zurücksetzen ergibt exakt den Originaltext; andere Sprachen lokalisierter Titel bleiben.
+- Ein Titel in `bs.json` ändert genau **eine** Zeile.
+- Das Outline liefert dieselben Fragen in derselben Reihenfolge wie `survey-core` (die ausgelieferte Version 3.2.0) beim Aufbau des Formulars.
+- Einfügen und Entfernen von Eigenschaften und Listeneinträgen übernimmt Einrückung, Zeilenende und kompakte Schreibweise der Umgebung.
+
+**Durchstich im Browser:** `backend/tools/survey-builder-spike/` lädt ein Survey, zeigt Seiten, Panels und Fragen, ändert einen Titel und schreibt den Text zurück; bei ungültigem JSON ist die Ansicht gesperrt und nennt Zeile und Spalte.
+
+**Aufwand:** Die Schätzung für AP0–AP3 (6–10 Wochen) wird nicht widerlegt. Das größte Risiko, der verlustfreie Round-Trip, ist mit der Textschicht entschärft. Ungeprüft bleiben AP5 (Bedingungen) und die Registry der Eigenschaften (AP1). Noch nicht umgesetzt: Verschieben von Elementen (`removeItem` plus `insertItem`; das verschobene Element wird dabei mit der Einrückung des Ziels neu geschrieben, der Rest bleibt unberührt) und Eigenschaften ordnen. **Empfehlung: MVP (AP1–AP3).**
 
 ## Tests
 
@@ -99,10 +145,11 @@ backend/tests/…                     PHP-Tests für serverseitige Teile; JS-Tes
 
 ## Offene Fragen
 
-- **Lizenz:** Schränken die SurveyJS-Lizenzbedingungen einen kompatiblen Editor ein? (AP0, Ergebnis hier eintragen.)
-- **JavaScript-Tests:** Gibt es in der CI ein Node? Wenn nein: Modelltests mit `node --test` ohne Abhängigkeiten ergänzen oder das Modell zusätzlich in PHP prüfen (Round-Trip an den Dateien) — Entscheidung vor AP1.
+- **Lizenz:** geprüft, siehe [Lizenz und Clean-Room](#lizenz-und-clean-room); offen ist die schriftliche Bestätigung durch SurveyJS.
+- **JavaScript-Tests:** *entschieden.* Die CI ist GitLab (`.gitlab-ci.yml`, Image `php:8.2-cli`, kein Node, kein `package.json`). Modelltests laufen mit `node --test` ohne Abhängigkeiten, als eigener Job `test_js` mit `node:22-alpine` (`before_script: []`, wie `lint_php`). Kein zweites Modell in PHP.
+- **Round-Trip:** Pflicht ist **Strukturgleichheit** (tiefer Vergleich) mit erhaltener Schlüsselreihenfolge. Ob auch der **Text** gleich bleibt (Einrückung, Escapes, Zeilenumbrüche), misst AP0; davon hängt ab, ob jede Änderung im Verlauf (`form_resources`) den ganzen Text umformatiert. Doppelte Schlüssel gehen beim Parsen verloren: der Editor muss sie erkennen und das Dokument ablehnen oder warnen.
 - **Umfang der Eigenschaften:** Reichen die ca. 25 genutzten Eigenschaften, oder braucht die Redaktion mehr (z. B. `maxSize` bei Datei-Uploads, `rows` bei Textbereichen)? Mit der Redaktion abstimmen.
-- **Mehrsprachige Texte:** Die Surveys tragen teils `{"de": …, "default": …}` (z. B. `completedHtml`, `html`). Wie zeigt der Editor das? Vorschlag: nur `default`/`de` bearbeiten, andere Sprachen unverändert lassen.
+- **Mehrsprachige Texte:** Die Surveys tragen teils `{"de": …, "default": …}` (z. B. `completedHtml`, `html`). Wie zeigt der Editor das? Vorschlag: nur `default`/`de` bearbeiten, andere Sprachen unverändert lassen. Wichtig: In den vorhandenen Surveys (`bs`, `vabo`, `zq`) **unterscheiden** sich `de` und `default` inhaltlich. Angezeigt wird `default`, weil Ondisos `survey.locale` nicht setzt (3.2.0-Update: nur die Standardtexte von SurveyJS sind deutsch). Der Editor bearbeitet daher `default`, zeigt `de` schreibgeschützt und lässt es unverändert.
 - **Vorschau im Editor:** Seitenweise Live-Vorschau neben dem Editor oder weiter die bestehende Vorschau-Seite? Die bestehende genügt für den MVP.
 
 ## Übergabe an die Umsetzungs-Sitzung

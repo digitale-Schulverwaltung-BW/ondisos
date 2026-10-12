@@ -16,6 +16,7 @@ install → test → coverage → security → build → release → deploy-stag
 | `test_unit` | test | immer | Unit-Tests mit PCOV-Coverage (`--testsuite=Unit`), JUnit- und Cobertura-Bericht; der Prozentwert erscheint im Badge der README |
 | `test_integration` | test | immer, **darf fehlschlagen** | Integration-Tests gegen einen MySQL-8.0-Dienst; importiert `database/schema.sql` und richtet `.env.test` auf den Dienst aus |
 | `lint_php` | test | immer | `php -l` für `backend/src`, `backend/public`, `frontend/src`, `frontend/public` |
+| `test_js` | test | immer | JavaScript-Tests des Survey-Editor-Modells: `node --test "backend/tests/js/*.test.mjs"` im Image `node:22-alpine`, ohne Pakete und ohne den PHP-`before_script` |
 | `coverage` | coverage | nur `main`, `master`, `develop` | Coverage-HTML mit Xdebug (`backend/coverage/`, 30 Tage als Artefakt) |
 | `release:plugin_zip` | release | nur Tags `vX.Y.Z` | baut die WordPress-Plugin-ZIP samt SHA-256-Prüfsumme, legt beides in der Generic Package Registry ab und erstellt ein GitLab-Release |
 

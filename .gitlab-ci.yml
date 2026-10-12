@@ -197,6 +197,16 @@ lint_php:
     - find frontend/public -name "*.php" -print0 | xargs -0 -n1 php -l
     - echo "All PHP files are syntactically valid"
 
+# Job: JavaScript tests (survey builder model; Node's built-in runner, no packages)
+test_js:
+  stage: test
+  image: node:22-alpine
+  dependencies: []
+  before_script: []  # Override global before_script (no PHP, no Composer)
+  script:
+    - node --version
+    - node --test "backend/tests/js/*.test.mjs"
+
 # ============================================================================
 # Release: WordPress plugin ZIP (tags vX.Y.Z only)
 # ============================================================================

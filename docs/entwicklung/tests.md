@@ -136,6 +136,16 @@ class MyServiceTest extends TestCase
 composer test:filter MyServiceTest
 ```
 
+## JavaScript-Tests
+
+Die Logik des grafischen Survey-Editors (`backend/public/assets/survey-builder/`) prüft Nodes eingebauter Test-Runner, ohne Pakete (Node 22 oder neuer):
+
+```bash
+node --test "backend/tests/js/*.test.mjs"
+```
+
+Die Tests lesen alle Surveys aus `frontend/surveys/` und vergleichen das Outline mit dem, was die ausgelieferte SurveyJS-Library daraus aufbaut. Die Pipeline führt sie im Job `test_js` aus. Die übrigen Browser-Skripte sind nicht automatisiert getestet (siehe Testlücken).
+
 ## Pipeline
 
 Jobs, Stufen, Release und lokales Nachstellen: [CI_CD.md](CI_CD.md).
