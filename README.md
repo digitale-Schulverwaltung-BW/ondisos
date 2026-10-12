@@ -17,14 +17,18 @@
   <img src="docs/img/frontend-formular.png" alt="Anmeldeformular im Frontend" width="720">
 </p>
 
-Ondisos nimmt Schulanmeldungen (aber auch: Rückmeldungen zum Elternabend, Info-Tag und so weiter - alles, was einen Namen und eine E-Mail-Adresse abfragt) online entgegen und bringt sie ohne Abtippen in die Schulverwaltung:
+Ondisos ermöglicht es, online-Formulare anzuzeigen und eingegebene Daten auf einem eigenen Server sicher
+abzuspeichern. Es gibt unzählige Möglichkeiten: Rückmeldungen zum Elternabend, Info-Tag und so weiter. Wenn
+es um Schulanmeldungen geht, wird es noch spannender: ondisos bringt die ohne Abtippen in die
+Schulverwaltung:
+
 Eltern und Betriebe füllen ein Formular auf der Schulwebsite aus, das Sekretariat findet die Anmeldung
 im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter und importiert sie in
 [ASV-BW](docs/sekretariat/ASV.md). Die Daten bleiben auf Servern, die Sie selbst betreiben.
 
 ## Was Ondisos kann
 
-- **Formulare ohne Programmierung.** Entwurf im SurveyJS-Creator, Pflege direkt im Backend – mit Prüfung, Vorschau, Verlauf und Wiederherstellen.
+- **Formulare ohne Programmierung.** Entwurf im SurveyJS-Creator (in Planung: interner Editor), Pflege direkt im Backend – mit Prüfung, Vorschau, Verlauf und Wiederherstellen.
 - **Eine Installation, mehrere Schulen.** Ein Backend bedient viele Schulen (*Mandanten*), strikt voneinander getrennt – etwa für einen Schulträger oder ein Medienzentrum.
 - **Öffentliches Frontend, geschütztes Backend.** Das Formular läuft auf der Schulwebsite (WordPress-Plugin oder eigenständig), die Daten liegen im Intranet. Beide sind per signierter API verbunden.
 - **Bestätigung für die Anmeldenden.** PDF mit Schul-Logo und Farbe, optional mit angehängtem Merkblatt.
