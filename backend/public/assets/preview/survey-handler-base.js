@@ -15,6 +15,13 @@
 
 Survey.Serializer.addProperty("question", { name: "placeholderExpression", type: "expression" });
 
+// SurveyJS' own texts (validation messages, "Weiter", "Abschließen") appear in German when the locale file is loaded.
+// Only the default locale is switched: survey.locale stays untouched, so the "default" strings of a survey are still
+// shown (the locale "de" would select the "de" strings of multilingual surveys instead).
+if (Survey.surveyLocalization && Survey.surveyLocalization.locales && Survey.surveyLocalization.locales["de"]) {
+    Survey.surveyLocalization.defaultLocale = "de";
+}
+
 class SurveyHandlerBase {
     /**
      * @param {Document|Element} root - Scope for DOM lookups.

@@ -9,7 +9,9 @@ DST=public/assets/preview
 
 cp "$SRC/assets/survey.core.min.js"            "$DST/survey.core.min.js"
 cp "$SRC/assets/survey-js-ui.min.js"           "$DST/survey-js-ui.min.js"
-cp "$SRC/assets/survey-core.fontless.min.css"  "$DST/survey-core.fontless.min.css"
+cp "$SRC/assets/survey-core.min.css"           "$DST/survey-core.min.css"
+mkdir -p "$DST/i18n"
+cp "$SRC/assets/i18n/german.min.js"            "$DST/i18n/german.min.js"
 cp "$SRC/js/survey-handler-base.js"            "$DST/survey-handler-base.js"
 cp "$SRC/assets/fonts/opensans/"*.woff2        "$DST/fonts/"
 echo "Preview assets updated from $SRC"

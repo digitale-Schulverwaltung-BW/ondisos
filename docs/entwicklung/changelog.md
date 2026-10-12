@@ -3,6 +3,11 @@
 Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1.2.md). Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
+## Unveröffentlicht (nach 3.1.2)
+
+**Frontend**
+- ✅ SurveyJS Form Library 2.3.15 → 3.2.0 (MIT; Frontend, Vorschau und WordPress-Plugin). Geprüft an allen Surveys in `frontend/surveys/`: Sichtbarkeit, Pflichtfelder und Fehlermeldungen unverändert, keine CSP-Verstöße, Wertformat der Datei-Fragen unverändert. Ausgeliefert wird jetzt `survey-core.min.css` (in 3.x nur noch Alias in `survey-core.fontless.min.css`, ohne `@font-face`); `defaultV2.fontless.min.css` und die alte Fontless-Datei entfallen. Die Standardtexte von SurveyJS erscheinen deutsch (`assets/i18n/german.min.js`, `defaultLocale = "de"`; `survey.locale` bleibt unverändert, damit die `default`-Texte der Surveys erhalten bleiben). Optik: neue Standardwerte von SurveyJS, siehe [TODO.md](TODO.md). Lizenzhinweise: `frontend/public/assets/LICENSES.txt`
+
 ## 3.1.2
 
 **Sicherheit**

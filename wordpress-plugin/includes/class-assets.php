@@ -93,7 +93,7 @@ class Assets
         // Enqueue SurveyJS core CSS
         wp_enqueue_style(
             'surveyjs-core',
-            $this->frontend_assets_url . 'survey-core.fontless.min.css',
+            $this->frontend_assets_url . 'survey-core.min.css',
             [],
             ONDISOS_PLUGIN_VERSION
         );
@@ -119,11 +119,20 @@ class Assets
             true
         );
 
+        // German texts for SurveyJS' own messages (survey-handler-base.js makes German the default locale)
+        wp_enqueue_script(
+            'surveyjs-locale-de',
+            $this->frontend_assets_url . 'i18n/german.min.js',
+            ['surveyjs-core'],
+            ONDISOS_PLUGIN_VERSION,
+            true
+        );
+
         // Enqueue shared base class (lives in frontend/public/js/, accessible via symlink)
         wp_enqueue_script(
             'ondisos-survey-handler-base',
             $this->frontend_js_url . 'survey-handler-base.js',
-            ['surveyjs-core', 'surveyjs-ui'],
+            ['surveyjs-core', 'surveyjs-ui', 'surveyjs-locale-de'],
             ONDISOS_PLUGIN_VERSION,
             true
         );
