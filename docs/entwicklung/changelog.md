@@ -3,6 +3,11 @@
 Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1.2.md). Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
+## 3.1.3 (in Arbeit)
+
+**Sicherheit**
+- ✅ `API_SIGNATURE_MODE=strict` ist Standard (`SignatureVerifier::DEFAULT_MODE`, `.env.example`): Signaturformat 1 wird nur noch mit ausdrücklich gesetztem `compat` angenommen. Vor dem Update im Audit-Log nach `api_legacy_signature` suchen; der Docker-Start meldet den wirksamen Modus. Details: [sicherheit.md](sicherheit.md#signierte-api-signaturformat-2-312), [PLAN-3.1.3.md](plans/PLAN-3.1.3.md)
+
 ## 3.1.2
 
 **Sicherheit**

@@ -208,7 +208,7 @@ Sie gilt nicht für `/api/*` (durch Signatur geschützt) und den PDF-Download pe
 **Weitere Einstellungen in der `.env`** (Vorlage `backend/.env.example`):
 
 - `CSP_MODE=enforce` (Standard): Die Content-Security-Policy erlaubt Skripte nur von der eigenen Herkunft oder mit Nonce. Meldet der Browser nach einem Eigenbau (eigene Skripte, Proxy-Filter) Verstöße in der Konsole, hilft zum Diagnostizieren `report-only` (nur melden); `off` schaltet sie ab. Ein Reverse-Proxy darf den Header nicht überschreiben. Das Standalone-Frontend hat eine eigene Einstellung `CSP_MODE` in `frontend/.env`.
-- `API_SIGNATURE_MODE=compat|strict` und `API_SIGNATURE_MAX_SKEW` (Sekunden, Standard 300): Umstellung auf das neue Signaturformat, siehe Checkliste unten.
+- `API_SIGNATURE_MODE=strict|compat` und `API_SIGNATURE_MAX_SKEW` (Sekunden, Standard 300): Seit 3.1.3 ist `strict` Standard (nur Signaturformat 2); `compat` nimmt das alte Format noch an und ist nur eine Übergangslösung für Frontends, die noch nicht aktualisiert sind. Bei Docker steht die Zeile `API_SIGNATURE_MODE=compat` in `backend/.env` (Zeilen, die der Entrypoint nicht verwaltet, bleiben beim Neuschreiben erhalten), danach `docker compose up -d backend`. Siehe Checkliste unten.
 - `HELP_BASE_URL`: Basis-URL einer eigenen Kopie der Dokumentation für den „?“-Button (leer = GitHub in der installierten Version; `{version}` wird ersetzt).
 
 ## Überwachung und Protokolle
@@ -272,7 +272,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 - [ ] **Berechtigungen:** `.env`-Dateien `chmod 600`, nicht im Repository; ohne Docker `uploads`, `cache`, `logs` für den Webserver beschreibbar
 - [ ] **Frontend-Cache** (`frontend/cache`, WordPress: `wp-content/uploads`) beschreibbar
 - [ ] **Uhrzeit:** Frontend- und Backend-Server mit NTP synchronisiert (die API verlangt höchstens 5 Minuten Abweichung, sonst `timestamp_skew` im Fehlerlog)
-- [ ] **API-Signatur:** alle Frontends und Plugins aktualisiert und im Audit-Log kein `api_legacy_signature` mehr, dann `API_SIGNATURE_MODE=strict` ([Hintergrund](../entwicklung/sicherheit.md#signierte-api-signaturformat-2-312))
+- [ ] **API-Signatur:** `API_SIGNATURE_MODE=strict` (Standard seit 3.1.3); `compat` nur, solange das Audit-Log noch `api_legacy_signature` zeigt, weil ein Frontend oder Plugin nicht aktualisiert ist ([Hintergrund](../entwicklung/sicherheit.md#signierte-api-signaturformat-2-312))
 - [ ] **Firewall:** nur 80/443 (und SSH) von außen
 
 Gegenproben für die Sicherheits-Header: `curl -I https://backend.example.org/login.php` und `curl -I http://backend.example.org/` (erwartet 301 auf `https://`).

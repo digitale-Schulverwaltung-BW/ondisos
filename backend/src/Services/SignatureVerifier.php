@@ -23,10 +23,10 @@ class SignatureVerifier
     public const MODE_STRICT = 'strict';
 
     /**
-     * Standard, wenn API_SIGNATURE_MODE nicht gesetzt ist. Während der Umstellung "compat"; ab 3.1.3 "strict"
-     * (PLAN-3.1.2, AP6). SignatureModeDefaultTest schlägt ab 3.1.3 fehl, solange das nicht umgestellt ist.
+     * Standard, wenn API_SIGNATURE_MODE nicht gesetzt ist: seit 3.1.3 "strict" (nur Format 2). Die Umstellungsphase
+     * mit "compat" (3.1.2) ist vorbei; wer noch Frontends mit Format 1 betreibt, setzt "compat" ausdrücklich.
      */
-    public const DEFAULT_MODE = self::MODE_COMPAT;
+    public const DEFAULT_MODE = self::MODE_STRICT;
 
     /** Gültigkeit der Nonce: Zeitstempel darf ±maxSkew abweichen, also bis zu 2 × maxSkew merken. */
     private const NONCE_TTL_FACTOR = 2;
@@ -34,7 +34,7 @@ class SignatureVerifier
     public function __construct(
         private readonly HmacValidator $hmac,
         private readonly ?ReplayGuard $replayGuard,
-        private readonly string $mode = self::MODE_COMPAT,
+        private readonly string $mode = self::DEFAULT_MODE,
         private readonly int $maxSkew = 300,
         private readonly int $tenantId = 0,
         private readonly ?\Closure $clock = null,

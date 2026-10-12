@@ -93,7 +93,7 @@ Das Frontend signiert jede Anfrage an `submit.php`, `upload.php` und `forms.php`
 
 Der Aufbau steht in `HmacValidator::canonicalV2()` (Backend) und `BackendApiClient::signatureHeaders()` (Frontend); `SignatureVerifier` prüft Format, Frische und Wiederholung. Ein Request mit v2-Headern und falscher Signatur wird nie auf Format 1 zurückgestuft.
 
-**Umstellung:** `API_SIGNATURE_MODE=compat` (Standard) nimmt beide Formate an und protokolliert Format 1 höchstens einmal pro Stunde und Tenant als `api_legacy_signature` im Audit-Log; `strict` nimmt nur Format 2 an. Reihenfolge: Backend aktualisieren, dann Frontends und Plugin, im Audit-Log auf das Ende von `api_legacy_signature` warten, dann `strict`. Ein Frontend mit Format 2 an einem älteren Backend scheitert mit 401; `API_SIGNATURE_VERSION=1` im Frontend ist der Notausstieg.
+**Modus:** `API_SIGNATURE_MODE=strict` (Standard seit 3.1.3) nimmt nur Format 2 an. `compat` (Standard in 3.1.2) nimmt beide Formate an und protokolliert Format 1 höchstens einmal pro Stunde und Tenant als `api_legacy_signature` im Audit-Log; es bleibt als Übergang für Frontends, die noch nicht aktualisiert sind. Reihenfolge beim Update von 3.1.1 oder 3.1.2: **vor** dem Backend-Update im Audit-Log nach `api_legacy_signature` suchen; gibt es Treffer, zuerst die betroffenen Frontends und Plugins aktualisieren oder `compat` ausdrücklich setzen. Ein Request im Format 1 an ein `strict`-Backend endet mit 401. Ein Frontend mit Format 2 an einem älteren Backend scheitert mit 401; `API_SIGNATURE_VERSION=1` im Frontend ist der Notausstieg.
 
 **Voraussetzung:** Die Uhren von Frontend- und Backend-Server dürfen um höchstens 5 Minuten abweichen (NTP). Bei Abweichung steht `API signature rejected (…): timestamp_skew` im Fehlerlog des Backends.
 
