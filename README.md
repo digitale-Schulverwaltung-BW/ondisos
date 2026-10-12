@@ -1,7 +1,7 @@
 <h1 align="center">Ondisos</h1>
 
 <p align="center">
-  <strong>Digital souveräne (Schul-) Anmeldung</strong><br>
+  <strong>Digital souveräne online-Formulare. (Schul-) Anmeldungen und mehr!</strong><br>
   <sub><b>On</b>boarding – <b>Di</b>gital <b>S</b>ouverän und <b>O</b>pen <b>S</b>ource</sub>
 </p>
 
