@@ -144,7 +144,9 @@ Die Logik des grafischen Survey-Editors (`backend/public/assets/survey-builder/`
 node --test "backend/tests/js/*.test.mjs"
 ```
 
-Die Tests lesen alle Surveys aus `frontend/surveys/` und vergleichen das Outline und die Registry mit dem, was die ausgelieferte SurveyJS-Library daraus aufbaut. Die Regeln des Servers liest `backend/tests/js/fixtures/survey-rules.json`; `SurveyBuilderRulesTest` (PHPUnit) hält sie gleich (`php backend/tools/dump-survey-rules.php > backend/tests/js/fixtures/survey-rules.json`). Die Pipeline führt sie im Job `test_js` aus. Die übrigen Browser-Skripte sind nicht automatisiert getestet (siehe Testlücken).
+Die Tests lesen alle Surveys aus `frontend/surveys/` und vergleichen das Outline und die Registry mit dem, was die ausgelieferte SurveyJS-Library daraus aufbaut. Die Regeln des Servers liest `backend/tests/js/fixtures/survey-rules.json`; `SurveyBuilderRulesTest` (PHPUnit) hält sie gleich (`php backend/tools/dump-survey-rules.php > backend/tests/js/fixtures/survey-rules.json`). Die Pipeline führt sie im Job `test_js` aus.
+
+Das Verhalten des Editors im Browser prüft ein Entwicklungswerkzeug, das nicht Teil der Pipeline ist: `node backend/tools/survey-builder-harness/check.mjs [Bildordner]`. Es braucht PHP (`composer install` im `backend/`), Node 22+, das Paket `playwright` und einen Chromium (`CHROMIUM_PATH`, `PLAYWRIGHT_MODULES`). Es rendert die Tabs von `form_survey.php` für mehrere Surveys (`render.php`, ohne Datenbank und Login), startet einen kleinen Server und bedient den Editor wie ein Mensch; das Ergebnis lässt es vom PHP-Validator des Servers prüfen (`validate.php`). Nach Änderungen am Editor einmal laufen lassen. Die übrigen Browser-Skripte sind nicht automatisiert getestet (siehe Testlücken).
 
 ## Pipeline
 

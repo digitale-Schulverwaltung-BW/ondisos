@@ -58,7 +58,8 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 cd backend && composer install
 composer test -- --testsuite=Unit             # ohne Datenbank
 composer test:filter MyServiceTest            # eine Klasse
-node --test "backend/tests/js/*.test.mjs"     # JavaScript-Tests (Survey-Editor-Modell), Node 22+, keine Pakete
+node --test "backend/tests/js/*.test.mjs"     # JavaScript-Tests (Survey-Editor), Node 22+, keine Pakete
+node backend/tools/survey-builder-harness/check.mjs   # Browserprüfung des grafischen Editors (Playwright, Chromium; nicht in der Pipeline)
 
 # Entwicklungsstack (Backend :9080, Frontend :8081, phpMyAdmin :8082)
 docker compose --profile dev up -d

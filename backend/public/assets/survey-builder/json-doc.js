@@ -183,6 +183,15 @@ function render(doc, value, indent) {
     return text.split('\n').join(doc.eol + indent);
 }
 
+/** One-line JSON in the style of hand-written lists: {"value": "AFG", "text": "Afghanistan"}. */
+export function inlineJson(value) {
+    if (Array.isArray(value)) { return `[${value.map(inlineJson).join(', ')}]`; }
+    if (value && typeof value === 'object') {
+        return `{${Object.entries(value).map(([k, v]) => `${JSON.stringify(k)}: ${inlineJson(v)}`).join(', ')}}`;
+    }
+    return JSON.stringify(value);
+}
+
 function splice(doc, from, to, replacement) {
     return parseDoc(doc.text.slice(0, from) + replacement + doc.text.slice(to));
 }
@@ -254,7 +263,11 @@ export function insertItem(doc, arrPath, index, value) {
     }
     const multiline = isMultiline(doc, arr, arr.items[0].start);
     const indent = lineIndentAt(doc.text, arr.items[0].start);
-    const item = (ind) => render(doc, value, ind);
+    // an object or array among neighbours written on one line each is written on one line too
+    const structured = arr.items.filter((it) => it.type === 'object' || it.type === 'array');
+    const oneLine = value !== null && typeof value === 'object' && structured.length > 0
+        && structured.every((it) => !doc.text.slice(it.start, it.end).includes('\n'));
+    const item = (ind) => (oneLine ? inlineJson(value) : render(doc, value, ind));
     if (index === arr.items.length) {
         const last = arr.items[arr.items.length - 1];
         return splice(doc, last.end, last.end, multiline ? `,${eol}${indent}${item(indent)}` : `, ${item(indent)}`);

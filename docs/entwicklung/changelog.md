@@ -5,6 +5,9 @@ Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1
 
 ## Unveröffentlicht (nach 3.1.2)
 
+**Survey-Editor (3.2.0, in Arbeit)**
+- ✅ Tab „Grafisch“ in `form_survey.php` neben „JSON“: Seiten und Elemente anlegen, verschieben, löschen, Eigenschaften und Auswahllisten bearbeiten, Prüfmeldungen am Element; der Text bleibt die einzige Wahrheit, Änderungen betreffen nur die bearbeitete Stelle (Verlauf ohne Rauschen). Namen, Server-Regeln und Texte: `App\Forms\SurveyBuilderRules`, `SurveyBuilderFindings`, `config/messages.php` (Gruppe `builder`). Stand und Nachweise: [PLAN-3.2.0.md](plans/PLAN-3.2.0.md#ap2-ergebnis-2026-10-12)
+
 **Frontend**
 - ✅ SurveyJS Form Library 2.3.15 → 3.2.0 (MIT; Frontend, Vorschau und WordPress-Plugin). Geprüft an allen Surveys in `frontend/surveys/`: Sichtbarkeit, Pflichtfelder und Fehlermeldungen unverändert, keine CSP-Verstöße, Wertformat der Datei-Fragen unverändert. Ausgeliefert wird jetzt `survey-core.min.css` (in 3.x nur noch Alias in `survey-core.fontless.min.css`, ohne `@font-face`); `defaultV2.fontless.min.css` und die alte Fontless-Datei entfallen. Die Standardtexte von SurveyJS erscheinen deutsch (`assets/i18n/german.min.js`, `defaultLocale = "de"`; `survey.locale` bleibt unverändert, damit die `default`-Texte der Surveys erhalten bleiben). Optik: neue Standardwerte von SurveyJS, siehe [TODO.md](TODO.md). Lizenzhinweise: `frontend/public/assets/LICENSES.txt`
 

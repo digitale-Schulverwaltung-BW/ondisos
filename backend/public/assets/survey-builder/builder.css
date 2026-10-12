@@ -1,0 +1,50 @@
+/* Graphical survey builder (form_survey.php, tab "Grafisch"). Layout only; colors come from Bootstrap. */
+
+.sb-main {
+    display: grid;
+    grid-template-columns: minmax(18rem, 5fr) minmax(20rem, 7fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .sb-main { grid-template-columns: 1fr; }
+}
+
+.sb-tree-col, .sb-props-col { min-width: 0; }
+
+.sb-tree {
+    border: 1px solid var(--bs-border-color);
+    border-radius: .375rem;
+    max-height: 70vh;
+    overflow: auto;
+    background: var(--bs-body-bg);
+}
+
+.sb-item {
+    display: flex;
+    align-items: baseline;
+    gap: .5rem;
+    padding: .3rem .6rem .3rem calc(.6rem + (var(--sb-level, 1) - 1) * 1.25rem);
+    cursor: pointer;
+    border-bottom: 1px solid var(--bs-border-color-translucent);
+}
+
+.sb-item:last-child { border-bottom: 0; }
+.sb-item:hover { background: var(--bs-tertiary-bg); }
+.sb-item:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: -2px; }
+.sb-item.sb-selected { background: var(--bs-primary-bg-subtle); }
+.sb-item.sb-page { font-weight: 600; background: var(--bs-tertiary-bg); }
+.sb-item.sb-page.sb-selected { background: var(--bs-primary-bg-subtle); }
+.sb-item.sb-flagged .sb-mark { color: var(--bs-danger); }
+
+.sb-toggle { display: inline-block; width: 1rem; flex: none; color: var(--bs-secondary-color); user-select: none; }
+.sb-type { flex: none; min-width: 6.5rem; font-size: .75rem; color: var(--bs-secondary-color); text-transform: none; }
+.sb-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: normal; }
+.sb-page .sb-label { font-weight: 600; }
+.sb-count { flex: none; font-size: .75rem; font-weight: normal; }
+.sb-mark { flex: none; }
+
+.sb-props { min-width: 0; }
+.sb-props .sb-group > summary { cursor: pointer; }
+.sb-palette { max-height: 70vh; overflow: auto; }

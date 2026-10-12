@@ -26,6 +26,18 @@ class SurveyBuilderRulesTest extends TestCase
         );
     }
 
+    public function testMessagesFixtureEqualsTheStandardMessages(): void
+    {
+        $fixture  = json_decode((string)file_get_contents(__DIR__ . '/../../js/fixtures/builder-messages.json'), true, 16, JSON_THROW_ON_ERROR);
+        $messages = require __DIR__ . '/../../../config/messages.php';
+
+        $this->assertSame(
+            $messages['builder'],
+            $fixture,
+            'Refresh with: php backend/tools/dump-builder-messages.php > backend/tests/js/fixtures/builder-messages.json'
+        );
+    }
+
     public function testRulesAreJsonEncodable(): void
     {
         $this->assertIsString(json_encode(SurveyBuilderRules::toArray(), JSON_THROW_ON_ERROR));

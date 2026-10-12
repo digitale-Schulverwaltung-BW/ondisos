@@ -1,0 +1,185 @@
+{
+    "tab": {
+        "graphic": "Grafisch",
+        "json": "JSON"
+    },
+    "structure": "Aufbau",
+    "tree_label": "Seiten und Elemente",
+    "props_label": "Eigenschaften",
+    "toolbar": {
+        "label": "Werkzeuge",
+        "add_page": "Seite hinzufügen",
+        "add_element": "Element hinzufügen",
+        "move_up": "Nach oben",
+        "move_down": "Nach unten",
+        "delete": "Löschen"
+    },
+    "palette_group": {
+        "input": "Eingabe",
+        "choice": "Auswahl",
+        "display": "Anzeige",
+        "layout": "Gruppierung",
+        "logic": "Berechnung"
+    },
+    "loading": "Der grafische Editor wird geladen …",
+    "implicit_page": "Die Elemente dieser Survey stehen direkt im Dokument, ohne Seiten. Sie lassen sich hier bearbeiten; Seiten anlegen geht nur im Tab „JSON\".",
+    "value": {
+        "unset": "(keiner)",
+        "yes": "Ja",
+        "no": "Nein"
+    },
+    "select_hint": "Wählen Sie links eine Seite oder ein Element, um es zu bearbeiten.",
+    "keys_hint": "Pfeiltasten: Auswahl · Alt + Pfeil: verschieben · Entf: löschen · Enter: Eigenschaften · Esc: zurück zur Liste",
+    "add_hint": "Neue Elemente erscheinen hinter dem gewählten Element, bei einer Seite oder Gruppe an deren Ende.",
+    "size": "Größe: {{kb}} KB von {{max}} KB · {{count}} von {{max_elements}} Elementen",
+    "size_warn": "Die Survey nähert sich der Obergrenze des Servers.",
+    "invalid": "Das JSON ist nicht lesbar: {{message}} (Zeile {{line}}, Spalte {{column}}). Bitte im Tab „JSON\" korrigieren.",
+    "goto_json": "Zum Tab „JSON\"",
+    "empty": "Es gibt noch keine Survey.",
+    "create_empty": "Leere Survey anlegen",
+    "duplicate_key": "Der Schlüssel „{{key}}\" kommt in {{path}} mehrfach vor; JSON behält nur den letzten Eintrag. Bitte im Tab „JSON\" bereinigen.",
+    "page": "Seite",
+    "unnamed": "(ohne Namen)",
+    "untitled": "(ohne Titel)",
+    "elements_count": "{{count}} Elemente",
+    "type": {
+        "text": "Textfeld",
+        "comment": "Mehrzeiliger Text",
+        "dropdown": "Dropdown",
+        "tagbox": "Mehrfach-Dropdown",
+        "radiogroup": "Einfachauswahl",
+        "checkbox": "Mehrfachauswahl",
+        "boolean": "Ja/Nein",
+        "file": "Datei-Upload",
+        "signaturepad": "Unterschrift",
+        "expression": "Berechnung",
+        "html": "Hinweistext",
+        "panel": "Gruppe",
+        "page": "Seite"
+    },
+    "group": {
+        "general": "Allgemein",
+        "layout": "Darstellung",
+        "logic": "Bedingungen und Berechnung"
+    },
+    "prop": {
+        "name": "Name",
+        "title": "Titel",
+        "description": "Beschreibung",
+        "isRequired": "Pflichtfeld",
+        "visible": "Sichtbar",
+        "startWithNewLine": "Beginnt eine neue Zeile",
+        "titleLocation": "Position des Titels",
+        "showNumber": "Nummer anzeigen",
+        "visibleIf": "Sichtbar, wenn",
+        "requiredIf": "Pflichtfeld, wenn",
+        "placeholder": "Platzhalter",
+        "placeholderExpression": "Platzhalter (Ausdruck)",
+        "inputType": "Eingabeart",
+        "inputSize": "Breite (Zeichen)",
+        "defaultValue": "Vorgabewert",
+        "setValueExpression": "Wert setzen durch Ausdruck",
+        "rows": "Zeilen",
+        "choices": "Antworten",
+        "allowClear": "Auswahl löschbar",
+        "closeOnSelect": "Nach Auswahl schließen",
+        "colCount": "Spalten",
+        "labelTrue": "Text für „Ja\"",
+        "labelFalse": "Text für „Nein\"",
+        "filePlaceholder": "Hinweis im Upload-Feld",
+        "maxSize": "Höchstgröße (Bytes)",
+        "dataFormat": "Format",
+        "expression": "Ausdruck",
+        "html": "Text (HTML)"
+    },
+    "help": {
+        "name": "Der Name ist der Schlüssel der Antwort in der Datenbank, im Excel-Export und im PDF. Er ändert sich nicht mit dem Titel. Eine Änderung bei einem Feld legt ein neues Feld an.",
+        "title": "Fehlt der Titel, zeigt das Formular den Namen.",
+        "placeholder": "Ein leerer Platzhalter zeigt nichts; fehlt er, zeigt das Formular den Standardtext von SurveyJS.",
+        "placeholderExpression": "Ausdruck mit Platzhaltern wie {Vorname}, ersetzt den Platzhalter dynamisch.",
+        "expression": "Ausdruck als Text, z. B. {Staatsangehoerigkeit} = \"DE\". Eine einfache Auswahl folgt später.",
+        "maxSize": "Höchstgröße einer Datei in Bytes, 0 = unbegrenzt (der Server begrenzt zusätzlich). 5 MB sind 5242880.",
+        "colCount": "0 = so viele Spalten, wie in die Zeile passen.",
+        "defaultValue": "Wird beim Öffnen des Formulars vorausgefüllt.",
+        "choices": "Eine Antwort pro Zeile. „Wert | Anzeigetext\" trennt den gespeicherten Wert vom angezeigten Text.",
+        "choices_advanced": "Einige Antworten haben weitere Einstellungen (z. B. Bedingungen) und lassen sich nur im Tab „JSON\" bearbeiten.",
+        "choices_count": "{{count}} Antworten",
+        "html": "Erlaubt sind nur diese Elemente: {{tags}}. Der Server prüft das beim Speichern.",
+        "html_bad": "Nicht erlaubt: {{tags}}. Der Server würde das Speichern ablehnen.",
+        "dataFormat": "Nur PNG: JPEG gibt einen schwarzen Hintergrund, SVG nimmt der Server nicht an."
+    },
+    "enum": {
+        "titleLocation": {
+            "default": "Standard",
+            "top": "Oben",
+            "bottom": "Unten",
+            "left": "Links",
+            "hidden": "Ausgeblendet"
+        },
+        "inputType": {
+            "text": "Text",
+            "email": "E-Mail",
+            "tel": "Telefon",
+            "date": "Datum",
+            "number": "Zahl",
+            "url": "Webadresse",
+            "time": "Uhrzeit"
+        },
+        "dataFormat": {
+            "png": "PNG"
+        }
+    },
+    "other_value": "(anderer Wert: {{value}})",
+    "other_langs": "Weitere Sprachen bleiben unverändert: {{list}}.",
+    "unknown_props": "Weitere Eigenschaften (nur im Tab „JSON\" änderbar): {{list}}",
+    "unknown_type": "Der Elementtyp „{{type}}\" wird im grafischen Editor nicht bearbeitet. Verschieben und Löschen sind möglich, alles andere im Tab „JSON\".",
+    "findings": {
+        "title": "Hinweise der letzten Prüfung",
+        "stale": "Stand der letzten Prüfung. Nach Änderungen bitte erneut prüfen.",
+        "here": "Hinweise zu diesem Element",
+        "show": "Anzeigen"
+    },
+    "confirm": {
+        "element": "Element „{{name}}\" löschen?",
+        "panel": "Gruppe „{{name}}\" mit {{count}} Elementen löschen?",
+        "page": "Seite „{{name}}\" mit {{count}} Elementen löschen?",
+        "refs": " {{count}} Bedingungen oder Texte verweisen darauf und müssen danach angepasst werden.",
+        "rename": "Der Name „{{old}}\" ist der Schlüssel der Antworten. Mit dem neuen Namen „{{new}}\" entsteht ein neues Feld: Excel-Export, PDF und Vorausfüll-Links kennen den alten Namen nicht mehr, bereits gespeicherte Anmeldungen behalten ihre Daten unter dem alten Namen.{{refs}} Fortfahren?",
+        "rename_refs": " {{count}} Verweise in Bedingungen und Texten werden angepasst."
+    },
+    "announce": {
+        "added": "Hinzugefügt: {{name}}",
+        "deleted": "Gelöscht: {{name}}",
+        "moved": "Verschoben: {{name}}, Position {{pos}} von {{total}}",
+        "renamed": "Umbenannt: {{name}}",
+        "page_added": "Seite hinzugefügt: {{name}}"
+    },
+    "new": {
+        "title": "Neue Frage",
+        "choice": "Antwort {{n}}",
+        "html": "Hinweistext",
+        "panel": "Neue Gruppe"
+    },
+    "err": {
+        "generic": "Die Änderung war nicht möglich.",
+        "duplicate": "Dieser Name wird schon verwendet.",
+        "reserved": "Dieser Name ist für das System reserviert.",
+        "empty": "Bitte einen Namen eingeben.",
+        "whitespace": "Der Name darf nicht mit einem Leerzeichen beginnen oder enden.",
+        "characters": "Der Name darf keine geschweiften Klammern, Punkte oder Steuerzeichen enthalten.",
+        "calculatedValue": "Dieser Name gehört schon zu einem berechneten Wert.",
+        "type": "Ungültiger Name.",
+        "value": "Dieser Wert ist nicht zulässig.",
+        "number": "Bitte eine ganze Zahl eingeben.",
+        "number_range": "Bitte eine ganze Zahl zwischen {{min}} und {{max}} eingeben.",
+        "unknownType": "Dieser Elementtyp wird hier nicht bearbeitet.",
+        "unknownProperty": "Diese Eigenschaft wird hier nicht bearbeitet.",
+        "path": "Die Struktur hat sich geändert. Bitte neu auswählen.",
+        "index": "Die Struktur hat sich geändert. Bitte neu auswählen.",
+        "tooManyElements": "Die Survey hat die Obergrenze von {{max}} Elementen erreicht.",
+        "tooDeep": "Gruppen sind zu tief verschachtelt (höchstens {{max}} Ebenen).",
+        "notContainer": "Hier kann nichts eingefügt werden.",
+        "lastPage": "Die letzte Seite kann nicht gelöscht werden.",
+        "implicitPage": "Diese Survey hat keine Seiten (die Elemente stehen direkt im Dokument): bitte im Tab „JSON\" ändern."
+    }
+}

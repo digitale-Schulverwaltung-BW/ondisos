@@ -386,3 +386,65 @@ test('random sequences of operations on every survey agree with the same operati
         }
     }
 });
+
+// ---- choices -------------------------------------------------------------------------------------------------------
+
+import { setChoices, otherProperties } from '../../public/assets/survey-builder/model.js';
+
+test('setChoices touches only the entries that changed (compact list stays compact)', () => {
+    const text = '{\n  "pages": [\n    {\n      "elements": [\n        {\n          "type": "dropdown",\n          "name": "land",\n          "choices": [\n            {"value": "AFG", "text": "Afghanistan"},\n            {"value": "ALB", "text": "Albanien"},\n            "Frankreich",\n            {"value": "ZYP", "text": "Zypern"}\n          ]\n        }\n      ]\n    }\n  ]\n}';
+    const d = load(text);
+    const at = ['pages', 0, 'elements', 0];
+    const lines = (t) => t.split('\n');
+    const changed = (a, b) => lines(a).filter((l, i) => l !== lines(b)[i]).length;
+
+    const edited = setChoices(d, at, [{ value: 'AFG', text: 'Afghanistan' }, { value: 'ALB', text: 'Albanien (Land)' }, 'Frankreich', { value: 'ZYP', text: 'Zypern' }]);
+    assert.equal(lines(edited.text).length, lines(text).length);
+    assert.equal(changed(text, edited.text), 1, 'one entry, one line');
+    assert.ok(edited.text.includes('{"value": "ALB", "text": "Albanien (Land)"},'));
+
+    const added = setChoices(d, at, [...valueAt(d, [...at, 'choices']), { value: 'NEU', text: 'Neu' }]);
+    assert.ok(added.text.includes('{"value": "ZYP", "text": "Zypern"},\n            {"value": "NEU", "text": "Neu"}\n'), 'one more line, in the style of the list');
+
+    const removed = setChoices(d, at, valueAt(d, [...at, 'choices']).filter((c) => c !== 'Frankreich'));
+    assert.equal(lines(removed.text).length, lines(text).length - 1);
+    assert.deepEqual(valueAt(removed, [...at, 'choices']).length, 3);
+
+    assert.equal(setChoices(d, at, valueAt(d, [...at, 'choices'])).text, text, 'no change, no new text');
+    const reordered = setChoices(d, at, [...valueAt(d, [...at, 'choices'])].reverse());
+    assert.deepEqual(valueAt(reordered, [...at, 'choices']), [...valueAt(d, [...at, 'choices'])].reverse());
+    const cleared = setChoices(d, at, []);
+    assert.deepEqual(valueAt(cleared, [...at, 'choices']), []);
+    JSON.parse(cleared.text);
+});
+
+test('setChoices keeps other keys of an entry; an entry that loses its text loses only that', () => {
+    const d = load({ pages: [{ elements: [{ type: 'radiogroup', name: 'r', choices: [{ value: 'a', text: 'A', visibleIf: '{x} = 1' }, 'b'] }] }] });
+    const at = ['pages', 0, 'elements', 0];
+    const next = setChoices(d, at, [{ value: 'a', text: 'A2', visibleIf: '{x} = 1' }, 'b']);
+    assert.deepEqual(valueAt(next, [...at, 'choices', 0]), { value: 'a', text: 'A2', visibleIf: '{x} = 1' });
+    const noText = setChoices(d, at, [{ value: 'a', visibleIf: '{x} = 1' }, 'b']);
+    assert.deepEqual(valueAt(noText, [...at, 'choices', 0]), { value: 'a', visibleIf: '{x} = 1' });
+});
+
+test('setProp choices goes through setChoices and keeps the layout; absent choices are added', () => {
+    const d = load({ pages: [{ elements: [{ type: 'dropdown', name: 'd' }] }] });
+    const at = ['pages', 0, 'elements', 0];
+    assert.deepEqual(valueAt(good(setProp(d, at, 'choices', ['a', 'b'])).doc, [...at, 'choices']), ['a', 'b']);
+});
+
+test('otherProperties lists what the builder does not edit', () => {
+    assert.deepEqual(otherProperties({ type: 'text', name: 'a', isRequired: true, weird: 1, other: { x: 1 } }), ['weird', 'other']);
+    assert.deepEqual(otherProperties({ type: 'matrix', name: 'm', rows: [] }), ['name', 'rows'], 'unknown type: everything');
+    assert.deepEqual(otherProperties({ type: 'panel', name: 'p', elements: [] }), []);
+});
+
+test('addElement and addPage keep away from the names the caller passes (published version, removed in this session)', () => {
+    const d = load({ pages: [{ name: 'page1', elements: [{ type: 'text', name: 'question1' }] }] });
+    assert.equal(good(addElement(d, ['pages', 0], 1, 'text', { rules: RULES, taken: ['question2', 'question5'] })).name, 'question6');
+    assert.equal(good(addPage(d, 1, { rules: RULES, taken: ['page4'] })).name, 'page5');
+});
+
+test('otherProperties of a page: the type is passed in, a page has none of its own', () => {
+    assert.deepEqual(otherProperties({ name: 'p', title: 'T', elements: [], navigationTitle: 'x' }, 'page'), ['navigationTitle']);
+});

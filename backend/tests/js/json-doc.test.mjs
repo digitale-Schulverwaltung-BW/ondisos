@@ -180,3 +180,14 @@ test('nodeAt returns undefined for paths that do not exist', () => {
     assert.equal(nodeAt(doc, ['b']), undefined);
     assert.equal(nodeAt(doc, ['a', 'x']), undefined);
 });
+
+test('inlineJson writes hand-written style, and new items follow one-line neighbours', async () => {
+    const { inlineJson } = await import('../../public/assets/survey-builder/json-doc.js');
+    assert.equal(inlineJson({ value: 'AFG', text: 'Afghanistan', n: [1, { a: null }] }), '{"value": "AFG", "text": "Afghanistan", "n": [1, {"a": null}]}');
+    const d = parseDoc('{\n  "c": [\n    {"value": "a", "text": "A"},\n    {"value": "b", "text": "B"}\n  ]\n}');
+    assert.equal(insertItem(d, ['c'], 2, { value: 'c', text: 'C' }).text, '{\n  "c": [\n    {"value": "a", "text": "A"},\n    {"value": "b", "text": "B"},\n    {"value": "c", "text": "C"}\n  ]\n}');
+    assert.equal(insertItem(d, ['c'], 0, { value: 'z', text: 'Z' }).text.split('\n')[2], '    {"value": "z", "text": "Z"},');
+    // strings stay as they are; a multi-line neighbour keeps the multi-line layout
+    const multi = parseDoc('{\n  "c": [\n    {\n      "value": "a"\n    }\n  ]\n}');
+    assert.equal(insertItem(multi, ['c'], 1, { value: 'b' }).text.includes('{\n      "value": "b"\n    }'), true);
+});

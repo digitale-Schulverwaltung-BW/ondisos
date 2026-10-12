@@ -156,6 +156,52 @@ function checkValue(def, value) {
     }
 }
 
+function sameJson(a, b) {
+    return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/**
+ * Replaces the list of answers of an element so that only the entries that changed are touched: an unchanged entry stays
+ * byte for byte, a changed entry of the same kind changes only its changed parts, new entries follow the layout of the
+ * list (one line each stays one line each).
+ */
+export function setChoices(doc, path, items) {
+    const at = [...path, 'choices'];
+    const node = nodeAt(doc, at);
+    if (!node) { return insertMember(doc, path, 'choices', items); }
+    if (node.type !== 'array') { return setValue(doc, at, items); }
+    const old = toValue(node);
+    let head = 0;
+    while (head < old.length && head < items.length && sameJson(old[head], items[head])) { head += 1; }
+    let tail = 0;
+    while (tail < old.length - head && tail < items.length - head
+        && sameJson(old[old.length - 1 - tail], items[items.length - 1 - tail])) { tail += 1; }
+    const oldMid = old.slice(head, old.length - tail);
+    const newMid = items.slice(head, items.length - tail);
+    const common = Math.min(oldMid.length, newMid.length);
+    let next = doc;
+    for (let i = 0; i < common; i++) {
+        const [a, b] = [oldMid[i], newMid[i]];
+        const itemPath = [...at, head + i];
+        const bothObjects = a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b);
+        if (bothObjects) {
+            for (const key of Object.keys(a)) { if (!(key in b)) { next = removeMember(next, itemPath, key); } }
+            for (const [key, v] of Object.entries(b)) { if (!sameJson(a[key], v)) { next = insertMember(next, itemPath, key, v); } }
+        } else {
+            next = setValue(next, itemPath, b);
+        }
+    }
+    for (let i = oldMid.length - 1; i >= common; i--) { next = removeItem(next, at, head + i); }
+    for (let i = common; i < newMid.length; i++) { next = insertItem(next, at, head + i, newMid[i]); }
+    return next;
+}
+
+/** Property names of an element that the builder does not edit (they stay in the text; the JSON tab shows them). */
+export function otherProperties(value, typeName = value && value.type) {
+    const keys = Object.keys(value ?? {}).filter((k) => k !== 'type' && k !== 'elements');
+    return keys.filter((k) => !propDef(typeName, k));
+}
+
 /**
  * Sets a property of a page or element, as the registry describes it. A value equal to the SurveyJS default is not
  * written, and an existing property with the default value is removed; an empty text of an expression or default answer
@@ -178,6 +224,7 @@ export function setProp(doc, path, name, value, options = {}) {
     if (def.kind === 'localized' || def.kind === 'html') {
         return ok(setLocalized(doc, path, name, value, { emptyIsAbsent: def.emptyIsAbsent === true }));
     }
+    if (def.kind === 'choices') { return ok(setChoices(doc, path, value)); }
     const isEmpty = (def.kind === 'expression' || def.kind === 'value') && value === '';
     if (isEmpty || (def.default !== undefined && value === def.default)) {
         return ok(present ? removeMember(doc, path, name) : doc);
@@ -226,10 +273,11 @@ const elementsKeyCount = (path) => path.filter((p) => p === 'elements').length;
 /**
  * Adds a new element at `index` into a page or panel (`parentPath`; [] for a survey with elements at the top level).
  * The name is generated (never from the title).
- * @param {{rules:object, texts?:{title?:string, choices?:string[], html?:string}}} options
+ * @param {{rules:object, texts?:{title?:string, choices?:string[], html?:string}, taken?:string[]}} options
+ *        `taken`: names that must not come back (published version, removed in this session; see generateName)
  * @returns {{ok:true, doc, path, name} | {ok:false, code:string}}
  */
-export function addElement(doc, parentPath, index, typeName, { rules, texts } = {}) {
+export function addElement(doc, parentPath, index, typeName, { rules, texts, taken } = {}) {
     if (!isKnownType(typeName)) { return fail('unknownType'); }
     const parent = nodeAt(doc, parentPath);
     if (!parent || parent.type !== 'object') { return fail('path'); }
@@ -242,7 +290,7 @@ export function addElement(doc, parentPath, index, typeName, { rules, texts } = 
     if (rules && countElements(doc) + 1 > rules.maxElements) { return fail('tooManyElements'); }
     if (rules && elementsKeyCount(parentPath) > rules.maxDepth) { return fail('tooDeep'); }
 
-    const name = generateName(doc, typeName === 'panel' ? 'panel' : 'question', rules);
+    const name = generateName(doc, typeName === 'panel' ? 'panel' : 'question', rules, taken);
     const element = template(typeName, name, texts);
     const next = list ? insertItem(doc, [...parentPath, 'elements'], index, element) : insertMember(doc, parentPath, 'elements', [element]);
     return ok(next, { path: [...parentPath, 'elements', index], name });
@@ -279,12 +327,12 @@ function pagesList(doc) {
 }
 
 /** Adds an empty page. A survey that keeps its elements at the top level has no pages to add to. */
-export function addPage(doc, index, { rules, texts } = {}) {
+export function addPage(doc, index, { rules, texts, taken } = {}) {
     const pages = pagesList(doc);
     if (!pages && nodeAt(doc, ['elements'])) { return fail('implicitPage'); }
     if (nodeAt(doc, ['pages']) && !pages) { return fail('path'); }
     if (!Number.isInteger(index) || index < 0 || index > (pages ? pages.items.length : 0)) { return fail('index'); }
-    const page = { name: generateName(doc, 'page', rules) };
+    const page = { name: generateName(doc, 'page', rules, taken) };
     if (texts?.title) { page.title = texts.title; }
     page.elements = [];
     const next = pages ? insertItem(doc, ['pages'], index, page) : insertMember(doc, [], 'pages', [page]);

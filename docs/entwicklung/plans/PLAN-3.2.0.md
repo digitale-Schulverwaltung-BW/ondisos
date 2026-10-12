@@ -77,7 +77,7 @@ backend/public/assets/survey-builder/
   history.js          Undo/Redo (Schnappschüsse des JSON)
 backend/public/form_survey.php      Umschalter Grafisch/JSON, Einbindung
 backend/tests/js/                   JS-Tests (`node --test`, Job `test_js`); PHP-Tests für serverseitige Teile unter backend/tests/
-backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entfällt mit AP2)
+backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, validate.php, check.mjs); löste den AP0-Durchstich ab
 ```
 
 `model.js` ist von der Oberfläche getrennt, damit der Round-Trip ohne Browser testbar ist. Der Server ändert sich kaum: höchstens Registry-Daten (z. B. erlaubte HTML-Tags) als JSON-Einbettung und neue Meldungstexte.
@@ -88,8 +88,8 @@ backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entf�
 |---|---|---|---|
 | **AP0** Klärung und Durchstich | Lizenzseite von SurveyJS prüfen. Spike: JSON laden, Seiten und Felder anzeigen, einen Titel ändern, Text zurückschreiben. Round-Trip an **allen** Surveys in `frontend/surveys/` messen. | 1 Woche | Alle Dateien ergeben nach Laden und Zurückschreiben ohne Änderung **dieselbe** JSON-Struktur; Aufwandsschätzung bestätigt oder korrigiert |
 | **AP1** Modell und Registry | `model.js`, `registry.js` für die elf genutzten Typen plus `signaturepad`; verlustfreier Round-Trip, stabile Namensvergabe, reservierte Namen | 1–2 Wochen | Modelltests (Round-Trip, unbekannte Eigenschaften bleiben, Namenskollisionen). **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-10-12) |
-| **AP2** Oberfläche (MVP) | Seiten anlegen, umbenennen, löschen; Elemente hinzufügen, löschen, nach oben/unten; Eigenschaften-Panel; Auswahlliste bearbeiten; Pflichtfeld, Titelposition, Platzhalter; Fehleranzeige aus dem Prüfbericht | 3–4 Wochen | Ein bestehendes Formular (z. B. `ausbildernachmittag.json`) lässt sich komplett grafisch ändern; Tastaturbedienung möglich |
-| **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung |
+| **AP2** Oberfläche (MVP) | Seiten anlegen, umbenennen, löschen; Elemente hinzufügen, löschen, nach oben/unten; Eigenschaften-Panel; Auswahlliste bearbeiten; Pflichtfeld, Titelposition, Platzhalter; Fehleranzeige aus dem Prüfbericht | 3–4 Wochen | Ein bestehendes Formular (z. B. `ausbildernachmittag.json`) lässt sich komplett grafisch ändern; Tastaturbedienung möglich. **Erfüllt**, siehe [AP2-Ergebnis](#ap2-ergebnis-2026-10-12) |
+| **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung. **Größtenteils mit AP2 umgesetzt** (Tab statt Umschalter), siehe AP2-Ergebnis |
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her |
 | **AP5** Einfache Bedingungen | `visibleIf`/`requiredIf` als „Feld – Operator – Wert" (ein oder mehrere Ausdrücke mit UND/ODER); alles Komplexere bleibt als Text sichtbar und **unverändert** (nur lesbar anzeigen) | 3–4 Wochen | Von den 55 Bedingungen der vorhandenen Surveys wird der Anteil, den die Oberfläche darstellen kann, gemessen und dokumentiert; der Rest bleibt unangetastet |
 | **AP6** Vorlagen | Neues Formular aus Vorlage („Anmeldung", „Rückmeldung ohne E-Mail"), Bausteine für Standardfelder (Name, E-Mail, Datenschutz-Zustimmung `consent_…`, Unterschrift) | 1–2 Wochen | Neue Vorlage besteht *Prüfen* ohne Warnung |
@@ -120,7 +120,7 @@ backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entf�
 - Das Outline liefert dieselben Fragen in derselben Reihenfolge wie `survey-core` (die ausgelieferte Version 3.2.0) beim Aufbau des Formulars.
 - Einfügen und Entfernen von Eigenschaften und Listeneinträgen übernimmt Einrückung, Zeilenende und kompakte Schreibweise der Umgebung.
 
-**Durchstich im Browser:** `backend/tools/survey-builder-spike/` lädt ein Survey, zeigt Seiten, Panels und Fragen, ändert einen Titel und schreibt den Text zurück; bei ungültigem JSON ist die Ansicht gesperrt und nennt Zeile und Spalte.
+**Durchstich im Browser** (eine Entwicklungsseite, mit AP2 durch die echte Oberfläche ersetzt): lädt ein Survey, zeigt Seiten, Panels und Fragen, ändert einen Titel und schreibt den Text zurück; bei ungültigem JSON ist die Ansicht gesperrt und nennt Zeile und Spalte.
 
 **Aufwand:** Die Schätzung für AP0–AP3 (6–10 Wochen) wird nicht widerlegt. Das größte Risiko, der verlustfreie Round-Trip, ist mit der Textschicht entschärft. Ungeprüft bleiben AP5 (Bedingungen) und die Registry der Eigenschaften (AP1). Verschieben innerhalb einer Seite oder eines Panels ist seit AP1 umgesetzt (die Texte tauschen die Plätze, das Layout bleibt); zwischen Containern bleibt AP4. **Empfehlung: MVP (AP1–AP3).**
 
@@ -151,6 +151,36 @@ backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entf�
 - Ein Fehler, den die Tests aufdeckten und der behoben ist: `validateName` verglich Elemente über die Objekt-Identität und hätte ein Element mit seinem eigenen Namen kollidieren lassen.
 
 **Offen für AP2/AP3:** Meldungstexte (`builder.type.*`, `builder.prop.*`, Fehlercodes wie `duplicate`, `reserved`) liegen noch nicht in `messages.php` (AP7); `rules` einbetten und `taken` füllen (AP3); Bedingungen als Text (AP5); Elemente zwischen Containern verschieben (AP4); die HTML-Auswahl im Editor aus `htmlTags` der Regeln (AP2).
+
+## AP2-Ergebnis (2026-10-12)
+
+**Entscheidung:** Der Editor ist direkt in `form_survey.php` ein Tab **„Grafisch"** neben **„JSON"** (Partial `inc/survey_builder_tabs.php`, im selben Formular). Der Tab „Grafisch" nutzt die volle Seitenbreite, „JSON" die gewohnte. Die Seite startet im JSON-Tab, wenn der Prüfbericht Fehler hat (sie verweisen auf Zeilen), sonst im grafischen. Damit sind die wesentlichen Teile von AP3 schon geliefert: gemeinsamer Text, Wechsel in beide Richtungen, Sperre mit Meldung bei unlesbarem JSON, Warnung vor ungespeicherten Änderungen (die bestehende).
+
+**Umfang (alles aus AP2):**
+- **Aufbau:** Baum aus Seiten, Gruppen und Elementen mit Typ, Titel und Anzahl; Auf- und Zuklappen; Markierung von Elementen mit Prüfmeldungen.
+- **Werkzeuge:** Element hinzufügen (Palette nach Gruppen), Seite hinzufügen, nach oben/unten, löschen (mit Rückfrage und Hinweis auf Verweise), Größenanzeige gegen die Grenzen des Servers.
+- **Eigenschaften-Panel** aus der Registry: Name, Titel, Beschreibung, Pflichtfeld, Titelposition, Platzhalter, Eingabeart, Spalten, Zeilen, Auswahlliste, Texte für Ja/Nein, HTML-Text, Upload-Hinweis und -Größe, Vorgabewert, Bedingungen als Text. „Darstellung" und „Bedingungen" klappen auf, wenn der Eintrag dort etwas stehen hat.
+- **Tastatur:** Pfeile wählen aus, Alt+Pfeil verschiebt, Entf löscht, Enter springt in die Eigenschaften, Esc zurück zur Liste, Links/Rechts klappt Seiten und Gruppen. Meldungen über eine Live-Region.
+- **Prüfbericht:** Meldungen stehen am Element (Markierung, Liste im Panel) und, wenn sie keinem Element gehören, oben; nach einer Änderung sind sie als veraltet gekennzeichnet.
+
+**Entwurfsentscheidungen:**
+- Eine Änderung wird bei **change** (Feld verlassen oder Enter) übernommen, nie bei jedem Tastendruck: eine Bearbeitung ist eine Änderung des Textes. Der Builder sitzt im Formular der Seite, deshalb sendet Enter in einem Feld **nie** das Formular ab; alle Buttons sind `type="button"` (ein Test sichert das).
+- Der Code-Editor bekommt jede Änderung als kleine Textänderung: Strg+Z im JSON-Tab nimmt sie zurück (geprüft). Ohne Code-Editor schreibt der Builder direkt in die Textarea (geprüft).
+- Umbenennen eines Feldes fragt vorher nach (ein neuer Name ist ein neues Feld; Excel, PDF und Vorausfüll-Links kennen den alten nicht mehr) und führt die Verweise nach. Fehler erscheinen am Feld, das Feld springt auf den gespeicherten Wert zurück.
+- Auswahllisten sind eine Zeile je Antwort, „Wert | Text" für Paare. Unveränderte Zeilen geben ihren ursprünglichen Eintrag zurück (Zahlenwerte und Schreibweise bleiben); in einer Liste mit einzeiligen Einträgen (wie `bs.json`) ist ein neuer Eintrag eine neue einzeilige Zeile, ein geänderter Eintrag eine geänderte Zeile (1 von 262 Antworten ändern = 1 Zeile). Antworten mit weiteren Einstellungen (z. B. Bedingungen) sind schreibgeschützt und verweisen auf den JSON-Tab.
+- Was der Builder nicht bearbeitet, wird **benannt**: unbekannte Typen stehen mit ihrem Namen im Baum (verschieb- und löschbar, ohne Felder), unbekannte Eigenschaften stehen als Liste unter dem Panel, weitere Sprachen eines Titels werden genannt und bleiben unverändert.
+- Alle Texte kommen aus `config/messages.php` (Gruppe `builder`, per `messages.local.php` überschreibbar) und werden als JSON in die Seite eingebettet; der Code verwendet nirgends `innerHTML` (ein Test sichert das).
+
+**Nachgewiesen:**
+- **JS-Tests:** 83 (`node --test`), darunter: jeder Text, den der Code anfragt, existiert; jeder Typ, jede Eigenschaft, jeder Enum-Wert und jeder Fehlercode hat einen Text; die Hilfsfunktionen der Auswahlliste.
+- **PHP-Tests:** 1232 Unit-Tests; neu: Pfade der Prüfmeldungen (auch gegen echte Meldungen des Validators), die eingebettete Konfiguration (das JSON kann sein Script-Element nicht verlassen), Struktur der Seite (Textarea im JSON-Tab, keine Inline-Skripte, alle Dateien vorhanden), Drift-Test der Meldungen.
+- **Browserprüfung** (`backend/tools/survey-builder-harness/check.mjs`, Chromium, nicht in der Pipeline; 69 Prüfungen): gerendert aus demselben Partial und mit denselben Skripten wie die Seite, an `gs`, `bs`, `vabo`, `ausbildernachmittag` und kleinen Sonderfällen (Survey ohne Seiten, unbekannter Typ, leerer Text, kaputtes JSON, Prüfbericht). Eine **vollständige Sitzung** (jeden Titel ändern, jedes Pflichtfeld umschalten, alle 12 Typen hinzufügen, Seite anlegen, verschieben, löschen) ergibt ein Survey, das der **PHP-Validator des Servers** akzeptiert; ebenso das Ergebnis der `gs`-Sitzung mit Umbenennen, Verweisen und Auswahlliste. Dazu der Lauf unter der CSP des Backends (keine Verletzung), ohne Code-Editor und auf einem schmalen Bildschirm (eine Spalte, kein Querscrollen). Die Prüfung erkennt eingebaute Fehler (Enter sendet das Formular, Rückfrage fehlt, Verweise nicht nachgeführt: alle gefunden).
+
+**Nicht geprüft:**
+- Die **echte Seite** mit Datenbank und Login wurde nicht gestartet (die Umgebung hat weder Docker noch MySQL). Geprüft ist das Markup aus demselben Partial mit denselben Skripten in derselben Reihenfolge. Vor dem Release einmal im Docker-Stack durchklicken (manuelle Testliste, AP7).
+- Screenreader und andere Browser als Chromium. Umgesetzt sind die ARIA-Muster (Baum mit Rollen, Live-Region, Beschriftungen); getestet ist nur die Tastatur.
+
+**Offen:** Rückgängig/Wiederholen im Builder selbst und Drag-and-drop (AP4; bis dahin hilft Strg+Z im JSON-Tab), Bedingungen als einfache Auswahl (AP5), Vorlagen und Bausteine (AP6), Redaktions-Doku und Hilfe-Links (AP7).
 
 ## Tests
 
