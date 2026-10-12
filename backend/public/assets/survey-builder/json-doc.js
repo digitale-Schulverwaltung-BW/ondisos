@@ -270,3 +270,22 @@ export function removeItem(doc, arrPath, index) {
     if (index < arr.items.length - 1) { return splice(doc, arr.items[index].start, arr.items[index + 1].start, ''); }
     return splice(doc, arr.items[index - 1].end, arr.items[index].end, '');
 }
+
+/**
+ * Moves an item to another position in the same array. The item texts change places while the separators (comma,
+ * line break, indentation) stay where they are, so the layout is exactly as before.
+ */
+export function moveItem(doc, arrPath, from, to) {
+    const arr = container(doc, arrPath, 'array');
+    const n = arr.items.length;
+    if (!Number.isInteger(from) || from < 0 || from >= n) { throw new RangeError('from out of range'); }
+    if (!Number.isInteger(to) || to < 0 || to >= n) { throw new RangeError('to out of range'); }
+    if (from === to) { return doc; }
+    const order = arr.items.map((it) => doc.text.slice(it.start, it.end));
+    order.splice(to, 0, order.splice(from, 1)[0]);
+    let out = '';
+    order.forEach((text, i) => {
+        out += text + (i < n - 1 ? doc.text.slice(arr.items[i].end, arr.items[i + 1].start) : '');
+    });
+    return splice(doc, arr.items[0].start, arr.items[n - 1].end, out);
+}

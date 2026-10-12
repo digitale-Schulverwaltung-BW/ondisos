@@ -15,13 +15,13 @@ final class SurveyValidator
 {
     public const MAX_BYTES    = 524288; // 512 KB
     public const MAX_ELEMENTS = 2000;
-    private const MAX_DEPTH   = 32;
+    public const MAX_DEPTH    = 32;
 
     /**
      * Field names the system uses itself: '_fieldTypes' is metadata in anmeldungen.data, 'website_url' is the
      * honeypot field of the forms (a question with that name would be taken for a bot and silently dropped).
      */
-    private const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
+    public const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
 
     /** Keys whose values are expressions (not HTML), so "<" there is a comparison. */
     private const EXPRESSION_KEY = '/(If|Expression|expression)$/';

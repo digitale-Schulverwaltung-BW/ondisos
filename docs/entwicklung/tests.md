@@ -144,7 +144,7 @@ Die Logik des grafischen Survey-Editors (`backend/public/assets/survey-builder/`
 node --test "backend/tests/js/*.test.mjs"
 ```
 
-Die Tests lesen alle Surveys aus `frontend/surveys/` und vergleichen das Outline mit dem, was die ausgelieferte SurveyJS-Library daraus aufbaut. Die Pipeline führt sie im Job `test_js` aus. Die übrigen Browser-Skripte sind nicht automatisiert getestet (siehe Testlücken).
+Die Tests lesen alle Surveys aus `frontend/surveys/` und vergleichen das Outline und die Registry mit dem, was die ausgelieferte SurveyJS-Library daraus aufbaut. Die Regeln des Servers liest `backend/tests/js/fixtures/survey-rules.json`; `SurveyBuilderRulesTest` (PHPUnit) hält sie gleich (`php backend/tools/dump-survey-rules.php > backend/tests/js/fixtures/survey-rules.json`). Die Pipeline führt sie im Job `test_js` aus. Die übrigen Browser-Skripte sind nicht automatisiert getestet (siehe Testlücken).
 
 ## Pipeline
 

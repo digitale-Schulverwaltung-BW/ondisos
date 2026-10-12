@@ -1,0 +1,49 @@
+{
+    "reservedNames": [
+        "_fieldTypes",
+        "website_url"
+    ],
+    "displayTypes": [
+        "html",
+        "image"
+    ],
+    "maxBytes": 524288,
+    "maxElements": 2000,
+    "maxDepth": 32,
+    "htmlTags": {
+        "a": [
+            "href",
+            "target",
+            "rel",
+            "title"
+        ],
+        "b": [],
+        "strong": [],
+        "i": [],
+        "em": [],
+        "u": [],
+        "small": [],
+        "sub": [],
+        "sup": [],
+        "br": [],
+        "hr": [],
+        "p": [],
+        "div": [],
+        "span": [],
+        "ul": [],
+        "ol": [],
+        "li": [],
+        "h1": [],
+        "h2": [],
+        "h3": [],
+        "h4": [],
+        "h5": [],
+        "h6": []
+    },
+    "safeSchemes": [
+        "http",
+        "https",
+        "mailto",
+        "tel"
+    ]
+}

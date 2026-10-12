@@ -87,7 +87,7 @@ backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entf�
 | AP | Inhalt | Aufwand | Abnahme |
 |---|---|---|---|
 | **AP0** Klärung und Durchstich | Lizenzseite von SurveyJS prüfen. Spike: JSON laden, Seiten und Felder anzeigen, einen Titel ändern, Text zurückschreiben. Round-Trip an **allen** Surveys in `frontend/surveys/` messen. | 1 Woche | Alle Dateien ergeben nach Laden und Zurückschreiben ohne Änderung **dieselbe** JSON-Struktur; Aufwandsschätzung bestätigt oder korrigiert |
-| **AP1** Modell und Registry | `model.js`, `registry.js` für die elf genutzten Typen plus `signaturepad`; verlustfreier Round-Trip, stabile Namensvergabe, reservierte Namen | 1–2 Wochen | Modelltests (Round-Trip, unbekannte Eigenschaften bleiben, Namenskollisionen) |
+| **AP1** Modell und Registry | `model.js`, `registry.js` für die elf genutzten Typen plus `signaturepad`; verlustfreier Round-Trip, stabile Namensvergabe, reservierte Namen | 1–2 Wochen | Modelltests (Round-Trip, unbekannte Eigenschaften bleiben, Namenskollisionen). **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-10-12) |
 | **AP2** Oberfläche (MVP) | Seiten anlegen, umbenennen, löschen; Elemente hinzufügen, löschen, nach oben/unten; Eigenschaften-Panel; Auswahlliste bearbeiten; Pflichtfeld, Titelposition, Platzhalter; Fehleranzeige aus dem Prüfbericht | 3–4 Wochen | Ein bestehendes Formular (z. B. `ausbildernachmittag.json`) lässt sich komplett grafisch ändern; Tastaturbedienung möglich |
 | **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung |
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her |
@@ -122,7 +122,35 @@ backend/tools/survey-builder-spike/ Entwicklungsseite des AP0-Durchstichs (entf�
 
 **Durchstich im Browser:** `backend/tools/survey-builder-spike/` lädt ein Survey, zeigt Seiten, Panels und Fragen, ändert einen Titel und schreibt den Text zurück; bei ungültigem JSON ist die Ansicht gesperrt und nennt Zeile und Spalte.
 
-**Aufwand:** Die Schätzung für AP0–AP3 (6–10 Wochen) wird nicht widerlegt. Das größte Risiko, der verlustfreie Round-Trip, ist mit der Textschicht entschärft. Ungeprüft bleiben AP5 (Bedingungen) und die Registry der Eigenschaften (AP1). Noch nicht umgesetzt: Verschieben von Elementen (`removeItem` plus `insertItem`; das verschobene Element wird dabei mit der Einrückung des Ziels neu geschrieben, der Rest bleibt unberührt) und Eigenschaften ordnen. **Empfehlung: MVP (AP1–AP3).**
+**Aufwand:** Die Schätzung für AP0–AP3 (6–10 Wochen) wird nicht widerlegt. Das größte Risiko, der verlustfreie Round-Trip, ist mit der Textschicht entschärft. Ungeprüft bleiben AP5 (Bedingungen) und die Registry der Eigenschaften (AP1). Verschieben innerhalb einer Seite oder eines Panels ist seit AP1 umgesetzt (die Texte tauschen die Plätze, das Layout bleibt); zwischen Containern bleibt AP4. **Empfehlung: MVP (AP1–AP3).**
+
+## AP1-Ergebnis (2026-10-12)
+
+**Neu:** `registry.js` (12 Typen: die elf genutzten plus `signaturepad`, je mit Eigenschaften, Art, Standardwert und erlaubten Werten; Palette; Vorlage für neue Elemente), `names.js` (Namen erzeugen, prüfen, Verweise finden), im Modell die Operationen `setProp`, `renameElement`, `addElement`, `removeElement`, `moveElement`, `addPage`, `removePage`, `movePage`. Auf der PHP-Seite `App\Forms\SurveyBuilderRules`: die Regeln des Servers (reservierte Namen, Anzeige-Typen, HTML-Tags, Grenzen) an einer Stelle; `SurveyBuilderRulesTest` hält die für die JS-Tests eingecheckte Kopie (`backend/tests/js/fixtures/survey-rules.json`) gleich. Die Seite bettet dieselben Regeln ab AP3 als JSON ein, der Editor erfindet nichts.
+
+**Die Registry beruht auf der ausgelieferten Library, nicht auf Annahmen** (`registry.test.mjs`): jede Eigenschaft existiert in SurveyJS 3.2.0 für den Typ, mit passender Art; die Standardwerte sind die der Library; angebotene Werte sind gültig; ein neues Element jedes Typs baut SurveyJS als diesen Typ. Sie deckt jede in den vorhandenen Surveys genutzte Eigenschaft ab, bis auf `boolean.validators` (1×; bleibt unberührt im Text).
+
+**Befunde, die den Entwurf bestimmen:**
+
+| Befund | Folge |
+|---|---|
+| Der Server verlangt eindeutige Feldnamen im ganzen Survey (nicht für `html`, `image`, Panels) und reserviert `_fieldTypes` und `website_url`; zwei vorhandene Namen enthalten Leerzeichen | Namen werden nur beim **Setzen** geprüft, nie bestehende; die Regeln des Servers stehen in `SurveyBuilderRules` |
+| Ein leerer Titel ist für SurveyJS dasselbe wie keiner, ein leerer Platzhalter nicht (fehlt er, erscheint „Select…") | Registry-Flag `emptyIsAbsent`, nur für Titel und Beschreibung, gegen die Library geprüft |
+| `showNumber` hat den Standardwert `true` | Standardwerte kommen aus der Library, nicht aus der Erinnerung |
+| Standardwerte werden nicht geschrieben, bestehende entfernt | kürzerer Text; ein ausdrückliches `"allowClear": true` verschwindet bei Änderung (semantisch gleich) |
+| Wird das Element mit der höchsten Nummer gelöscht, kehrt die Nummer zurück | `generateName(…, taken)`: die Seite übergibt Namen der veröffentlichten Version und des Verlaufs (AP3) |
+| `signaturepad`: JPEG gibt schwarzen Hintergrund, SVG lehnt der Server ab | die Registry bietet nur `png` an |
+
+**Umbenennen** meldet `changesDataKey` (die Antworten der Frage liegen unter dem Namen: ein neuer Name ist ein neues Feld) und listet alle Verweise auf den alten Namen in Ausdrücken und Texten (`{name}`, `{name.x}`, `{name[0]}`; exakt, nicht `{name2}`); auf Wunsch (`updateReferences`) werden sie nachgeführt. Die Konfiguration der Schule (Vorbelegung, PDF-Felder, Mail-Platzhalter) liegt außerhalb des Surveys: das meldet nach dem Speichern der `SurveyLinter`.
+
+**Nachgewiesen** (JS-Tests: 68, alle grün):
+- Unbekannte Typen und Eigenschaften überstehen jede Operation Byte für Byte; `setProp` verweigert sie, statt zu raten.
+- Jeder Typ in jedes Survey: SurveyJS baut es, Namen bleiben nach der Server-Regel eindeutig, Hinzufügen plus Entfernen stellt den Text exakt wieder her.
+- **Differenztest:** 7 Surveys × 120 zufällige Operationen (hinzufügen, entfernen, verschieben, Titel, Pflichtfeld, umbenennen) laufen parallel auf dem Textmodell und auf einem einfachen Objekt; nach jedem Schritt sind beide gleich, der Text ist gültiges JSON, die Namensregel des Servers gilt, SurveyJS baut das Formular.
+- **Mutationsprüfung:** vier absichtlich eingebaute Fehler (falscher Trenner beim Entfernen, Einfügen eine Position zu spät, Lücken füllen, Standardwerte schreiben) schlagen alle fehl.
+- Ein Fehler, den die Tests aufdeckten und der behoben ist: `validateName` verglich Elemente über die Objekt-Identität und hätte ein Element mit seinem eigenen Namen kollidieren lassen.
+
+**Offen für AP2/AP3:** Meldungstexte (`builder.type.*`, `builder.prop.*`, Fehlercodes wie `duplicate`, `reserved`) liegen noch nicht in `messages.php` (AP7); `rules` einbetten und `taken` füllen (AP3); Bedingungen als Text (AP5); Elemente zwischen Containern verschieben (AP4); die HTML-Auswahl im Editor aus `htmlTags` der Regeln (AP2).
 
 ## Tests
 
