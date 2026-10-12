@@ -1,6 +1,9 @@
 # PLAN 3.1.2 – Härtung der Admin-Anmeldung: Netz-Allowlist und Zwei-Faktor-Anmeldung
 
-**Status:** in Umsetzung. AP1, AP2, AP2b, AP3, AP5 und AP6 sind umgesetzt; AP4 (Passkeys) ist auf **3.1.3** verschoben. Für ein eigenes Release **3.1.2** vorgesehen: Änderungen „unter der Haube", keine neuen Funktionen für Sekretariat oder Redaktion.
+**Status:** umgesetzt, Release **3.1.2** ist gebaut (Release Notes, Abnahmeprotokoll). AP1, AP2, AP2b, AP3, AP5 und AP6 sind fertig; AP4 (Passkeys) ist auf **3.1.3** verschoben. Offen vor dem Tag: die manuellen Prüfungen auf einer bestehenden Instanz (siehe [ABNAHME.md](../releases/ABNAHME.md#v312)).
+Die Abschnitte der Arbeitspakete unten sind teils noch im Entwurfston geschrieben; maßgeblich ist der Stand im Code, in [sicherheit.md](../sicherheit.md) und [zwei-faktor.md](../../betreiber/zwei-faktor.md).
+
+**Außerhalb des ursprünglichen Plans** kamen in 3.1.2 hinzu (Einzelheiten im [Changelog](../changelog.md#312)): Content-Security-Policy mit Nonce, Missbrauchsschutz der öffentlichen Anmeldung (Rate-Limit je Besucher, Honeypot, Upload-Grenzen), Tenant löschen, Unterschriftsfelder, „Name oder E-Mail“, Wegfall der Ansicht „Alle Tenants“, Abhängigkeits-Updates (`composer audit`) und der Hilfe-Button.
 
 **Stand der Voraussetzungen:** Die Client-IP wird zentral über `App\Utils\ClientIp` ermittelt (`X-Forwarded-For` nur hinter Proxys aus `TRUSTED_PROXIES`, siehe [sicherheit.md](../sicherheit.md) und [konfiguration.md](../konfiguration.md)).
 `AuditLogger`, `RateLimiter`, `editor_rate_limit.php` und `download.php` nutzen sie bereits. Damit ist die Grundlage für die Netz-Allowlist (AP2) geschaffen.

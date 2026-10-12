@@ -5,7 +5,7 @@ declare(strict_types=1);
  * Shared start of forms.php and form_edit.php: access check, tenant check, controller.
  *
  * Sets: $editorRole (platform|tenant), $editor (FormEditorController), $surveyEditor (SurveyEditorController) — or $editorNoTenant = true when a
- * platform admin is in "all tenants" mode and has to pick a tenant first (then $editor is not set).
+ * platform admin has not picked a tenant yet (then $editor is not set).
  * Stops with 403 for everybody who may not use the editor.
  */
 

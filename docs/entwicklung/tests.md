@@ -27,7 +27,7 @@ backend/tests/
 └── Integration/               # Tests mit DB (Repositories/AnmeldungRepositoryIsolationTest, Forms/ = Formular-Editor 3.1)
 ```
 
-Stand 2026-10-09: 1194 Unit-Tests (Zählung von PHPUnit; bei 3.1.0 waren es 924) (`composer test -- --testsuite=Unit`; die Coverage misst der Pipeline-Job `coverage`) und 182 Integration-Tests bei 3.1.0, seitdem nicht neu gezählt (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
+Stand 2026-10-12: 1200 Unit-Tests (Zählung von PHPUnit; bei 3.1.0 waren es 924) (`composer test -- --testsuite=Unit`; die Coverage misst der Pipeline-Job `coverage`) und 182 Integration-Tests bei 3.1.0, seitdem nicht neu gezählt (`--testsuite=Integration`, brauchen MySQL mit `database/schema.sql`). Der Test-Container braucht die PHP-Extension `mysqli`.
 
 ### Tests lokal ausführen
 

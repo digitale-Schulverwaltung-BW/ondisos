@@ -109,10 +109,11 @@ Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte 
 
 ## Status und Ausblick
 
-**Version 3.1.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
-([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.1.0.md)).
+**Version 3.1.2** – produktiv einsetzbar. Neu: Härtung der Admin-Anmeldung (Netz-Allowlist, Zwei-Faktor-Anmeldung mit Authenticator-App), signierte API mit Replay-Schutz,
+Content-Security-Policy, Unterschriftsfelder, Tenant löschen ([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.1.2.md)).
+Frühere Releases: [3.1.0](docs/entwicklung/releases/RELEASE-NOTES-3.1.0.md) (Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP).
 
-Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
+Als Nächstes: Passkeys als zweiter Faktor (3.1.3), grafischer Survey-Editor im Backend ([Entwurf](docs/entwicklung/plans/PLAN-3.2.0.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
 Weitere Ideen: Freigabe-Workflow, Import aus Schulverwaltungssoftware, REST-API.
 
 ## Danksagung und Lizenz

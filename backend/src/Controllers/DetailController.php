@@ -256,7 +256,7 @@ class DetailController
      * Find uploaded files for this Anmeldung
      *
      * Files live in uploads/tenant-<id>/ (the tenant that owns the Anmeldung, which is
-     * not necessarily the active context: platform admins can view "all tenants").
+     * looked up by id, never taken from the request).
      */
     private function findUploadedFiles(Anmeldung $anmeldung): array
     {
