@@ -86,6 +86,7 @@ Architektur, Tests, Pipeline, Planung.
 | [plans/PLAN-3.1.md](entwicklung/plans/PLAN-3.1.md) | Plan und Umsetzungsstand von 3.1 |
 | [plans/PLAN-3.1.1.md](entwicklung/plans/PLAN-3.1.1.md) | WordPress-Plugin ohne Shell (ZIP umgesetzt; Verbindungscode, Update-Prüfung offen) |
 | [plans/PLAN-3.1.2.md](entwicklung/plans/PLAN-3.1.2.md) | Härtung der Admin-Anmeldung: Netz-Allowlist, Zwei-Faktor mit TOTP (umgesetzt in 3.1.2; Passkeys folgen in 3.1.3) |
+| [plans/PLAN-3.1.3.md](entwicklung/plans/PLAN-3.1.3.md) | Passkeys, Platform-Admin in der Datenbank mit Einrichtung im Browser, `strict` als Standard (Entwurf) |
 | [plans/PLAN-3.2.0.md](entwicklung/plans/PLAN-3.2.0.md) | Grafischer Survey-Editor im Backend (Entwurf): Umfang, Architektur, Arbeitspakete, Risiken |
 | [releases/RELEASE-NOTES-3.1.2.md](entwicklung/releases/RELEASE-NOTES-3.1.2.md) | Was 3.1.2 bringt, Upgrade von 3.1.1 |
 | [releases/RELEASE-NOTES-3.1.0.md](entwicklung/releases/RELEASE-NOTES-3.1.0.md) | Was 3.1.0 bringt |

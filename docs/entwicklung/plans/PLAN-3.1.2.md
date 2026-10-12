@@ -139,6 +139,8 @@ Die Anwendung soll diese Annahme selbst durchsetzen können, damit ein Fehler in
 
 ### AP4 – Passkeys (WebAuthn): verschoben auf 3.1.3
 
+Weiterführung und Detailplanung: [PLAN-3.1.3.md](PLAN-3.1.3.md).
+
 Erst nach stabilem AP3; bewusst nicht Teil von 3.1.2, damit die erste Ausgabe der Zwei-Faktor-Anmeldung klein und überprüfbar bleibt.
 
 - Bibliothek: `web-auth/webauthn-lib` (Prüfung auf PHP 8.2+, Abhängigkeitsumfang). Alternativ eigene, schlanke Implementierung nur, wenn die Bibliothek unverhältnismäßig groß ist (nicht empfohlen: kryptografischer Code).
