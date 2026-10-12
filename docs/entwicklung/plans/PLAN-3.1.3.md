@@ -1,6 +1,6 @@
 # PLAN 3.1.3 – Passkeys, Platform-Admin in der Datenbank mit Einrichtung im Browser, `strict` als Standard
 
-**Status:** Entwurf (Stand 2026-10-12), noch keine Zeile Code. Eigenes Release **3.1.3**, unabhängig vom grafischen Survey-Editor ([PLAN-3.2.0.md](PLAN-3.2.0.md)).
+**Status:** Entwurf (Stand 2026-10-12). **AP0 (Bibliothek) und AP1 (`strict`) sind erledigt**, AP2 bis AP4 offen. Eigenes Release **3.1.3**, unabhängig vom grafischen Survey-Editor ([PLAN-3.2.0.md](PLAN-3.2.0.md)).
 Aufwände sind Schätzungen für eine Person und nicht gemessen; AP0 soll sie belegen oder korrigieren.
 
 **Herkunft:** AP4 (Passkeys) und die Festschreibung des Signaturformats stammen aus [PLAN-3.1.2.md](PLAN-3.1.2.md). Neu ist der Umbau des Platform-Admins (Offene Entscheidung dort: „Platform-Admin langfristig in die Datenbank?“), der zugleich die Einrichtung einer frischen Instanz im Browser ermöglicht.
@@ -22,31 +22,32 @@ Aufwände sind Schätzungen für eine Person und nicht gemessen; AP0 soll sie be
 
 **Nicht Ziel:** passwortloser Login mit Passkey (Passkey bleibt zweiter Faktor, wie in 3.1.2 entschieden); mehrere Platform-Admin-Konten mit Benutzerverwaltung (das Schema erlaubt es, die Oberfläche kommt nicht); Umbenennen des Platform-Admins; Entfernen des Signaturformats 1 aus dem Code; Single Sign-on.
 
-## AP0 – Bibliothek prüfen (Spike, vor AP3)
+## AP0 – Bibliothek prüfen (Spike) – erledigt, Entscheidung: `web-auth/webauthn-lib`
 
-**Lizenzprüfung (erledigt, soweit aus den Paket-Metadaten ersichtlich):**
+**Lizenzen:** `composer licenses` nach dem Einspielen in ein Wegwerf-Projekt (Kopie von `composer.json`/`composer.lock`): alle **28 neuen Pakete sind MIT** (`web-auth/webauthn-lib` 5.3.9, `web-auth/cose-lib` 4.8.2, `spomky-labs/cbor-php` 3.4.2, `spomky-labs/pki-framework` 1.6.3, `brick/math` 1.0.0, `symfony/{serializer,property-access,property-info,type-info,string,uid,clock}` 7.4.x und sieben Polyfills, `phpdocumentor/{reflection-docblock,reflection-common,type-resolver}`, `phpstan/phpdoc-parser`, `webmozart/assert`, `doctrine/deprecations`, `psr/container`, `psr/event-dispatcher`). Ondisos steht unter der MIT-Lizenz: kompatibel. `composer audit` meldet keine Advisories. Die Lizenztexte liegen im jeweiligen `vendor/<paket>/LICENSE`; ein Eintrag in `LICENSES.txt` folgt mit AP3.
 
-| Paket | Version | Lizenz |
+**Größe** (`composer install --no-dev`, gemessen in `vendor/`):
+
+| | Pakete | `vendor/` |
 |---|---|---|
-| `web-auth/webauthn-lib` | 5.3.9 (PHP ≥ 8.2) | MIT |
-| `web-auth/cose-lib`, `spomky-labs/cbor-php`, `spomky-labs/pki-framework`, `brick/math` | 4.8.2, 3.4.2, 1.6.3, 1.0.0 | MIT |
-| `paragonie/constant_time_encoding` (bereits im Projekt) | 3.x | MIT |
-| `symfony/serializer`, `property-access`, `property-info`, `uid`, `clock`, `string`, `type-info`, Polyfills | 7.4.x | MIT |
-| `phpdocumentor/reflection-docblock`, `phpstan/phpdoc-parser`, `webmozart/assert` | 6.0.3, 2.3.6, 2.5.0 | MIT |
+| heute | 14 Verzeichnisse | 380 MB (fast alles mPDF und PhpSpreadsheet) |
+| + `web-auth/webauthn-lib` | 48 Pakete insgesamt (+28) | 440 MB (**+60 MB**, davon Symfony 24 MB, Spomky 12 MB) |
+| + `lbuchs/webauthn` (Alternative) | +1 | 383 MB (+3 MB) |
 
-Ondisos steht unter der MIT-Lizenz; alle geprüften Pakete sind MIT und damit kompatibel (Hinweispflicht: Lizenztexte in `LICENSES.txt` bzw. `composer licenses` mitliefern, wie bei den vorhandenen Bibliotheken). **Noch zu prüfen** (nicht abgerufen): `doctrine/deprecations`, `psr/container`, `phpdocumentor/reflection-common`, `phpdocumentor/type-resolver`, `symfony/deprecation-contracts`. Das erledigt `composer licenses` nach dem Einspielen; ein Eintrag außerhalb von MIT/BSD/Apache-2.0 stoppt die Übernahme.
-*Hinweis zur Recherche:* In dieser Sitzung war nur die Paketdatenbank (Packagist) erreichbar, nicht GitHub; Pflege-Stand und Issues der Bibliothek sind damit nicht geprüft.
+Wegen der Plattform-Festlegung auf PHP 8.2 wählt Composer Symfony 7.4 (LTS); alle Versionen sind damit für 8.2 aufgelöst. Gelaufen ist der Spike auf PHP 8.3 (8.2 steht hier nicht zur Verfügung).
 
-**Umfang der Abhängigkeiten:** Ein Trockenlauf (`composer require web-auth/webauthn-lib --dry-run` gegen `composer.lock`) zieht **rund 28 neue Pakete** hinein. Wegen der Plattform-Festlegung auf PHP 8.2 wählt Composer Symfony 7.4 (Symfony 8 braucht PHP 8.4); 7.4 ist die aktuelle LTS und damit vertretbar. Das ist deutlich mehr als bei TOTP (4 Pakete).
+**Ende-zu-Ende** in Chromium mit dem virtuellen Authenticator (`WebAuthn.addVirtualAuthenticator`, CTAP2, Plattform-Authenticator, `userVerification: preferred`), gegen einen PHP-Wegwerf-Server, mit **beiden** Bibliotheken: Registrierung, zwei Anmeldungen hintereinander (Zähler 1 → 2 → 3), manipulierte `clientDataJSON` (Origin geändert) wird abgewiesen, dieselbe Antwort ein zweites Mal wird abgewiesen (Challenge einmalig). Beide haben alle Fälle bestanden. Das Gerüst (Seite, Playwright-Skript) dient AP3 als Vorlage für die Ende-zu-Ende-Tests.
 
-**Alternative:** `lbuchs/webauthn` 2.2.0 (MIT, ohne weitere Abhängigkeiten, nur `ext-openssl`; letztes Release Juli 2024, kleiner Maintainer-Kreis). Kleinere Angriffsfläche und kein Symfony im Backend, dafür weniger Pflege und weniger Prüfung durch Dritte. Kryptografischen Code selbst zu schreiben bleibt ausgeschlossen.
+**Befunde, die in AP3 einfließen:**
 
-**Spike-Aufgaben:**
-- `webauthn-lib` im Dockerfile bauen, Größe von `vendor/` und Image vorher/nachher messen; PHP-8.2-Lauf (Plattform-Pin) bestätigen; `composer audit`.
-- Registrierung und Anmeldung mit beiden Bibliotheken in einem Wegwerf-Skript gegen die **virtuelle Authenticator-Funktion** von Chromium (DevTools-Protokoll, `WebAuthn.addVirtualAuthenticator`; Chromium und Playwright sind in der Entwicklungsumgebung vorhanden). Das liefert zugleich die Ende-zu-Ende-Prüfung für AP3.
-- Entscheidung dokumentieren. **Tendenz:** `webauthn-lib`, wenn die Größe verkraftbar ist (gepflegt, breit eingesetzt); sonst `lbuchs/webauthn`.
+- `webauthn-lib` prüft den Signaturzähler standardmäßig mit `ThrowExceptionIfInvalid`: Der neue Zähler muss **größer** sein als der gespeicherte, Zähler `0` bei `0` wird also abgewiesen (geprüft). Synchronisierte Passkeys melden aber oft dauerhaft `0`. AP3 braucht einen eigenen `CounterChecker` (im Spike enthalten: Rückschritt nur abweisen, wenn der gespeicherte Zähler `> 0` ist). `lbuchs/webauthn` hat die Regel der Spezifikation („nur prüfen, wenn einer der Werte ≠ 0“) eingebaut.
+- `webauthn-lib` serialisiert Optionen und Datensätze mit dem Symfony-Serializer; ein `CredentialRecord` lässt sich als JSON speichern. Das Schema von `admin_passkeys` darf deshalb einfach bleiben (Spalten für Abfragen, dazu der Record als JSON), muss aber die Felder der Bibliothek (Trust-Path, AAGUID, Backup-Flags) nicht einzeln abbilden.
+- Beide Bibliotheken kommen mit `attestation: none` aus; Beglaubigungsformate und Metadaten-Dienst werden nicht gebraucht.
 
-## AP1 – `strict` als Standard (klein, zuerst)
+**Entscheidung:** `web-auth/webauthn-lib`. Gründe: aktiv gepflegt (letztes Release September 2026, `lbuchs/webauthn` Juli 2024), breit eingesetzt, die Prüfung von CBOR, COSE und Zertifikaten ist sicherheitskritischer Code, den wir nicht selbst pflegen. Preis: 28 zusätzliche Pakete und 60 MB (16 % des heutigen `vendor/`). Wer die Lieferkette klein halten will, kann auf `lbuchs/webauthn` ausweichen; damit der Tausch billig bleibt, kapselt AP3 die Bibliothek hinter einer schmalen Klasse (`App\Services\PasskeyService`: Optionen erzeugen, Registrierung prüfen, Anmeldung prüfen) und gibt ihre Typen nie an Seiten und Repositories weiter.
+*Nicht geprüft:* Pflegestand und offene Issues auf GitHub (kein Zugriff in dieser Sitzung).
+
+## AP1 – `strict` als Standard (klein, zuerst) – umgesetzt
 
 - `SignatureVerifier::DEFAULT_MODE = MODE_STRICT`, `.env.example` auf `strict`, Kommentar im Code anpassen; `SignatureModeDefaultTest` läuft dann grün (er prüft Code und `.env.example`).
 - Doku: [sicherheit.md](../sicherheit.md#signierte-api-signaturformat-2-312), [konfiguration.md](../konfiguration.md), [betrieb.md](../../betreiber/betrieb.md) (Checkliste: aus „dann `strict` setzen“ wird „`compat` nur noch als Übergang“), [CLAUDE.md](../../../CLAUDE.md) (Bekannte Einschränkungen), TODO.md (Punkt entfällt).
@@ -84,7 +85,7 @@ CLI-Skript `backend/reset-platform-admin.php` (idempotent wie `migrate.php`, Aud
 
 - **Nur zweiter Faktor**, nach dem Passwort, im Zwischenzustand `pending_2fa` wie TOTP. `userVerification: preferred`, `residentKey: discouraged` (der Benutzer ist durch das Passwort bekannt, `allowCredentials` genügt), `attestation: none`.
 - **Relying Party:** Die Backend-URL steht nirgends in der Konfiguration (`APP_URL` gibt es nicht). Neu in `.env`: `WEBAUTHN_RP_ID` (Host ohne Port) und `WEBAUTHN_ORIGIN` (z. B. `https://backend.example.de`). **Nicht** aus `Host` oder `X-Forwarded-Host` abgeleitet: Das wäre manipulierbar, und eine falsche Origin lässt Registrierungen später stillschweigend ins Leere laufen. Fehlen die Werte, ist die Passkey-Option ausgeblendet mit klarer Meldung (fail-closed wie bei `TWO_FACTOR_KEY`). Entwicklungsumgebung: `localhost` ohne HTTPS ist für Browser zulässig. Der Docker-Entrypoint reicht beide Werte durch; hinter Reverse-Proxy muss die **öffentliche** Adresse stehen (dokumentieren, mit Fehlerbild).
-- **Signaturzähler:** Passkeys, die zwischen Geräten synchronisiert werden, melden oft `0`. Ein Rückschritt wird nur abgewiesen, wenn der gespeicherte Zähler `> 0` ist; jede Auffälligkeit steht als `passkey_counter_anomaly` im Audit-Log.
+- **Signaturzähler:** Passkeys, die zwischen Geräten synchronisiert werden, melden oft `0`, der Standard-Prüfer von `webauthn-lib` weist `0` bei `0` aber ab (AP0). Eigener `CounterChecker`: Ein Rückschritt wird nur abgewiesen, wenn der gespeicherte Zähler `> 0` ist; jede Auffälligkeit steht als `passkey_counter_anomaly` im Audit-Log.
 - **Ein Faktor genügt:** Wer einen Passkey hat, braucht weder TOTP noch umgekehrt. `TwoFactorPolicy::decide()` zählt beide als „hat Faktor“ (`$hasFactor`); Schonfrist, Pflicht und Wizard-Zwang bleiben unverändert. Recovery-Codes gelten für jeden Faktor.
 - **Challenge** liegt in der Sitzung, einmalig und an die Lebensdauer von `pending_2fa` gebunden (5 Minuten). Falsche Antworten zählen zu den 5 Fehlversuchen, danach ist `pending_2fa` verworfen.
 
@@ -136,7 +137,7 @@ Voraussetzung ist ein gesetzter `TWO_FACTOR_KEY` (der Entrypoint erzeugt ihn ber
 
 | Frage | Optionen | Tendenz |
 |---|---|---|
-| Bibliothek | `web-auth/webauthn-lib` (≈ 28 Pakete, gepflegt); `lbuchs/webauthn` (keine Abhängigkeiten, kleiner Maintainer-Kreis) | `webauthn-lib`, wenn AP0 die Größe als verträglich zeigt |
+| Bibliothek | `web-auth/webauthn-lib` (28 Pakete, +60 MB, gepflegt); `lbuchs/webauthn` (keine Abhängigkeiten, +3 MB, zuletzt Juli 2024) | **Entschieden (AP0): `webauthn-lib`**, hinter `PasskeyService` gekapselt |
 | RP-ID und Origin | explizite `.env`-Werte; aus der Anfrage abgeleitet | explizit (fail-closed) |
 | Ort und Form des Einrichtungscodes | Containerlog + Datei in `cache/`; Wert in der `.env`; Link mit Token | Log + Datei, in AP4 zu klären |
 | Mindestlänge des Passworts | 8 / 12 / 15 | 12, ohne Zusammensetzungsregeln |
@@ -146,8 +147,8 @@ Voraussetzung ist ein gesetzter `TWO_FACTOR_KEY` (der Entrypoint erzeugt ihn ber
 
 ## Reihenfolge
 
-1. **AP0** Spike (Bibliothek, Größe, virtueller Authenticator) – Entscheidung festhalten.
-2. **AP1** `strict` (klein, unabhängig; kann vorab in einen eigenen Commit).
+1. **AP0** Spike (Bibliothek, Größe, virtueller Authenticator) – erledigt, Entscheidung festgehalten.
+2. **AP1** `strict` – erledigt.
 3. **AP2** Platform-Admin in der Datenbank (berührt den Login-Kern einmal; vor den Passkeys, damit der Wizard nur einmal gebaut wird).
 4. **AP3** Passkeys.
 5. **AP4** Einrichtung im Browser (nutzt AP2 und den Wizard aus AP3).
