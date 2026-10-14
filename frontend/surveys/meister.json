@@ -283,6 +283,33 @@
           "startWithNewLine": false,
           "title": "Zeugnisdatum",
           "inputType": "date"
+        },
+        {
+          "type": "file",
+          "name": "Upload_Zeugnis_Schulabschluss",
+          "title": "Zeugnis allgemeiner Schulabschluss (Scan)",
+          "description": "Bitte laden Sie das Zeugnis Ihres zuletzt erreichten allgemeinen Schulabschlusses als Scan oder Foto hoch.",
+          "maxSize": 5242880,
+          "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB.",
+          "isRequired": true
+        },
+        {
+          "type": "file",
+          "name": "Upload_Gesellenbrief",
+          "title": "Gesellen- bzw. Facharbeiterprüfung (Scan)",
+          "description": "Bitte laden Sie das Zeugnis bzw. den Gesellenbrief als Scan oder Foto hoch.",
+          "maxSize": 5242880,
+          "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB.",
+          "isRequired": true
+        },
+        {
+          "type": "file",
+          "name": "Upload_Zeugnis_Berufsschule",
+          "title": "Berufsschulabschlusszeugnis (Scan)",
+          "description": "Bitte laden Sie das Berufsschulabschlusszeugnis als Scan oder Foto hoch.",
+          "maxSize": 5242880,
+          "filePlaceholder": "Ziehen Sie hier die Datei herein oder klicken Sie den Button. Erlaubte Dateitypen: jpg, png oder pdf. Maximal 5 MB.",
+          "requiredIf": "{Berufsschulabschluss_als} notempty"
         }
       ]
     },
@@ -291,82 +318,140 @@
       "title": "Berufliche Praxis nach der Berufsausbildung bis zum Eintritt in die Meisterschule",
       "elements": [
         {
-          "type": "paneldynamic",
-          "name": "Berufstaetigkeit",
-          "title": "Berufstätigkeit",
-          "templateTitle": "Berufstätigkeit {panelIndex}",
-          "panelCount": 1,
-          "minPanelCount": 0,
-          "maxPanelCount": 3,
-          "panelAddText": "Weitere Berufstätigkeit hinzufügen",
-          "panelRemoveText": "Entfernen",
-          "templateElements": [
+          "type": "text",
+          "name": "Berufstaetigkeit1_als",
+          "title": "Berufstätigkeit als"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit1_von",
+          "title": "von",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit1_als} notempty"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit1_bis",
+          "startWithNewLine": false,
+          "title": "bis",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit1_als} notempty",
+          "validators": [
             {
-              "type": "text",
-              "name": "als",
-              "title": "Berufstätigkeit als"
-            },
-            {
-              "type": "text",
-              "name": "von",
-              "title": "von",
-              "inputType": "date"
-            },
-            {
-              "type": "text",
-              "name": "bis",
-              "startWithNewLine": false,
-              "title": "bis",
-              "inputType": "date"
-            },
-            {
-              "type": "text",
-              "name": "Monate",
-              "startWithNewLine": false,
-              "title": "Monate",
-              "inputType": "number",
-              "min": 0
+              "type": "expression",
+              "expression": "{Berufstaetigkeit1_von} empty or {Berufstaetigkeit1_bis} empty or {Berufstaetigkeit1_bis} >= {Berufstaetigkeit1_von}",
+              "text": "Das Enddatum darf nicht vor dem Beginn liegen."
             }
           ]
         },
         {
-          "type": "paneldynamic",
-          "name": "Sonstige_Taetigkeiten",
-          "title": "Sonstige Tätigkeiten",
-          "templateTitle": "Sonstige Tätigkeit {panelIndex}",
-          "panelCount": 0,
-          "minPanelCount": 0,
-          "maxPanelCount": 3,
-          "panelAddText": "Sonstige Tätigkeit hinzufügen",
-          "panelRemoveText": "Entfernen",
-          "templateElements": [
+          "type": "expression",
+          "name": "Berufstaetigkeit1_Monate",
+          "startWithNewLine": false,
+          "title": "Monate",
+          "expression": "iif({Berufstaetigkeit1_von} notempty and {Berufstaetigkeit1_bis} notempty, round((dateDiff({Berufstaetigkeit1_von}, {Berufstaetigkeit1_bis}, 'days') + 1) / 30.44), '')"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit2_als",
+          "title": "Berufstätigkeit als"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit2_von",
+          "title": "von",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit2_als} notempty"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit2_bis",
+          "startWithNewLine": false,
+          "title": "bis",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit2_als} notempty",
+          "validators": [
             {
-              "type": "text",
-              "name": "als",
-              "title": "Sonstige Tätigkeit als"
-            },
-            {
-              "type": "text",
-              "name": "von",
-              "title": "von",
-              "inputType": "date"
-            },
-            {
-              "type": "text",
-              "name": "bis",
-              "startWithNewLine": false,
-              "title": "bis",
-              "inputType": "date"
-            },
-            {
-              "type": "text",
-              "name": "Monate",
-              "startWithNewLine": false,
-              "title": "Monate",
-              "inputType": "number",
-              "min": 0
+              "type": "expression",
+              "expression": "{Berufstaetigkeit2_von} empty or {Berufstaetigkeit2_bis} empty or {Berufstaetigkeit2_bis} >= {Berufstaetigkeit2_von}",
+              "text": "Das Enddatum darf nicht vor dem Beginn liegen."
             }
           ]
+        },
+        {
+          "type": "expression",
+          "name": "Berufstaetigkeit2_Monate",
+          "startWithNewLine": false,
+          "title": "Monate",
+          "expression": "iif({Berufstaetigkeit2_von} notempty and {Berufstaetigkeit2_bis} notempty, round((dateDiff({Berufstaetigkeit2_von}, {Berufstaetigkeit2_bis}, 'days') + 1) / 30.44), '')"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit3_als",
+          "title": "Berufstätigkeit als"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit3_von",
+          "title": "von",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit3_als} notempty"
+        },
+        {
+          "type": "text",
+          "name": "Berufstaetigkeit3_bis",
+          "startWithNewLine": false,
+          "title": "bis",
+          "inputType": "date",
+          "requiredIf": "{Berufstaetigkeit3_als} notempty",
+          "validators": [
+            {
+              "type": "expression",
+              "expression": "{Berufstaetigkeit3_von} empty or {Berufstaetigkeit3_bis} empty or {Berufstaetigkeit3_bis} >= {Berufstaetigkeit3_von}",
+              "text": "Das Enddatum darf nicht vor dem Beginn liegen."
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "name": "Berufstaetigkeit3_Monate",
+          "startWithNewLine": false,
+          "title": "Monate",
+          "expression": "iif({Berufstaetigkeit3_von} notempty and {Berufstaetigkeit3_bis} notempty, round((dateDiff({Berufstaetigkeit3_von}, {Berufstaetigkeit3_bis}, 'days') + 1) / 30.44), '')"
+        },
+        {
+          "type": "text",
+          "name": "Sonstige_Taetigkeit_als",
+          "title": "Sonstige Tätigkeit als"
+        },
+        {
+          "type": "text",
+          "name": "Sonstige_Taetigkeit_von",
+          "title": "von",
+          "inputType": "date",
+          "requiredIf": "{Sonstige_Taetigkeit_als} notempty"
+        },
+        {
+          "type": "text",
+          "name": "Sonstige_Taetigkeit_bis",
+          "startWithNewLine": false,
+          "title": "bis",
+          "inputType": "date",
+          "requiredIf": "{Sonstige_Taetigkeit_als} notempty",
+          "validators": [
+            {
+              "type": "expression",
+              "expression": "{Sonstige_Taetigkeit_von} empty or {Sonstige_Taetigkeit_bis} empty or {Sonstige_Taetigkeit_bis} >= {Sonstige_Taetigkeit_von}",
+              "text": "Das Enddatum darf nicht vor dem Beginn liegen."
+            }
+          ]
+        },
+        {
+          "type": "expression",
+          "name": "Sonstige_Taetigkeit_Monate",
+          "startWithNewLine": false,
+          "title": "Monate",
+          "expression": "iif({Sonstige_Taetigkeit_von} notempty and {Sonstige_Taetigkeit_bis} notempty, round((dateDiff({Sonstige_Taetigkeit_von}, {Sonstige_Taetigkeit_bis}, 'days') + 1) / 30.44), '')"
         },
         {
           "type": "html",
@@ -382,7 +467,7 @@
         {
           "type": "html",
           "name": "hinweis_unterlagen",
-          "html": "<p><b>Bitte verwenden Sie für Ihre Bewerbung keine Bewerbungsmappe, Schnellhefter o. ä.</b></p>\n<p>Bitte fügen Sie der Anmeldung ausschließlich eine Kopie des <b>Berufsschulabschlusszeugnisses</b> bei; bitte <b>keine weiteren Zeugnisse oder Arbeitsbescheinigungen</b> usw. beilegen (diese Unterlagen benötigt <b>nur</b> die Handwerkskammer).</p>\n<p><b>Der Eingang Ihrer Anmeldung wird von uns schriftlich bestätigt.</b> Sollte die von Ihnen gewünschte Kurs nicht zu Stande kommen oder überbelegt sein, werden wir uns rechtzeitig wieder mit Ihnen in Verbindung setzen und Ihnen einen Alternativtermin vorschlagen.</p>\n<p>Mit Aufnahme des Unterrichts verpflichten Sie sich, nach Erhalt der Rechnung die Lehrgangsgebühren zu bezahlen. <b>Die vorzeitige Abmeldung</b> vom Schulbesuch <b>muss schriftlich</b> gegenüber der Schule erklärt werden; die Lehrgangsgebühren werden dann anteilig nach Unterrichtswochen berechnet. Möchten Sie nur <b>einen Teil der Kurse</b> besuchen – weil Sie bereits andere Teile der Meisterprüfung bestanden haben – so benötigen wir zur Berechnung der anteiligen Kosten ebenfalls einen <b>schriftlichen Antrag</b> von Ihnen.</p>"
+          "html": "<p>Bitte laden Sie Ihre Zeugnisse auf der Seite „Schulabschluss und Berufsausbildung“ als Scan hoch. Weitere Zeugnisse oder Arbeitsbescheinigungen benötigt <b>nur</b> die Handwerkskammer; bitte senden Sie diese nicht an die Schule.</p>\n<p><b>Der Eingang Ihrer Anmeldung wird von uns schriftlich bestätigt.</b> Sollte der von Ihnen gewünschte Kurs nicht zu Stande kommen oder überbelegt sein, werden wir uns rechtzeitig wieder mit Ihnen in Verbindung setzen und Ihnen einen Alternativtermin vorschlagen.</p>\n<p>Mit Aufnahme des Unterrichts verpflichten Sie sich, nach Erhalt der Rechnung die Lehrgangsgebühren zu bezahlen. <b>Die vorzeitige Abmeldung</b> vom Schulbesuch <b>muss schriftlich</b> gegenüber der Schule erklärt werden; die Lehrgangsgebühren werden dann anteilig nach Unterrichtswochen berechnet. Möchten Sie nur <b>einen Teil der Kurse</b> besuchen – weil Sie bereits andere Teile der Meisterprüfung bestanden haben – so benötigen wir zur Berechnung der anteiligen Kosten ebenfalls einen <b>schriftlichen Antrag</b> von Ihnen.</p>"
         },
         {
           "type": "text",
