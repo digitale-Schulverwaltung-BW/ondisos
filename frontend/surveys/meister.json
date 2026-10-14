@@ -1,0 +1,421 @@
+{
+  "title": "Anmeldung Vorbereitungslehrgang Meisterprüfung",
+  "description": "Elektrotechniker-Meister",
+  "logoPosition": "right",
+  "autoFocusFirstQuestion": true,
+  "completedHtml": {
+    "de": "<h3>Vielen Dank für die Anmeldung. Ihre Daten wurden erfolgreich gespeichert.</h3>\n<p>Der Eingang Ihrer Anmeldung wird von uns schriftlich bestätigt.</p>",
+    "default": "Vielen Dank für Ihre Anmeldung. Die Daten wurden übermittelt."
+  },
+  "loadingHtml": "Lade Formular...",
+  "pages": [
+    {
+      "name": "page0",
+      "elements": [
+        {
+          "type": "html",
+          "name": "datenschutz_hinweis",
+          "html": "<p>Die nachfolgenden Angaben werden gemäß den aktuell gültigen Datenschutzverordnungen erhoben. Die Speicherung der Daten erfolgt elektronisch. Die weitere Datenverarbeitung richtet sich nach den Vorschriften des Schulgesetzes (SchG) und der Datenschutzverordnungen des Landes Baden-Württemberg. Sie haben gemäß dem SchG ein Recht auf unentgeltliche Auskunft und Akteneinsicht. Bei vermuteten Verletzungen des Datenschutzrechts können Sie sich an den Datenschutzbeauftragten Ihres Bundeslandes wenden.</p>\n<p>Ich habe die <a href=\"https://www.hhs.karlsruhe.de/datenschutz/\">Datenschutzerklärung</a> sowie <a href=\"https://www.hhs.karlsruhe.de/anmeldung-online-datenschutz/\">die Beschreibung des Verfahrens online-Anmeldung</a> gelesen und stimme der elektronischen Erfassung und Verarbeitung meiner Daten zu.</p>"
+        },
+        {
+          "type": "checkbox",
+          "name": "consent_DatenschutzOk",
+          "startWithNewLine": false,
+          "title": "ich stimme zu",
+          "titleLocation": "left",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "ja",
+              "text": "ja"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "page_kurs",
+      "title": "Unterrichtsform, Beginn, Schwerpunkt",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Unterrichtsform",
+          "title": "Unterrichtsform",
+          "isRequired": true,
+          "choices": [
+            "Vollzeitunterricht",
+            "Teilzeitunterricht"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Kursbeginn_Monat",
+          "title": "Gewünschter Kursbeginn",
+          "isRequired": true,
+          "choices": [
+            "Februar",
+            "September"
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Kursbeginn_Jahr",
+          "startWithNewLine": false,
+          "title": "Jahr des Kursbeginns",
+          "isRequired": true,
+          "inputType": "number",
+          "min": 2026,
+          "max": 2100,
+          "placeholder": "z. B. 2027"
+        },
+        {
+          "type": "radiogroup",
+          "name": "Schwerpunkt",
+          "title": "Elektrotechniker-Meister: Schwerpunkt",
+          "isRequired": true,
+          "choices": [
+            "Energie- und Gebäudetechnik",
+            "Gebäudesystemintegration"
+          ]
+        },
+        {
+          "type": "radiogroup",
+          "name": "Teile_Meisterpruefung",
+          "title": "Teile der Meisterprüfung",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "I-IV",
+              "text": "die Teile I bis IV"
+            },
+            {
+              "value": "nur Teile",
+              "text": "nur Teile"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Teile_Auswahl",
+          "visibleIf": "{Teile_Meisterpruefung} = 'nur Teile'",
+          "title": "Welche Teile?",
+          "isRequired": true,
+          "placeholder": "z. B. II und III"
+        }
+      ]
+    },
+    {
+      "name": "page_schueler",
+      "title": "Angaben Schüler",
+      "elements": [
+        {
+          "type": "panel",
+          "name": "panel_person",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Name",
+              "title": "Name",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Vorname",
+              "startWithNewLine": false,
+              "title": "Vorname",
+              "isRequired": true
+            },
+            {
+              "type": "radiogroup",
+              "name": "Geschlecht",
+              "title": "Geschlecht",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "M",
+                  "text": "männlich"
+                },
+                {
+                  "value": "W",
+                  "text": "weiblich"
+                },
+                {
+                  "value": "D",
+                  "text": "divers"
+                }
+              ],
+              "colCount": 3
+            },
+            {
+              "type": "text",
+              "name": "Geburtstag",
+              "title": "Geburtsdatum",
+              "isRequired": true,
+              "inputType": "date"
+            },
+            {
+              "type": "text",
+              "name": "Geburtsort",
+              "startWithNewLine": false,
+              "title": "Geburtsort",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Konfession",
+              "title": "Konfession"
+            },
+            {
+              "type": "text",
+              "name": "Staatsangehoerigkeit",
+              "startWithNewLine": false,
+              "title": "Staatsangehörigkeit",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Verkehrssprache",
+              "startWithNewLine": false,
+              "title": "Verkehrssprache in der Familie"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "panel_adresse",
+          "title": "Anschrift und Kontakt",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Strasse",
+              "title": "Straße",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "HausNr",
+              "startWithNewLine": false,
+              "title": "Hausnummer",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "PLZ",
+              "title": "Postleitzahl",
+              "isRequired": true,
+              "inputSize": 7
+            },
+            {
+              "type": "text",
+              "name": "Ort",
+              "startWithNewLine": false,
+              "title": "Wohnort",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Telefon",
+              "title": "Telefon/Mobil",
+              "isRequired": true,
+              "inputType": "tel"
+            },
+            {
+              "type": "text",
+              "name": "email",
+              "startWithNewLine": false,
+              "title": "E-Mail-Adresse",
+              "isRequired": true,
+              "inputType": "email"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "page_abschluss",
+      "title": "Schulabschluss und Berufsausbildung",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Schulabschluss",
+          "title": "Zuletzt erreichter allgemeiner Schulabschluss",
+          "isRequired": true,
+          "choices": [
+            "Hauptschule",
+            "Realschule",
+            "Werkrealschule",
+            "Fachschulreife",
+            "Gymnasium",
+            "Fachhochschulreife",
+            "Hochschulreife"
+          ],
+          "colCount": 2
+        },
+        {
+          "type": "text",
+          "name": "Schulabschluss_Zeugnisdatum",
+          "title": "Zeugnisdatum",
+          "isRequired": true,
+          "inputType": "date"
+        },
+        {
+          "type": "text",
+          "name": "Gesellenpruefung_als",
+          "title": "Gesellen- bzw. Facharbeiterprüfung als",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Gesellenpruefung_Zeugnisdatum",
+          "startWithNewLine": false,
+          "title": "Zeugnisdatum",
+          "isRequired": true,
+          "inputType": "date"
+        },
+        {
+          "type": "text",
+          "name": "Berufsschulabschluss_als",
+          "title": "Berufsschulabschlussprüfung als"
+        },
+        {
+          "type": "text",
+          "name": "Berufsschulabschluss_Zeugnisdatum",
+          "startWithNewLine": false,
+          "title": "Zeugnisdatum",
+          "inputType": "date"
+        }
+      ]
+    },
+    {
+      "name": "page_praxis",
+      "title": "Berufliche Praxis nach der Berufsausbildung bis zum Eintritt in die Meisterschule",
+      "elements": [
+        {
+          "type": "paneldynamic",
+          "name": "Berufstaetigkeit",
+          "title": "Berufstätigkeit",
+          "templateTitle": "Berufstätigkeit {panelIndex}",
+          "panelCount": 1,
+          "minPanelCount": 0,
+          "maxPanelCount": 3,
+          "panelAddText": "Weitere Berufstätigkeit hinzufügen",
+          "panelRemoveText": "Entfernen",
+          "templateElements": [
+            {
+              "type": "text",
+              "name": "als",
+              "title": "Berufstätigkeit als"
+            },
+            {
+              "type": "text",
+              "name": "von",
+              "title": "von",
+              "inputType": "date"
+            },
+            {
+              "type": "text",
+              "name": "bis",
+              "startWithNewLine": false,
+              "title": "bis",
+              "inputType": "date"
+            },
+            {
+              "type": "text",
+              "name": "Monate",
+              "startWithNewLine": false,
+              "title": "Monate",
+              "inputType": "number",
+              "min": 0
+            }
+          ]
+        },
+        {
+          "type": "paneldynamic",
+          "name": "Sonstige_Taetigkeiten",
+          "title": "Sonstige Tätigkeiten",
+          "templateTitle": "Sonstige Tätigkeit {panelIndex}",
+          "panelCount": 0,
+          "minPanelCount": 0,
+          "maxPanelCount": 3,
+          "panelAddText": "Sonstige Tätigkeit hinzufügen",
+          "panelRemoveText": "Entfernen",
+          "templateElements": [
+            {
+              "type": "text",
+              "name": "als",
+              "title": "Sonstige Tätigkeit als"
+            },
+            {
+              "type": "text",
+              "name": "von",
+              "title": "von",
+              "inputType": "date"
+            },
+            {
+              "type": "text",
+              "name": "bis",
+              "startWithNewLine": false,
+              "title": "bis",
+              "inputType": "date"
+            },
+            {
+              "type": "text",
+              "name": "Monate",
+              "startWithNewLine": false,
+              "title": "Monate",
+              "inputType": "number",
+              "min": 0
+            }
+          ]
+        },
+        {
+          "type": "html",
+          "name": "hinweis_zulassung",
+          "html": "<p>Mit obigen Angaben überprüft die Schule, ob die Voraussetzungen für die Zulassung zur Meisterprüfung erfüllt sind. Die Aufnahme in die Meisterschule bedeutet jedoch <b>keinen Rechtsanspruch auf Zulassung zur Meisterprüfung</b>. Darüber entscheidet ausschließlich der Prüfungsausschuss der Handwerkskammer. Erkundigen Sie sich im Zweifelsfall bei der Handwerkskammer und lassen Sie sich von dort die Zulassung bestätigen. Ansprechpartner: Handwerkskammer Karlsruhe, Friedrichsplatz 4, 76133 Karlsruhe, Tel.: 0721 / 1600-145 (Frau Frank); Fax: 0721 / 1600-59145</p>"
+        }
+      ]
+    },
+    {
+      "name": "page_absenden",
+      "title": "Absenden",
+      "elements": [
+        {
+          "type": "html",
+          "name": "hinweis_unterlagen",
+          "html": "<p><b>Bitte verwenden Sie für Ihre Bewerbung keine Bewerbungsmappe, Schnellhefter o. ä.</b></p>\n<p>Bitte fügen Sie der Anmeldung ausschließlich eine Kopie des <b>Berufsschulabschlusszeugnisses</b> bei; bitte <b>keine weiteren Zeugnisse oder Arbeitsbescheinigungen</b> usw. beilegen (diese Unterlagen benötigt <b>nur</b> die Handwerkskammer).</p>\n<p><b>Der Eingang Ihrer Anmeldung wird von uns schriftlich bestätigt.</b> Sollte die von Ihnen gewünschte Kurs nicht zu Stande kommen oder überbelegt sein, werden wir uns rechtzeitig wieder mit Ihnen in Verbindung setzen und Ihnen einen Alternativtermin vorschlagen.</p>\n<p>Mit Aufnahme des Unterrichts verpflichten Sie sich, nach Erhalt der Rechnung die Lehrgangsgebühren zu bezahlen. <b>Die vorzeitige Abmeldung</b> vom Schulbesuch <b>muss schriftlich</b> gegenüber der Schule erklärt werden; die Lehrgangsgebühren werden dann anteilig nach Unterrichtswochen berechnet. Möchten Sie nur <b>einen Teil der Kurse</b> besuchen – weil Sie bereits andere Teile der Meisterprüfung bestanden haben – so benötigen wir zur Berechnung der anteiligen Kosten ebenfalls einen <b>schriftlichen Antrag</b> von Ihnen.</p>"
+        },
+        {
+          "type": "text",
+          "name": "Unterschrift_Ort",
+          "title": "Ort",
+          "isRequired": true
+        },
+        {
+          "type": "signaturepad",
+          "name": "Unterschrift",
+          "startWithNewLine": false,
+          "title": "Unterschrift Schüler/in",
+          "isRequired": true,
+          "dataFormat": "png"
+        },
+        {
+          "type": "comment",
+          "name": "Anmerkungen",
+          "title": "Anmerkungen",
+          "description": "Optional: Mitteilungen an die Schule"
+        },
+        {
+          "type": "html",
+          "name": "hinweis_absenden",
+          "html": "Mit dem Absenden <b>bestätige</b> ich die <b>Richtigkeit und Vollständigkeit</b> der gemachten Angaben.<br /><br />Nach dem Absenden können Sie auf der nächsten Seite eine <b>PDF-Bestätigung über die Anmeldung</b> herunterladen."
+        }
+      ]
+    }
+  ],
+  "clearInvisibleValues": "none",
+  "pagePrevText": "Zurück",
+  "pageNextText": "Weiter",
+  "completeText": "Absenden",
+  "firstPageIsStartPage": true,
+  "widthMode": "responsive"
+}
