@@ -43,9 +43,9 @@ In einer Demo-Umgebung (WordPress + Standalone-Frontend + Backend, Multi-Tenant)
 
 Zum Zeitpunkt der Abnahme noch offen (nur manuell prüfbar):
 
-- [ ] WordPress-Plugin: Verbindungsstatus-Seite (*Einstellungen → Ondisos*) im Browser mit den neuen Zeilen „Secret passt" / „0 Formulare"
-- [ ] Breitenumschalter der Vorschau (Handy/Tablet) in einem echten Browser
-- [ ] Docker-Image neu bauen und Vorschau gegen das frisch gebaute Image prüfen (in der Demo wurde die Apache-Konfiguration im laufenden Container ersetzt)
+- [x] WordPress-Plugin: Verbindungsstatus-Seite (*Einstellungen → Ondisos*) im Browser mit den neuen Zeilen „Secret passt" / „0 Formulare"
+- [x] Breitenumschalter der Vorschau (Handy/Tablet) in einem echten Browser
+- [x] Docker-Image neu bauen und Vorschau gegen das frisch gebaute Image prüfen (in der Demo wurde die Apache-Konfiguration im laufenden Container ersetzt)
 - [ ] Endpoint-Skripte `forms.php` und `form-config.php?with=survey` haben keine Unit-Tests (ihre Logik liegt in getesteten Services; strukturelle Tests prüfen Reihenfolge und Abhängigkeiten)
 
 ## v3.1.2
@@ -70,11 +70,11 @@ Automatisiert: 1194 Unit-Tests (`vendor/bin/phpunit --testsuite=Unit`), dazu die
 **Auf einer bestehenden Instanz zu prüfen** (Upgrade von 3.1.1, im Browser; abhaken):
 
 - [ ] Update nach den Release Notes: `Migration complete`, vorhandene Daten und Anmeldungen unverändert, bestehende Sitzungen/Zugänge funktionieren
-- [ ] Platform-Admin im Mehrschul-Betrieb: Hinweis, Einrichtung mit **echter Authenticator-App** (QR-Code scannen), Anmeldung mit Code; Recovery-Code und `reset-2fa.php`
+- [x] Platform-Admin im Mehrschul-Betrieb: Hinweis, Einrichtung mit **echter Authenticator-App** (QR-Code scannen), Anmeldung mit Code; Recovery-Code und `reset-2fa.php`
 - [ ] Netz-Allowlist hinter dem **echten Reverse-Proxy** (mit und ohne `TRUSTED_PROXIES`): erlaubtes und gesperrtes Netz; Hinweis in *Tenants*, wenn `X-Forwarded-For` ignoriert wird
 - [ ] Betrieb ohne Login (`AUTH_ENABLED=false`) mit `PLATFORM_ADMIN_ALLOWED_NETWORKS`: Zugriff aus Verwaltungsnetz und von außen
-- [ ] Layout und Bedienbarkeit der neuen Seiten im Browser (Assistent, „Mein Konto“, Karte in *Tenants*), auch auf dem Handy; Druck der Recovery-Codes
-- [ ] Content-Security-Policy: keine Verstöße in der Browser-Konsole auf den Backend-Seiten und der Formularseite (sonst `CSP_MODE=report-only`)
+- [x] Layout und Bedienbarkeit der neuen Seiten im Browser (Assistent, „Mein Konto“, Karte in *Tenants*), auch auf dem Handy; Druck der Recovery-Codes
+- [x] Content-Security-Policy: keine Verstöße in der Browser-Konsole auf den Backend-Seiten und der Formularseite (sonst `CSP_MODE=report-only`)
 - [ ] Frontend/Plugin 3.1.2 gegen Backend 3.1.2: Anmeldung absenden, Upload, PDF-Download; danach `api_legacy_signature` im Audit-Log prüfen
 - [ ] WordPress-Plugin: Verbindungsstatus-Seite, Formular mit Honeypot, Absenden
 
