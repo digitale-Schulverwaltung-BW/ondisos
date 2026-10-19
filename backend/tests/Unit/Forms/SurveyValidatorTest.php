@@ -121,6 +121,39 @@ class SurveyValidatorTest extends TestCase
         $this->assertTrue($result->isValid());
     }
 
+    public function testSameNameInTwoDynamicPanelTemplatesIsAWarning(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'paneldynamic', 'name' => '_Berufstaetigkeit', 'templateElements' => [['type' => 'text', 'name' => 'von']]],
+            ['type' => 'paneldynamic', 'name' => '_Sonstige_Taetigkeiten', 'templateElements' => [['type' => 'text', 'name' => 'von']]]
+        ));
+        $this->assertTrue($result->isValid());
+        $this->assertCount(1, $result->warnings());
+        $this->assertSame('pages[0].elements[1]', $result->warnings()[0]['path']);
+        $this->assertStringContainsString('"von"', $result->warnings()[0]['message']);
+    }
+
+    public function testTemplateNameThatAlsoExistsOutsideIsAWarning(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'text', 'name' => 'a'],
+            ['type' => 'paneldynamic', 'name' => 'kinder', 'templateElements' => [['type' => 'text', 'name' => 'a']]]
+        ));
+        $this->assertTrue($result->isValid());
+        $this->assertCount(1, $result->warnings());
+        $this->assertStringContainsString('"a"', $result->warnings()[0]['message']);
+    }
+
+    public function testUniqueTemplateNamesGiveNoWarning(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'text', 'name' => 'a'],
+            ['type' => 'paneldynamic', 'name' => 'p1', 'templateElements' => [['type' => 'text', 'name' => 'b']]],
+            ['type' => 'paneldynamic', 'name' => 'p2', 'templateElements' => [['type' => 'text', 'name' => 'c']]]
+        ));
+        $this->assertSame([], $result->warnings());
+    }
+
     public function testHtmlElementsNeedNoUniqueName(): void
     {
         $result = $this->validate($this->survey(

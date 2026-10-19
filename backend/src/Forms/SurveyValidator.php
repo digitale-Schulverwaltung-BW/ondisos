@@ -9,7 +9,8 @@ namespace App\Forms;
  * Errors (block): not JSON / too big / no questions, elements without type or name, duplicate field names,
  * reserved field names, HTML outside the allowlist, javascript: URLs.
  * Warnings (do not block): functions in expressions SurveyJS does not know, choices loaded from an
- * external URL (the visitor's browser would contact a third party).
+ * external URL (the visitor's browser would contact a third party), names in dynamic panel templates that
+ * repeat in another dynamic panel or outside (valid at runtime, but SurveyJS Creator reports them as duplicates).
  */
 final class SurveyValidator
 {
@@ -35,6 +36,9 @@ final class SurveyValidator
         'year', 'month', 'day', 'weekday', 'currentYear', 'currentMonth', 'currentDay', 'now',
         'isNumber', 'isEmpty', 'notEmpty', 'contains',
     ];
+
+    /** @var array<string, array<string,string>> template field name => [dynamic panel name => path of the panel] */
+    private array $templateNames = [];
 
     /**
      * @return array{result: ValidationResult, survey: ?array<string,mixed>} survey is null when it could not be parsed
@@ -66,9 +70,11 @@ final class SurveyValidator
 
         $seen  = [];
         $count = 0;
+        $this->templateNames = [];
         foreach ($this->elementsWithPath($survey) as [$path, $element]) {
             $this->checkElement($path, $element, $seen, $count, $result, 0);
         }
+        $this->checkTemplateNameCollisions($seen, $result);
         if ($count > self::MAX_ELEMENTS) {
             $result->addError('', 'Zu viele Elemente (maximal ' . self::MAX_ELEMENTS . ')');
         }
@@ -150,6 +156,37 @@ final class SurveyValidator
             $inner = [];
             foreach (($element['templateElements'] ?? []) as $i => $child) {
                 $this->checkElement("$path.templateElements[$i]", $child, $inner, $count, $result, $depth + 1);
+            }
+            $panelName = is_string($name) && $name !== '' ? $name : $path;
+            foreach (array_keys($inner) as $innerName) {
+                $this->templateNames[(string)$innerName][$panelName] ??= $path;
+            }
+        }
+    }
+
+    /**
+     * SurveyJS scopes template names per dynamic panel, so the survey works; SurveyJS Creator still wants every
+     * name unique across the survey and reports "The name ... is duplicated" when the survey is opened there again.
+     *
+     * @param array<string,bool> $rootNames field names outside dynamic panel templates
+     */
+    private function checkTemplateNameCollisions(array $rootNames, ValidationResult $result): void
+    {
+        foreach ($this->templateNames as $name => $panels) {
+            $name = (string)$name;
+            $list = '"' . implode('", "', array_keys($panels)) . '"';
+            if (count($panels) > 1) {
+                $result->addWarning(
+                    (string)array_values($panels)[1],
+                    "Feldname \"{$name}\" kommt in den Vorlagen mehrerer dynamischer Panels vor ({$list}): "
+                    . 'im Formular zulässig, der SurveyJS Creator meldet ihn aber als doppelt'
+                );
+            } elseif (isset($rootNames[$name])) {
+                $result->addWarning(
+                    (string)array_values($panels)[0],
+                    "Feldname \"{$name}\" kommt in der Vorlage des dynamischen Panels {$list} und außerhalb davon vor: "
+                    . 'im Formular zulässig, der SurveyJS Creator meldet ihn aber als doppelt'
+                );
             }
         }
     }
