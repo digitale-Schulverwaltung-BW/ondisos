@@ -34,6 +34,7 @@ final class SurveyValidator
         'countInArray', 'indexOf', 'subStr', 'substring', 'lowerCase', 'upperCase', 'trim', 'length', 'concat',
         'year', 'month', 'day', 'weekday', 'currentYear', 'currentMonth', 'currentDay', 'now',
         'isNumber', 'isEmpty', 'notEmpty', 'contains',
+        'dateDiff', 'dateAdd', 'getYear', 'displayValue', 'propertyValue', 'getComment',
     ];
 
     /**

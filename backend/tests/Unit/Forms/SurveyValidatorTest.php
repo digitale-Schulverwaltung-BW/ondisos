@@ -218,6 +218,14 @@ class SurveyValidatorTest extends TestCase
         $this->assertStringContainsString('evil()', $result->warnings()[0]['message']);
     }
 
+    public function testDateDiffIsAKnownFunction(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'expression', 'name' => 'monate', 'expression' => "dateDiff({von}, {bis}, 'months')",
+        ]));
+        $this->assertSame([], $result->warnings());
+    }
+
     public function testFunctionNamesInQuotedLiteralsAreIgnored(): void
     {
         $result = $this->validate($this->survey([
