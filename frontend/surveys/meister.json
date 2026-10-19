@@ -2377,37 +2377,37 @@
           "templateElements": [
             {
               "type": "text",
-              "name": "als",
+              "name": "als1",
               "title": "Berufstätigkeit als"
             },
             {
               "type": "text",
-              "name": "von",
+              "name": "von1",
               "title": "von",
               "inputType": "date",
-              "requiredIf": "{panel.als} notempty"
+              "requiredIf": "{panel.als1} notempty"
             },
             {
               "type": "text",
-              "name": "bis",
+              "name": "bis1",
               "startWithNewLine": false,
               "title": "bis",
               "inputType": "date",
-              "requiredIf": "{panel.als} notempty",
+              "requiredIf": "{panel.als1} notempty",
               "validators": [
                 {
                   "type": "expression",
-                  "expression": "{panel.von} empty or {panel.bis} empty or {panel.bis} >= {panel.von}",
+                  "expression": "{panel.von1} empty or {panel.bis1} empty or {panel.bis1} >= {panel.von1}",
                   "text": "Das Enddatum darf nicht vor dem Beginn liegen."
                 }
               ]
             },
             {
               "type": "expression",
-              "name": "Monate",
+              "name": "Monate1",
               "startWithNewLine": false,
               "title": "Monate",
-              "expression": "iif({panel.von} notempty and {panel.bis} notempty, round((dateDiff({panel.von}, {panel.bis}, 'days') + 1) / 30.44), '')"
+              "expression": "iif({panel.von1} notempty and {panel.bis1} notempty, round((dateDiff({panel.von1}, {panel.bis1}, 'days') + 1) / 30.44), '')"
             }
           ],
           "templateTitle": "Berufstätigkeit {panelIndex}",
@@ -2420,10 +2420,10 @@
           "type": "expression",
           "name": "Monate_Berufstaetigkeit_gesamt",
           "title": "Berufstätigkeit gesamt (Monate)",
-          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate')",
+          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate1')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0,
-          "visibleIf": "{_Berufstaetigkeit.length} > 0"
+          "visibleIf": "sumInArray({_Berufstaetigkeit}, 'Monate1') > 0"
         },
         {
           "type": "paneldynamic",
@@ -2432,37 +2432,37 @@
           "templateElements": [
             {
               "type": "text",
-              "name": "als",
+              "name": "als2",
               "title": "Sonstige Tätigkeit als"
             },
             {
               "type": "text",
-              "name": "von",
+              "name": "von2",
               "title": "von",
               "inputType": "date",
-              "requiredIf": "{panel.als} notempty"
+              "requiredIf": "{panel.als2} notempty"
             },
             {
               "type": "text",
-              "name": "bis",
+              "name": "bis2",
               "startWithNewLine": false,
               "title": "bis",
               "inputType": "date",
-              "requiredIf": "{panel.als} notempty",
+              "requiredIf": "{panel.als2} notempty",
               "validators": [
                 {
                   "type": "expression",
-                  "expression": "{panel.von} empty or {panel.bis} empty or {panel.bis} >= {panel.von}",
+                  "expression": "{panel.von2} empty or {panel.bis2} empty or {panel.bis2} >= {panel.von2}",
                   "text": "Das Enddatum darf nicht vor dem Beginn liegen."
                 }
               ]
             },
             {
               "type": "expression",
-              "name": "Monate",
+              "name": "Monate2",
               "startWithNewLine": false,
               "title": "Monate",
-              "expression": "iif({panel.von} notempty and {panel.bis} notempty, round((dateDiff({panel.von}, {panel.bis}, 'days') + 1) / 30.44), '')"
+              "expression": "iif({panel.von2} notempty and {panel.bis2} notempty, round((dateDiff({panel.von2}, {panel.bis2}, 'days') + 1) / 30.44), '')"
             }
           ],
           "templateTitle": "Sonstige Tätigkeit {panelIndex}",
@@ -2474,16 +2474,16 @@
           "type": "expression",
           "name": "Monate_Sonstige_gesamt",
           "title": "Sonstige Tätigkeiten gesamt (Monate)",
-          "expression": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate')",
+          "expression": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate2')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0,
-          "visibleIf": "{_Sonstige_Taetigkeiten.length} > 0"
+          "visibleIf": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate2') > 0"
         },
         {
           "type": "expression",
           "name": "Monate_gesamt",
           "title": "Monate gesamt",
-          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate') + sumInArray({_Sonstige_Taetigkeiten}, 'Monate')",
+          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate1') + sumInArray({_Sonstige_Taetigkeiten}, 'Monate2')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0,
           "visible": false
@@ -2492,145 +2492,145 @@
           "type": "text",
           "name": "Berufstaetigkeit1_als",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[0].als}"
+          "setValueExpression": "{_Berufstaetigkeit[0].als1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit1_von",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[0].von}"
+          "setValueExpression": "{_Berufstaetigkeit[0].von1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit1_bis",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[0].bis}"
+          "setValueExpression": "{_Berufstaetigkeit[0].bis1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit1_Monate",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[0].Monate}"
+          "setValueExpression": "{_Berufstaetigkeit[0].Monate1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit2_als",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[1].als}"
+          "setValueExpression": "{_Berufstaetigkeit[1].als1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit2_von",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[1].von}"
+          "setValueExpression": "{_Berufstaetigkeit[1].von1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit2_bis",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[1].bis}"
+          "setValueExpression": "{_Berufstaetigkeit[1].bis1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit2_Monate",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[1].Monate}"
+          "setValueExpression": "{_Berufstaetigkeit[1].Monate1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit3_als",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[2].als}"
+          "setValueExpression": "{_Berufstaetigkeit[2].als1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit3_von",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[2].von}"
+          "setValueExpression": "{_Berufstaetigkeit[2].von1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit3_bis",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[2].bis}"
+          "setValueExpression": "{_Berufstaetigkeit[2].bis1}"
         },
         {
           "type": "text",
           "name": "Berufstaetigkeit3_Monate",
           "visible": false,
-          "setValueExpression": "{_Berufstaetigkeit[2].Monate}"
+          "setValueExpression": "{_Berufstaetigkeit[2].Monate1}"
         },
         {
           "type": "text",
           "name": "Sonstige1_als",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[0].als}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[0].als2}"
         },
         {
           "type": "text",
           "name": "Sonstige1_von",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[0].von}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[0].von2}"
         },
         {
           "type": "text",
           "name": "Sonstige1_bis",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[0].bis}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[0].bis2}"
         },
         {
           "type": "text",
           "name": "Sonstige1_Monate",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[0].Monate}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[0].Monate2}"
         },
         {
           "type": "text",
           "name": "Sonstige2_als",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[1].als}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[1].als2}"
         },
         {
           "type": "text",
           "name": "Sonstige2_von",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[1].von}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[1].von2}"
         },
         {
           "type": "text",
           "name": "Sonstige2_bis",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[1].bis}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[1].bis2}"
         },
         {
           "type": "text",
           "name": "Sonstige2_Monate",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[1].Monate}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[1].Monate2}"
         },
         {
           "type": "text",
           "name": "Sonstige3_als",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[2].als}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[2].als2}"
         },
         {
           "type": "text",
           "name": "Sonstige3_von",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[2].von}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[2].von2}"
         },
         {
           "type": "text",
           "name": "Sonstige3_bis",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[2].bis}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[2].bis2}"
         },
         {
           "type": "text",
           "name": "Sonstige3_Monate",
           "visible": false,
-          "setValueExpression": "{_Sonstige_Taetigkeiten[2].Monate}"
+          "setValueExpression": "{_Sonstige_Taetigkeiten[2].Monate2}"
         },
         {
           "type": "html",
