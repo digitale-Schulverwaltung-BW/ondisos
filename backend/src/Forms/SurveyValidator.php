@@ -26,14 +26,27 @@ final class SurveyValidator
     /** Keys whose values are expressions (not HTML), so "<" there is a comparison. */
     private const EXPRESSION_KEY = '/(If|Expression|expression)$/';
 
-    /** Expression functions known to SurveyJS (built-ins); unknown ones are reported as warnings. */
-    private const KNOWN_FUNCTIONS = [
-        'iif', 'isContainerReady', 'isDisplayMode', 'age', 'today', 'currentDate', 'getDate', 'diffDays', 'addDays',
-        'sum', 'avg', 'min', 'max', 'count', 'round', 'trunc', 'ceil', 'floor', 'abs', 'sqrt', 'pow', 'log', 'exp',
-        'sin', 'cos', 'tan', 'asin', 'acos', 'atan', 'sumInArray', 'avgInArray', 'minInArray', 'maxInArray',
-        'countInArray', 'indexOf', 'subStr', 'substring', 'lowerCase', 'upperCase', 'trim', 'length', 'concat',
-        'year', 'month', 'day', 'weekday', 'currentYear', 'currentMonth', 'currentDay', 'now',
-        'isNumber', 'isEmpty', 'notEmpty', 'contains',
+    /**
+     * Expression functions the bundled SurveyJS (1.9.130, frontend/public/assets/survey.core.min.js) registers;
+     * unknown ones are reported as warnings, because SurveyJS silently yields no value for them.
+     * After a SurveyJS update, take the list from the bundle (SurveyValidatorTest fails until it matches):
+     *   grep -o 'Instance.register("[A-Za-z]*"' frontend/public/assets/survey.core.min.js | cut -d'"' -f2 | sort -u
+     */
+    public const KNOWN_FUNCTIONS = [
+        'age', 'avg', 'avgInArray', 'count', 'countInArray', 'currentDate', 'currentYear', 'dateAdd', 'dateDiff',
+        'day', 'diffDays', 'displayValue', 'getComment', 'getDate', 'getYear', 'iif', 'isContainerReady',
+        'isDisplayMode', 'max', 'maxInArray', 'min', 'minInArray', 'month', 'propertyValue', 'round', 'substring',
+        'sum', 'sumInArray', 'today', 'trunc', 'weekday', 'year',
+    ];
+
+    /**
+     * Operator keywords of the SurveyJS expression grammar (case-insensitive). Followed by "(" they are no
+     * function call, e.g. "{a} = 1 and ({b} = 2 or {c} = 3)".
+     */
+    public const OPERATOR_WORDS = [
+        'and', 'or', 'negate', 'empty', 'notempty', 'contains', 'contain', 'notcontains', 'notcontain',
+        'anyof', 'allof', 'equal', 'notequal', 'greater', 'less', 'greaterorequal', 'lessorequal', 'power',
+        'true', 'false',
     ];
 
     /**
@@ -206,6 +219,9 @@ final class SurveyValidator
             return;
         }
         foreach (array_unique($m[1]) as $fn) {
+            if (in_array(strtolower($fn), self::OPERATOR_WORDS, true)) {
+                continue;
+            }
             if (!in_array($fn, self::KNOWN_FUNCTIONS, true)) {
                 $result->addWarning($path, "Unbekannte Funktion {$fn}() im Ausdruck (SurveyJS kennt sie nicht)");
             }

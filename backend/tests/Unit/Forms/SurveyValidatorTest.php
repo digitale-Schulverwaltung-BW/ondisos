@@ -218,6 +218,73 @@ class SurveyValidatorTest extends TestCase
         $this->assertStringContainsString('evil()', $result->warnings()[0]['message']);
     }
 
+    public function testKnownFunctionsMatchTheBundledSurveyJs(): void
+    {
+        $bundle = (string)file_get_contents(__DIR__ . '/../../../../frontend/public/assets/survey.core.min.js');
+        preg_match_all('/Instance\.register\("([A-Za-z]+)"/', $bundle, $m);
+        $registered = array_values(array_unique($m[1]));
+        sort($registered);
+        $known = SurveyValidator::KNOWN_FUNCTIONS;
+        sort($known);
+
+        $this->assertNotEmpty($registered, 'no registered functions found in survey.core.min.js');
+        $this->assertSame($registered, $known, 'update SurveyValidator::KNOWN_FUNCTIONS (see its comment)');
+    }
+
+    public function testOperatorWordsAreKeywordsOfTheBundledGrammar(): void
+    {
+        $bundle = (string)file_get_contents(__DIR__ . '/../../../../frontend/public/assets/survey.core.min.js');
+        foreach (SurveyValidator::OPERATOR_WORDS as $word) {
+            $this->assertStringContainsString('"' . $word . '",!0)', $bundle, "{$word} is no case-insensitive keyword");
+        }
+    }
+
+    public function testDateDiffIsAKnownFunction(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'expression', 'name' => 'monate', 'expression' => "dateDiff({von}, {bis}, 'months')",
+        ]));
+        $this->assertSame([], $result->warnings());
+    }
+
+    public function testTruncIsAKnownFunction(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'expression', 'name' => 'a', 'expression' => 'trunc({b} / 12)',
+        ]));
+        $this->assertSame([], $result->warnings());
+    }
+
+    /** @return array<string,array{0:string}> */
+    public static function functionsMissingInTheBundle(): array
+    {
+        return [
+            'ceil'      => ['ceil({b} / 12)'],
+            'floor'     => ['floor({b})'],
+            'now'       => ['now()'],
+            'isEmpty'   => ['isEmpty({b})'],
+            'upperCase' => ["upperCase({b}) = 'X'"],
+        ];
+    }
+
+    #[DataProvider('functionsMissingInTheBundle')]
+    public function testFunctionMissingInTheBundleIsAWarning(string $expression): void
+    {
+        $result = $this->validate($this->survey(['type' => 'expression', 'name' => 'a', 'expression' => $expression]));
+        $this->assertTrue($result->isValid());
+        $this->assertCount(1, $result->warnings());
+        $this->assertStringContainsString('Unbekannte Funktion', $result->warnings()[0]['message']);
+    }
+
+    public function testOperatorsBeforeParenthesesAreNoFunctions(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'text', 'name' => 'a',
+            'visibleIf' => "{b} = 1 AND ({c} = 2 or ({d} notempty)) and {e} contains ('x')",
+        ]));
+        $this->assertSame([], $result->warnings());
+    }
+
     public function testFunctionNamesInQuotedLiteralsAreIgnored(): void
     {
         $result = $this->validate($this->survey([

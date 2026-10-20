@@ -13,3 +13,4 @@ cp "$SRC/assets/survey-core.fontless.min.css"  "$DST/survey-core.fontless.min.cs
 cp "$SRC/js/survey-handler-base.js"            "$DST/survey-handler-base.js"
 cp "$SRC/assets/fonts/opensans/"*.woff2        "$DST/fonts/"
 echo "Preview assets updated from $SRC"
+echo "After a SurveyJS update also refresh App\\Forms\\SurveyValidator::KNOWN_FUNCTIONS (see its comment; SurveyValidatorTest checks it)."
