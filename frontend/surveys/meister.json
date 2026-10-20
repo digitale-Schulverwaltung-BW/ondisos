@@ -2359,8 +2359,18 @@
               "startWithNewLine": false,
               "title": "Zeugnisnote Durchschnitt",
               "inputType": "number",
-              "minValueExpression": "1",
-              "maxValueExpression": "6"
+              "isRequired": true,
+              "min": 1,
+              "max": 6,
+              "step": 0.1,
+              "placeholder": "z. B. 2,3",
+              "validators": [
+                {
+                  "type": "expression",
+                  "expression": "{Berufsschule_Zeugnisnote} empty or round({Berufsschule_Zeugnisnote}, 1) = {Berufsschule_Zeugnisnote}",
+                  "text": "Bitte die Note mit höchstens einer Nachkommastelle angeben (z. B. 2,3)."
+                }
+              ]
             }
           ]
         }
@@ -2487,6 +2497,18 @@
           "displayStyle": "decimal",
           "maximumFractionDigits": 0,
           "visible": false
+        },
+        {
+          "type": "expression",
+          "name": "Bonus_Berufserfahrung",
+          "visible": false,
+          "expression": "iif({Monate_Berufstaetigkeit_gesamt} > 42, -0.2 * min(8, trunc(({Monate_Berufstaetigkeit_gesamt} - 37) / 6)), 0)"
+        },
+        {
+          "type": "expression",
+          "name": "Ranking",
+          "visible": false,
+          "expression": "iif({Berufsschule_Zeugnisnote} notempty, max(1, round({Berufsschule_Zeugnisnote} + {Bonus_Berufserfahrung}, 1)), '')"
         },
         {
           "type": "text",
