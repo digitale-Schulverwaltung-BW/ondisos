@@ -86,16 +86,20 @@ const SignPage = (() => {
             return;
         }
         const bar = el('signBar');
+        const landscape = window.matchMedia('(orientation: landscape)').matches;
         const frameWidth = wrap.offsetWidth - canvas.offsetWidth;
         const frameHeight = wrap.offsetHeight - canvas.offsetHeight;
-        // The countdown line stays visible above the pad
-        const available = window.innerHeight - frameHeight - bar.offsetHeight - 16;
+        // Portrait: the countdown line sits above the pad. Landscape: countdown and ✅ sit beside it (CSS grid)
+        const sideWidth = landscape ? Math.max(bar.offsetWidth, el('signSend').offsetWidth) + 12 : 0;
+        const available = window.innerHeight - frameHeight - (landscape ? 0 : bar.offsetHeight) - 16;
         const canvasWidth = Math.max(160, available * ratio);
-        const maxWidth = Math.min(document.documentElement.clientWidth - 16, canvasWidth + frameWidth);
+        const maxWidth = Math.min(document.documentElement.clientWidth - 16 - sideWidth, canvasWidth + frameWidth);
         wrap.style.maxWidth = Math.floor(maxWidth) + 'px';
-        if (window.innerWidth > window.innerHeight) {
-            // Landscape: countdown and pad fill the screen once SurveyJS has rescaled the pad
-            setTimeout(() => bar.scrollIntoView({ block: 'start', behavior: 'smooth' }), 150);
+        // In the landscape grid the pad column takes the pad's width, so pad and ✅ are centered together
+        wrap.style.width = landscape ? Math.floor(maxWidth) + 'px' : '';
+        if (landscape) {
+            // Pad (with countdown and ✅ beside it) fills the screen once SurveyJS has rescaled it
+            setTimeout(() => wrap.scrollIntoView({ block: 'center', behavior: 'smooth' }), 150);
         }
     }
 
@@ -113,7 +117,10 @@ const SignPage = (() => {
         }
         fittedWidth = width;
         clearTimeout(fitTimer);
-        document.querySelector('.sign__padwrap').style.maxWidth = '';
+        const wrap = document.querySelector('.sign__padwrap');
+        wrap.style.maxWidth = '';
+        // Landscape grid: the pad column has no width of its own, give it one until fitPad() measures
+        wrap.style.width = window.matchMedia('(orientation: landscape)').matches ? (width - 140) + 'px' : '';
         fitTimer = setTimeout(fitPad, 150);
     }
 

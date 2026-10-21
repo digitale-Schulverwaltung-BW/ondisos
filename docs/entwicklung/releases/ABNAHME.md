@@ -97,7 +97,8 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 **Noch zu prüfen** (abhaken):
 
 - [x] iPhone (Safari) im WLAN per QR-Code: Ablauf funktioniert. **Funde:** (1) Im Querformat wurde die Fläche kleiner (Safaris Leisten nehmen Höhe, iOS vergrößert die Schrift); (2) Striche, die knapp außerhalb der Fläche beginnen, markierten Text der Seite (wie bei DocuSeal). Behoben: Fläche richtet sich nur nach der eigenen Höhe (Seite darf scrollen, Countdown bleibt sichtbar), `text-size-adjust: 100%`, keine Textauswahl und kein Kontextmenü auf der Handy-Seite, Rahmen der Fläche mit `touch-action: none`
-- [ ] Nach den Korrekturen erneut auf dem iPhone: Querformat, Unterschrift ohne Markieren
+- [x] Zweiter Durchgang iPhone: Brave (Chromium) im Querformat gut; **Safari zoomte die Seite** (Fläche beim 300 × 200-Feld klein, 400 × 150-Feld verschoben). Behoben: kein Zoom auf der Handy-Seite (`maximum-scale=1`, `touch-action: manipulation`); im Querformat stehen Countdown und ein kompakter ✅-Button neben der Fläche, die damit die volle Höhe bekommt (Vorschlag aus dem Test)
+- [ ] Nach den Korrekturen erneut auf dem iPhone (Safari): Querformat beider Felder, Drehen, Unterschrift ohne Markieren
 - [ ] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
 - [ ] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
 - [ ] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“

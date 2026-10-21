@@ -122,7 +122,8 @@ class Signature_Handler
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <!-- No zoom: Safari kept zooming in on rotation or a double tap while signing; the page holds only the pad -->
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo $t('page_title'); ?></title>
     <link href="<?php echo esc_url($assets->frontend_assets_url() . 'survey-core.fontless.min.css?v=' . $version); ?>" rel="stylesheet">

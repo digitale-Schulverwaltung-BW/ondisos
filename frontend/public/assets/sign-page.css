@@ -4,6 +4,8 @@
 html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    /* A quick second tap (i-dot) next to the pad must not zoom the page */
+    touch-action: manipulation;
 }
 
 /*
@@ -92,9 +94,34 @@ body {
 .sign__status--error { color: #b02a37; }
 .sign__status--done { color: #146c43; font-size: 1.05rem; }
 
-/* Landscape: every pixel of height goes to the drawing area (after the base rules, so these win) */
+/*
+ * Landscape while signing: countdown and a compact ✅ button float beside the pad, so the pad gets
+ * the full height; only the header scrolls away (after the base rules, so these win).
+ */
 @media (orientation: landscape) {
     .sign { padding-bottom: 8px; }
-    .sign__bar { margin: 4px 0; }
-    .sign__send { margin-top: 8px; padding: 8px 24px; }
+    .sign-active .sign {
+        display: grid;
+        grid-template-columns: auto auto;
+        justify-content: center;
+        grid-template-rows: auto 1fr 1fr auto;
+        grid-template-areas: "head head" "pad bar" "pad send" "status status";
+        column-gap: 12px;
+        align-items: center;
+    }
+    .sign-active .sign__head { grid-area: head; }
+    .sign-active .sign__padwrap { grid-area: pad; }
+    .sign-active .sign__bar { grid-area: bar; align-self: end; justify-self: center; margin: 0 0 8px; flex-direction: column; }
+    .sign-active .sign__send { grid-area: send; align-self: start; justify-self: center; margin: 0; }
+    .sign-active .sign__status { grid-area: status; }
+    .sign-active .sign__countdown { font-size: 0.85rem; }
+    /* Icon only; the text stays in the button for screen readers */
+    .sign-active .sign__send {
+        width: 64px;
+        height: 64px;
+        padding: 0;
+        font-size: 0;
+        border-radius: 50%;
+    }
+    .sign-active .sign__send::before { content: "✅"; font-size: 30px; line-height: 64px; }
 }
