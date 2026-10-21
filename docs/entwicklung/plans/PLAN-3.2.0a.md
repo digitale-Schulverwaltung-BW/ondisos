@@ -1,6 +1,6 @@
 # PLAN 3.2.0a – Unterschrift per Smartphone (QR-Code)
 
-**Status:** In Arbeit (Stand 2026-10-21): AP1 bis AP5 umgesetzt (Standalone und Plugin), offen AP6 (Doku, Abnahme) und der Test auf echten Geräten. Unabhängig vom grafischen Survey-Editor ([PLAN-3.2.0.md](PLAN-3.2.0.md)) und in beliebiger Reihenfolge dazu umsetzbar.
+**Status:** Umgesetzt (Stand 2026-10-21): AP1 bis AP6. Offen ist die Abnahme auf echten Geräten, hinter dem Reverse-Proxy und mit WAF ([ABNAHME.md](../releases/ABNAHME.md#v320a-unterschrift-per-smartphone)). Unabhängig vom grafischen Survey-Editor ([PLAN-3.2.0.md](PLAN-3.2.0.md)) und in beliebiger Reihenfolge dazu umsetzbar.
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen.
 
 ## Ausgangslage
@@ -91,7 +91,7 @@ Vorschau → „Übernehmen“ setzt question.value (Data-URI); Absenden wie bis
 | ~~**AP3**~~ | Erledigt 2026-10-21 (Logik in `Frontend\Services\SignatureRelay`, auch fürs Plugin; im Browser getestet, Hoch-/Querformat, Drehen behält die Striche; iOS-Simulator noch offen). Frontend Standalone: Relay `public/api/signature.php` (CSRF für `create`/`poll`, `session_write_close()`), Handy-Seite `public/sign.php` (SurveyJS mit einem `signaturepad`, Querformat-Fläche, Dreh-Hinweis, Countdown, Meldung „Code abgelaufen“); `BackendApiClient` um die vier Aufrufe erweitern | 1,5 Tage |
 | ~~**AP4**~~ | Erledigt 2026-10-21 (Methode `setupSignatureHandoff()` der Basisklasse, nur Standalone ruft sie auf; Dialog als `<dialog>`, QR als `<img>`, Link mit Kopieren-Ausweg ohne Clipboard-API; im Browser mit Demo-Formular getestet: verbunden, Vorschau, Übernehmen, Verwerfen, Absenden). `survey-handler-base.js`: bei `signaturepad` mit `dataFormat` png, Option an und `matchMedia('(pointer: coarse)')` falsch einen Button über `onAfterRenderQuestion` einfügen; Dialog mit QR-Code, Countdown, „Smartphone verbunden“, *Neuen Code erzeugen*, Polling alle 3 s (Pause bei verborgenem Tab), Vorschau, *Übernehmen*/*Verwerfen* | 1 Tag |
 | ~~**AP5**~~ | Erledigt 2026-10-21: eine AJAX-Aktion `ondisos_sig` (Aktion im JSON-Body, wie im Standalone) statt vier, Handy-Seite `admin-ajax.php?action=ondisos_sign`, Nonce `ondisos_signature` für create/poll, Texte als Data-Attribut (mit `messages.local.php`); `build-zip.sh` packt `sign-page.js` mit. Im WordPress auf :8080 getestet, auch als anonymer Besucher. | 1 Tag |
-| **AP6** | Doku und Abnahme: SURVEYJS.md (Abschnitt Unterschriftsfelder, Empfehlung „Checkbox mit getipptem Namen“ für Schulen, denen eine Bestätigung genügt), sicherheit.md, architektur.md (Endpunkt, Tabelle), konfiguration.md, Schul-IT (WAF/Wordfence, `admin-ajax.php`), Messages, manuelle Tests in ABNAHME.md | 0,5 Tage |
+| ~~**AP6**~~ | Erledigt 2026-10-21 (Schul-IT: `schul-it/standalone-frontend.md` und `wordpress-plugin/INSTALL.md`; Abnahme in ABNAHME.md, Geräte-Tests offen). Doku und Abnahme: SURVEYJS.md (Abschnitt Unterschriftsfelder, Empfehlung „Checkbox mit getipptem Namen“ für Schulen, denen eine Bestätigung genügt), sicherheit.md, architektur.md (Endpunkt, Tabelle), konfiguration.md, Schul-IT (WAF/Wordfence, `admin-ajax.php`), Messages, manuelle Tests in ABNAHME.md | 0,5 Tage |
 
 Summe grob **6,5 Tage**. Ein erster nutzbarer Stand ohne Plugin ist AP1 bis AP4.
 

@@ -6,6 +6,8 @@
 - [Formulare entwerfen (SurveyJS Creator)](#formulare-entwerfen-surveyjs-creator)
   - [Lizenzhinweis](#lizenzhinweis)
 - [Unterschriftsfelder](#unterschriftsfelder)
+  - [Auf dem Smartphone unterschreiben](#auf-dem-smartphone-unterschreiben)
+  - [Bestätigung ohne Unterschrift](#bestätigung-ohne-unterschrift)
 - [Workflow im Backend](#workflow-im-backend)
   - [Bestehendes Formular ändern](#bestehendes-formular-ändern)
   - [Was „Prüfen“ meldet](#was-prüfen-meldet)
@@ -47,6 +49,36 @@ Der SurveyJS-Fragetyp `signaturepad` wird unterstützt. Die Unterschrift wird al
 SVG wird nicht angenommen.
 
 Eine Unterschrift ist ein einfaches Bild, keine qualifizierte elektronische Signatur. Ob das für Ihren Zweck genügt, klären Sie mit Schulträger oder Datenschutzbeauftragten.
+
+### Auf dem Smartphone unterschreiben
+
+Mit der Maus zu unterschreiben ist mühsam. Ab 3.2.0a können Besucher am Rechner **„Auf dem Smartphone unterschreiben“** wählen:
+
+1. Am Unterschriftsfeld erscheint ein QR-Code. Der Besucher scannt ihn mit Smartphone oder Tablet.
+2. Auf dem Smartphone öffnet sich eine Seite mit Schulname, Formulartitel und dem Titel des Feldes und einer Unterschriftsfläche. Der Besucher unterschreibt und sendet.
+3. Am Rechner erscheint die Unterschrift als Vorschau. Erst mit **Übernehmen** kommt sie ins Formular, **Verwerfen** erzeugt einen neuen Code.
+
+Danach läuft alles wie bei einer Unterschrift mit der Maus (Detailansicht, PDF, Platzhalter in Excel und Mail).
+
+**Einschalten:** *Formulare →* beim Formular *Bearbeiten →* Abschnitt *Allgemein →* „Unterschrift auf dem Smartphone anbieten“. Die Einstellung gilt für alle Unterschriftsfelder des Formulars; im Survey ändern Sie nichts.
+
+Gut zu wissen:
+
+- Der Button erscheint nur bei Unterschriftsfeldern im Format PNG und nur an Geräten mit Maus. Wer das Formular schon auf Smartphone oder Tablet ausfüllt, unterschreibt direkt im Feld.
+- Ein QR-Code gilt **10 Minuten** und nur für eine Unterschrift. Bei mehreren Unterschriftsfeldern (z. B. Schüler/in und Erziehungsberechtigte) gibt es je Feld einen eigenen Code.
+- Größe, Strich- und Hintergrundfarbe der Fläche auf dem Smartphone entsprechen dem Feld im Formular (`signatureWidth`, `signatureHeight`, `penColor`, `backgroundColor` bzw. Theme). Ein Feld im Querformat (Vorgabe 300 × 200) nutzt den Platz auf dem Smartphone am besten.
+- Die Vorschau in *Formulare* zeigt den Button nicht, sie sendet nichts.
+- Die Unterschrift ist dadurch **nicht rechtssicherer**: Sie bleibt ein gemaltes Bild, nur bequemer gezeichnet.
+
+### Bestätigung ohne Unterschrift
+
+Genügt Ihrer Schule eine Bestätigung, ist eine Checkbox mit getipptem Namen einfacher und hat denselben Beweiswert wie ein gemaltes Bild, zum Beispiel:
+
+```json
+{ "type": "checkbox", "name": "Bestaetigung", "title": "Bestätigung", "isRequired": true,
+  "choices": [{ "value": "ja", "text": "Ich bestätige die Richtigkeit meiner Angaben." }] },
+{ "type": "text", "name": "BestaetigtVon", "title": "Vor- und Nachname", "isRequired": true }
+```
 
 ## Workflow im Backend
 

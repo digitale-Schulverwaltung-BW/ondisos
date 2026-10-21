@@ -3,6 +3,13 @@
 Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1.2.md). Details zu 3.1: [Release Notes](releases/RELEASE-NOTES-3.1.0.md), [PLAN-3.1.md](plans/PLAN-3.1.md).
 
 
+## 3.2.0a (unveröffentlicht)
+
+**Funktionen**
+- ✅ Unterschrift per Smartphone: Unterschriftsfelder (`signaturepad`, PNG) zeigen am Rechner einen QR-Code; unterschrieben wird auf Smartphone oder Tablet, die Unterschrift erscheint als Vorschau und wird erst nach *Übernehmen* zum Feldwert. Schalter `signature_handoff` in der Formular-Konfiguration (Editor: *Allgemein*), Standard aus. Größe und Farben wie das Feld am Rechner; Standalone (`sign.php`, `api/signature.php`) und WordPress-Plugin (`admin-ajax.php?action=ondisos_sign` / `ondisos_sig`). Redaktion: [SURVEYJS.md](../redaktion/SURVEYJS.md#auf-dem-smartphone-unterschreiben), Plan: [PLAN-3.2.0a.md](plans/PLAN-3.2.0a.md)
+- ✅ Backend: Tabelle `signature_handoffs` (`php migrate.php`), Endpunkt `api/signature-handoff.php` (nur Signaturformat 2, Rate-Limit je Aktion), `SignatureHandoffService`/`-Repository`; Frontend: `SignatureRelay` (auch im Plugin); Audit-Ereignis `signature_handoff_rejected`. Details: [sicherheit.md](sicherheit.md#unterschrift-per-smartphone-320a)
+- Reihenfolge beim Update: Backend zuerst, dann Frontend bzw. Plugin (das Frontend ruft den neuen Endpunkt nur für Formulare mit eingeschalteter Option auf)
+
 ## 3.1.2
 
 **Sicherheit**

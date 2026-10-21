@@ -20,8 +20,9 @@ Diese Anleitung beschreibt die Installation mit der **fertigen ZIP-Datei**, ohne
 5. [Testen](#testen)
 6. [Aktualisieren](#aktualisieren)
 7. [Fehlersuche](#fehlersuche)
-8. [Deinstallation](#deinstallation)
-9. [Sicherheitshinweise](#sicherheitshinweise)
+8. [Unterschrift per Smartphone](#unterschrift-per-smartphone)
+9. [Deinstallation](#deinstallation)
+10. [Sicherheitshinweise](#sicherheitshinweise)
 
 ---
 
@@ -125,9 +126,37 @@ Zusätzlich zeigt *Einstellungen → Ondisos* den Verbindungsstatus.
 | Formular lädt, PDF-Link schlägt fehl | Backend-URL und Erreichbarkeit vom WordPress-Server aus prüfen |
 | Formular zeigt eine alte Fassung | Das Plugin fragt bei jedem Aufruf das Backend ab; eine alte Fassung erscheint nur, solange das Backend nicht erreichbar ist (der Cache hält bis zu 7 Tage). Erreichbarkeit prüfen; im Zweifel `wp-content/uploads/ondisos-cache/` leeren |
 | Cache-Verzeichnis nicht beschreibbar | Das Plugin arbeitet dann ohne Cache; Schreibrechte auf `wp-content/uploads` prüfen |
+| Kein Button „Auf dem Smartphone unterschreiben“ | Option beim Formular aus (Redaktion), Feld nicht im Format PNG, oder Gerät mit Touchscreen als Haupteingabe (dort wird direkt im Feld unterschrieben) |
+| Dialog oder Smartphone: „Der Dienst ist gerade nicht erreichbar“ | Backend älter als 3.2.0a, Secret passt nicht, oder eine Sicherheits-Erweiterung blockiert `admin-ajax.php?action=ondisos_sig` (siehe [Unterschrift per Smartphone](#unterschrift-per-smartphone)) |
+| Dialog: „Die Seite ist veraltet …“ | Die Seite stammt aus einem Seiten-Cache und ihr Nonce ist abgelaufen (wie beim Absenden): Formularseiten vom Cache ausnehmen oder die Cache-Dauer unter 12 Stunden halten |
 
 Mehr Details liefert das WordPress-Debug-Log (`define('WP_DEBUG', true); define('WP_DEBUG_LOG', true);` in der `wp-config.php`, Ausgabe in `wp-content/debug.log`) und im Browser der Reiter *Netzwerk*
 (Antwort von `admin-ajax.php?action=ondisos_submit`).
+
+## Unterschrift per Smartphone
+
+Schaltet die Redaktion bei einem Formular „Unterschrift auf dem Smartphone anbieten“ ein (ab 3.2.0a), zeigt das Formular an Unterschriftsfeldern einen QR-Code; unterschrieben wird auf dem Smartphone.
+Das Plugin nutzt dafür zwei weitere Aktionen von `admin-ajax.php`, beide für Besucher ohne Anmeldung:
+
+| Adresse | Aufgabe |
+|---|---|
+| `wp-admin/admin-ajax.php?action=ondisos_sign` | Seite auf dem Smartphone (der QR-Code zeigt dorthin; eigene Seite ohne Theme) |
+| `wp-admin/admin-ajax.php?action=ondisos_sig` | Vermittlung zwischen Browser und Backend (POST mit JSON) |
+
+`admin-ajax.php` muss ohnehin öffentlich erreichbar sein, denn auch Absenden und PDF-Download laufen darüber. Wer `/wp-admin/` per Webserver-Regel auf interne Adressen beschränkt,
+lässt `admin-ajax.php` davon aus (die übliche Ausnahme der Härtungsanleitungen).
+
+**Sicherheits-Erweiterungen (z. B. Wordfence):** Die neuen Anfragen sehen für eine Web Application Firewall ungewöhnlich aus:
+
+- Die Formularseite fragt `action=ondisos_sig` während des Unterschreibens **alle 3 Sekunden** ab (höchstens 10 Minuten). Ein Rate-Limit der Firewall für `admin-ajax.php` darf das nicht treffen.
+- Das Smartphone sendet die Unterschrift als **Base64-Bild im JSON-Body** (bis etwa 200 KB); Regeln gegen „verdächtige Payloads“ können anschlagen.
+- `action=ondisos_sign` liefert eine vollständige HTML-Seite aus, keine JSON-Antwort.
+
+Blockiert die Firewall, sehen Besucher „Der Dienst ist gerade nicht erreichbar“. Prüfen Sie dann das Protokoll der Firewall (bei Wordfence: *Live Traffic* bzw. die Liste blockierter Anfragen)
+und geben Sie die beiden Aktionen frei (bei Wordfence über die Ausnahmeliste der Firewall, *Allowlisted URLs*, mit dem Pfad `/wp-admin/admin-ajax.php` und dem Parameter `action`).
+Testen Sie danach einmal mit einem Smartphone im **Mobilfunknetz**, nicht im WLAN der Schule.
+
+Die Adresse im QR-Code ist die WordPress-Adresse der Website (*Einstellungen → Allgemein*); sie muss von außen erreichbar sein.
 
 ## Deinstallation
 

@@ -99,6 +99,24 @@ Der Aufbau steht in `HmacValidator::canonicalV2()` (Backend) und `BackendApiClie
 
 Der Replay-Schutz ist dateibasiert (ein Backend-Server) wie das Rate-Limit. Das Transportproblem (HTTPS zwischen Frontend und Backend) bleibt Pflicht: Die Signatur schützt nicht vor dem Mitlesen.
 
+## Unterschrift per Smartphone (3.2.0a)
+
+Ablauf und Entscheidungen: [PLAN-3.2.0a.md](plans/PLAN-3.2.0a.md), Datenfluss: [architektur.md](architektur.md#unterschrift-per-smartphone-320a).
+
+| Schutz | Umsetzung |
+|---|---|
+| Zwei getrennte Geheimnisse | Das **Schreib-Token** steht im QR-Code und erlaubt nur `info` und ein `submit`; der **Lese-Schlüssel** bleibt im Browser am Rechner und erlaubt nur `poll`. Wer den QR-Code abfotografiert, kann nichts mitlesen. Beide 256 Bit aus `random_bytes()`, in der Datenbank nur als SHA-256, Vergleich mit `hash_equals()`; Sitzungs-ID zufällig (128 Bit) |
+| Token nicht in Logs | Das Schreib-Token steht im URL-Fragment (`#s=…&t=…`): weder in Access-Logs noch im `Referer`; die Handy-Seite sendet es im Body und hat `Referrer-Policy: no-referrer` |
+| Einmalig und kurzlebig | 10 Minuten ab Erzeugen; `submit` per bedingtem `UPDATE` nur einmal; das PNG wird genau einmal abgeholt (bedingtes `DELETE`), danach ist die Sitzung weg |
+| Kein Fremdbild unbemerkt im Formular | Der Rechner zeigt „Smartphone verbunden“ ab dem Scan und das Bild als Vorschau; erst **Übernehmen** setzt den Feldwert |
+| Bindung an den Tenant | Jede Abfrage nach `tenant_id` gefiltert; ein Token eines anderen Tenants ist ungültig. Fehlversuche (unbekannte Sitzung, falsches Token) protokolliert das Audit-Log als `signature_handoff_rejected`, abgelaufene Codes nicht |
+| Bildprüfung | nur `data:image/png;base64,…`, höchstens 200 000 Zeichen, PNG-Signatur und -Maße geprüft; mit GD dekodiert und neu kodiert (entfernt Metadaten und angehängte Daten) |
+| Kein anonymer Bildspeicher | Rate-Limit je Besucher (`X-Ondisos-Client`) und Aktion (`create` 10 je 10 Minuten, `poll` 60, `info`/`submit` 30 je Minute), höchstens 200 offene Sitzungen je Tenant |
+| QR-Code zeigt nie auf fremde Adressen | Die Adresse der Handy-Seite setzt der Server (`SignatureRelay`), nie der Browser; das Backend nimmt nur absolute http(s)-URLs ohne Fragment und Zugangsdaten |
+| CSRF | `create` und `poll` brauchen CSRF-Token bzw. WordPress-Nonce; `info` und `submit` sind durch das Schreib-Token berechtigt |
+| Signatur | eigener Zweck `signature`, **nur Format 2**, auch bei `API_SIGNATURE_MODE=compat` |
+| Handy-Seite | CSP wie die Formularseite (auch im Plugin: die Seite gehört dem Plugin, nicht dem Theme), `noindex`, keine personenbezogenen Daten; Farben aus der Sitzung nur als geprüfte Farbangaben |
+
 ## Bewusst akzeptierte Restrisiken
 
 Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):
@@ -110,6 +128,7 @@ Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):
 | WordPress-Plugin: Tenant-Secret in `wp_options` | Das Secret liegt im Klartext in der WordPress-Datenbank (die Oberfläche zeigt es nie wieder an). Wer Code in WordPress ausführen oder die Datenbank lesen kann, kann Anmeldungen signieren: bei Verdacht das Secret im Backend erneuern. |
 | Vorbefüllung per `?prefill=<base64>` | Personenbezogene Daten stehen in der URL (Browser-Verlauf, Proxy- und Access-Logs, Referer). Nur verwenden, wenn die Schule das so will; keine sensiblen Felder vorbefüllen. |
 | PDF-Links (Token) | Der Link ist ein Bearer-Link: 30 Minuten gültig, nicht einmalig, nicht widerrufbar. Wer ihn in einer E-Mail oder einem Log findet, kann das PDF laden. |
+| Unterschrift per Smartphone: Link im QR-Code | Bis zum Ablauf (10 Minuten) oder zur ersten Unterschrift kann jeder, der den Link kennt, **eine** Unterschrift abliefern; übernommen wird sie nur nach Sichtprüfung am Rechner. Die Unterschrift bleibt eine einfache elektronische Signatur, egal auf welchem Gerät gezeichnet. |
 | E-Mail über PHP `mail()` | keine SMTP-Authentifizierung und keine TLS-Kontrolle (SMTP ist geplant). |
 | Keine Content-Security-Policy für Admin-Oberfläche und Formularseite | Nur der Vorschau-Frame hat eine CSP. Eine Standard-CSP ist als Härtung offen. |
 

@@ -127,6 +127,7 @@ return [
         'error_bad_image' => 'Die Unterschrift konnte nicht übertragen werden. Bitte versuchen Sie es erneut.',
         'error_rate_limit' => 'Zu viele Versuche. Bitte warten Sie einen Moment.',
         'error_unavailable' => 'Der Dienst ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.',
+        'error_csrf' => 'Die Seite ist veraltet. Bitte laden Sie sie neu; Ihre Eingaben müssen Sie danach erneut machen.',
 
         // Dialog on the computer
         'button' => 'Auf dem Smartphone unterschreiben',

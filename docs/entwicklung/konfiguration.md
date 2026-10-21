@@ -102,6 +102,7 @@ return [
         'version' => '2026-01-v1',
         'notify_email' => 'sekretariat@example.com',
         'prefill_fields' => ['Ausbildungsbetrieb', 'Ausbilder'],
+        'signature_handoff' => false, // 3.2.0a: Unterschriftsfelder auch auf dem Smartphone unterschreiben (QR-Code)
         'pdf' => [ 'enabled' => true, /* siehe PDF Download System */ ],
         // optional: 'email' => ['intro_template' => …], 'ical' => […]
     ],

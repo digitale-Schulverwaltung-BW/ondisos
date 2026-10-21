@@ -417,7 +417,7 @@ class SurveyHandlerBase {
         };
         const fail = (code) => {
             stopTimers();
-            const known = ['expired', 'used', 'invalid', 'rate_limit', 'disabled'];
+            const known = ['expired', 'used', 'invalid', 'rate_limit', 'disabled', 'csrf'];
             const key = code === 'disabled' ? 'dialog_disabled' : 'error_' + (known.includes(code) ? code : 'unavailable');
             $('[data-text="message"]').textContent = code === 'expired'
                 ? t('dialog_expired', 'Der QR-Code ist abgelaufen.')

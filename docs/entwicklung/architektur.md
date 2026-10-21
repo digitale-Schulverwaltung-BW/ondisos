@@ -16,9 +16,12 @@ projekt/
 │   │   ├── csrf_token.php
 │   │   ├── pdf/download.php      # PDF Download Proxy (leitet zum Backend)
 │   │   ├── api/messages.json.php # UI-Texte für JavaScript
+│   │   ├── api/signature.php     # Unterschrift per Smartphone (3.2.0a): Relay zum Backend
+│   │   ├── sign.php              # Unterschrift per Smartphone: Seite auf dem Smartphone (+ assets/sign-page.css)
 │   │   └── js/
-│   │       ├── survey-handler-base.js  # gemeinsame Basis (Standalone + WordPress)
-│   │       └── survey-handler.js       # Standalone-Handler
+│   │       ├── survey-handler-base.js  # gemeinsame Basis (Standalone + WordPress), auch Dialog „Auf dem Smartphone unterschreiben“
+│   │       ├── survey-handler.js       # Standalone-Handler
+│   │       └── sign-page.js            # Seite auf dem Smartphone (Standalone + WordPress)
 │   ├── inc/bootstrap.php         # Autoloader, .env laden
 │   ├── src/
 │   │   ├── Config/
@@ -29,6 +32,7 @@ projekt/
 │   │   ├── Services/
 │   │   │   ├── AnmeldungService.php
 │   │   │   ├── BackendApiClient.php  # signiert Requests, hängt ?tenant= an
+│   │   │   ├── SignatureRelay.php    # Unterschrift per Smartphone: Prüfung und Filter des Relays (Standalone + WordPress)
 │   │   │   ├── EmailService.php
 │   │   │   └── MessageService.php
 │   │   └── Utils/CsrfProtection.php · ClientIp.php
@@ -40,7 +44,8 @@ projekt/
 ├── wordpress-plugin/              # Alternative zum Standalone-Frontend
 │   ├── ondisos.php               # Plugin-Bootstrap, Shortcode [ondisos form="…"]
 │   ├── includes/                 # class-shortcode, -ajax-handler, -pdf-proxy, -settings,
-│   │                             # -form-config-loader, -assets, -plugin, -autoloader
+│   │                             # -form-config-loader, -assets, -plugin, -autoloader,
+│   │                             # -signature-handler (admin-ajax ondisos_sig / ondisos_sign)
 │   ├── assets/js/survey-handler-wp.js
 │   └── INSTALL.md · INSTALL-AUS-GIT.md
 │
@@ -78,12 +83,14 @@ projekt/
     │       ├── upload.php        # Datei-Upload (HMAC, Virenscan)
     │       ├── form-config.php   # Formular-Konfiguration je Tenant (öffentlich per Slug); ?with=survey liefert Survey/Theme + ETag
     │       ├── forms.php         # Formular-Schlüssel des eigenen Tenants (HMAC über "forms:<slug>", für den Plugin-Status)
+    │       ├── signature-handoff.php  # Unterschrift per Smartphone (3.2.0a): create/info/submit/poll, nur Signaturformat 2
     │       └── health.php
     ├── src/
     │   ├── Config/        Config · Database · EnvLoader · FormConfig · TenantContext
     │   ├── Models/        Anmeldung · AnmeldungStatus (Enum)
     │   ├── Repositories/  AnmeldungRepository · TenantRepository · TenantAdminRepository
     │   │                  FormConfigRepository · FormResourceRepository · FormDraftRepository · FormRevisionRepository  (3.1, alle tenant-gefiltert)
+    │   │                  SignatureHandoffRepository  (3.2.0a, tenant-gefiltert)
     │   ├── Forms/         (3.1, reine Logik ohne DB) ValidationResult · Identifiers · SurveyValidator · HtmlPolicy · ThemeValidator
     │   │                  SurveyFieldExtractor · SurveyLinter · FormConfigSchema · FormConfigValidator · FormConfigFormMapper · EditorAccess · JsonLocator · SurveyDiff · ServiceResult
     │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController · FormEditorController · SurveyEditorController · SurveyPreviewController
@@ -94,6 +101,7 @@ projekt/
     │   │                  LoginService · MessageService · NominatimService · SchoolLookupService
     │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService · FormCopyService  (3.1)
     │   │                  TenantLogoService · PdfLogoResolver  (Schul-Logo: Upload durch Tenant-Admins, Reihenfolge der Logo-Quellen)
+    │   │                  SignatureHandoffService  (3.2.0a: Tokens, Ablauf, Einmaligkeit, PNG-Prüfung)
     │   ├── Cli/           CliArgs · ImportSurveysCommand · CopyFormsCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         ClientIp · DataFormatter · FilenameSanitizer · NullableHelpers
@@ -172,6 +180,27 @@ Ein nicht initialisierter Kontext wirft eine Exception (kein stilles Durchfallen
 8. EmailService sendet Benachrichtigung
    ↓
 9. Success-Meldung (+ PDF-Download-Karte) an User
+```
+
+### Unterschrift per Smartphone (3.2.0a)
+
+Nur wenn die Formular-Konfiguration `signature_handoff: true` enthält; Plan und Entscheidungen: [PLAN-3.2.0a.md](plans/PLAN-3.2.0a.md).
+
+```
+1. Rechner: Button am signaturepad-Feld (survey-handler-base.js, setupSignatureHandoff)
+   POST api/signature.php {action:create, form_key, field_name, field_title, width, height, pen_color, background_color}
+   (WordPress: admin-ajax.php?action=ondisos_sig; CSRF-Token bzw. Nonce)
+   ↓ SignatureRelay setzt sign_url selbst (sign.php bzw. admin-ajax.php?action=ondisos_sign)
+2. Backend api/signature-handoff.php (Signaturformat 2, Zweck "signature"): prüft signature_handoff, legt Sitzung an
+   (id, Hash von Schreib-Token und Lese-Schlüssel, 10 Minuten) → id, read_key, qr_svg, sign_link (= sign_url#s=<id>&t=<Schreib-Token>)
+   ↓
+3. Smartphone öffnet sign_link; sign-page.js liest s/t aus dem Fragment
+   info  → Schule, Formular- und Feldtitel, Maße, Farben, Restlaufzeit; Status "scanned"
+   submit → PNG prüfen (GD: neu kodieren), Status "signed" (nur einmal)
+   ↓
+4. Rechner: poll alle 3 s (Lese-Schlüssel) → open | scanned | signed (+ PNG, Sitzung wird gelöscht) | expired
+   ↓
+5. Vorschau → „Übernehmen“ setzt question.value; Absenden wie jede Anmeldung (submit.php)
 ```
 
 ### Admin Workflow
@@ -263,6 +292,8 @@ CREATE TABLE anmeldungen (
 - `deleted` / `deleted_at`: Soft-delete
 - `tenants.api_secret`: Secret für die HMAC-Signatur; `SecretPolicy` lehnt Platzhalter/Standardwerte ab
 - Tenant 1 (`slug = default`) wird bei Migration/Seed immer angelegt
+- `signature_handoffs` (3.2.0a): kurzlebige Sitzungen der Unterschrift per Smartphone (`id`, `tenant_id`, `form_key`, Feldname und -titel, Maße, Farben, `write_hash`, `read_hash`, `png`, `status` open/scanned/signed,
+  `created_at`/`expires_at` als Unix-Sekunden). Tokens nur als SHA-256; eine Zeile lebt höchstens 10 Minuten und wird beim Abholen, beim nächsten `create` des Tenants oder bei `migrate.php` gelöscht
 
 ---
 
@@ -286,6 +317,7 @@ CREATE TABLE anmeldungen (
 - Dynamische Platzhalter (`placeholderExpression`)
 - CSRF-Protection
 - File-Upload Support
+- Unterschrift per Smartphone (3.2.0a): QR-Code am Unterschriftsfeld, Vorschau und Übernehmen am Rechner (siehe [Datenfluss](#unterschrift-per-smartphone-320a))
 - Automatische Consent-Feld-Filterung
 - Clean JavaScript (Class-based)
 - PDF Download nach Submission:

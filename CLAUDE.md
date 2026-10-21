@@ -95,7 +95,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 - Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale eingebunden).
 - Mehrere Docker-Stacks aus demselben Verzeichnis teilen sich `backend/.env`, die der Entrypoint bei jedem Start neu schreibt ([docker-entwicklung.md](docs/entwicklung/docker-entwicklung.md)).
 
-**Geplant:** grafischer Survey-Editor im Backend (3.2.0, [PLAN-3.2.0.md](docs/entwicklung/plans/PLAN-3.2.0.md)), Unterschrift per Smartphone über QR-Code (3.2.0a, [PLAN-3.2.0a.md](docs/entwicklung/plans/PLAN-3.2.0a.md)), Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
+**Geplant:** grafischer Survey-Editor im Backend (3.2.0, [PLAN-3.2.0.md](docs/entwicklung/plans/PLAN-3.2.0.md)), Abnahme der Unterschrift per Smartphone (3.2.0a umgesetzt, Geräte-Tests offen; [PLAN-3.2.0a.md](docs/entwicklung/plans/PLAN-3.2.0a.md)), Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
 Monitoring, OpenAPI-Beschreibung. *Option, nicht geplant:* Managed Multi-Frontend (ein Frontend für mehrere Tenants; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen).
 
 ## Dokumentationskarte

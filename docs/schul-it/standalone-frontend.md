@@ -72,6 +72,22 @@ Eine `forms-config.php` brauchen Sie nicht: Die Formular-Konfiguration kommt aus
 Verlinken Sie von der Schulwebsite auf `index.php?form=<formular>`. Felder lassen sich per Link vorbelegen, z. B. `…?form=bs&Klasse=5a`;
 übernommen werden nur Parameter, die als Feldname im Formular existieren.
 
+## Unterschrift per Smartphone
+
+Schaltet die Redaktion bei einem Formular „Unterschrift auf dem Smartphone anbieten“ ein (ab 3.2.0a), scannen Besucher am Rechner einen QR-Code und unterschreiben auf dem Smartphone.
+Dafür kommen zwei Adressen des Frontends dazu, die wie das Formular **öffentlich** erreichbar sein müssen:
+
+| Adresse | Aufgabe |
+|---|---|
+| `sign.php` | Seite auf dem Smartphone (der QR-Code zeigt dorthin) |
+| `api/signature.php` | Vermittlung zwischen Browser und Backend (Formularseite und Smartphone) |
+
+Die Adresse im QR-Code bildet das Frontend aus der Adresse, unter der Besucher das Formular aufrufen. Hinter einem Reverse-Proxy müssen deshalb der Host-Header und `X-Forwarded-Proto: https`
+ankommen, sonst zeigt der QR-Code auf eine interne Adresse oder auf `http://`. Prüfen Sie das einmal mit einem Smartphone im Mobilfunknetz (nicht im WLAN der Schule).
+
+Eine Web Application Firewall vor dem Frontend darf Anfragen an `api/signature.php` nicht blockieren: Die Formularseite fragt dort während des Unterschreibens alle 3 Sekunden nach,
+und das Smartphone sendet die Unterschrift als Base64-Bild im JSON-Body (bis etwa 200 KB).
+
 ## Texte der Oberfläche anpassen
 
 Meldungen und Beschriftungen des Frontends stehen in `config/messages.php`. Eigene Änderungen gehören in `config/messages.local.php`
@@ -92,4 +108,8 @@ Das Backend muss **zuerst** aktualisiert werden (siehe [Betriebsmodell](../betre
 | **Besucher sehen „Erfolg“, aber im Backend fehlt die Anmeldung** | Der Spamschutz (unsichtbares Feld `website_url`) hat ausgelöst: Im PHP-Fehlerlog steht `Honeypot triggered`. Ursachen: ein Bot, ein Browser-Plugin, das alle Felder automatisch ausfüllt, oder eine Survey-Frage mit dem Namen `website_url` (die Redaktion muss sie umbenennen; neue Surveys lassen den Namen nicht mehr zu) |
 | **Absenden scheitert bei vielen Besuchern, im Fehlerlog `Backend API returned HTTP 429`** | Das Limit je Besucher im Backend ist erreicht. Steht ein Reverse-Proxy vor dem Frontend, muss `TRUSTED_PROXIES` stimmen, sonst gelten alle Besucher als dieselbe Adresse |
 | **Formular erscheint nicht, obwohl das Backend läuft** | Formular ohne Speicherung im Backend und ohne gültige Empfänger-Adresse wird nicht angezeigt; Redaktion trägt unter *Formulare* eine Empfänger-Adresse ein |
+| **Kein Button „Auf dem Smartphone unterschreiben“** | Die Option ist beim Formular aus (Redaktion), das Feld nutzt nicht das Format PNG, oder das Gerät hat einen Touchscreen als Haupteingabe (dort wird direkt im Feld unterschrieben) |
+| **Smartphone: „Der Dienst ist gerade nicht erreichbar“** bzw. Dialog am Rechner zeigt dasselbe | Das Frontend erreicht `signature-handoff.php` im Backend nicht: Backend älter als 3.2.0a (Backend zuerst aktualisieren), `TENANT_API_SECRET` passt nicht, oder `API_SIGNATURE_VERSION=1` ist gesetzt (die Funktion braucht Signaturformat 2). Im PHP-Fehlerlog steht `Signature handoff: …` |
+| **Dialog am Rechner: „Die Seite ist veraltet …“** | Die PHP-Session ist abgelaufen (wie beim Absenden mit „Ungültiges Sicherheitstoken“): Seite neu laden. Kommt das oft vor, `session.gc_maxlifetime` erhöhen |
+| **QR-Code führt auf eine falsche oder interne Adresse** | Reverse-Proxy reicht Host bzw. `X-Forwarded-Proto` nicht durch (siehe [Unterschrift per Smartphone](#unterschrift-per-smartphone)) |
 | **Upload scheitert** | Dateityp bzw. -größe gegen `UPLOAD_ALLOWED_TYPES` / `UPLOAD_MAX_SIZE` im Frontend **und** Backend prüfen; Virenfund wird abgelehnt |

@@ -1,4 +1,4 @@
-# Abnahmeprotokolle 3.0.0, 3.1.0 und 3.1.2
+# Abnahmeprotokolle 3.0.0, 3.1.0, 3.1.2 und 3.2.0a
 
 Was vor den Releases in einer Demo-Umgebung (WordPress, Standalone-Frontend und Backend im Multi-Tenant-Modus) und im Browser geprüft wurde.
 Die zum jeweiligen Zeitpunkt noch offenen manuellen Prüfungen stehen unverändert dabei; was davon heute noch aussteht, führt [TODO.md](../TODO.md).
@@ -77,4 +77,30 @@ Automatisiert: 1194 Unit-Tests (`vendor/bin/phpunit --testsuite=Unit`), dazu die
 - [x] Content-Security-Policy: keine Verstöße in der Browser-Konsole auf den Backend-Seiten und der Formularseite (sonst `CSP_MODE=report-only`)
 - [ ] Frontend/Plugin 3.1.2 gegen Backend 3.1.2: Anmeldung absenden, Upload, PDF-Download; danach `api_legacy_signature` im Audit-Log prüfen
 - [ ] WordPress-Plugin: Verbindungsstatus-Seite, Formular mit Honeypot, Absenden
+
+## v3.2.0a (Unterschrift per Smartphone)
+
+Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant-Isolation und Einmaligkeit) gegen MySQL 8. Plan: [PLAN-3.2.0a.md](../plans/PLAN-3.2.0a.md).
+
+**In der Entwicklungsumgebung geprüft** (Docker-Stack, Standalone-Frontend, WordPress mit Plugin aus `build-zip.sh`, Chrome mit Handy-Größe als „Smartphone“; 2026-10-21):
+
+- [x] Migration legt `signature_handoffs` an und ergänzt die Farbspalten in einer vorhandenen Tabelle; zweiter Lauf ohne Änderung
+- [x] Option „Unterschrift auf dem Smartphone anbieten“ im Formular-Editor (*Allgemein*), ausgeliefert über `form-config.php`; Formular ohne Option: `create` mit `403 disabled`
+- [x] Backend-Endpunkt: Format 1 abgelehnt (`401`), SVG statt PNG `422`, zweites `submit` `409`, Abholung genau einmal, Fehlversuche als `signature_handoff_rejected`
+- [x] Standalone: Button an beiden Unterschriftsfeldern des Demo-Formulars; Dialog mit QR-Code und Countdown; „Smartphone verbunden“ nach dem Öffnen; Unterschrift, Vorschau in der Strichfarbe des Themes, *Übernehmen*, Absenden; PNG in der Anmeldung
+- [x] Zweites Feld: eigene Sitzung mit eigener Größe (400 × 150) und Strichfarbe; *Verwerfen* erzeugt einen neuen Code und übernimmt nichts
+- [x] Handy-Seite: Hoch- und Querformat (Fläche passt in die Höhe, Dreh-Hinweis nur hochkant), Drehen behält die Striche, ungültiger bzw. verbrauchter Link mit Meldung, keine Konsolenfehler unter der CSP
+- [x] Relay: ohne CSRF-Token `403 csrf`, `sign_url` aus dem Browser wird ignoriert
+- [x] WordPress-Plugin: Button, Dialog und Handy-Seite über `admin-ajax.php`; Anmeldung mit Unterschrift; als anonymer Besucher: ohne Nonce `csrf`, mit Nonce `create`/`poll`
+- [x] Vorschau im Backend ohne Button (`PreviewAssetsTest`)
+
+**Noch zu prüfen** (abhaken):
+
+- [ ] Echte Geräte: iPhone (Safari) und Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button unter Android
+- [ ] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
+- [ ] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
+- [ ] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host); Rate-Limit je Besucher
+- [ ] WordPress mit Wordfence (oder anderer WAF): Polling und Base64-Body werden nicht blockiert
+- [ ] Detailansicht und PDF-Bestätigung einer per Smartphone unterschriebenen Anmeldung
+- [ ] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert
 
