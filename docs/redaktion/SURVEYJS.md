@@ -110,6 +110,8 @@ Empfänger-Adressen und Logo werden dabei nie kopiert.
 
 Die **Vorschau** (Button im Survey-Editor) zeigt Entwurf oder veröffentlichte Fassung so, wie Besucher das Formular sehen. Oben schalten Sie zwischen **Entwurf** und **Veröffentlicht** um
 und wählen die Breite **Handy**, **Tablet** oder **Desktop**. Ein gelber Hinweis nennt, welche Fassung gezeigt wird („Gezeigt wird der Entwurf. Besucher sehen noch die veröffentlichte Fassung.“).
+Über dem Formular wählen Sie jede Seite direkt aus (‹ Seitenauswahl ›), auch die Startseite; Pflichtfelder werden dabei nicht geprüft, Sie müssen also nicht erst alles ausfüllen.
+Die Knöpfe des Formulars selbst prüfen wie bei Besuchern.
 Eingaben werden nicht gespeichert, „Abschicken“ sendet nichts. Die Vorschau läuft in einem abgeschotteten Rahmen und ändert nichts am Live-Formular.
 
 ![Vorschau des Formulars im Backend](../img/backend-vorschau.png)

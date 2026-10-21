@@ -108,6 +108,11 @@ $font = static function (string $file): string {
         }
         #preview-note { max-width: 900px; margin: 0 auto 12px; padding: 8px 14px; border-radius: 6px; background: #fff3cd; color: #664d03; font-size: 14px; }
         #preview-note.completed { background: #d1e7dd; color: #0f5132; }
+        #preview-pages { max-width: 900px; margin: 0 auto 12px; display: flex; gap: 8px; align-items: center; }
+        #preview-pages[hidden] { display: none; }
+        #preview-pages button { flex: 0 0 auto; width: 40px; height: 36px; border: 1px solid #ccc; border-radius: 6px; background: white; font-size: 20px; line-height: 1; cursor: pointer; }
+        #preview-pages button:disabled { opacity: .35; cursor: default; }
+        #preview-pages select { flex: 1 1 auto; min-width: 0; height: 36px; padding: 0 8px; border: 1px solid #ccc; border-radius: 6px; background: white; font: inherit; font-size: 15px; }
         #preview-message { max-width: 900px; margin: 40px auto; padding: 16px; background: #f8d7da; color: #58151c; border-radius: 6px; }
     </style>
 </head>
@@ -116,6 +121,11 @@ $font = static function (string $file): string {
     <div id="preview-message"><?= $e($message) ?></div>
 <?php else: ?>
     <div id="preview-note"><?= $e(M::get('preview.note', 'Vorschau: Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.')) ?></div>
+    <nav id="preview-pages" hidden>
+        <button type="button" id="preview-prev" title="<?= $e(M::get('preview.page_prev', 'Vorherige Seite (ohne Prüfung der Pflichtfelder)')) ?>">&lsaquo;</button>
+        <select id="preview-page-select" aria-label="<?= $e(M::get('preview.page_select', 'Seite direkt aufrufen')) ?>"></select>
+        <button type="button" id="preview-next" title="<?= $e(M::get('preview.page_next', 'Nächste Seite (ohne Prüfung der Pflichtfelder)')) ?>">&rsaquo;</button>
+    </nav>
     <div id="surveyContainer"></div>
 
     <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey.core.min.js"></script>
@@ -125,7 +135,8 @@ $font = static function (string $file): string {
         window.previewConfig = {
             survey: <?= $preview['survey_json'] ?>,
             theme: <?= $preview['theme_json'] ?>,
-            completedNote: <?= json_encode(M::get('preview.completed', 'Vorschau: Das Formular wurde nicht abgeschickt, es wird nichts gespeichert.'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>
+            completedNote: <?= json_encode(M::get('preview.completed', 'Vorschau: Das Formular wurde nicht abgeschickt, es wird nichts gespeichert.'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>,
+            startPageLabel: <?= json_encode(M::get('preview.start_page', 'Startseite'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
     <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey-preview.js"></script>
