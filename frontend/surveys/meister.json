@@ -2282,20 +2282,109 @@
           "title": "Allgemeinbildender Schulabschluss",
           "elements": [
             {
-              "type": "radiogroup",
-              "name": "Schulabschluss",
-              "title": "Zuletzt erreichter allgemeiner Schulabschluss",
-              "isRequired": true,
-              "choices": [
-                "Hauptschule",
-                "Realschule",
-                "Werkrealschule",
-                "Fachschulreife",
-                "Gymnasium",
-                "Fachhochschulreife",
-                "Hochschulreife"
-              ],
-              "colCount": 2
+          "type": "dropdown",
+          "name": "Vorbildung",
+          "title": {
+            "de": "Höchster Schulabschluss:"
+          },
+          "titleLocation": "left",
+          "isRequired": true,
+          "choices": [
+            {
+              "value": "oA",
+              "text": "ohne Abschluss"
+            },
+            {
+              "value": "KV",
+              "text": "Keine Vorbildung"
+            },
+            {
+              "value": "oHA",
+              "text": "ohne Hauptschulabschluss"
+            },
+            {
+              "value": "AF",
+              "text": "Abschluss Förderschule"
+            },
+            {
+              "value": "A8WRS",
+              "text": "Abschluss Klasse 8 Werkreal-/Hauptschule (nur für 2BF)"
+            },
+            {
+              "value": "HSA",
+              "text": "Hauptschulabschluss"
+            },
+            {
+              "value": "HSA-GMS",
+              "text": "Hauptschulabschluss an einer Gemeinschaftsschule"
+            },
+            {
+              "value": "HSA-VZ10",
+              "text": "mit Hauptschulabschluss (bzw. Versetzungszeugnis in die 10. Klasse)"
+            },
+            {
+              "value": "WRSA",
+              "text": "Werkrealschulabschluss"
+            },
+            {
+              "value": "WRSA-GMS",
+              "text": "Werkrealschulabschluss an einer Gemeinschaftsschule"
+            },
+            {
+              "value": "RSA-WRS",
+              "text": "Realschulabschluss an einer Werkrealschule"
+            },
+            {
+              "value": "RSA-GMS",
+              "text": "Realschulabschluss an einer Gemeinschaftsschule"
+            },
+            {
+              "value": "RSA-RS",
+              "text": "Realschulabschluss an einer Realschule"
+            },
+            {
+              "value": "RSA-GYM",
+              "text": "Realschulabschluss an einem Gymnasium"
+            },
+            {
+              "value": "FSR-mBABS",
+              "text": "Fachschulreife oder mittlerer Bildungsabschluss (BS (9+3)"
+            },
+            {
+              "value": "FSR",
+              "text": "Fachschulreife oder vergleichbarer Abschluss"
+            },
+            {
+              "value": "FHR",
+              "text": "Fachhochschulreife"
+            },
+            {
+              "value": "HRa",
+              "text": "Hochschulreife, allgemein"
+            },
+            {
+              "value": "HRf",
+              "text": "Hochschulreife, fachgebunden"
+            },
+            {
+              "value": "HRa-GMS",
+              "text": "Hochschulreife an der Gemeinschaftsschule"
+            },
+            {
+              "value": "Sonst (AS)",
+              "text": "Sonst. Abschluss (allg. bildend)"
+            },
+            {
+              "value": "A (BS)",
+              "text": "Abschlusszeugnis (beruflich)"
+            },
+            {
+              "value": "Sonst (BS)",
+              "text": "mit sonstigem beruflichen Abschluss"
+            }
+          ],
+          "placeholder": "auswählen..."
+        
             },
             {
               "type": "text",
