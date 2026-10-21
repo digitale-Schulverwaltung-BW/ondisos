@@ -163,6 +163,17 @@ class AuditLogger
         self::log($event, ['form' => $formKey] + $details);
     }
 
+    /**
+     * A signature handoff request with an unknown session or a wrong token (3.2.0a).
+     * Expired codes are normal and not logged.
+     *
+     * @param string $action info, submit or poll
+     */
+    public static function signatureHandoffRejected(string $action, string $reason): void
+    {
+        self::log('signature_handoff_rejected', ['action' => $action, 'reason' => $reason]);
+    }
+
     public static function tenantDeleted(int $tenantId, string $slug, string $name): void
     {
         self::log('tenant_deleted', ['deleted_tenant_id' => $tenantId, 'slug' => $slug, 'name' => $name]);

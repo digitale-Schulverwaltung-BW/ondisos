@@ -429,6 +429,7 @@ return [
             'db' => ['label' => 'Anmeldungen im Backend speichern', 'help' => 'Dringend empfohlen: Nur gespeicherte Anmeldungen lassen sich exportieren und als PDF herunterladen.'],
             'notify_email' => ['label' => 'Benachrichtigung an', 'help' => 'Bei jeder Anmeldung geht eine E-Mail an diese Adressen.'],
             'prefill_fields' => ['label' => 'Felder für Vorausfüll-Links', 'help' => 'Diese Felder werden in den Link zum Vorausfüllen übernommen (z. B. für Betriebe, die mehrere Personen anmelden).'],
+            'signature_handoff' => ['label' => 'Unterschrift auf dem Smartphone anbieten', 'help' => 'Unterschriftsfelder zeigen am Rechner einen QR-Code: Unterschrieben wird auf Smartphone oder Tablet, die Unterschrift erscheint im Formular. Bleibt eine einfache elektronische Unterschrift (gleicher Beweiswert wie mit der Maus).'],
             'form' => ['label' => 'Survey-Datei', 'help' => 'Name der Survey, aus der das Formular aufgebaut wird (z. B. bs.json).'],
             'theme' => ['label' => 'Theme-Datei', 'help' => 'Name des Farb-/Schrift-Themes (z. B. survey_theme.json).'],
             'email' => [

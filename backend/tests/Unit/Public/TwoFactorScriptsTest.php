@@ -17,7 +17,7 @@ class TwoFactorScriptsTest extends TestCase
     private const OPEN_SCRIPTS = [
         'login.php', 'logout.php', 'two_factor.php', 'two_factor_setup.php',
         'pdf/download.php',
-        'api/health.php', 'api/form-config.php', 'api/forms.php', 'api/submit.php', 'api/upload.php',
+        'api/health.php', 'api/form-config.php', 'api/forms.php', 'api/submit.php', 'api/upload.php', 'api/signature-handoff.php',
     ];
 
     /** @return list<string> */

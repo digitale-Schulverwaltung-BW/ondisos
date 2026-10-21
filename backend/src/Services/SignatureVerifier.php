@@ -98,6 +98,21 @@ class SignatureVerifier
         );
     }
 
+    /**
+     * Unterschrift per Smartphone (3.2.0a): nur v2, auch im Modus "compat". Das Feature ist jünger als v2,
+     * ein Frontend, das es kennt, signiert immer mit v2.
+     *
+     * @param array<string,mixed> $server
+     */
+    public function verifySignatureHandoff(string $body, array $server): array
+    {
+        if ((string)($server['HTTP_X_TIMESTAMP'] ?? '') === '' && (string)($server['HTTP_X_NONCE'] ?? '') === '') {
+            return $this->fail('signature', 'legacy_not_allowed');
+        }
+
+        return $this->verify('signature', hash('sha256', $body), static fn(string $sig): bool => false, $server, true);
+    }
+
     public static function uploadPayload(string $anmeldungId, string $fieldname, string $filename, string $fileSha256): string
     {
         return $anmeldungId . "\n" . $fieldname . "\n" . $filename . "\n" . $fileSha256;

@@ -144,3 +144,24 @@ CREATE TABLE IF NOT EXISTS admin_recovery_codes (
     created_at DATETIME     DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_admin_key (admin_key, code_hash)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Signature handoff to a smartphone (3.2.0a): one row per QR code, at most 10 minutes.
+-- Tokens only as SHA-256; created_at/expires_at are Unix seconds.
+CREATE TABLE IF NOT EXISTS signature_handoffs (
+    id          CHAR(32)     NOT NULL PRIMARY KEY,
+    tenant_id   INT          NOT NULL,
+    form_key    VARCHAR(100) NOT NULL,
+    field_name  VARCHAR(200) NOT NULL,
+    field_title VARCHAR(255) NOT NULL,
+    width       INT          NOT NULL,
+    height      INT          NOT NULL,
+    write_hash  CHAR(64)     NOT NULL,
+    read_hash   CHAR(64)     NOT NULL,
+    png         MEDIUMTEXT   NULL,
+    status      ENUM('open','scanned','signed') NOT NULL DEFAULT 'open',
+    created_at  BIGINT       NOT NULL,
+    expires_at  BIGINT       NOT NULL,
+    INDEX idx_tenant_expires (tenant_id, expires_at),
+    FOREIGN KEY fk_signature_handoff_tenant (tenant_id)
+        REFERENCES tenants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

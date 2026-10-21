@@ -45,6 +45,7 @@ final class FormConfigSchema
             'db'           => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'general'],
             'notify_email' => ['type' => self::TYPE_EMAIL_LIST, 'editableBy' => $both, 'maxItems' => 20, 'group' => 'general'],
             'prefill_fields' => ['type' => self::TYPE_NAME_LIST, 'editableBy' => $both, 'maxItems' => 100, 'group' => 'general'],
+            'signature_handoff' => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'general'],
 
             // --- files the form is built from (set by the system / platform admin) -------------
             'form'  => ['type' => self::TYPE_RESOURCE, 'editableBy' => $platform, 'group' => 'files'],

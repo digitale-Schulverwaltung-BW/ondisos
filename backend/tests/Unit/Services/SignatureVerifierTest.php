@@ -227,4 +227,42 @@ class SignatureVerifierTest extends TestCase
         $server = ['HTTP_X_SIGNATURE' => substr($headers[0], strlen('X-Signature: '))];
         $this->assertSame(1, $this->verifier()->verifySubmit($body, $server)['version']);
     }
+    public function testSignatureHandoffAcceptsValidV2(): void
+    {
+        $body = '{"action":"poll"}';
+
+        $r = $this->verifier()->verifySignatureHandoff($body, $this->v2('signature', hash('sha256', $body)));
+
+        $this->assertTrue($r['ok']);
+    }
+
+    public function testSignatureHandoffRejectsLegacyEvenInCompatMode(): void
+    {
+        $body = '{"action":"poll"}';
+
+        $r = $this->verifier(SignatureVerifier::MODE_COMPAT)
+            ->verifySignatureHandoff($body, ['HTTP_X_SIGNATURE' => hash_hmac('sha256', $body, self::SECRET)]);
+
+        $this->assertFalse($r['ok']);
+        $this->assertSame('legacy_not_allowed', $r['reason']);
+    }
+
+    public function testSignatureHandoffRejectsSubmitSignature(): void
+    {
+        $body = '{"action":"poll"}';
+
+        $r = $this->verifier()->verifySignatureHandoff($body, $this->v2('submit', hash('sha256', $body)));
+
+        $this->assertFalse($r['ok']);
+    }
+
+    public function testSignatureHandoffRejectsReplay(): void
+    {
+        $body = '{"action":"poll"}';
+        $headers = $this->v2('signature', hash('sha256', $body));
+        $verifier = $this->verifier();
+
+        $this->assertTrue($verifier->verifySignatureHandoff($body, $headers)['ok']);
+        $this->assertSame('replay', $verifier->verifySignatureHandoff($body, $headers)['reason']);
+    }
 }

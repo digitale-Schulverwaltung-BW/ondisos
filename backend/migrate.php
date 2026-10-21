@@ -416,6 +416,37 @@ try {
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     echo "OK\n";
 
+    // Step 14: Signature handoff to a smartphone (3.2.0a); times are Unix seconds
+    echo "Step 14: Create signature_handoffs table... ";
+    $db->query("CREATE TABLE IF NOT EXISTS signature_handoffs (
+    id          CHAR(32)     NOT NULL PRIMARY KEY,
+    tenant_id   INT          NOT NULL,
+    form_key    VARCHAR(100) NOT NULL,
+    field_name  VARCHAR(200) NOT NULL,
+    field_title VARCHAR(255) NOT NULL,
+    width       INT          NOT NULL,
+    height      INT          NOT NULL,
+    write_hash  CHAR(64)     NOT NULL,
+    read_hash   CHAR(64)     NOT NULL,
+    png         MEDIUMTEXT   NULL,
+    status      ENUM('open','scanned','signed') NOT NULL DEFAULT 'open',
+    created_at  BIGINT       NOT NULL,
+    expires_at  BIGINT       NOT NULL,
+    INDEX idx_tenant_expires (tenant_id, expires_at),
+    FOREIGN KEY fk_signature_handoff_tenant (tenant_id)
+        REFERENCES tenants(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+    echo "OK\n";
+
+    // Expired handoffs of all tenants (the API deletes them per tenant on the next create)
+    echo "Step 15: Delete expired signature handoffs... ";
+    $now = time();
+    $stmt = $db->prepare('DELETE FROM signature_handoffs WHERE expires_at <= ?');
+    $stmt->bind_param('i', $now);
+    $stmt->execute();
+    echo "OK ({$stmt->affected_rows})\n";
+    $stmt->close();
+
     echo "Migration complete.\n";
 } catch (\Throwable $e) {
     fwrite(STDERR, "Migration failed: {$e->getMessage()}\n");

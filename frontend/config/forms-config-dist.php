@@ -14,6 +14,9 @@ return [
         // Notification email(s) - supports single address or comma-separated list
         'notify_email' => 'sekretariat@example.com, lehrer@example.com',
 
+        // Signature fields (signaturepad) may be signed on a smartphone via QR code (3.2.0a, default off)
+        'signature_handoff' => false,
+
         // Fields to prefill in the form when using a prefill link
         // Note: Field names must match exactly with the form definition (bs.json)
         // This list only governs the auto-generated ?prefill=<base64> links (see
