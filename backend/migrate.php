@@ -426,6 +426,8 @@ try {
     field_title VARCHAR(255) NOT NULL,
     width       INT          NOT NULL,
     height      INT          NOT NULL,
+    pen_color   VARCHAR(40)  NULL,
+    background_color VARCHAR(40) NULL,
     write_hash  CHAR(64)     NOT NULL,
     read_hash   CHAR(64)     NOT NULL,
     png         MEDIUMTEXT   NULL,
@@ -438,8 +440,27 @@ try {
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
     echo "OK\n";
 
+    // Colors of the field on the computer, so the phone draws the same (tables created before they existed)
+    echo "Step 15: Add pen_color/background_color to signature_handoffs... ";
+    $stmt = $db->prepare(
+        "SELECT COUNT(*) as cnt FROM INFORMATION_SCHEMA.COLUMNS
+         WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'signature_handoffs' AND COLUMN_NAME = 'pen_color'"
+    );
+    $stmt->bind_param('s', $dbName);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+    if ((int)$row['cnt'] === 0) {
+        $db->query("ALTER TABLE signature_handoffs
+            ADD COLUMN pen_color VARCHAR(40) NULL AFTER height,
+            ADD COLUMN background_color VARCHAR(40) NULL AFTER pen_color");
+        echo "OK\n";
+    } else {
+        echo "SKIPPED (already exists)\n";
+    }
+
     // Expired handoffs of all tenants (the API deletes them per tenant on the next create)
-    echo "Step 15: Delete expired signature handoffs... ";
+    echo "Step 16: Delete expired signature handoffs... ";
     $now = time();
     $stmt = $db->prepare('DELETE FROM signature_handoffs WHERE expires_at <= ?');
     $stmt->bind_param('i', $now);

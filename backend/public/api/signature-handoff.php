@@ -5,8 +5,10 @@
 // Called only by the frontend server (server to server, no CORS); signature format 2 only.
 //
 // POST JSON {"action": "create"|"info"|"submit"|"poll", ...}
-//   create: form_key, field_name, field_title, width, height, sign_url → id, read_key, qr_svg, sign_link, expires_in
-//   info:   id, token (write token from the QR code) → school, form_key, field_title, width, height, expires_in
+//   create: form_key, field_name, field_title, width, height, sign_url, pen_color, background_color
+//           → id, read_key, qr_svg, sign_link, expires_in
+//   info:   id, token (write token from the QR code) → school, form_key, field_title, width, height,
+//           pen_color, background_color, expires_in
 //   submit: id, token, png (data:image/png;base64,…) → ok
 //   poll:   id, key (read key of the computer) → status (open|scanned|signed|expired), expires_in, png once
 // Errors: {"ok": false, "error": "<code>"}; the frontend turns the code into a message.
@@ -119,7 +121,16 @@ $result = match ($action) {
         if ($config === null || ($config['signature_handoff'] ?? false) !== true) {
             handoffFail(403, 'disabled');
         }
-        $created = $service->create($formKey, $str('field_name'), $str('field_title'), $int('width'), $int('height'), $str('sign_url'));
+        $created = $service->create(
+            $formKey,
+            $str('field_name'),
+            $str('field_title'),
+            $int('width'),
+            $int('height'),
+            $str('sign_url'),
+            $str('pen_color'),
+            $str('background_color')
+        );
         if (!$created['ok']) {
             return $created;
         }

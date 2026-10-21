@@ -223,6 +223,7 @@ $csrfToken = CsrfProtection::getToken();
             tenantSlug: <?= json_encode($tenantSlug, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>,
             version: '2026-01-v3',
             containerId: 'surveyContainer',
+            signatureHandoff: <?= json_encode(($formConfig['signature_handoff'] ?? false) === true) ?>,
             surveyJson: <?= $surveyJson ?>,
             themeJson: <?= $themeJson ?>
         };

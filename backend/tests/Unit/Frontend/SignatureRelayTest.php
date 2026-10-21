@@ -90,11 +90,14 @@ class SignatureRelayTest extends TestCase
         $this->relay($client)->handle([
             'action' => 'create', 'form_key' => 'bs', 'field_name' => 'u', 'field_title' => 'U',
             'width' => 300, 'height' => '200', 'sign_url' => 'https://evil.example/',
+            'pen_color' => '#000', 'background_color' => 'transparent',
         ], true, self::SIGN_URL);
 
         $this->assertSame(self::SIGN_URL, $client->params['sign_url']);
         $this->assertSame(300, $client->params['width']);
         $this->assertSame(200, $client->params['height']);
+        $this->assertSame('#000', $client->params['pen_color']);
+        $this->assertSame('transparent', $client->params['background_color']);
     }
 
     public function testOnlyExpectedFieldsArePassedOn(): void

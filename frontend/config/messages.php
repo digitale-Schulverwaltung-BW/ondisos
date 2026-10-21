@@ -133,6 +133,8 @@ return [
         'dialog_title' => 'Auf dem Smartphone unterschreiben',
         'dialog_scan' => 'Scannen Sie den QR-Code mit der Kamera Ihres Smartphones oder Tablets und unterschreiben Sie dort.',
         'dialog_link' => 'Scannen klappt nicht? Link öffnen oder kopieren:',
+        'dialog_open' => 'Link öffnen',
+        'dialog_copy' => 'Link kopieren',
         'dialog_connected' => 'Smartphone verbunden, bitte dort unterschreiben.',
         'dialog_expired' => 'Der QR-Code ist abgelaufen.',
         'dialog_new_code' => 'Neuen Code erzeugen',

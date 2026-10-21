@@ -29,7 +29,7 @@ final class SignatureRelay
     /** Fields handed back to the browser per action. */
     private const RESPONSE_FIELDS = [
         'create' => ['id', 'read_key', 'qr_svg', 'sign_link', 'expires_in'],
-        'info'   => ['school', 'form_key', 'field_title', 'width', 'height', 'expires_in'],
+        'info'   => ['school', 'form_key', 'field_title', 'width', 'height', 'pen_color', 'background_color', 'expires_in'],
         'submit' => [],
         'poll'   => ['status', 'expires_in', 'png'],
     ];
@@ -72,6 +72,8 @@ final class SignatureRelay
                 'field_title' => $str('field_title'),
                 'width' => $int('width'),
                 'height' => $int('height'),
+                'pen_color' => $str('pen_color'),
+                'background_color' => $str('background_color'),
                 'sign_url' => $signUrl,
             ],
             'info' => ['id' => $str('id'), 'token' => $str('token')],

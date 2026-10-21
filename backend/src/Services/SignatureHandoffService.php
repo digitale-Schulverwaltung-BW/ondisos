@@ -25,6 +25,7 @@ class SignatureHandoffService
     /** Smaller than DataFormatter::MAX_IMAGE_DATA_URI_LENGTH: a signature is a few KB. */
     public const MAX_PNG_LENGTH = 200000;
     public const MAX_SIGN_URL_LENGTH = 500;
+    public const MAX_COLOR_LENGTH = 40;
     public const MIN_SIZE = 50;
     public const MAX_SIZE = 2000;
 
@@ -57,11 +58,21 @@ class SignatureHandoffService
 
     /**
      * New session for one signature field. Expired sessions of the tenant are removed first.
+     * Pen and background color are those of the field on the computer ('' = SurveyJS default), so the
+     * phone draws the same picture.
      *
      * @return array{ok: true, id: string, read_key: string, qr_url: string, expires_in: int}|array{ok: false, error: string}
      */
-    public function create(string $formKey, string $fieldName, string $fieldTitle, int $width, int $height, string $signUrl): array
-    {
+    public function create(
+        string $formKey,
+        string $fieldName,
+        string $fieldTitle,
+        int $width,
+        int $height,
+        string $signUrl,
+        string $penColor = '',
+        string $backgroundColor = ''
+    ): array {
         $fieldName = trim($fieldName);
         $fieldTitle = trim($fieldTitle);
         if (
@@ -71,6 +82,8 @@ class SignatureHandoffService
             || $width < self::MIN_SIZE || $width > self::MAX_SIZE
             || $height < self::MIN_SIZE || $height > self::MAX_SIZE
             || !self::isValidSignUrl($signUrl)
+            || ($penColor !== '' && !self::isValidColor($penColor))
+            || ($backgroundColor !== '' && !self::isValidColor($backgroundColor))
         ) {
             return ['ok' => false, 'error' => self::ERROR_INVALID_INPUT];
         }
@@ -92,6 +105,8 @@ class SignatureHandoffService
             'field_title' => $fieldTitle !== '' ? $fieldTitle : $fieldName,
             'width' => $width,
             'height' => $height,
+            'pen_color' => $penColor !== '' ? $penColor : null,
+            'background_color' => $backgroundColor !== '' ? $backgroundColor : null,
             'write_hash' => self::hash($writeToken),
             'read_hash' => self::hash($readKey),
             'created_at' => $now,
@@ -111,7 +126,8 @@ class SignatureHandoffService
     /**
      * What the phone shows before signing; marks the session as scanned.
      *
-     * @return array{ok: true, form_key: string, field_name: string, field_title: string, width: int, height: int, expires_in: int}|array{ok: false, error: string}
+     * @return array{ok: true, form_key: string, field_name: string, field_title: string, width: int, height: int,
+     *               pen_color: ?string, background_color: ?string, expires_in: int}|array{ok: false, error: string}
      */
     public function info(string $id, string $writeToken): array
     {
@@ -133,6 +149,8 @@ class SignatureHandoffService
             'field_title' => $session['field_title'],
             'width' => $session['width'],
             'height' => $session['height'],
+            'pen_color' => $session['pen_color'],
+            'background_color' => $session['background_color'],
             'expires_in' => max(0, $session['expires_at'] - $now),
         ];
     }
@@ -262,6 +280,18 @@ class SignatureHandoffService
             && ($parts['host'] ?? '') !== ''
             && !isset($parts['fragment'])
             && !isset($parts['user']) && !isset($parts['pass']);
+    }
+
+    /**
+     * A CSS color as SurveyJS reports it for the pad: #hex, rgb()/rgba(), hsl()/hsla() or a color keyword.
+     * Nothing else: the value ends up in the phone page.
+     */
+    public static function isValidColor(string $color): bool
+    {
+        return strlen($color) <= self::MAX_COLOR_LENGTH && preg_match(
+            '/^(?:#[0-9a-fA-F]{3,8}|(?:rgb|rgba|hsl|hsla)\([0-9.,%\s\/deg]+\)|[a-zA-Z]{3,20})$/D',
+            $color
+        ) === 1;
     }
 
     private static function hash(string $secret): string

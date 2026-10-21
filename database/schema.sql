@@ -155,6 +155,8 @@ CREATE TABLE IF NOT EXISTS signature_handoffs (
     field_title VARCHAR(255) NOT NULL,
     width       INT          NOT NULL,
     height      INT          NOT NULL,
+    pen_color   VARCHAR(40)  NULL,
+    background_color VARCHAR(40) NULL,
     write_hash  CHAR(64)     NOT NULL,
     read_hash   CHAR(64)     NOT NULL,
     png         MEDIUMTEXT   NULL,

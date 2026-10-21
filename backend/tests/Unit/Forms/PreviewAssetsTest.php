@@ -37,6 +37,14 @@ class PreviewAssetsTest extends TestCase
         );
     }
 
+    /** The preview sends nothing: it shares the handler base but must never offer signing on a smartphone (3.2.0a). */
+    public function testPreviewDoesNotEnableSignatureHandoff(): void
+    {
+        $preview = (string)file_get_contents(self::ROOT . '/backend/public/assets/preview/survey-preview.js');
+
+        $this->assertStringNotContainsString('setupSignatureHandoff', $preview);
+    }
+
     public function testEveryScriptTagOfTheSandboxedFrameCarriesTheNonce(): void
     {
         $php = (string)file_get_contents(self::ROOT . '/backend/public/form_preview_frame.php');

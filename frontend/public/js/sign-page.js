@@ -116,6 +116,9 @@ const SignPage = (() => {
                 dataFormat: 'png',
                 allowClear: true,
                 placeholder: msg('pad_placeholder'),
+                // Same colors as the field on the computer (null = SurveyJS default)
+                ...(info.pen_color ? { penColor: info.pen_color } : {}),
+                ...(info.background_color ? { backgroundColor: info.background_color } : {}),
             }],
         });
         survey.render(el('signPad'));

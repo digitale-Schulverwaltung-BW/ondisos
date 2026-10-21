@@ -52,6 +52,8 @@ class SignatureHandoffRepositoryTest extends TestCase
             'field_title' => 'Unterschrift',
             'width' => 300,
             'height' => 200,
+            'pen_color' => '#1ab394',
+            'background_color' => null,
             'write_hash' => hash('sha256', 'w'),
             'read_hash' => hash('sha256', 'r'),
             'created_at' => self::NOW,
@@ -80,6 +82,8 @@ class SignatureHandoffRepositoryTest extends TestCase
         $this->assertNotNull($row);
         $this->assertSame('open', $row['status']);
         $this->assertSame(self::NOW + 600, $row['expires_at']);
+        $this->assertSame('#1ab394', $row['pen_color']);
+        $this->assertNull($row['background_color']);
     }
 
     public function testOtherTenantCannotSeeOrChangeSession(): void

@@ -47,11 +47,36 @@ class SurveyHandler extends SurveyHandlerBase {
         // Setup completion handler
         this.survey.onComplete.add((sender) => this.handleComplete(sender));
 
+        // Signature on a smartphone (3.2.0a), only if the form allows it
+        if (this.config.signatureHandoff && typeof this.setupSignatureHandoff === 'function') {
+            this.setupSignatureHandoff(this.survey, (action, data) => this.signatureRequest(action, data));
+        }
+
         // Render survey
         this.survey.render(document.getElementById(this.config.containerId));
         // (typeof-Prüfung: ein gecachtes altes survey-handler-base.js darf das Formular nicht verhindern)
         if (typeof this.addHoneypot === 'function') {
             this.addHoneypot(document.getElementById(this.config.containerId));
+        }
+    }
+
+    /**
+     * One call to the signature relay (api/signature.php); create and poll carry the CSRF token.
+     * Always resolves to the relay's JSON, {ok: false, error: 'unavailable'} if there is none.
+     */
+    async signatureRequest(action, data) {
+        try {
+            const response = await fetch('api/signature.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.csrfToken },
+                body: JSON.stringify({ action, ...data }),
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            const body = await response.json().catch(() => null);
+            return body && typeof body === 'object' ? body : { ok: false, error: 'unavailable' };
+        } catch (error) {
+            return { ok: false, error: 'unavailable' };
         }
     }
 

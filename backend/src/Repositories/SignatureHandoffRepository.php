@@ -25,18 +25,20 @@ class SignatureHandoffRepository
 
     /**
      * @param array{id: string, form_key: string, field_name: string, field_title: string, width: int, height: int,
-     *              write_hash: string, read_hash: string, created_at: int, expires_at: int} $row
+     *              pen_color: ?string, background_color: ?string, write_hash: string, read_hash: string,
+     *              created_at: int, expires_at: int} $row
      */
     public function insert(array $row): void
     {
         $tenantId = TenantContext::getTenantId();
         $stmt = $this->db->prepare(
             'INSERT INTO signature_handoffs
-                (id, tenant_id, form_key, field_name, field_title, width, height, write_hash, read_hash, created_at, expires_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                (id, tenant_id, form_key, field_name, field_title, width, height, pen_color, background_color,
+                 write_hash, read_hash, created_at, expires_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->bind_param(
-            'sisssiissii',
+            'sisssiissssii',
             $row['id'],
             $tenantId,
             $row['form_key'],
@@ -44,6 +46,8 @@ class SignatureHandoffRepository
             $row['field_title'],
             $row['width'],
             $row['height'],
+            $row['pen_color'],
+            $row['background_color'],
             $row['write_hash'],
             $row['read_hash'],
             $row['created_at'],
@@ -55,13 +59,15 @@ class SignatureHandoffRepository
 
     /**
      * @return array{id: string, form_key: string, field_name: string, field_title: string, width: int, height: int,
-     *               write_hash: string, read_hash: string, png: ?string, status: string, created_at: int, expires_at: int}|null
+     *               pen_color: ?string, background_color: ?string, write_hash: string, read_hash: string, png: ?string,
+     *               status: string, created_at: int, expires_at: int}|null
      */
     public function find(string $id): ?array
     {
         $tenantId = TenantContext::getTenantId();
         $stmt = $this->db->prepare(
-            'SELECT id, form_key, field_name, field_title, width, height, write_hash, read_hash, png, status,
+            'SELECT id, form_key, field_name, field_title, width, height, pen_color, background_color,
+                    write_hash, read_hash, png, status,
                     created_at, expires_at
              FROM signature_handoffs WHERE id = ? AND tenant_id = ? LIMIT 1'
         );
@@ -80,6 +86,8 @@ class SignatureHandoffRepository
             'field_title' => (string)$row['field_title'],
             'width' => (int)$row['width'],
             'height' => (int)$row['height'],
+            'pen_color' => $row['pen_color'] !== null ? (string)$row['pen_color'] : null,
+            'background_color' => $row['background_color'] !== null ? (string)$row['background_color'] : null,
             'write_hash' => (string)$row['write_hash'],
             'read_hash' => (string)$row['read_hash'],
             'png' => $row['png'] !== null ? (string)$row['png'] : null,

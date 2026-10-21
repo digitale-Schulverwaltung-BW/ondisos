@@ -220,6 +220,57 @@ class SignatureHandoffServiceTest extends TestCase
         $this->assertSame('scanned', $this->repo->find($s['id'])['status']);
     }
 
+    public function testColorsOfTheFieldReachThePhone(): void
+    {
+        $created = $this->service->create('bs', 'u', 'U', 300, 200, self::SIGN_URL, 'rgba(25, 179, 148, 1)', 'transparent');
+        preg_match('/&t=([a-f0-9]+)$/', $created['qr_url'], $m);
+
+        $info = $this->service->info($created['id'], $m[1]);
+
+        $this->assertSame('rgba(25, 179, 148, 1)', $info['pen_color']);
+        $this->assertSame('transparent', $info['background_color']);
+    }
+
+    public function testWithoutColorsTheInfoReportsNull(): void
+    {
+        $s = $this->createSession();
+
+        $info = $this->service->info($s['id'], $s['write_token']);
+
+        $this->assertNull($info['pen_color']);
+        $this->assertNull($info['background_color']);
+    }
+
+    /** @return array<string, array{string, bool}> */
+    public static function colors(): array
+    {
+        return [
+            'hex short' => ['#000', true],
+            'hex long' => ['#1ab394', true],
+            'hex alpha' => ['#1ab394ff', true],
+            'rgba' => ['rgba(0,0,0,0)', true],
+            'hsl' => ['hsl(120deg 50% 40%)', true],
+            'keyword' => ['transparent', true],
+            'css injection' => ['red;background:url(x)', false],
+            'markup' => ['<b>', false],
+            'url' => ['url(https://evil.example/x.png)', false],
+            'too long' => ['#' . str_repeat('a', 40), false],
+        ];
+    }
+
+    /** @dataProvider colors */
+    public function testIsValidColor(string $color, bool $valid): void
+    {
+        $this->assertSame($valid, SignatureHandoffService::isValidColor($color));
+    }
+
+    public function testCreateRejectsInvalidColor(): void
+    {
+        $result = $this->service->create('bs', 'u', 'U', 300, 200, self::SIGN_URL, 'red;x:y');
+
+        $this->assertSame(SignatureHandoffService::ERROR_INVALID_INPUT, $result['error']);
+    }
+
     public function testInfoWithReadKeyIsInvalid(): void
     {
         $s = $this->createSession();
