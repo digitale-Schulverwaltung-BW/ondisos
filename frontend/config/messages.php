@@ -105,6 +105,45 @@ return [
     ],
 
     /**
+     * Signature on a smartphone (3.2.0a): phone page (sign.php) and dialog on the computer
+     */
+    'signature' => [
+        // Phone page
+        'page_title' => 'Unterschrift',
+        'for_field' => 'Unterschrift für: {{field}}',
+        'valid_for' => 'Gültig noch {{time}}',
+        'rotate_hint' => 'Für mehr Platz das Gerät quer drehen.',
+        'pad_placeholder' => 'Hier unterschreiben',
+        'landscape_button' => 'Querformat (Vollbild)',
+        'send' => 'Unterschrift senden',
+        'sending' => 'Wird gesendet …',
+        'done_title' => 'Unterschrift übertragen',
+        'done_text' => 'Sie können zum Rechner zurückkehren und die Unterschrift dort übernehmen.',
+        'empty' => 'Bitte unterschreiben Sie im Feld.',
+        'loading' => 'Lädt …',
+        'error_expired' => 'Dieser Code ist abgelaufen. Bitte erzeugen Sie am Rechner einen neuen QR-Code und scannen Sie ihn erneut.',
+        'error_used' => 'Für diesen Code wurde schon eine Unterschrift gesendet. Für eine neue Unterschrift erzeugen Sie am Rechner einen neuen QR-Code.',
+        'error_invalid' => 'Dieser Link ist ungültig. Bitte scannen Sie den QR-Code am Rechner erneut.',
+        'error_bad_image' => 'Die Unterschrift konnte nicht übertragen werden. Bitte versuchen Sie es erneut.',
+        'error_rate_limit' => 'Zu viele Versuche. Bitte warten Sie einen Moment.',
+        'error_unavailable' => 'Der Dienst ist gerade nicht erreichbar. Bitte versuchen Sie es gleich noch einmal.',
+
+        // Dialog on the computer
+        'button' => 'Auf dem Smartphone unterschreiben',
+        'dialog_title' => 'Auf dem Smartphone unterschreiben',
+        'dialog_scan' => 'Scannen Sie den QR-Code mit der Kamera Ihres Smartphones oder Tablets und unterschreiben Sie dort.',
+        'dialog_link' => 'Scannen klappt nicht? Link öffnen oder kopieren:',
+        'dialog_connected' => 'Smartphone verbunden, bitte dort unterschreiben.',
+        'dialog_expired' => 'Der QR-Code ist abgelaufen.',
+        'dialog_new_code' => 'Neuen Code erzeugen',
+        'dialog_preview' => 'Diese Unterschrift ist angekommen:',
+        'dialog_accept' => 'Übernehmen',
+        'dialog_discard' => 'Verwerfen',
+        'dialog_close' => 'Schließen',
+        'dialog_disabled' => 'Unterschrift per Smartphone ist für dieses Formular nicht freigeschaltet.',
+    ],
+
+    /**
      * HTML Templates
      * These contain HTML markup with placeholders
      */

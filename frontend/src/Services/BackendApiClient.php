@@ -411,6 +411,74 @@ class BackendApiClient
     }
 
     /**
+     * Signature on a smartphone (3.2.0a): one call to the backend's api/signature-handoff.php.
+     *
+     * The action travels in the signed JSON body (signature format 2 only, purpose "signature").
+     * The backend answers with {"ok": true, …} or {"ok": false, "error": "<code>"} and an HTTP status;
+     * both are handed back unchanged. code 0 = the backend did not answer.
+     *
+     * @param string $action create, info, submit or poll
+     * @param array<string, mixed> $params
+     * @return array{code: int, data: ?array<string, mixed>}
+     */
+    public function signatureHandoff(string $action, array $params): array
+    {
+        if ($this->apiSecret === '') {
+            error_log('Backend API error: TENANT_API_SECRET is not configured');
+            return ['code' => 0, 'data' => null];
+        }
+
+        if ($this->signatureVersion() === 1) {
+            // The endpoint only accepts format 2; fail here instead of sending a request that must be rejected
+            error_log('Signature handoff needs API signature format 2 (API_SIGNATURE_VERSION=1 is set)');
+            return ['code' => 0, 'data' => null];
+        }
+
+        $body = (string)json_encode(['action' => $action] + $params, JSON_UNESCAPED_SLASHES);
+        $headers = array_merge(
+            ['Content-Type: application/json', 'Accept: application/json'],
+            $this->signatureHeaders('signature', hash('sha256', $body), $body),
+            $this->clientHeader()
+        );
+
+        $response = $this->httpPost($this->endpoint('signature-handoff.php'), $body, $headers, 10);
+        if ($response['error'] !== '' || $response['code'] === 0) {
+            error_log('Signature handoff: backend unreachable: ' . ($response['error'] !== '' ? $response['error'] : 'no response'));
+            return ['code' => 0, 'data' => null];
+        }
+
+        $data = json_decode($response['body'], true);
+
+        return ['code' => $response['code'], 'data' => is_array($data) ? $data : null];
+    }
+
+    /**
+     * One POST request. Isolated so tests can replace the network.
+     *
+     * @param list<string> $headers
+     * @return array{body: string, code: int, error: string}
+     */
+    protected function httpPost(string $url, string $body, array $headers, int $timeoutSeconds): array
+    {
+        $ch = curl_init($url);
+        curl_setopt_array($ch, [
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $body,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT        => $timeoutSeconds,
+            CURLOPT_CONNECTTIMEOUT => $timeoutSeconds,
+            CURLOPT_HTTPHEADER     => $headers,
+        ]);
+
+        $response = curl_exec($ch);
+        $code     = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $error    = curl_error($ch);
+        curl_close($ch);
+
+        return ['body' => is_string($response) ? $response : '', 'code' => $code, 'error' => $error];
+    }
+
+    /**
      * Perform a GET request. Isolated so tests can replace the network.
      *
      * @return array{body: string, code: int, error: string} code 0 and a non-empty error when no HTTP response arrived
