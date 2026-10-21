@@ -89,16 +89,16 @@ const SignPage = (() => {
         const landscape = window.matchMedia('(orientation: landscape)').matches;
         const frameWidth = wrap.offsetWidth - canvas.offsetWidth;
         const frameHeight = wrap.offsetHeight - canvas.offsetHeight;
-        // Portrait: the countdown line sits above the pad. Landscape: countdown and ✅ sit beside it (CSS grid)
+        // Portrait: the countdown line sits above the pad. Landscape: countdown and ✓ button sit beside it (CSS grid)
         const sideWidth = landscape ? Math.max(bar.offsetWidth, el('signSend').offsetWidth) + 12 : 0;
         const available = window.innerHeight - frameHeight - (landscape ? 0 : bar.offsetHeight) - 16;
         const canvasWidth = Math.max(160, available * ratio);
         const maxWidth = Math.min(document.documentElement.clientWidth - 16 - sideWidth, canvasWidth + frameWidth);
         wrap.style.maxWidth = Math.floor(maxWidth) + 'px';
-        // In the landscape grid the pad column takes the pad's width, so pad and ✅ are centered together
+        // In the landscape grid the pad column takes the pad's width, so pad and ✓ button are centered together
         wrap.style.width = landscape ? Math.floor(maxWidth) + 'px' : '';
         if (landscape) {
-            // Pad (with countdown and ✅ beside it) fills the screen once SurveyJS has rescaled it
+            // Pad (with countdown and ✓ button beside it) fills the screen once SurveyJS has rescaled it
             setTimeout(() => wrap.scrollIntoView({ block: 'center', behavior: 'smooth' }), 150);
         }
     }

@@ -95,7 +95,7 @@ body {
 .sign__status--done { color: #146c43; font-size: 1.05rem; }
 
 /*
- * Landscape while signing: countdown and a compact ✅ button float beside the pad, so the pad gets
+ * Landscape while signing: countdown and a compact ✓ button float beside the pad, so the pad gets
  * the full height; only the header scrolls away (after the base rules, so these win).
  */
 @media (orientation: landscape) {
@@ -123,5 +123,12 @@ body {
         font-size: 0;
         border-radius: 50%;
     }
-    .sign-active .sign__send::before { content: "✅"; font-size: 30px; line-height: 64px; }
+    /* Plain check mark as text (FE0E: never the colored emoji, which clashes with the button) */
+    .sign-active .sign__send::before {
+        content: "\2713\FE0E";
+        color: #111;
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 64px;
+    }
 }
