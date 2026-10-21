@@ -75,8 +75,9 @@ const SignPage = (() => {
     }
 
     /**
-     * Width of the pad: the full width, but never taller than the screen allows (landscape),
-     * keeping the aspect ratio of the field on the computer.
+     * Width of the pad: the full width, but only so tall that the pad itself fits on the screen,
+     * keeping the aspect ratio of the field on the computer. Header and button may scroll away:
+     * in landscape (Safari's bars take much of the height) the drawing area gets the space.
      */
     function fitPad() {
         const wrap = document.querySelector('.sign__padwrap');
@@ -84,17 +85,33 @@ const SignPage = (() => {
         if (!canvas || !canvas.offsetHeight) {
             return;
         }
-        // Everything on the page except the drawing area itself (header, buttons, SurveyJS frame)
-        const others = document.documentElement.scrollHeight - canvas.offsetHeight;
+        const bar = el('signBar');
         const frameWidth = wrap.offsetWidth - canvas.offsetWidth;
-        const canvasWidth = Math.max(160, (window.innerHeight - others - 8) * ratio);
+        const frameHeight = wrap.offsetHeight - canvas.offsetHeight;
+        // The countdown line stays visible above the pad
+        const available = window.innerHeight - frameHeight - bar.offsetHeight - 16;
+        const canvasWidth = Math.max(160, available * ratio);
         const maxWidth = Math.min(document.documentElement.clientWidth - 16, canvasWidth + frameWidth);
         wrap.style.maxWidth = Math.floor(maxWidth) + 'px';
+        if (window.innerWidth > window.innerHeight) {
+            // Landscape: countdown and pad fill the screen once SurveyJS has rescaled the pad
+            setTimeout(() => bar.scrollIntoView({ block: 'start', behavior: 'smooth' }), 150);
+        }
     }
 
-    /** SurveyJS rescales the canvas asynchronously: measure again once it has settled. */
+    /**
+     * SurveyJS rescales the canvas asynchronously: measure again once it has settled.
+     * Only width changes count (turning the phone): iOS changes the height whenever its bars
+     * collapse while scrolling, and refitting then would make the pad jump.
+     */
     let fitTimer = null;
+    let fittedWidth = 0;
     function scheduleFit() {
+        const width = document.documentElement.clientWidth;
+        if (width === fittedWidth) {
+            return;
+        }
+        fittedWidth = width;
         clearTimeout(fitTimer);
         document.querySelector('.sign__padwrap').style.maxWidth = '';
         fitTimer = setTimeout(fitPad, 150);

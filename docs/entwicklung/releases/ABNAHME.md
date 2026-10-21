@@ -96,7 +96,9 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 
 **Noch zu prüfen** (abhaken):
 
-- [ ] Echte Geräte: iPhone (Safari) und Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button unter Android
+- [x] iPhone (Safari) im WLAN per QR-Code: Ablauf funktioniert. **Funde:** (1) Im Querformat wurde die Fläche kleiner (Safaris Leisten nehmen Höhe, iOS vergrößert die Schrift); (2) Striche, die knapp außerhalb der Fläche beginnen, markierten Text der Seite (wie bei DocuSeal). Behoben: Fläche richtet sich nur nach der eigenen Höhe (Seite darf scrollen, Countdown bleibt sichtbar), `text-size-adjust: 100%`, keine Textauswahl und kein Kontextmenü auf der Handy-Seite, Rahmen der Fläche mit `touch-action: none`
+- [ ] Nach den Korrekturen erneut auf dem iPhone: Querformat, Unterschrift ohne Markieren
+- [ ] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
 - [ ] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
 - [ ] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
 - [ ] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host); Rate-Limit je Besucher

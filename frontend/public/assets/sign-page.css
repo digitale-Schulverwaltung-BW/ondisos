@@ -1,6 +1,20 @@
 /* Phone page of the signature on a smartphone (3.2.0a), see public/sign.php */
 
+/* iOS enlarges text in landscape on its own; the header would then overflow the screen */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/*
+ * Nothing on this page needs selecting: a stroke that starts just outside the pad would otherwise
+ * start a text selection in Safari (and a long press the callout menu).
+ */
 body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+    overflow-x: hidden;
     margin: 0;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
     background: #f5f5f5;
@@ -14,6 +28,7 @@ body {
     text-align: center;
 }
 
+.sign__head { overflow-wrap: anywhere; }
 .sign__school { font-size: 0.9rem; color: #666; }
 .sign__form { font-size: 1.25rem; margin: 4px 0; }
 .sign__field { font-size: 0.95rem; color: #444; }
@@ -52,7 +67,8 @@ body {
     .sign__form { font-size: 1rem; }
 }
 
-.sign__padwrap { margin: 0 auto; }
+/* The frame around the canvas belongs to the drawing gesture too: no scrolling or zooming from there */
+.sign__padwrap { margin: 0 auto; touch-action: none; }
 .sign__padwrap .sd-root-modern { background: transparent; }
 .sign__padwrap .sd-body.sd-body--static { padding: 0; max-width: none; }
 .sign__padwrap .sd-page { padding: 0; }
