@@ -38,7 +38,7 @@ git ls-files -z -- wordpress-plugin \
 
 # Frontend parts the plugin needs (Layout C): PHP classes, messages, SurveyJS assets, shared JS.
 # Not needed: surveys (come from the backend), index.php and the standalone scripts.
-git ls-files -z -- frontend/src frontend/config/messages.php frontend/config/messages.example.php frontend/public/assets frontend/public/js/survey-handler-base.js \
+git ls-files -z -- frontend/src frontend/config/messages.php frontend/config/messages.example.php frontend/public/assets frontend/public/js/survey-handler-base.js frontend/public/js/sign-page.js \
     | while IFS= read -r -d '' f; do
         mkdir -p "$DEST/$(dirname "$f")"
         cp -p "$f" "$DEST/$f"
@@ -47,7 +47,7 @@ git ls-files -z -- frontend/src frontend/config/messages.php frontend/config/mes
 [ -f LICENSE ] && cp LICENSE "$DEST/LICENSE"
 
 # Sanity: the bundled layout must be complete
-for need in ondisos.php frontend/src/Services/BackendApiClient.php frontend/config/messages.php frontend/public/assets/survey.core.min.js frontend/public/js/survey-handler-base.js; do
+for need in ondisos.php frontend/src/Services/BackendApiClient.php frontend/config/messages.php frontend/public/assets/survey.core.min.js frontend/public/js/survey-handler-base.js frontend/public/js/sign-page.js frontend/public/assets/sign-page.css; do
     [ -f "$DEST/$need" ] || { echo "Missing in ZIP: $need" >&2; exit 1; }
 done
 if find "$DEST" \( -name '.env' -o -name '*.local.php' -o -name '.git*' -o -name 'tests' \) | grep -q .; then

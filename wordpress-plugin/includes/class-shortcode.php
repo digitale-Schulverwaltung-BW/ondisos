@@ -92,6 +92,9 @@ class Shortcode
         // Get AJAX URL
         $ajax_url = admin_url('admin-ajax.php');
 
+        // Signature on a smartphone (3.2.0a): only if the form allows it
+        $signature_handoff = (FormConfig::get($form_key)['signature_handoff'] ?? false) === true;
+
         // Get prefill data if present
         $prefill_data = $this->get_prefill_data();
 
@@ -99,7 +102,7 @@ class Shortcode
         do_action('ondisos_enqueue_assets', $form_key);
 
         // Render container
-        return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data);
+        return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data, $signature_handoff);
     }
 
     /**
@@ -146,6 +149,7 @@ class Shortcode
      * @param string $nonce WP nonce
      * @param string $ajax_url AJAX URL
      * @param string $prefill_data Prefill data (base64)
+     * @param bool $signature_handoff Offer signing on a smartphone (nonce, relay URL and texts as data attributes)
      * @return string HTML
      */
     private function render_container(
@@ -155,7 +159,8 @@ class Shortcode
         string $version,
         string $nonce,
         string $ajax_url,
-        string $prefill_data
+        string $prefill_data,
+        bool $signature_handoff = false
     ): string {
         $container_id = 'ondisos-container-' . esc_attr($form_key);
         $survey_script_id = $container_id . '-survey-json';
@@ -171,7 +176,11 @@ class Shortcode
              data-theme-json-id="<?php echo esc_attr($theme_script_id); ?>"
              data-prefill="<?php echo esc_attr($prefill_data); ?>"
              data-nonce="<?php echo esc_attr($nonce); ?>"
-             data-ajax-url="<?php echo esc_url($ajax_url); ?>">
+             data-ajax-url="<?php echo esc_url($ajax_url); ?>"<?php if ($signature_handoff) : ?>
+             data-signature-handoff="1"
+             data-signature-nonce="<?php echo esc_attr(wp_create_nonce(Signature_Handler::NONCE_ACTION)); ?>"
+             data-signature-url="<?php echo esc_url(Signature_Handler::relay_url()); ?>"
+             data-signature-messages="<?php echo esc_attr((string)wp_json_encode(Signature_Handler::messages(), JSON_UNESCAPED_UNICODE)); ?>"<?php endif; ?>>
             <div class="ondisos-loading">
                 <p>Formular wird geladen...</p>
             </div>

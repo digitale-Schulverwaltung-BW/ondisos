@@ -160,6 +160,8 @@ Das Plugin verwendet eine Clean MVC-Architektur mit Service Layer:
 * `wp_ajax_ondisos_submit` / `wp_ajax_nopriv_ondisos_submit` - Form submission
 * `wp_ajax_ondisos_pdf_download` / `wp_ajax_nopriv_ondisos_pdf_download` - PDF-Proxy
 * `wp_ajax_ondisos_ical` / `wp_ajax_nopriv_ondisos_ical` - iCal-Download
+* `wp_ajax_ondisos_sig` / `wp_ajax_nopriv_ondisos_sig` - Unterschrift per Smartphone: Relay zum Backend
+* `wp_ajax_ondisos_sign` / `wp_ajax_nopriv_ondisos_sign` - Unterschrift per Smartphone: Seite für das Smartphone
 
 **File Structure:**
 

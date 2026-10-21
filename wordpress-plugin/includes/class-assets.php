@@ -59,6 +59,18 @@ class Assets
         add_action('ondisos_enqueue_assets', [$this, 'enable_assets']);
     }
 
+    /** Base URL of the bundled SurveyJS assets (also used by the signature phone page). */
+    public function frontend_assets_url(): string
+    {
+        return $this->frontend_assets_url;
+    }
+
+    /** Base URL of the shared frontend scripts. */
+    public function frontend_js_url(): string
+    {
+        return $this->frontend_js_url;
+    }
+
     /**
      * Flag to track if assets should be loaded
      */

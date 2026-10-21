@@ -83,6 +83,7 @@ wordpress-plugin/
 | CSRF | Session-Token | WP-Nonce |
 | Submit | `save.php` | `admin-ajax.php?action=ondisos_submit` |
 | PDF-Download | `pdf/download.php` (Proxy) | `admin-ajax.php?action=ondisos_pdf_download` |
+| Unterschrift per Smartphone | `api/signature.php`, `sign.php` | `admin-ajax.php?action=ondisos_sig`, `admin-ajax.php?action=ondisos_sign` |
 | Konfiguration | `frontend/.env` | WP-Einstellungen, sonst `.env` |
 | JS | `survey-handler.js` | `survey-handler-wp.js` (beide erben `survey-handler-base.js`) |
 

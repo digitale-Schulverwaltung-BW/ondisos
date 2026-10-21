@@ -42,6 +42,11 @@ class Plugin
     private Pdf_Proxy $pdf_proxy;
 
     /**
+     * Signature on a smartphone: relay and phone page (3.2.0a)
+     */
+    private Signature_Handler $signature_handler;
+
+    /**
      * Assets handler
      */
     private Assets $assets;
@@ -154,6 +159,9 @@ class Plugin
 
         // Initialize PDF proxy handler
         $this->pdf_proxy = new Pdf_Proxy();
+
+        // Initialize signature handoff (relay and phone page)
+        $this->signature_handler = new Signature_Handler();
 
         // Initialize assets handler
         $this->assets = new Assets();

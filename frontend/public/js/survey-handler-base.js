@@ -324,7 +324,8 @@ class SurveyHandlerBase {
             return;
         }
         this._sigRequest = request;
-        this._sigFormKey = (this.config && this.config.formKey) || '';
+        // Standalone: config.formKey; WordPress: formKey from the container
+        this._sigFormKey = (this.config && this.config.formKey) || this.formKey || '';
         survey.onAfterRenderQuestion.add((sender, options) => {
             const question = options.question;
             if (question.getType() !== 'signaturepad' || question.isReadOnly) {

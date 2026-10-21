@@ -23,6 +23,45 @@ class SurveyHandlerWP extends SurveyHandlerBase {
         this.nonce = container.dataset.nonce;
         this.ajaxUrl = container.dataset.ajaxUrl;
         this.survey = null;
+        // Signature on a smartphone (3.2.0a): set by the shortcode only if the form allows it
+        this.signatureUrl = container.dataset.signatureHandoff === '1' ? (container.dataset.signatureUrl || '') : '';
+        this.signatureNonce = container.dataset.signatureNonce || '';
+        try {
+            this.signatureMessages = JSON.parse(container.dataset.signatureMessages || '{}');
+        } catch (e) {
+            this.signatureMessages = {};
+        }
+    }
+
+    /** Texts of the signature dialog come from the shortcode (with local overrides); everything else as before. */
+    msg(key, defaultValue = '') {
+        if (key.startsWith('signature.')) {
+            const text = this.signatureMessages[key.slice('signature.'.length)];
+            if (typeof text === 'string' && text !== '') {
+                return text;
+            }
+        }
+        return super.msg(key, defaultValue);
+    }
+
+    /**
+     * One call to the signature relay (admin-ajax.php?action=ondisos_sig); create and poll carry the nonce.
+     * Always resolves to the relay's JSON, {ok: false, error: 'unavailable'} if there is none.
+     */
+    async signatureRequest(action, data) {
+        try {
+            const response = await fetch(this.signatureUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, nonce: this.signatureNonce, ...data }),
+                credentials: 'same-origin',
+                cache: 'no-store',
+            });
+            const body = await response.json().catch(() => null);
+            return body && typeof body === 'object' ? body : { ok: false, error: 'unavailable' };
+        } catch (error) {
+            return { ok: false, error: 'unavailable' };
+        }
     }
 
     /**
@@ -68,6 +107,11 @@ class SurveyHandlerWP extends SurveyHandlerBase {
 
             // Setup completion handler
             this.survey.onComplete.add((sender) => this.handleComplete(sender));
+
+            // Signature on a smartphone (before render: the button is added per rendered question)
+            if (this.signatureUrl && typeof this.setupSignatureHandoff === 'function') {
+                this.setupSignatureHandoff(this.survey, (action, data) => this.signatureRequest(action, data));
+            }
 
             // Clear loading message
             this.container.innerHTML = '';
