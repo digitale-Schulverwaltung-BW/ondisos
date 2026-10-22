@@ -58,6 +58,12 @@ $font = static function (string $file): string {
     $path = __DIR__ . '/assets/preview/fonts/' . $file;
     return is_file($path) ? 'data:font/woff2;base64,' . base64_encode((string)file_get_contents($path)) : '';
 };
+
+/** Asset URL with the file's modification time, so browsers fetch a changed file instead of a cached one. */
+$asset = static function (string $file) use ($e): string {
+    $mtime = @filemtime(__DIR__ . '/assets/preview/' . $file);
+    return $e('assets/preview/' . $file . ($mtime !== false ? '?v=' . $mtime : ''));
+};
 ?><!DOCTYPE html>
 <html lang="de">
 <head>
@@ -65,7 +71,7 @@ $font = static function (string $file): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vorschau</title>
 <?php if ($message === null): ?>
-    <link href="assets/preview/survey-core.fontless.min.css" rel="stylesheet">
+    <link href="<?= $asset('survey-core.fontless.min.css') ?>" rel="stylesheet">
 <?php endif; ?>
     <style>
         @font-face { font-family: 'Open Sans'; font-weight: 400; font-style: normal; src: url('<?= $font('open-sans-v44-latin-regular.woff2') ?>') format('woff2'); }
@@ -128,9 +134,9 @@ $font = static function (string $file): string {
     </nav>
     <div id="surveyContainer"></div>
 
-    <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey.core.min.js"></script>
-    <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey-js-ui.min.js"></script>
-    <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey-handler-base.js"></script>
+    <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey.core.min.js') ?>"></script>
+    <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey-js-ui.min.js') ?>"></script>
+    <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey-handler-base.js') ?>"></script>
     <script nonce="<?= $e($nonce) ?>">
         window.previewConfig = {
             survey: <?= $preview['survey_json'] ?>,
@@ -139,7 +145,7 @@ $font = static function (string $file): string {
             startPageLabel: <?= json_encode(M::get('preview.start_page', 'Startseite'), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE) ?>
         };
     </script>
-    <script nonce="<?= $e($nonce) ?>" src="assets/preview/survey-preview.js"></script>
+    <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey-preview.js') ?>"></script>
 <?php endif; ?>
 </body>
 </html>
