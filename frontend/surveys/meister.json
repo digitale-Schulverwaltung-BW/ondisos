@@ -138,11 +138,24 @@
               "value": "nur Teile",
               "elements": [
                 {
-                  "type": "text",
-                  "name": "question7",
+                  "type": "checkbox",
+                  "name": "Teile",
                   "title": "Welche Teile?",
                   "isRequired": true,
-                  "placeholder": "z. B. II und III"
+                  "choices": [
+                    {
+                      "value": "1+2",
+                      "text": "I+II"
+                    },
+                    {
+                      "value": "3",
+                      "text": "III"
+                    },
+                    {
+                      "value": "4",
+                      "text": "IV"
+                    }
+                  ]
                 }
               ]
             }
@@ -2282,134 +2295,96 @@
           "title": "Allgemeinbildender Schulabschluss",
           "elements": [
             {
-          "type": "dropdown",
-          "name": "Vorbildung",
-          "title": {
-            "de": "Höchster Schulabschluss:"
-          },
-          "titleLocation": "left",
-          "isRequired": true,
-          "choices": [
-            {
-              "value": "oA",
-              "text": "ohne Abschluss"
-            },
-            {
-              "value": "KV",
-              "text": "Keine Vorbildung"
-            },
-            {
-              "value": "oHA",
-              "text": "ohne Hauptschulabschluss"
-            },
-            {
-              "value": "AF",
-              "text": "Abschluss Förderschule"
-            },
-            {
-              "value": "A8WRS",
-              "text": "Abschluss Klasse 8 Werkreal-/Hauptschule (nur für 2BF)"
-            },
-            {
-              "value": "HSA",
-              "text": "Hauptschulabschluss"
-            },
-            {
-              "value": "HSA-GMS",
-              "text": "Hauptschulabschluss an einer Gemeinschaftsschule"
-            },
-            {
-              "value": "HSA-VZ10",
-              "text": "mit Hauptschulabschluss (bzw. Versetzungszeugnis in die 10. Klasse)"
-            },
-            {
-              "value": "WRSA",
-              "text": "Werkrealschulabschluss"
-            },
-            {
-              "value": "WRSA-GMS",
-              "text": "Werkrealschulabschluss an einer Gemeinschaftsschule"
-            },
-            {
-              "value": "RSA-WRS",
-              "text": "Realschulabschluss an einer Werkrealschule"
-            },
-            {
-              "value": "RSA-GMS",
-              "text": "Realschulabschluss an einer Gemeinschaftsschule"
-            },
-            {
-              "value": "RSA-RS",
-              "text": "Realschulabschluss an einer Realschule"
-            },
-            {
-              "value": "RSA-GYM",
-              "text": "Realschulabschluss an einem Gymnasium"
-            },
-            {
-              "value": "FSR-mBABS",
-              "text": "Fachschulreife oder mittlerer Bildungsabschluss (BS (9+3)"
-            },
-            {
-              "value": "FSR",
-              "text": "Fachschulreife oder vergleichbarer Abschluss"
-            },
-            {
-              "value": "FHR",
-              "text": "Fachhochschulreife"
-            },
-            {
-              "value": "HRa",
-              "text": "Hochschulreife, allgemein"
-            },
-            {
-              "value": "HRf",
-              "text": "Hochschulreife, fachgebunden"
-            },
-            {
-              "value": "HRa-GMS",
-              "text": "Hochschulreife an der Gemeinschaftsschule"
-            },
-            {
-              "value": "Sonst (AS)",
-              "text": "Sonst. Abschluss (allg. bildend)"
-            },
-            {
-              "value": "A (BS)",
-              "text": "Abschlusszeugnis (beruflich)"
-            },
-            {
-              "value": "Sonst (BS)",
-              "text": "mit sonstigem beruflichen Abschluss"
-            }
-          ],
-          "placeholder": "auswählen..."
-        
+              "type": "dropdown",
+              "name": "Vorbildung",
+              "title": {
+                "de": "Höchster Schulabschluss:"
+              },
+              "titleLocation": "top",
+              "isRequired": true,
+              "choices": [
+                {
+                  "value": "oHA",
+                  "text": "ohne Hauptschulabschluss"
+                },
+                {
+                  "value": "AF",
+                  "text": "Abschluss Förderschule"
+                },
+                {
+                  "value": "A8WRS",
+                  "text": "Abschluss Klasse 8 Werkreal-/Hauptschule (nur für 2BF)"
+                },
+                {
+                  "value": "HSA",
+                  "text": "Hauptschulabschluss"
+                },
+                {
+                  "value": "HSA-GMS",
+                  "text": "Hauptschulabschluss an einer Gemeinschaftsschule"
+                },
+                {
+                  "value": "HSA-VZ10",
+                  "text": "mit Hauptschulabschluss (bzw. Versetzungszeugnis in die 10. Klasse)"
+                },
+                {
+                  "value": "WRSA",
+                  "text": "Werkrealschulabschluss"
+                },
+                {
+                  "value": "WRSA-GMS",
+                  "text": "Werkrealschulabschluss an einer Gemeinschaftsschule"
+                },
+                {
+                  "value": "RSA-WRS",
+                  "text": "Realschulabschluss an einer Werkrealschule"
+                },
+                {
+                  "value": "RSA-GMS",
+                  "text": "Realschulabschluss an einer Gemeinschaftsschule"
+                },
+                {
+                  "value": "RSA-RS",
+                  "text": "Realschulabschluss an einer Realschule"
+                },
+                {
+                  "value": "RSA-GYM",
+                  "text": "Realschulabschluss an einem Gymnasium"
+                },
+                {
+                  "value": "FSR-mBABS",
+                  "text": "Fachschulreife oder mittlerer Bildungsabschluss (BS (9+3)"
+                },
+                {
+                  "value": "FSR",
+                  "text": "Fachschulreife oder vergleichbarer Abschluss"
+                },
+                {
+                  "value": "FHR",
+                  "text": "Fachhochschulreife"
+                },
+                {
+                  "value": "HRa",
+                  "text": "Hochschulreife, allgemein"
+                },
+                {
+                  "value": "HRf",
+                  "text": "Hochschulreife, fachgebunden"
+                },
+                {
+                  "value": "HRa-GMS",
+                  "text": "Hochschulreife an der Gemeinschaftsschule"
+                },
+                {
+                  "value": "Sonst (AS)",
+                  "text": "Sonst. Abschluss (allg. bildend)"
+                }
+              ],
+              "placeholder": "auswählen..."
             },
             {
               "type": "text",
               "name": "Schulabschluss_Zeugnisdatum",
-              "startWithNewLine": false,
-              "title": "Zeugnisdatum",
-              "isRequired": true,
-              "inputType": "date"
-            }
-          ]
-        },
-        {
-          "type": "panel",
-          "name": "panel_gesellenpruefung",
-          "title": "Gesellen- bzw. Facharbeiterprüfung",
-          "elements": [
-            {
-              "type": "text",
-              "name": "Gesellenpruefung_als",
-              "title": "Gesellen- bzw. Facharbeiterprüfung als",
-              "isRequired": true
-            },
-            {
-              "type": "text",
-              "name": "Gesellenpruefung_Zeugnisdatum",
               "startWithNewLine": false,
               "title": "Zeugnisdatum",
               "isRequired": true,
@@ -2447,19 +2422,40 @@
               "name": "Berufsschule_Zeugnisnote",
               "startWithNewLine": false,
               "title": "Zeugnisnote Durchschnitt",
-              "inputType": "number",
               "isRequired": true,
-              "min": 1,
-              "max": 6,
-              "step": 0.1,
-              "placeholder": "z. B. 2,3",
               "validators": [
                 {
                   "type": "expression",
-                  "expression": "{Berufsschule_Zeugnisnote} empty or round({Berufsschule_Zeugnisnote}, 1) = {Berufsschule_Zeugnisnote}",
-                  "text": "Bitte die Note mit höchstens einer Nachkommastelle angeben (z. B. 2,3)."
+                  "text": "Bitte die Note mit höchstens einer Nachkommastelle angeben (z. B. 2,3).",
+                  "expression": "{Berufsschule_Zeugnisnote} empty or round({Berufsschule_Zeugnisnote}, 1) = {Berufsschule_Zeugnisnote}"
                 }
-              ]
+              ],
+              "inputType": "number",
+              "min": 1,
+              "max": 6,
+              "step": 0.1,
+              "placeholder": "z. B. 2,3"
+            }
+          ]
+        },
+        {
+          "type": "panel",
+          "name": "panel_gesellenpruefung",
+          "title": "Gesellen- bzw. Facharbeiterprüfung",
+          "elements": [
+            {
+              "type": "text",
+              "name": "Gesellenpruefung_als",
+              "title": "Gesellen- bzw. Facharbeiterprüfung als",
+              "isRequired": true
+            },
+            {
+              "type": "text",
+              "name": "Gesellenpruefung_Zeugnisdatum",
+              "startWithNewLine": false,
+              "title": "Zeugnisdatum",
+              "isRequired": true,
+              "inputType": "date"
             }
           ]
         }
@@ -2483,23 +2479,23 @@
               "type": "text",
               "name": "von1",
               "title": "von",
-              "inputType": "date",
-              "requiredIf": "{panel.als1} notempty"
+              "requiredIf": "{panel.als1} notempty",
+              "inputType": "date"
             },
             {
               "type": "text",
               "name": "bis1",
               "startWithNewLine": false,
               "title": "bis",
-              "inputType": "date",
               "requiredIf": "{panel.als1} notempty",
               "validators": [
                 {
                   "type": "expression",
-                  "expression": "{panel.von1} empty or {panel.bis1} empty or {panel.bis1} >= {panel.von1}",
-                  "text": "Das Enddatum darf nicht vor dem Beginn liegen."
+                  "text": "Das Enddatum darf nicht vor dem Beginn liegen.",
+                  "expression": "{panel.von1} empty or {panel.bis1} empty or {panel.bis1} >= {panel.von1}"
                 }
-              ]
+              ],
+              "inputType": "date"
             },
             {
               "type": "expression",
@@ -2518,11 +2514,11 @@
         {
           "type": "expression",
           "name": "Monate_Berufstaetigkeit_gesamt",
+          "visibleIf": "sumInArray({_Berufstaetigkeit}, 'Monate1') > 0",
           "title": "Berufstätigkeit gesamt (Monate)",
           "expression": "sumInArray({_Berufstaetigkeit}, 'Monate1')",
           "displayStyle": "decimal",
-          "maximumFractionDigits": 0,
-          "visibleIf": "sumInArray({_Berufstaetigkeit}, 'Monate1') > 0"
+          "maximumFractionDigits": 0
         },
         {
           "type": "paneldynamic",
@@ -2538,23 +2534,23 @@
               "type": "text",
               "name": "von2",
               "title": "von",
-              "inputType": "date",
-              "requiredIf": "{panel.als2} notempty"
+              "requiredIf": "{panel.als2} notempty",
+              "inputType": "date"
             },
             {
               "type": "text",
               "name": "bis2",
               "startWithNewLine": false,
               "title": "bis",
-              "inputType": "date",
               "requiredIf": "{panel.als2} notempty",
               "validators": [
                 {
                   "type": "expression",
-                  "expression": "{panel.von2} empty or {panel.bis2} empty or {panel.bis2} >= {panel.von2}",
-                  "text": "Das Enddatum darf nicht vor dem Beginn liegen."
+                  "text": "Das Enddatum darf nicht vor dem Beginn liegen.",
+                  "expression": "{panel.von2} empty or {panel.bis2} empty or {panel.bis2} >= {panel.von2}"
                 }
-              ]
+              ],
+              "inputType": "date"
             },
             {
               "type": "expression",
@@ -2572,20 +2568,20 @@
         {
           "type": "expression",
           "name": "Monate_Sonstige_gesamt",
+          "visibleIf": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate2') > 0",
           "title": "Sonstige Tätigkeiten gesamt (Monate)",
           "expression": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate2')",
           "displayStyle": "decimal",
-          "maximumFractionDigits": 0,
-          "visibleIf": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate2') > 0"
+          "maximumFractionDigits": 0
         },
         {
           "type": "expression",
           "name": "Monate_gesamt",
+          "visible": false,
           "title": "Monate gesamt",
           "expression": "sumInArray({_Berufstaetigkeit}, 'Monate1') + sumInArray({_Sonstige_Taetigkeiten}, 'Monate2')",
           "displayStyle": "decimal",
-          "maximumFractionDigits": 0,
-          "visible": false
+          "maximumFractionDigits": 0
         },
         {
           "type": "expression",
@@ -2770,6 +2766,15 @@
           "name": "Unterschrift_Ort",
           "title": "Ort, Datum",
           "isRequired": true
+        },
+        {
+          "type": "signaturepad",
+          "name": "Unterschrift",
+          "startWithNewLine": false,
+          "title": "Unterschrift",
+          "isRequired": true,
+          "signatureWidth": 500,
+          "placeholder": "Unterschrift"
         },
         {
           "type": "comment",
