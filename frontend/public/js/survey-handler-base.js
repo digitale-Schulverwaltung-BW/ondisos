@@ -42,6 +42,8 @@ class SurveyHandlerBase {
     /**
      * Extract field types from survey model.
      * Returns object mapping field names to their type info.
+     * Title and page (name and title) are a snapshot for the PDF: it shows question titles and groups the
+     * fields under their page title, as the survey was when the registration was sent.
      */
     extractFieldTypes(sender) {
         const fieldTypes = {};
@@ -55,6 +57,13 @@ class SurveyHandlerBase {
             // Include inputType for text fields (date, email, tel, etc.)
             if (type === 'text' && question.inputType) {
                 typeInfo.inputType = question.inputType;
+            }
+
+            typeInfo.title = question.processedTitle || question.title || name;
+            const page = question.page;
+            if (page) {
+                typeInfo.page = page.name;
+                typeInfo.pageTitle = page.processedTitle || page.title || '';
             }
 
             fieldTypes[name] = typeInfo;

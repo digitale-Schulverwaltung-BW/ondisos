@@ -57,7 +57,7 @@ final class FormConfigFormMapper
             [$present, $raw] = self::lookup($config, $path);
 
             $values[$path] = match ($field['type']) {
-                FormConfigSchema::TYPE_BOOL       => $present ? (bool)$raw : ($path === 'db'),
+                FormConfigSchema::TYPE_BOOL       => $present ? (bool)$raw : ($field['default'] ?? false),
                 FormConfigSchema::TYPE_EMAIL_LIST => self::asList($raw),
                 FormConfigSchema::TYPE_NAME_LIST  => self::asList($raw),
                 FormConfigSchema::TYPE_FIELD_FILTER => $raw === 'all' || !$present ? 'all' : self::asList($raw),

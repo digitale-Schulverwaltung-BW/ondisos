@@ -454,6 +454,7 @@ return [
                 'header_title' => ['label' => 'Überschrift im PDF'],
                 'intro_text' => ['label' => 'Einleitungstext'],
                 'footer_text' => ['label' => 'Fußzeile'],
+                'section_headings' => ['label' => 'Seitentitel der Survey als Überschriften', 'help' => 'Die Angaben stehen im PDF unter dem Titel ihrer Survey-Seite. Ältere Anmeldungen, die ohne Seitentitel gespeichert wurden, erscheinen als eine Tabelle.'],
                 'include_fields' => ['label' => 'Felder im PDF', 'help' => 'Nur wirksam, wenn „Nur diese Felder" gewählt ist.'],
                 'exclude_fields' => ['label' => 'Felder, die nicht im PDF erscheinen'],
                 'pre_sections' => ['label' => 'Abschnitte vor den Angaben'],

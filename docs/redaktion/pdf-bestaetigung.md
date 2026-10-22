@@ -25,11 +25,13 @@ Unter **Formulare → Bearbeiten** (Formular wählen) im Reiter **PDF-Bestätigu
 | **Titel**, **Beschriftung des Download-Buttons** | Texte der Download-Karte nach dem Absenden |
 | **Gültigkeit des Download-Links** | in Sekunden, 60 bis 86400; üblich 1800 (30 Minuten). Danach lässt sich das PDF nur noch im Backend abrufen |
 | **Überschrift im PDF**, **Einleitungstext**, **Fußzeile** | Texte im PDF |
+| **Seitentitel der Survey als Überschriften** | die Angaben stehen unter dem Titel ihrer Survey-Seite (ein Balken je Seite; Panels ergeben keine eigene Überschrift). Standard: an. Ausgeschaltet oder bei Seiten ohne Titel erscheint eine Tabelle unter „Formulardaten“ |
 | **Felder im PDF**, **Felder, die nicht im PDF erscheinen** | alle Felder, nur ausgewählte oder alle außer bestimmten; ein Feldname pro Zeile (Zustimmungsfelder gehören meist in die Ausschlussliste) |
 | **Abschnitte vor / nach den Angaben** | eigene Textblöcke (z. B. Hinweise zum weiteren Vorgehen) |
 | **Zusätzliches PDF anhängen** | z. B. ein Informationsblatt; wird hinter jede Bestätigung dieses Formulars gesetzt, auch für bereits eingegangene Anmeldungen. Höchstens 5 MB und 20 Seiten |
 
-Die Reihenfolge der Felder im PDF entspricht der Reihenfolge im Formular. Das Dokument für Anmeldende enthält nur die Angaben aus dem Formular.
+Die Reihenfolge der Felder im PDF entspricht der Reihenfolge im Formular, beschriftet sind sie mit dem Titel der Frage (ohne Titel mit dem Feldnamen). Das Dokument für Anmeldende enthält nur die Angaben aus dem Formular.
+Frage- und Seitentitel werden beim Absenden mit der Anmeldung gespeichert: Spätere Änderungen an der Survey ändern ältere PDFs nicht. Anmeldungen, die vor diesem Update eingegangen sind, zeigen die Feldnamen in einer Tabelle.
 
 **Angehängte PDFs:** Nicht verwendbar sind PDFs mit komprimierter Querverweistabelle (PDF 1.5 oder neuer, aus manchen Office-Programmen) und verschlüsselte PDFs; sie werden beim Hochladen mit einem Hinweis abgelehnt.
 Dann hilft häufig, das Dokument mit einem anderen Programm neu zu erzeugen, z. B. über „Drucken → Als PDF speichern“.

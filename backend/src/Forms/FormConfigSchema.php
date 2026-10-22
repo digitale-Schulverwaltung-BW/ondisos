@@ -32,7 +32,8 @@ final class FormConfigSchema
 
     /**
      * @return array<string, array<string,mixed>> dotted path => descriptor
-     *   Descriptor keys: type, editableBy (list of roles), max/min (length or value), maxItems, group
+     *   Descriptor keys: type, editableBy (list of roles), max/min (length or value), maxItems, group,
+     *   default (checkbox state while the option is not stored; false if absent)
      */
     public static function fields(): array
     {
@@ -42,7 +43,7 @@ final class FormConfigSchema
         return [
             // --- general -----------------------------------------------------------------------
             'version'      => ['type' => self::TYPE_STRING, 'editableBy' => $both, 'max' => 50, 'group' => 'general'],
-            'db'           => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'general'],
+            'db'           => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'general', 'default' => true],
             'notify_email' => ['type' => self::TYPE_EMAIL_LIST, 'editableBy' => $both, 'maxItems' => 20, 'group' => 'general'],
             'prefill_fields' => ['type' => self::TYPE_NAME_LIST, 'editableBy' => $both, 'maxItems' => 100, 'group' => 'general'],
             'signature_handoff' => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'general'],
@@ -73,6 +74,7 @@ final class FormConfigSchema
             'pdf.header_title'   => ['type' => self::TYPE_STRING, 'editableBy' => $both, 'max' => 200, 'group' => 'pdf'],
             'pdf.intro_text'     => ['type' => self::TYPE_TEXT, 'editableBy' => $both, 'max' => 2000, 'group' => 'pdf'],
             'pdf.footer_text'    => ['type' => self::TYPE_TEXT, 'editableBy' => $both, 'max' => 2000, 'group' => 'pdf'],
+            'pdf.section_headings' => ['type' => self::TYPE_BOOL, 'editableBy' => $both, 'group' => 'pdf', 'default' => true],
             'pdf.include_fields' => ['type' => self::TYPE_FIELD_FILTER, 'editableBy' => $both, 'maxItems' => 300, 'group' => 'pdf'],
             'pdf.exclude_fields' => ['type' => self::TYPE_NAME_LIST, 'editableBy' => $both, 'maxItems' => 300, 'group' => 'pdf'],
             'pdf.pre_sections'   => ['type' => self::TYPE_SECTIONS, 'editableBy' => $both, 'maxItems' => 10, 'group' => 'pdf'],

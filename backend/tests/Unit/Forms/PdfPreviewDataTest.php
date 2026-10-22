@@ -64,4 +64,35 @@ class PdfPreviewDataTest extends TestCase
         $this->assertSame([['title' => 'Hinweis', 'content' => '']], $config['pre_sections']);
         $this->assertSame([], $config['post_sections']);
     }
+
+    public function testFieldTypesCarryQuestionAndPageTitles(): void
+    {
+        $survey = ['pages' => [
+            ['name' => 'schueler', 'title' => 'Angaben Schüler', 'elements' => [
+                ['type' => 'text', 'name' => 'Vorname', 'title' => 'Vorname des Kindes'],
+                ['type' => 'panel', 'name' => 'p', 'title' => 'Wird nicht verwendet', 'elements' => [['type' => 'text', 'name' => 'Ort']]],
+            ]],
+            ['title' => ['default' => 'Schulbildung'], 'elements' => [['type' => 'text', 'name' => 'Abschluss']]],
+        ]];
+
+        $types = PdfPreviewData::fromSurvey($survey)['_fieldTypes'];
+
+        $this->assertSame(['type' => 'text', 'title' => 'Vorname des Kindes', 'page' => 'schueler', 'pageTitle' => 'Angaben Schüler'], $types['Vorname']);
+        $this->assertSame('Ort', $types['Ort']['title'], 'without title the field name');
+        $this->assertSame('Angaben Schüler', $types['Ort']['pageTitle'], 'panels do not make headings');
+        $this->assertSame(['type' => 'text', 'title' => 'Abschluss', 'page' => 'page2', 'pageTitle' => 'Schulbildung'], $types['Abschluss']);
+    }
+
+    public function testSurveyWithoutPagesHasNoPageInformation(): void
+    {
+        $types = PdfPreviewData::fromSurvey(['elements' => [['type' => 'text', 'name' => 'Name']]])['_fieldTypes'];
+        $this->assertSame(['type' => 'text', 'title' => 'Name'], $types['Name']);
+    }
+
+    public function testConfigTakesSectionHeadingsFromPostedOrStoredValue(): void
+    {
+        $this->assertFalse(PdfPreviewData::config(['section_headings' => '0'])['section_headings']);
+        $this->assertTrue(PdfPreviewData::config(['section_headings' => true])['section_headings']);
+        $this->assertArrayNotHasKey('section_headings', PdfPreviewData::config([]));
+    }
 }

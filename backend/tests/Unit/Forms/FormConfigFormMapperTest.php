@@ -65,6 +65,11 @@ class FormConfigFormMapperTest extends TestCase
         $this->assertSame(['a', 'b'], $s['prefill_fields']);
     }
 
+    public function testFormValuesKeepsStoredSectionHeadingsOff(): void
+    {
+        $this->assertFalse(Map::formValues(['pdf' => ['section_headings' => false]])['pdf.section_headings']);
+    }
+
     public function testFormValuesDefaultsAndLegacyShapes(): void
     {
         $v = Map::formValues([
@@ -74,6 +79,7 @@ class FormConfigFormMapperTest extends TestCase
 
         $this->assertTrue($v['db'], 'db defaults to true like the frontend does');
         $this->assertFalse($v['pdf.enabled']);
+        $this->assertTrue($v['pdf.section_headings'], 'page headings are on until a school turns them off');
         $this->assertSame(['a@b.de', 'c@d.de'], $v['notify_email']);
         $this->assertSame('', $v['pdf.logo'], 'legacy false = no logo');
         $this->assertSame('1800', $v['pdf.token_lifetime']);

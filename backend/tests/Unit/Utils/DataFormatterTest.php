@@ -395,4 +395,64 @@ class DataFormatterTest extends TestCase
     {
         $this->assertSame('[Datei]', DataFormatter::formatValue('data:application/pdf;base64,JVBERi0='));
     }
+
+    public function testFieldLabelUsesStoredQuestionTitle(): void
+    {
+        $types = ['Vorname' => ['type' => 'text', 'title' => 'Vorname des Kindes']];
+        $this->assertSame('Vorname des Kindes', DataFormatter::fieldLabel('Vorname', $types));
+    }
+
+    public function testFieldLabelFallsBackToKeyWithoutTitle(): void
+    {
+        $this->assertSame('Vorname', DataFormatter::fieldLabel('Vorname', ['Vorname' => ['type' => 'text']]));
+        $this->assertSame('Vorname', DataFormatter::fieldLabel('Vorname', ['Vorname' => 'text']), 'old string shape');
+        $this->assertSame('Vorname', DataFormatter::fieldLabel('Vorname', null));
+        $this->assertSame('Vorname', DataFormatter::fieldLabel('Vorname', ['Vorname' => ['title' => ' <b> </b> ']]));
+    }
+
+    public function testFieldLabelStripsHtmlFromMarkdownTitles(): void
+    {
+        $types = ['agb' => ['title' => "Ich habe die <a href=\"x\">AGB</a>\n gelesen &amp; akzeptiert"]];
+        $this->assertSame('Ich habe die AGB gelesen & akzeptiert', DataFormatter::fieldLabel('agb', $types));
+    }
+
+    public function testFieldLabelIsCutToMaximumLength(): void
+    {
+        $types = ['x' => ['title' => str_repeat('ä', DataFormatter::MAX_TITLE_LENGTH + 10)]];
+        $this->assertSame(DataFormatter::MAX_TITLE_LENGTH, mb_strlen(DataFormatter::fieldLabel('x', $types)));
+    }
+
+    public function testGroupByPageSplitsAtPageChanges(): void
+    {
+        $types = [
+            'a' => ['page' => 'p1', 'pageTitle' => 'Schüler'],
+            'b' => ['page' => 'p1', 'pageTitle' => 'Schüler'],
+            'c' => ['page' => 'p2', 'pageTitle' => 'Schulbildung'],
+        ];
+
+        $groups = DataFormatter::groupByPage(['a' => 1, 'b' => 2, 'c' => 3], $types);
+
+        $this->assertSame([
+            ['title' => 'Schüler', 'fields' => ['a' => 1, 'b' => 2]],
+            ['title' => 'Schulbildung', 'fields' => ['c' => 3]],
+        ], $groups);
+    }
+
+    public function testGroupByPageKeepsDataFlatWithoutPageInformation(): void
+    {
+        $groups = DataFormatter::groupByPage(['a' => 1, 'b' => 2], ['a' => ['type' => 'text'], 'b' => 'text']);
+        $this->assertSame([['title' => '', 'fields' => ['a' => 1, 'b' => 2]]], $groups);
+    }
+
+    public function testGroupByPageAddsUnknownFieldsToCurrentPage(): void
+    {
+        $types = ['a' => ['page' => 'p1', 'pageTitle' => 'Schüler']];
+        $groups = DataFormatter::groupByPage(['a' => 1, 'berechnet' => 2], $types);
+        $this->assertSame([['title' => 'Schüler', 'fields' => ['a' => 1, 'berechnet' => 2]]], $groups);
+    }
+
+    public function testGroupByPageReturnsNothingForNoData(): void
+    {
+        $this->assertSame([], DataFormatter::groupByPage([], null));
+    }
 }

@@ -7,7 +7,8 @@ namespace App\Forms;
  * Sample submission for the PDF preview: every question of a survey with a made-up answer.
  *
  * Text questions show their own field name, dates show 1.1.2000, numbers show 1, choice questions show their first choice,
- * yes/no questions show "Ja". The keys keep the survey order (the PDF sorts by "_fieldTypes", like real submissions).
+ * yes/no questions show "Ja". The keys keep the survey order (the PDF sorts by "_fieldTypes", like real submissions);
+ * "_fieldTypes" carries question and page titles in the shape survey-handler-base.js stores with a submission.
  */
 final class PdfPreviewData
 {
@@ -46,6 +47,9 @@ final class PdfPreviewData
                 }
             }
         }
+        if (array_key_exists('section_headings', $pdf)) { // the editor posts "0"/"1", a stored config true/false
+            $out['section_headings'] = filter_var($pdf['section_headings'], FILTER_VALIDATE_BOOLEAN);
+        }
         if (($pdf['logo'] ?? null) === false) {
             $out['logo'] = false; // "no logo" stays honoured
         }
@@ -66,8 +70,20 @@ final class PdfPreviewData
     {
         $data  = [];
         $types = [];
-        foreach (SurveyFieldExtractor::topLevelElements($survey) as $element) {
-            self::walk($element, $data, $types);
+        foreach (is_array($survey['pages'] ?? null) ? array_values($survey['pages']) : [] as $i => $page) {
+            if (!is_array($page) || !is_array($page['elements'] ?? null)) {
+                continue;
+            }
+            $pageInfo = [
+                'page'      => is_string($page['name'] ?? null) && $page['name'] !== '' ? $page['name'] : 'page' . ($i + 1), // SurveyJS default name
+                'pageTitle' => self::text($page['title'] ?? null) ?? '',
+            ];
+            foreach ($page['elements'] as $element) {
+                self::walk($element, $data, $types, $pageInfo);
+            }
+        }
+        foreach (is_array($survey['elements'] ?? null) ? $survey['elements'] : [] as $element) { // single-page survey without "pages"
+            self::walk($element, $data, $types, []);
         }
         $data['_fieldTypes'] = $types;
         return $data;
@@ -75,9 +91,10 @@ final class PdfPreviewData
 
     /**
      * @param array<string,mixed> $data
-     * @param array<string,string> $types
+     * @param array<string,array<string,string>> $types
+     * @param array{page?:string,pageTitle?:string} $pageInfo
      */
-    private static function walk(mixed $element, array &$data, array &$types): void
+    private static function walk(mixed $element, array &$data, array &$types, array $pageInfo): void
     {
         if (!is_array($element)) {
             return;
@@ -86,7 +103,7 @@ final class PdfPreviewData
 
         if ($type === 'panel' || $type === 'page') {
             foreach (($element['elements'] ?? []) as $child) {
-                self::walk($child, $data, $types);
+                self::walk($child, $data, $types, $pageInfo);
             }
             return;
         }
@@ -96,7 +113,7 @@ final class PdfPreviewData
             return;
         }
         $data[$name]  = self::sample($type, $name, $element);
-        $types[$name] = $type;
+        $types[$name] = ['type' => $type, 'title' => self::text($element['title'] ?? null) ?? $name] + $pageInfo;
     }
 
     /** @param array<string,mixed> $element */
@@ -138,11 +155,17 @@ final class PdfPreviewData
         }
         $first = reset($choices);
         if (is_array($first)) {
-            $first = $first['text'] ?? $first['value'] ?? null;
-            if (is_array($first)) { // localized text {"default": "…"}
-                $first = $first['default'] ?? reset($first);
-            }
+            $first = self::text($first['text'] ?? null) ?? $first['value'] ?? null;
         }
         return is_string($first) || is_int($first) ? (string)$first : null;
+    }
+
+    /** A survey text, plain or localized {"default": "…", "de": "…"} (the default text, as the survey shows it); null if missing or empty */
+    private static function text(mixed $value): ?string
+    {
+        if (is_array($value)) {
+            $value = $value['default'] ?? reset($value);
+        }
+        return is_string($value) && trim($value) !== '' ? $value : null;
     }
 }

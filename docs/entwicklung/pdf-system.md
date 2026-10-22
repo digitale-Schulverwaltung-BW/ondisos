@@ -71,6 +71,7 @@ PDF_TOKEN_SECRET=your-secret-key-here
         'header_title' => 'Anmeldebestätigung',
         'intro_text' => 'Vielen Dank...',
         'footer_text' => 'Bei Fragen: ...',
+        'section_headings' => true, // Seitentitel als Überschriften (Standard: true)
         'include_fields' => 'all',
         'exclude_fields' => ['consent_datenschutz'],
         'pre_sections' => [],   // Vor Daten-Tabelle
@@ -142,7 +143,17 @@ Logos werden automatisch:
 ## Field-Ordering
 
 Die Reihenfolge der Felder im PDF entspricht der SurveyJS-Formular-Reihenfolge.
-Metadaten `_fieldTypes` werden von survey-handler.js extrahiert und zur Sortierung verwendet.
+Metadaten `_fieldTypes` werden von `survey-handler-base.js` (`extractFieldTypes()`) beim Absenden extrahiert und zur Sortierung verwendet.
+Je Frage stehen dort `type` (bei Textfeldern `inputType`), `title` (verarbeiteter Fragetitel) sowie `page` und `pageTitle` der Survey-Seite, z. B.:
+
+```json
+"_fieldTypes": {"Vorname": {"type": "text", "title": "Vorname", "page": "schueler", "pageTitle": "Angaben Schüler"}}
+```
+
+- `DataFormatter::fieldLabel()` beschriftet ein Feld mit `title` (HTML entfernt, höchstens 300 Zeichen), sonst mit dem Feldnamen. Der Excel-Export behält die Feldnamen (ASV).
+- `DataFormatter::groupByPage()` teilt die gefilterten Felder an jedem Seitenwechsel; jede Gruppe beginnt in `sections/data-table.php` mit einer Zeile `tr.page-heading`, die Zweierpaare beginnen je Seite neu.
+  Nur eine Ebene: Panels ergeben keine Überschrift. Hat keine Gruppe einen Titel (Anmeldungen vor diesem Update, Seiten ohne Titel) oder ist `pdf.section_headings` aus, bleibt es bei einer Tabelle unter „Formulardaten“.
+- Die PDF-Vorschau (`PdfPreviewData::fromSurvey()`) erzeugt `_fieldTypes` in derselben Form aus der Survey-JSON.
 
 ## Testing
 

@@ -40,6 +40,13 @@ class PdfTemplateRenderer
         // Prepare data
         $rawData = $anmeldung->data ?? [];
         $filteredData = DataFormatter::prepareForPdf($rawData, $pdfConfig);
+        $fieldTypes = is_array($rawData['_fieldTypes'] ?? null) ? $rawData['_fieldTypes'] : null;
+
+        // Page titles as headings (default on); untitled pages only or no page information = one flat table
+        $groups = ($pdfConfig['section_headings'] ?? true) !== false
+            ? DataFormatter::groupByPage($filteredData, $fieldTypes)
+            : [['title' => '', 'fields' => $filteredData]];
+        $withHeadings = array_filter($groups, static fn (array $g): bool => $g['title'] !== '') !== [];
 
         // Load logo with dimensions
         $logoData = $this->loadLogoData($pdfConfig['logo'] ?? null);
@@ -52,6 +59,9 @@ class PdfTemplateRenderer
             'anmeldung' => $anmeldung,
             'config' => $pdfConfig,
             'data' => $filteredData,
+            'groups' => $withHeadings ? $groups : [['title' => '', 'fields' => $filteredData]],
+            'withHeadings' => $withHeadings,
+            'fieldTypes' => $fieldTypes,
             'rawData' => $rawData,
             'logoBase64' => $logoData['dataUri'] ?? null, // Keep for backward compat
             'logoData' => $logoData,

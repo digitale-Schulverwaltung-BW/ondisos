@@ -42,6 +42,62 @@ class DataFormatter
         */
     }
 
+    /** Upper bound for a label or heading taken from the survey (characters) */
+    public const MAX_TITLE_LENGTH = 300;
+
+    /**
+     * Label of a field in the PDF: the question title stored with the submission, else the field name
+     *
+     * Titles may carry HTML (SurveyJS markdown); the PDF shows them as plain text.
+     *
+     * @param string $key The field key
+     * @param array|null $fieldTypes _fieldTypes metadata of the submission
+     * @return string Plain text label
+     */
+    public static function fieldLabel(string $key, ?array $fieldTypes): string
+    {
+        $info = $fieldTypes[$key] ?? null;
+        $title = is_array($info) ? self::plainText($info['title'] ?? null) : '';
+        return $title !== '' ? $title : $key;
+    }
+
+    /**
+     * Split prepared PDF data into consecutive groups of the same survey page
+     *
+     * Each group carries the page title ('' for a page without title). Without page information
+     * (registrations from before 3.2, fields the snapshot does not know) the data stays one group.
+     *
+     * @param array<string, mixed> $data Filtered and sorted data (prepareForPdf())
+     * @param array|null $fieldTypes _fieldTypes metadata of the submission
+     * @return list<array{title: string, fields: array<string, mixed>}>
+     */
+    public static function groupByPage(array $data, ?array $fieldTypes): array
+    {
+        $groups = [];
+        $current = null;
+        foreach ($data as $key => $value) {
+            $info = $fieldTypes[$key] ?? null;
+            $page = is_array($info) && is_string($info['page'] ?? null) ? $info['page'] : null;
+            if ($groups === [] || ($page !== null && $page !== $current)) {
+                $groups[] = ['title' => is_array($info) ? self::plainText($info['pageTitle'] ?? null) : '', 'fields' => []];
+                $current = $page;
+            }
+            $groups[array_key_last($groups)]['fields'][$key] = $value;
+        }
+        return $groups;
+    }
+
+    /** HTML and surplus whitespace removed, cut to MAX_TITLE_LENGTH; '' for anything but a string */
+    private static function plainText(mixed $value): string
+    {
+        if (!is_string($value)) {
+            return '';
+        }
+        $text = html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = trim((string)preg_replace('/\s+/u', ' ', $text));
+        return mb_substr($text, 0, self::MAX_TITLE_LENGTH);
+    }
+
     /**
      * Format a value for display
      *
