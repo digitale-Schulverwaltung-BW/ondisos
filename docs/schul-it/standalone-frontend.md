@@ -88,6 +88,18 @@ ankommen, sonst zeigt der QR-Code auf eine interne Adresse oder auf `http://`. P
 Eine Web Application Firewall vor dem Frontend darf Anfragen an `api/signature.php` nicht blockieren: Die Formularseite fragt dort während des Unterschreibens alle 3 Sekunden nach,
 und das Smartphone sendet die Unterschrift als Base64-Bild im JSON-Body (bis etwa 200 KB).
 
+### Meldungen der Unterschrift per Smartphone
+
+Im Browser erscheint jeder Backend-Fehler als „Der Dienst ist gerade nicht erreichbar“ (HTTP `502`). Das PHP-Fehlerlog des Frontends nennt die Ursache (im WordPress-Plugin: `wp-content/debug.log`):
+
+| Meldung im Fehlerlog | Bedeutung und Abhilfe |
+|---|---|
+| `Signature handoff (…): backend HTTP 404 (no JSON answer)` | Den Endpunkt gibt es nicht: Backend älter als 3.2.0a, oder ein Reverse-Proxy bzw. eine Firewall vor dem Backend lässt nur bekannte API-Pfade durch; dann `api/signature-handoff.php` freigeben |
+| `Signature handoff (…): backend HTTP 401 (unauthorized)` | Signatur abgelehnt: `TENANT_API_SECRET` passt nicht oder die Uhren weichen ab (im Fehlerlog des Backends: `API signature rejected (signature, …)`) |
+| `Signature handoff (…): backend HTTP 500 (server)` | Fehler im Backend; dessen Fehlerlog nennt ihn (`Signature handoff (…) failed: …`), z. B. fehlende Composer-Pakete nach einem Update ([Betrieb](../betreiber/betrieb.md#weitere-fehlerbilder)) |
+| `Signature handoff: backend unreachable: …` | Keine Verbindung (DNS, TLS, Zeitüberschreitung): `BACKEND_API_URL` und Erreichbarkeit prüfen |
+| `Signature handoff needs API signature format 2 …` | `API_SIGNATURE_VERSION=1` ist gesetzt; die Funktion braucht Signaturformat 2 |
+
 ## Texte der Oberfläche anpassen
 
 Meldungen und Beschriftungen des Frontends stehen in `config/messages.php`. Eigene Änderungen gehören in `config/messages.local.php`
@@ -109,7 +121,7 @@ Das Backend muss **zuerst** aktualisiert werden (siehe [Betriebsmodell](../betre
 | **Absenden scheitert bei vielen Besuchern, im Fehlerlog `Backend API returned HTTP 429`** | Das Limit je Besucher im Backend ist erreicht. Steht ein Reverse-Proxy vor dem Frontend, muss `TRUSTED_PROXIES` stimmen, sonst gelten alle Besucher als dieselbe Adresse |
 | **Formular erscheint nicht, obwohl das Backend läuft** | Formular ohne Speicherung im Backend und ohne gültige Empfänger-Adresse wird nicht angezeigt; Redaktion trägt unter *Formulare* eine Empfänger-Adresse ein |
 | **Kein Button „Auf dem Smartphone unterschreiben“** | Die Option ist beim Formular aus (Redaktion), das Feld nutzt nicht das Format PNG, oder das Gerät hat einen Touchscreen als Haupteingabe (dort wird direkt im Feld unterschrieben) |
-| **Smartphone: „Der Dienst ist gerade nicht erreichbar“** bzw. Dialog am Rechner zeigt dasselbe | Das Frontend erreicht `signature-handoff.php` im Backend nicht: Backend älter als 3.2.0a (Backend zuerst aktualisieren), `TENANT_API_SECRET` passt nicht, oder `API_SIGNATURE_VERSION=1` ist gesetzt (die Funktion braucht Signaturformat 2). Im PHP-Fehlerlog steht `Signature handoff: …` |
+| **Smartphone: „Der Dienst ist gerade nicht erreichbar“** bzw. Dialog am Rechner zeigt dasselbe (Browser: `502` von `api/signature.php`) | Das Frontend kommt mit `signature-handoff.php` im Backend nicht zurecht. Die Ursache steht im PHP-Fehlerlog des Frontends, siehe [Meldungen der Unterschrift per Smartphone](#meldungen-der-unterschrift-per-smartphone) |
 | **Dialog am Rechner: „Die Seite ist veraltet …“** | Die PHP-Session ist abgelaufen (wie beim Absenden mit „Ungültiges Sicherheitstoken“): Seite neu laden. Kommt das oft vor, `session.gc_maxlifetime` erhöhen |
 | **QR-Code führt auf eine falsche oder interne Adresse** | Reverse-Proxy reicht Host bzw. `X-Forwarded-Proto` nicht durch (siehe [Unterschrift per Smartphone](#unterschrift-per-smartphone)) |
 | **Upload scheitert** | Dateityp bzw. -größe gegen `UPLOAD_ALLOWED_TYPES` / `UPLOAD_MAX_SIZE` im Frontend **und** Backend prüfen; Virenfund wird abgelehnt |

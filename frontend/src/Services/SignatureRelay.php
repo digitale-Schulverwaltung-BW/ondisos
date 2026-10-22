@@ -17,7 +17,8 @@ namespace Frontend\Services;
  * - The URL of the phone page (sign_url) is always set by the server, never taken from the browser:
  *   otherwise a manipulated request could put a foreign address into the QR code.
  * - Backend errors keep their code (expired, used …) and 4xx status; an unreachable or rejecting backend
- *   (missing secret, 401, 5xx) becomes "unavailable" without details.
+ *   (missing secret, 401, 5xx) becomes "unavailable" for the browser; the PHP error log gets the backend's
+ *   HTTP status and error code (never tokens or image data).
  */
 final class SignatureRelay
 {
@@ -86,6 +87,10 @@ final class SignatureRelay
         $data = $response['data'];
 
         if ($code === 0 || $data === null || $code === 401 || $code >= 500) {
+            // Code 0: BackendApiClient has already logged why (unreachable, no secret, format 1)
+            if ($code !== 0) {
+                error_log(self::backendProblem($action, $code, $data));
+            }
             return self::error(502, 'unavailable');
         }
         if (($data['ok'] ?? false) !== true) {
@@ -135,6 +140,22 @@ final class SignatureRelay
         }
 
         return is_string($title) ? trim(strip_tags($title)) : '';
+    }
+
+    /**
+     * Log line for a backend answer the browser only sees as "unavailable", e.g.
+     * "Signature handoff (create): backend HTTP 500 (server)". 401 = signature rejected (secret, clock),
+     * 404 without JSON = endpoint missing (backend older than 3.2.0a or blocked by a proxy), 5xx = see the backend's error log.
+     *
+     * @param array<string, mixed>|null $data
+     */
+    public static function backendProblem(string $action, int $code, ?array $data): string
+    {
+        $detail = $data === null
+            ? 'no JSON answer'
+            : (is_string($data['error'] ?? null) && preg_match('/^[a-z_]{1,40}$/', $data['error']) === 1 ? $data['error'] : 'no error code');
+
+        return sprintf('Signature handoff (%s): backend HTTP %d (%s)', $action, $code, $detail);
     }
 
     /** @return array{code: int, body: array{ok: false, error: string}} */

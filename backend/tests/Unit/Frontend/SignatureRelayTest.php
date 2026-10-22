@@ -14,12 +14,23 @@ class SignatureRelayTest extends TestCase
     private const SECRET = 'a-real-looking-tenant-secret-0123456789abcdef';
     private const SIGN_URL = 'https://schule.example/anmeldung/sign.php';
 
+    private string|false $errorLog = false;
+
     protected function setUp(): void
     {
+        // The relay logs backend problems; keep them out of the test output
+        $this->errorLog = ini_set('error_log', '/dev/null');
         require_once __DIR__ . '/../../../../frontend/src/Config/FormConfig.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/BackendApiClient.php';
         require_once __DIR__ . '/../../../../frontend/src/Services/SignatureRelay.php';
         require_once __DIR__ . '/../../../../frontend/src/Utils/ClientIp.php';
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->errorLog !== false) {
+            ini_set('error_log', $this->errorLog);
+        }
     }
 
     /** Client whose backend answers with $code/$data and which records the call. */
@@ -148,6 +159,23 @@ class SignatureRelayTest extends TestCase
         $result = $this->relay($this->client($code, $data))->handle(['action' => 'info'], false, self::SIGN_URL);
 
         $this->assertSame(['code' => 502, 'body' => ['ok' => false, 'error' => 'unavailable']], $result);
+    }
+
+    /** @return array<string, array{int, ?array, string}> */
+    public static function backendProblems(): array
+    {
+        return [
+            'server error with code' => [500, ['ok' => false, 'error' => 'server'], 'Signature handoff (create): backend HTTP 500 (server)'],
+            'endpoint missing (HTML 404)' => [404, null, 'Signature handoff (create): backend HTTP 404 (no JSON answer)'],
+            'signature rejected' => [401, ['ok' => false, 'error' => 'unauthorized'], 'Signature handoff (create): backend HTTP 401 (unauthorized)'],
+            'odd error text not logged' => [500, ['error' => "x\nforged log line"], 'Signature handoff (create): backend HTTP 500 (no error code)'],
+        ];
+    }
+
+    /** @dataProvider backendProblems */
+    public function testBackendProblemLogLine(int $code, ?array $data, string $expected): void
+    {
+        $this->assertSame($expected, \Frontend\Services\SignatureRelay::backendProblem('create', $code, $data));
     }
 
     public function testOddBackendErrorTextIsNotEchoed(): void

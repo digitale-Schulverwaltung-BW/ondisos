@@ -17,6 +17,11 @@ docker compose logs backend | grep "Migration complete"
 curl http://localhost:9080/api/health.php
 ```
 
+**Composer-Pakete:** Compose bindet `backend/` aus dem Projektverzeichnis in den Container ein; es gilt also das `vendor/` des Projektverzeichnisses, nicht das des Images.
+Ab 3.2.0a installiert der Container deshalb beim Start die Pakete neu, sobald sich `backend/composer.lock` seit der letzten Installation geändert hat (im Log: `📦 Installing Composer dependencies`).
+Dafür braucht er beim ersten Start nach einem solchen Update Zugang zum Internet (Packagist, GitHub). Ohne Internet steht im Log `⚠️ composer install FAILED`, und das Backend läuft mit den alten Paketen weiter:
+Funktionen mit neuen Paketen scheitern dann mit `Class "…" not found` (siehe [Weitere Fehlerbilder](#weitere-fehlerbilder)). Vor 3.2.0a wurden neue Pakete nach einem `git pull` gar nicht installiert.
+
 Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.1.md](MIGRATION-3.1.md), [Upgrade auf 3.1.2](../entwicklung/releases/RELEASE-NOTES-3.1.2.md#upgrade-von-311).
 Ändert sich das Compose-File, genügt `docker compose up -d` (nicht `restart`). Nach einem Update des Basis-Images oder von PHP: `docker compose build --no-cache backend`.
 
@@ -245,7 +250,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 | Beobachtung | Ursache und Abhilfe |
 |---|---|
 | `Unknown column 'tenant_id'` | Die Migration ist nicht gelaufen: `php backend/migrate.php` (Docker: läuft bei jedem Start, `docker compose logs backend` prüfen) |
-| `Class not found` | Abhängigkeiten fehlen: ohne Docker `composer install --no-dev --optimize-autoloader` im `backend/` |
+| `Class not found` (z. B. `Class "BaconQrCode\Writer" not found`) | Abhängigkeiten fehlen. Docker: `docker compose logs backend \| grep -i composer` zeigt, ob die Installation beim Start gescheitert ist (kein Internet); von Hand `docker compose exec backend composer install --no-dev --no-interaction --optimize-autoloader`, danach `docker compose restart backend` (leert OPcache). Ohne Docker: `composer install --no-dev --optimize-autoloader` im `backend/` und Apache bzw. PHP-FPM neu laden |
 | Auto-Expunge läuft nicht | `AUTO_EXPUNGE_DAYS` muss größer 0 sein, `cache/` beschreibbar (dort liegt je Schule `last_expunge_<Tenant-ID>.txt`); das Dashboard zeigt Status und nächsten Lauf |
 | Excel-Export zeigt die Spalte „Formular“ | Der Export war nicht auf ein Formular gefiltert (`?form=bs`); beim Export eines einzelnen Formulars entfällt die Spalte |
 | Datumsfelder im Export falsch | Der Export wandelt Werte der Form `YYYY-MM-DD` in `dd.mm.yyyy` um; das Feld muss ISO-Format enthalten |

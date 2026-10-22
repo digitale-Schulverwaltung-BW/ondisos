@@ -102,8 +102,6 @@ if (filter_var($_ENV['RATE_LIMIT_ENABLED'] ?? 'true', FILTER_VALIDATE_BOOLEAN)) 
     }
 }
 
-$service = new SignatureHandoffService(new SignatureHandoffRepository());
-
 $statusFor = static fn(string $error): int => match ($error) {
     SignatureHandoffService::ERROR_INVALID_INPUT => 400,
     SignatureHandoffService::ERROR_INVALID => 404,
@@ -114,45 +112,53 @@ $statusFor = static fn(string $error): int => match ($error) {
     default => 400,
 };
 
-$result = match ($action) {
-    'create' => (static function () use ($service, $str, $int): array {
-        $formKey = $str('form_key');
-        $config = FormConfig::get($formKey);
-        if ($config === null || ($config['signature_handoff'] ?? false) !== true) {
-            handoffFail(403, 'disabled');
-        }
-        $created = $service->create(
-            $formKey,
-            $str('field_name'),
-            $str('field_title'),
-            $int('width'),
-            $int('height'),
-            $str('sign_url'),
-            $str('pen_color'),
-            $str('background_color')
-        );
-        if (!$created['ok']) {
-            return $created;
-        }
+// Unexpected failures (database, missing package such as bacon-qr-code after an update without composer install)
+// get a JSON answer; the log line names the action. The relay shows "unavailable" and logs "backend HTTP 500 (server)".
+try {
+    $service = new SignatureHandoffService(new SignatureHandoffRepository());
+    $result = match ($action) {
+        'create' => (static function () use ($service, $str, $int): array {
+            $formKey = $str('form_key');
+            $config = FormConfig::get($formKey);
+            if ($config === null || ($config['signature_handoff'] ?? false) !== true) {
+                handoffFail(403, 'disabled');
+            }
+            $created = $service->create(
+                $formKey,
+                $str('field_name'),
+                $str('field_title'),
+                $int('width'),
+                $int('height'),
+                $str('sign_url'),
+                $str('pen_color'),
+                $str('background_color')
+            );
+            if (!$created['ok']) {
+                return $created;
+            }
 
-        return [
-            'ok' => true,
-            'id' => $created['id'],
-            'read_key' => $created['read_key'],
-            'qr_svg' => QrCodeSvg::render($created['qr_url']),
-            // Same link as text, for a computer user who cannot scan (the user holds both secrets anyway)
-            'sign_link' => $created['qr_url'],
-            'expires_in' => $created['expires_in'],
-        ];
-    })(),
-    'info' => (static function () use ($service, $str, $tenant): array {
-        $info = $service->info($str('id'), $str('token'));
+            return [
+                'ok' => true,
+                'id' => $created['id'],
+                'read_key' => $created['read_key'],
+                'qr_svg' => QrCodeSvg::render($created['qr_url']),
+                // Same link as text, for a computer user who cannot scan (the user holds both secrets anyway)
+                'sign_link' => $created['qr_url'],
+                'expires_in' => $created['expires_in'],
+            ];
+        })(),
+        'info' => (static function () use ($service, $str, $tenant): array {
+            $info = $service->info($str('id'), $str('token'));
 
-        return $info['ok'] ? ['school' => (string)$tenant['name']] + $info : $info;
-    })(),
-    'submit' => $service->submit($str('id'), $str('token'), $str('png')),
-    'poll' => $service->poll($str('id'), $str('key')),
-};
+            return $info['ok'] ? ['school' => (string)$tenant['name']] + $info : $info;
+        })(),
+        'submit' => $service->submit($str('id'), $str('token'), $str('png')),
+        'poll' => $service->poll($str('id'), $str('key')),
+    };
+} catch (\Throwable $e) {
+    error_log(sprintf('Signature handoff (%s) failed: %s: %s', $action, get_class($e), $e->getMessage()));
+    handoffFail(500, 'server');
+}
 
 if (!$result['ok']) {
     if ($result['error'] === SignatureHandoffService::ERROR_INVALID && $action !== 'create') {

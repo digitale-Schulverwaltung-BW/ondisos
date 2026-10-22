@@ -125,11 +125,31 @@ if { [ "${AUTH_ENABLED:-true}" = "true" ] || [ "${MULTI_TENANT_ENABLED:-false}" 
     echo "    and set ADMIN_PASSWORD_HASH='...' (single quotes) in the root .env."
 fi
 
-# Install/update Composer dependencies
-if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
-    echo "📦 Installing Composer dependencies..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader
-    echo "✅ Composer dependencies installed!"
+# Install/update Composer dependencies.
+# docker-compose.yml mounts ./backend over /var/www/html, so vendor/ comes from the host and hides the
+# image's vendor/. After a git pull that changes composer.lock, the new packages must be installed here
+# (otherwise e.g. "Class BaconQrCode\Writer not found"). The hash of composer.lock at the last successful
+# install is kept in vendor/.composer-lock.sha256; a different hash (or no vendor/) triggers composer install.
+LOCK_HASH_FILE="vendor/.composer-lock.sha256"
+COMPOSER_FLAGS="--no-interaction --prefer-dist --optimize-autoloader"
+if [ "${APP_ENV:-production}" = "production" ]; then
+    COMPOSER_FLAGS="$COMPOSER_FLAGS --no-dev"
+fi
+LOCK_HASH=$(sha256sum composer.lock 2>/dev/null | cut -d' ' -f1 || true)
+if [ ! -f "vendor/autoload.php" ] || [ -z "$LOCK_HASH" ] || [ "$(cat "$LOCK_HASH_FILE" 2>/dev/null)" != "$LOCK_HASH" ]; then
+    echo "📦 Installing Composer dependencies (vendor/ missing or composer.lock changed)..."
+    # shellcheck disable=SC2086
+    if composer install $COMPOSER_FLAGS; then
+        [ -n "$LOCK_HASH" ] && echo "$LOCK_HASH" > "$LOCK_HASH_FILE"
+        echo "✅ Composer dependencies installed!"
+    elif [ -f "vendor/autoload.php" ]; then
+        # No internet (intranet backend): keep running with the old packages instead of a restart loop
+        echo "⚠️  composer install FAILED. Continuing with the existing vendor/, which may lack packages of this version."
+        echo "    Install them by hand: docker compose exec backend composer install $COMPOSER_FLAGS"
+    else
+        echo "❌ composer install failed and there is no vendor/: the backend cannot start."
+        exit 1
+    fi
 fi
 
 # Run database migration (idempotent — safe to run on every start)
