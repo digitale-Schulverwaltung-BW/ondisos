@@ -242,4 +242,23 @@ class SurveyValidatorTest extends TestCase
         $this->assertTrue($result->isValid());
         $this->assertNotEmpty($result->warnings());
     }
+
+    public function testDuplicateNameInChoiceOptionIsAnError(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'text', 'name' => 'Beginn'],
+            ['type' => 'radiogroup', 'name' => 'Form', 'choices' => [['value' => 'VZ', 'elements' => [['type' => 'text', 'name' => 'Beginn']]]]],
+        ));
+
+        $this->assertSame('pages[0].elements[1].choices[0].elements[0].name', $result->errors()[0]['path'] ?? null);
+    }
+
+    public function testQuestionInChoiceOptionNeedsAName(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'radiogroup', 'name' => 'Form', 'choices' => [['value' => 'VZ', 'elements' => [['type' => 'text']]]]],
+        ));
+
+        $this->assertNotSame([], $result->errors());
+    }
 }

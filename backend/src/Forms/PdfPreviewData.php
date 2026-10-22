@@ -114,6 +114,9 @@ final class PdfPreviewData
         }
         $data[$name]  = self::sample($type, $name, $element);
         $types[$name] = ['type' => $type, 'title' => self::text($element['title'] ?? null) ?? $name] + $pageInfo;
+        foreach (SurveyFieldExtractor::choiceElements($element) as $child) {
+            self::walk($child, $data, $types, $pageInfo);
+        }
     }
 
     /** @param array<string,mixed> $element */

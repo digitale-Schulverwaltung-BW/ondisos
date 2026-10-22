@@ -146,6 +146,13 @@ final class SurveyValidator
             }
         }
 
+        // Questions in a choice option share the survey's name scope.
+        foreach (is_array($element['choices'] ?? null) ? $element['choices'] : [] as $ci => $choice) {
+            foreach (is_array($choice) && is_array($choice['elements'] ?? null) ? $choice['elements'] : [] as $i => $child) {
+                $this->checkElement("$path.choices[$ci].elements[$i]", $child, $seen, $count, $result, $depth + 1);
+            }
+        }
+
         // Dynamic panels have their own name scope for the template elements.
         if ($type === 'paneldynamic') {
             $inner = [];

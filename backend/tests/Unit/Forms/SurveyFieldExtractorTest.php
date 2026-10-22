@@ -54,4 +54,24 @@ class SurveyFieldExtractorTest extends TestCase
         $this->assertNotEmpty($names);
         $this->assertSame($names, array_values(array_unique($names)));
     }
+
+    public function testQuestionsInChoiceOptionsAreConditionalFieldsInFormOrder(): void
+    {
+        $survey = ['pages' => [['elements' => [
+            ['type' => 'radiogroup', 'name' => 'Form', 'choices' => [
+            ['value' => 'VZ', 'elements' => [['type' => 'radiogroup', 'name' => 'Schwerpunkt', 'choices' => [
+                ['value' => 'a', 'elements' => [['type' => 'text', 'name' => 'Beginn', 'isRequired' => true]]],
+            ]]]],
+            'TZ',
+        ]],
+            ['type' => 'text', 'name' => 'Danach'],
+        ]]]];
+
+        $fields = SurveyFieldExtractor::fields($survey);
+
+        $this->assertSame(['Form', 'Schwerpunkt', 'Beginn', 'Danach'], array_keys($fields));
+        $this->assertFalse($fields['Form']['conditional']);
+        $this->assertTrue($fields['Beginn']['conditional'], 'shown only while its option is selected');
+        $this->assertTrue($fields['Beginn']['required']);
+    }
 }

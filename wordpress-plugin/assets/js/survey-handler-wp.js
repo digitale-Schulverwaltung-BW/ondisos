@@ -165,7 +165,7 @@ class SurveyHandlerWP extends SurveyHandlerBase {
         }
 
         // Try plain query params, restricted to this survey's question names
-        const validNames = new Set(this.survey.getAllQuestions(false).map(q => q.name));
+        const validNames = new Set(this.questionsOf(this.survey).map(q => q.name));
         return this._extractPlainPrefillParams(urlParams, validNames);
     }
 
@@ -177,7 +177,7 @@ class SurveyHandlerWP extends SurveyHandlerBase {
 
         // SurveyJS only includes answered questions in data.
         // Ensure ALL questions are present so the email table and DB have every field.
-        sender.getAllQuestions(false).forEach(question => {
+        this.questionsOf(sender).forEach(question => {
             const type = question.getType();
 
             // html questions are presentational (no value); file questions are uploaded

@@ -8,6 +8,8 @@ namespace App\Forms;
  *
  * Panels are walked recursively; dynamic panels count as one field (their template
  * elements are scoped to the panel). Display-only elements (html, image) are no fields.
+ * Questions nested in a choice option (choices[].elements, SurveyJS 2) are fields of the survey like any other,
+ * shown only while their option is selected (so they count as conditional).
  */
 final class SurveyFieldExtractor
 {
@@ -82,7 +84,7 @@ final class SurveyFieldExtractor
      * @param mixed $element
      * @param array<string, array{type:string, title:?string, required:bool, conditional:bool}> $fields
      */
-    private static function collect(mixed $element, array &$fields): void
+    private static function collect(mixed $element, array &$fields, bool $inChoice = false): void
     {
         if (!is_array($element)) {
             return;
@@ -91,7 +93,7 @@ final class SurveyFieldExtractor
 
         if ($type === 'panel' || $type === 'page') {
             foreach (($element['elements'] ?? []) as $child) {
-                self::collect($child, $fields);
+                self::collect($child, $fields, $inChoice);
             }
             return;
         }
@@ -103,8 +105,28 @@ final class SurveyFieldExtractor
                 'type'        => $type,
                 'title'       => is_string($title) ? $title : null,
                 'required'    => ($element['isRequired'] ?? false) === true,
-                'conditional' => !empty($element['requiredIf']) || !empty($element['visibleIf']) || !empty($element['enableIf']),
+                'conditional' => $inChoice || !empty($element['requiredIf']) || !empty($element['visibleIf']) || !empty($element['enableIf']),
             ];
         }
+        foreach (self::choiceElements($element) as $child) {
+            self::collect($child, $fields, true);
+        }
+    }
+
+    /**
+     * Elements nested in the choice options of a question (choices[].elements), in choice order.
+     *
+     * @param array<string,mixed> $element
+     * @return list<mixed>
+     */
+    public static function choiceElements(array $element): array
+    {
+        $out = [];
+        foreach (is_array($element['choices'] ?? null) ? $element['choices'] : [] as $choice) {
+            foreach (is_array($choice) && is_array($choice['elements'] ?? null) ? $choice['elements'] : [] as $child) {
+                $out[] = $child;
+            }
+        }
+        return $out;
     }
 }

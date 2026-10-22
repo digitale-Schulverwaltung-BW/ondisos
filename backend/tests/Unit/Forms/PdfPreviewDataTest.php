@@ -95,4 +95,22 @@ class PdfPreviewDataTest extends TestCase
         $this->assertTrue(PdfPreviewData::config(['section_headings' => true])['section_headings']);
         $this->assertArrayNotHasKey('section_headings', PdfPreviewData::config([]));
     }
+
+    public function testQuestionsInChoiceOptionsFollowTheirQuestionOnTheSamePage(): void
+    {
+        $survey = ['pages' => [
+            ['name' => 'kurs', 'title' => 'Kurs', 'elements' => [['type' => 'radiogroup', 'name' => 'Form', 'choices' => [
+            ['value' => 'VZ', 'elements' => [['type' => 'radiogroup', 'name' => 'Schwerpunkt', 'choices' => [
+                ['value' => 'a', 'elements' => [['type' => 'text', 'name' => 'Beginn', 'isRequired' => true]]],
+            ]]]],
+            'TZ',
+        ]]]],
+            ['name' => 'ende', 'title' => 'Absenden', 'elements' => [['type' => 'comment', 'name' => 'Anmerkungen']]],
+        ]];
+
+        $types = PdfPreviewData::fromSurvey($survey)['_fieldTypes'];
+
+        $this->assertSame(['Form', 'Schwerpunkt', 'Beginn', 'Anmerkungen'], array_keys($types));
+        $this->assertSame('kurs', $types['Beginn']['page']);
+    }
 }

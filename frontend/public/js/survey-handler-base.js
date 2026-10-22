@@ -40,6 +40,15 @@ class SurveyHandlerBase {
     // -------------------------------------------------------------------------
 
     /**
+     * All questions of the survey, including those nested in a choice option (choices[].elements).
+     * getAllQuestions() leaves the choice-nested ones out; with includeNested it also returns the inner
+     * questions of dynamic panels and matrices, which are no fields of their own (they have a parentQuestion).
+     */
+    questionsOf(survey) {
+        return survey.getAllQuestions(false, false, true).filter(q => !q.parentQuestion);
+    }
+
+    /**
      * Extract field types from survey model.
      * Returns object mapping field names to their type info.
      * Title and page (name and title) are a snapshot for the PDF: it shows question titles and groups the
@@ -48,7 +57,7 @@ class SurveyHandlerBase {
     extractFieldTypes(sender) {
         const fieldTypes = {};
 
-        sender.getAllQuestions().forEach(question => {
+        this.questionsOf(sender).forEach(question => {
             const name = question.name;
             const type = question.getType();
 
@@ -78,7 +87,7 @@ class SurveyHandlerBase {
      * not as File objects. We convert each base64 data URL to a Blob for proper upload.
      */
     addFileUploads(formData, sender) {
-        sender.getAllQuestions()
+        this.questionsOf(sender)
             .filter(q => q.getType() === 'file')
             .forEach(question => {
                 const files = question.value;
@@ -267,12 +276,12 @@ class SurveyHandlerBase {
      * Metadata keys (e.g. _fieldTypes) are appended after the question keys.
      *
      * @param {object} data   - The assembled survey_data object
-     * @param {object} sender - The SurveyJS model (provides getAllQuestions)
+     * @param {object} sender - The SurveyJS model
      */
     _sortDataByQuestionOrder(data, sender) {
         const ordered = {};
 
-        sender.getAllQuestions(false).forEach(question => {
+        this.questionsOf(sender).forEach(question => {
             const name = question.name;
             if (name in data) {
                 ordered[name] = data[name];
@@ -295,7 +304,7 @@ class SurveyHandlerBase {
      */
     _setupDynamicPlaceholders(survey) {
         const update = () => {
-            survey.getAllQuestions().forEach(q => {
+            this.questionsOf(survey).forEach(q => {
                 if (q["placeholderExpression"]) {
                     const val = survey.runExpression(q["placeholderExpression"]);
                     if (val != null) q.placeholder = String(val);
