@@ -8,15 +8,19 @@ require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 
 use App\Controllers\AnmeldungController;
+use App\Forms\ListColumns;
 use App\Services\AnmeldungService;
+use App\Services\ListColumnService;
 use App\Repositories\AnmeldungRepository;
+use App\Repositories\FormConfigRepository;
+use App\Repositories\FormResourceRepository;
 use App\Utils\NullableHelpers as NH;
 use App\Services\MessageService as M;
 
 // Initialize dependencies (later: use DI Container)
 $repository = new AnmeldungRepository();
 $service = new AnmeldungService($repository);
-$controller = new AnmeldungController($service);
+$controller = new AnmeldungController($service, new ListColumnService(new FormConfigRepository(), new FormResourceRepository()));
 
 // Handle request
 $viewData = $controller->index();
@@ -51,6 +55,24 @@ function sortIndicator(string $column, string $currentCol, string $currentDir): 
         ? '<span class="ms-1" style="font-size:.75em">&#9650;</span>'
         : '<span class="ms-1" style="font-size:.75em">&#9660;</span>';
 }
+/**
+ * Hidden inputs for GET params (arrays like cols[] and f[...] included).
+ */
+function hiddenInputs(array $params): string
+{
+    $html = '';
+    foreach (explode('&', http_build_query($params)) as $pair) {
+        if ($pair === '') {
+            continue;
+        }
+        [$name, $value] = array_map('urldecode', array_pad(explode('=', $pair, 2), 2, ''));
+        $html .= '<input type="hidden" name="' . htmlspecialchars($name) . '" value="' . htmlspecialchars($value) . '">';
+    }
+    return $html;
+}
+
+$isDataSort = str_starts_with($sortColumn, ListColumns::SORT_PREFIX);
+
 // Get trash count for badge
 $trashCount = count($repository->findDeleted());
 require __DIR__ . '/../inc/header.php';
@@ -61,7 +83,7 @@ require __DIR__ . '/../inc/header.php';
         <div class="d-flex align-items-center gap-3">
             <h1 class="mb-0"><?= M::get('ui.anmeldungen') ?></h1>
             <form method="get" class="mb-0">
-                <?php if ($sortColumn !== 'id' || $sortDirection !== 'DESC'): ?>
+                <?php if (!$isDataSort && ($sortColumn !== 'id' || $sortDirection !== 'DESC')): ?>
                     <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
                     <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
                 <?php endif; ?>
@@ -119,6 +141,7 @@ require __DIR__ . '/../inc/header.php';
         <?php if ($selectedStatus !== ''): ?>
             <input type="hidden" name="status" value="<?= htmlspecialchars($selectedStatus) ?>">
         <?php endif; ?>
+        <?= hiddenInputs(array_filter(['cols' => $extraColumns, 'f' => $dataFilters])) ?>
 
         <label for="perPage" class="form-label mb-0"><?= M::get('ui.entries_per_page') ?></label>
         <select name="perPage" id="perPage" class="form-select form-select-sm w-auto" data-autosubmit>
@@ -138,19 +161,26 @@ require __DIR__ . '/../inc/header.php';
     if ($nameSearch !== '')    $filterBase['name']    = $nameSearch;
     if ($emailSearch !== '')   $filterBase['email']   = $emailSearch;
     if ($selectedStatus !== '') $filterBase['status'] = $selectedStatus;
+    if ($extraColumns !== [])  $filterBase['cols']    = $extraColumns;
+    if ($dataFilters !== [])   $filterBase['f']       = $dataFilters;
     ?>
-    <!-- Filter forms: kept outside the bulk form (nested forms are invalid HTML and made the name filter submit the bulk form).
-         The filter fields in the table header belong to them through their form="" attribute. -->
-    <?php foreach (['name', 'email', 'status'] as $filterField): ?>
-        <form method="get" id="filter-<?= $filterField ?>">
-            <?php foreach ($filterBase as $k => $v): if ($k === $filterField) continue; ?>
-                <input type="hidden" name="<?= htmlspecialchars($k) ?>" value="<?= htmlspecialchars((string)$v) ?>">
-            <?php endforeach; ?>
+    <!-- Filter form: kept outside the bulk form (nested forms are invalid HTML and made the name filter submit the bulk form).
+         The filter fields in the table header belong to it through their form="" attribute. -->
+    <form method="get" id="filter-form">
+        <?= hiddenInputs(array_intersect_key($filterBase, array_flip(['form', 'perPage', 'cols']))) ?>
+        <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
+        <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
+        <input type="hidden" name="page" value="1">
+    </form>
+    <?php if ($columnCatalog !== []): ?>
+        <!-- Column picker: extra columns from the survey data (checkboxes in the table header) -->
+        <form method="get" id="columns-form">
+            <?= hiddenInputs(array_diff_key($filterBase, ['cols' => true])) ?>
             <input type="hidden" name="sort" value="<?= htmlspecialchars($sortColumn) ?>">
             <input type="hidden" name="dir" value="<?= htmlspecialchars($sortDirection) ?>">
-            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="cols_set" value="1">
         </form>
-    <?php endforeach; ?>
+    <?php endif; ?>
 
     <!-- Bulk Actions Form -->
     <form method="post" action="bulk_actions.php" id="bulkForm">
@@ -186,7 +216,8 @@ require __DIR__ . '/../inc/header.php';
             </div>
         </div>
 
-        <!-- Data Table -->
+        <!-- Data Table (scrolls sideways when extra columns make it wider than the page) -->
+        <div class="table-responsive">
         <table class="table table-striped table-sm table-hover align-middle">
             <thead>
                 <!-- Sort header row -->
@@ -223,6 +254,47 @@ require __DIR__ . '/../inc/header.php';
                             <?= M::get('ui.table.date') ?><?= sortIndicator('created_at', $sortColumn, $sortDirection) ?>
                         </a>
                     </th>
+                    <?php foreach ($extraColumns as $col): $sortKey = ListColumns::SORT_PREFIX . $col; ?>
+                    <th>
+                        <a href="<?= sortUrl($sortKey, $sortColumn, $sortDirection, $filterBase) ?>" class="text-decoration-none text-dark fw-semibold"
+                           title="<?= htmlspecialchars($col) ?>">
+                            <?= htmlspecialchars($columnCatalog[$col]['label']) ?><?= sortIndicator($sortKey, $sortColumn, $sortDirection) ?>
+                        </a>
+                    </th>
+                    <?php endforeach; ?>
+                    <?php if ($columnCatalog !== []): ?>
+                    <th class="text-end" style="width: 1%">
+                        <div class="dropdown">
+                            <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle" data-bs-toggle="dropdown"
+                                    data-bs-auto-close="outside" data-bs-popper-config='{"strategy":"fixed"}' aria-expanded="false" title="<?= htmlspecialchars(M::get('ui.list_columns.hint')) ?>">
+                                <?= M::get('ui.list_columns.button') ?>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-0 fw-normal" style="min-width: 18rem; max-width: 24rem">
+                                <!-- Header with the apply button stays in place; only the field list scrolls -->
+                                <div class="d-flex align-items-start gap-2 p-3 pb-2 border-bottom">
+                                    <div class="small text-muted flex-grow-1">
+                                        <?= htmlspecialchars(M::get('ui.list_columns.hint')) ?>
+                                        (<?= htmlspecialchars(M::format('ui.list_columns.max', ['max' => ListColumns::MAX_COLUMNS])) ?>)
+                                    </div>
+                                    <button type="submit" form="columns-form" class="btn btn-primary btn-sm">
+                                        <?= M::get('ui.list_columns.apply') ?>
+                                    </button>
+                                </div>
+                                <div class="px-3 py-2" style="max-height: 60vh; overflow-y: auto">
+                                    <?php foreach ($columnCatalog as $name => $column): $name = (string)$name; $id = 'col-' . md5($name); ?>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="cols[]" form="columns-form" id="<?= $id ?>"
+                                                   value="<?= htmlspecialchars($name) ?>" <?= in_array($name, $extraColumns, true) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="<?= $id ?>" title="<?= htmlspecialchars($name) ?>">
+                                                <?= htmlspecialchars($column['label']) ?>
+                                            </label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </th>
+                    <?php endif; ?>
                 </tr>
                 <!-- Filter row -->
                 <tr class="table-light">
@@ -231,15 +303,15 @@ require __DIR__ . '/../inc/header.php';
                     <?php if ($selectedForm === ''): ?><th></th><?php endif; ?>
                     <th></th><!-- Version: no filter -->
                     <th>
-                        <input type="text" name="name" form="filter-name" value="<?= htmlspecialchars($nameSearch) ?>"
+                        <input type="text" name="name" form="filter-form" value="<?= htmlspecialchars($nameSearch) ?>"
                                    class="form-control form-control-sm" placeholder="Filter…" style="min-width:100px">
                     </th>
                     <th>
-                        <input type="text" name="email" form="filter-email" value="<?= htmlspecialchars($emailSearch) ?>"
+                        <input type="text" name="email" form="filter-form" value="<?= htmlspecialchars($emailSearch) ?>"
                                    class="form-control form-control-sm" placeholder="Filter…" style="min-width:120px">
                     </th>
                     <th>
-                        <select name="status" form="filter-status" class="form-select form-select-sm" data-autosubmit style="min-width:110px">
+                        <select name="status" form="filter-form" class="form-select form-select-sm" data-autosubmit style="min-width:110px">
                                 <option value="">Alle</option>
                                 <?php foreach (\App\Models\AnmeldungStatus::cases() as $s): ?>
                                     <option value="<?= $s->value ?>" <?= $selectedStatus === $s->value ? 'selected' : '' ?>>
@@ -250,15 +322,31 @@ require __DIR__ . '/../inc/header.php';
                     </th>
                     <th>
                         <?php
-                        $hasFilters = $nameSearch !== '' || $emailSearch !== '' || $selectedStatus !== '';
+                        $hasFilters = $nameSearch !== '' || $emailSearch !== '' || $selectedStatus !== '' || $dataFilters !== [];
                         if ($hasFilters):
                             $resetParams = [];
                             if ($selectedForm !== '') $resetParams['form'] = $selectedForm;
                             if ($pagination['perPage'] !== 25) $resetParams['perPage'] = $pagination['perPage'];
+                            if ($extraColumns !== []) $resetParams['cols'] = $extraColumns;
                         ?>
                             <a href="?<?= http_build_query($resetParams) ?>" class="btn btn-outline-secondary btn-sm" title="Filter zurücksetzen">&#10005;</a>
                         <?php endif; ?>
                     </th>
+                    <?php foreach ($extraColumns as $col): $column = $columnCatalog[$col]; ?>
+                    <th>
+                        <?php if (ListColumns::filterable($column)): ?>
+                            <select name="f[<?= htmlspecialchars($col) ?>]" form="filter-form" class="form-select form-select-sm" data-autosubmit style="min-width:100px">
+                                <option value="">Alle</option>
+                                <?php foreach ($column['choices'] as $key => $text): ?>
+                                    <option value="<?= htmlspecialchars((string)$key) ?>" <?= ($dataFilters[$col] ?? null) === (string)$key ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($text) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        <?php endif; ?>
+                    </th>
+                    <?php endforeach; ?>
+                    <?php if ($columnCatalog !== []): ?><th></th><?php endif; ?>
                 </tr>
             </thead>
             <tbody>
@@ -290,10 +378,15 @@ require __DIR__ . '/../inc/header.php';
                             </span>
                         </td>
                         <td><?= $anmeldung->createdAt->format('d.m.Y H:i') ?></td>
+                        <?php foreach ($extraColumns as $col): $text = ListColumns::format($anmeldung->data[$col] ?? null, $columnCatalog[$col]); ?>
+                            <td class="text-truncate" style="max-width: 16rem" title="<?= htmlspecialchars($text) ?>"><?= htmlspecialchars($text) ?></td>
+                        <?php endforeach; ?>
+                        <?php if ($columnCatalog !== []): ?><td></td><?php endif; ?>
                     </tr>
                 <?php endforeach; ?>
             </tbody>
         </table>
+        </div>
     </form>
 
     <!-- Pagination -->
@@ -306,6 +399,8 @@ require __DIR__ . '/../inc/header.php';
             if ($nameSearch !== '')      $pageBase['name']    = $nameSearch;
             if ($emailSearch !== '')     $pageBase['email']   = $emailSearch;
             if ($selectedStatus !== '')  $pageBase['status']  = $selectedStatus;
+            if ($extraColumns !== [])    $pageBase['cols']    = $extraColumns;
+            if ($dataFilters !== [])     $pageBase['f']       = $dataFilters;
             if ($sortColumn !== 'id' || $sortDirection !== 'DESC') {
                 $pageBase['sort'] = $sortColumn;
                 $pageBase['dir']  = $sortDirection;

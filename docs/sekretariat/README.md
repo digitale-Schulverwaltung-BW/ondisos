@@ -36,6 +36,11 @@ Die Seite **Anmeldungen** zeigt alle eingegangenen Anmeldungen, die neuesten obe
 - **Filtern:** Über die Auswahl **Alle Formulare** wählen Sie ein einzelnes Formular, in der Spalte **Status** nur einen Status
   (z. B. *Neu*). In den Feldern unter **Name** und **E-Mail** können Sie nach Namen suchen.
 - **Sortieren:** Klick auf eine Spaltenüberschrift mit Pfeil (Name, E-Mail, Status, Datum).
+- **Weitere Spalten:** Ist ein einzelnes Formular gewählt, öffnet die Schaltfläche **Spalten** rechts in der Kopfzeile eine Liste
+  der Formularfelder. Kreuzen Sie bis zu acht Felder an (z. B. *Vollzeit oder Teilzeit*) und klicken Sie auf **Übernehmen**.
+  Auswahlfelder zeigen den Text der Auswahl, Ja/Nein-Felder *Ja* oder *Nein*. Diese Spalten lassen sich ebenfalls sortieren (leere Angaben stehen
+  immer unten), Auswahlfelder auch filtern. Ihre Spaltenwahl gilt je Formular, bis Sie sich abmelden. Uploads, Unterschriften und Tabellenfragen
+  stehen nicht zur Wahl; Formulare, deren Survey nur als Datei im Frontend liegt, bieten keine Spalten.
 - **Einträge pro Seite:** 10, 25, 50 oder 100.
 - **Mehrere Einträge auswählen:** Kästchen vor den Nummern ankreuzen (das Kästchen in der Kopfzeile wählt alle angezeigten aus). Mit den Schaltflächen oberhalb der Tabelle wirken Sie dann auf alle ausgewählten Anmeldungen gleichzeitig; sie stehen unter [Bearbeitungsstand pflegen](#6-bearbeitungsstand-pflegen) und [Aufräumen](#7-aufräumen-archivieren-löschen-papierkorb).
 - Das **Dashboard** (Menü oben) zählt die Anmeldungen je Status und bietet unter **Schnellzugriff** direkt „Neue Anmeldungen".

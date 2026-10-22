@@ -19,7 +19,9 @@ class AnmeldungService
 
     /**
      * Get paginated anmeldungen with validation
-     * 
+     *
+     * @param list<array{sql:string, params:list<string>}> $dataConditions filters on survey fields (App\Forms\ListColumns)
+     * @param array{sql:string, params:list<string>}|null $dataOrder sorting by a survey field (App\Forms\ListColumns)
      * @return array{
      *   items: \App\Models\Anmeldung[],
      *   pagination: array{
@@ -38,7 +40,10 @@ class AnmeldungService
         int $page = 1,
         int $perPage = self::DEFAULT_PER_PAGE,
         string $sortColumn = 'id',
-        string $sortDirection = 'DESC'
+        string $sortDirection = 'DESC',
+        array $dataConditions = [],
+        ?array $dataOrder = null,
+        bool $withData = false
     ): array {
         // Validate and sanitize inputs
         $perPage = $this->validatePerPage($perPage);
@@ -63,7 +68,10 @@ class AnmeldungService
             limit: $perPage,
             offset: $offset,
             sortColumn: $sortColumn,
-            sortDirection: $sortDirection
+            sortDirection: $sortDirection,
+            dataConditions: $dataConditions,
+            dataOrder: $dataOrder,
+            withData: $withData
         );
 
         $totalPages = max(1, (int)ceil($result['total'] / $perPage));

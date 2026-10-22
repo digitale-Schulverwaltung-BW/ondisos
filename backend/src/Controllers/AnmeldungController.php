@@ -5,12 +5,16 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Config\TenantContext;
+use App\Forms\ListColumns;
 use App\Services\AnmeldungService;
+use App\Services\ListColumnService;
 
 class AnmeldungController
 {
     public function __construct(
-        private AnmeldungService $service
+        private AnmeldungService $service,
+        private ?ListColumnService $columns = null
     ) {}
 
     /**
@@ -28,6 +32,35 @@ class AnmeldungController
         $page = $this->getIntParam('page', 1);
         $perPage = $this->getIntParam('perPage', 25);
 
+        // Extra columns from the survey data (only with one form selected)
+        $columnCatalog = $selectedForm !== '' && $this->columns !== null ? $this->columns->catalogFor($selectedForm) : [];
+        $extraColumns = $this->selectedColumns($selectedForm, $columnCatalog);
+
+        // Filters on choice columns; only for shown columns and values that are choices
+        $dataFilters = [];
+        $dataConditions = [];
+        $requestedFilters = is_array($_GET['f'] ?? null) ? $_GET['f'] : [];
+        foreach ($extraColumns as $name) {
+            $value = $requestedFilters[$name] ?? null;
+            $condition = is_string($value) && $value !== '' ? ListColumns::filterCondition($columnCatalog[$name], $value) : null;
+            if ($condition !== null) {
+                $dataFilters[$name] = $value;
+                $dataConditions[] = $condition;
+            }
+        }
+
+        // Sorting by an extra column (sort=f:<name>); a column that is not shown falls back to the default
+        $dataOrder = null;
+        if (str_starts_with($sortColumn, ListColumns::SORT_PREFIX)) {
+            $name = substr($sortColumn, strlen(ListColumns::SORT_PREFIX));
+            if (in_array($name, $extraColumns, true)) {
+                $dataOrder = ListColumns::orderBy($columnCatalog[$name], $sortDirection);
+            } else {
+                $sortColumn = 'id';
+                $sortDirection = 'DESC';
+            }
+        }
+
         // Get data through service
         $result = $this->service->getPaginatedAnmeldungen(
             formularFilter: $selectedForm,
@@ -37,7 +70,10 @@ class AnmeldungController
             page: $page,
             perPage: $perPage,
             sortColumn: $sortColumn,
-            sortDirection: $sortDirection
+            sortDirection: $sortDirection,
+            dataConditions: $dataConditions,
+            dataOrder: $dataOrder,
+            withData: $extraColumns !== []
         );
 
         $forms = $this->service->getAvailableForms();
@@ -53,8 +89,36 @@ class AnmeldungController
             'emailSearch' => $emailSearch,
             'sortColumn' => $sortColumn,
             'sortDirection' => $sortDirection,
-            'allowedPerPage' => $allowedPerPage
+            'allowedPerPage' => $allowedPerPage,
+            'columnCatalog' => $columnCatalog,
+            'extraColumns' => $extraColumns,
+            'dataFilters' => $dataFilters,
         ];
+    }
+
+    /**
+     * Extra columns to show: from the request (column picker sends cols_set, so "none" is a choice too),
+     * otherwise the last choice for this form, kept in the session per tenant and form.
+     *
+     * @param array<string,array<string,mixed>> $catalog
+     * @return list<string>
+     */
+    private function selectedColumns(string $form, array $catalog): array
+    {
+        if ($catalog === []) {
+            return [];
+        }
+        $hasSession = session_status() === PHP_SESSION_ACTIVE;
+        $tenantId = TenantContext::getTenantId();
+
+        if (isset($_GET['cols_set']) || isset($_GET['cols'])) {
+            $selected = ListColumns::select($_GET['cols'] ?? [], $catalog);
+            if ($hasSession) {
+                $_SESSION['list_columns'][$tenantId][$form] = $selected;
+            }
+            return $selected;
+        }
+        return ListColumns::select($hasSession ? ($_SESSION['list_columns'][$tenantId][$form] ?? []) : [], $catalog);
     }
 
     /**

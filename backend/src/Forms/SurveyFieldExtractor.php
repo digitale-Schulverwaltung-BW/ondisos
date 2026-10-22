@@ -31,6 +31,40 @@ final class SurveyFieldExtractor
     }
 
     /**
+     * The definitions of the fields (same names and order as fields()), for callers that need more than type and title (choices, inputType, ...).
+     *
+     * @param array<string,mixed> $survey
+     * @return array<string, array<string,mixed>> field name => element definition
+     */
+    public static function elements(array $survey): array
+    {
+        $elements = [];
+        $walk = static function (mixed $element) use (&$walk, &$elements): void {
+            if (!is_array($element)) {
+                return;
+            }
+            $type = is_string($element['type'] ?? null) ? $element['type'] : '';
+            if ($type === 'panel' || $type === 'page') {
+                foreach (($element['elements'] ?? []) as $child) {
+                    $walk($child);
+                }
+                return;
+            }
+            $name = $element['name'] ?? null;
+            if (is_string($name) && $name !== '' && !in_array($type, self::DISPLAY_TYPES, true)) {
+                $elements[$name] ??= $element;
+            }
+            foreach (self::choiceElements($element) as $child) {
+                $walk($child);
+            }
+        };
+        foreach (self::topLevelElements($survey) as $element) {
+            $walk($element);
+        }
+        return $elements;
+    }
+
+    /**
      * @param array<string,mixed> $survey
      * @return list<string>
      */

@@ -119,6 +119,17 @@ return [
             'actions' => 'Aktionen',
         ],
 
+        // Extra columns from the survey data (registration list)
+        'list_columns' => [
+            'button' => 'Spalten',
+            'hint' => 'Felder aus dem Formular als zusätzliche Spalten anzeigen',
+            'max' => 'höchstens {{max}}',
+            'apply' => 'Übernehmen',
+            'yes' => 'Ja',
+            'no' => 'Nein',
+            'other' => 'Sonstiges',
+        ],
+
         // Filters
         'filters' => [
             'all_forms' => 'Alle Formulare',

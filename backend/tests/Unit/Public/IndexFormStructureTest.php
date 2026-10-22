@@ -39,15 +39,21 @@ class IndexFormStructureTest extends TestCase
         $this->assertStringNotContainsString('<form', $inside, 'forms must not be nested in the bulk form');
     }
 
-    public function testFilterFieldsBelongToTheirOwnGetForms(): void
+    public function testFilterFieldsBelongToTheFilterGetForm(): void
     {
-        foreach (['name', 'email', 'status'] as $field) {
+        foreach (['name="name"', 'name="email"', 'name="status"', 'name="f[<?= htmlspecialchars($col) ?>]"'] as $field) {
             $this->assertMatchesRegularExpression(
-                '/name="' . $field . '"\s+form="filter-' . $field . '"/',
+                '/' . preg_quote($field, '/') . '\s+form="filter-form"/',
                 $this->source,
-                "the $field filter must reference its own form"
+                "the filter $field must reference the filter form"
             );
         }
-        $this->assertStringContainsString('id="filter-<?= $filterField ?>"', $this->source);
+        $this->assertStringContainsString('<form method="get" id="filter-form">', $this->source);
+    }
+
+    public function testColumnPickerCheckboxesBelongToTheColumnsGetForm(): void
+    {
+        $this->assertMatchesRegularExpression('/name="cols\[\]"\s+form="columns-form"/', $this->source);
+        $this->assertStringContainsString('<form method="get" id="columns-form">', $this->source);
     }
 }

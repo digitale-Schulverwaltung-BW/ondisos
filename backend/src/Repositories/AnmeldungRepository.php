@@ -26,6 +26,12 @@ class AnmeldungRepository
     /**
      * Get paginated list of Anmeldungen
      *
+     * $dataConditions and $dataOrder are SQL pieces from App\Forms\ListColumns (placeholders only, values bound):
+     * filters and sorting on fields of the survey data. $dataOrder (with its direction) replaces $sortColumn.
+     *
+     * @param list<array{sql:string, params:list<string>}> $dataConditions
+     * @param array{sql:string, params:list<string>}|null $dataOrder
+     * @param bool $withData also load the survey data (for extra columns)
      * @return array{items: Anmeldung[], total: int}
      */
     public function findPaginated(
@@ -36,7 +42,10 @@ class AnmeldungRepository
         int $limit = 25,
         int $offset = 0,
         string $sortColumn = 'id',
-        string $sortDirection = 'DESC'
+        string $sortDirection = 'DESC',
+        array $dataConditions = [],
+        ?array $dataOrder = null,
+        bool $withData = false
     ): array {
         // Defense-in-depth: validate formular filter at repository level
         AnmeldungValidator::validateFormularName($formularFilter);
@@ -49,7 +58,7 @@ class AnmeldungRepository
         $types = '';
 
         $countSql = "SELECT COUNT(*) AS cnt FROM anmeldungen WHERE deleted = 0";
-        $sql = "SELECT id, formular, formular_version, name, email, status, created_at
+        $sql = "SELECT id, formular, formular_version, name, email, status, created_at" . ($withData ? ', data' : '') . "
                 FROM anmeldungen WHERE deleted = 0";
 
         // Tenant isolation: every query is filtered by the active tenant
@@ -89,6 +98,13 @@ class AnmeldungRepository
             $types .= 's';
         }
 
+        foreach ($dataConditions as $condition) {
+            $countSql .= " AND ({$condition['sql']})";
+            $sql .= " AND ({$condition['sql']})";
+            array_push($params, ...$condition['params']);
+            $types .= str_repeat('s', count($condition['params']));
+        }
+
         // Get total count
         $countStmt = $this->db->prepare($countSql);
         if (!empty($params)) {
@@ -98,7 +114,14 @@ class AnmeldungRepository
         $total = $countStmt->get_result()->fetch_assoc()['cnt'];
 
         // Get items — sort column/direction are whitelisted above, safe to interpolate
-        $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT ? OFFSET ?";
+        if ($dataOrder !== null) {
+            // Same order for equal field values: newest first
+            $sql .= " ORDER BY {$dataOrder['sql']}, id DESC LIMIT ? OFFSET ?";
+            array_push($params, ...$dataOrder['params']);
+            $types .= str_repeat('s', count($dataOrder['params']));
+        } else {
+            $sql .= " ORDER BY {$sortColumn} {$sortDirection} LIMIT ? OFFSET ?";
+        }
         $params[] = $limit;
         $params[] = $offset;
         $types .= 'ii';
