@@ -152,6 +152,7 @@ Je Frage stehen dort `type` (bei Textfeldern `inputType`), `title` (verarbeitete
 
 - `DataFormatter::fieldLabel()` beschriftet ein Feld mit `title` (HTML entfernt, höchstens 300 Zeichen), sonst mit dem Feldnamen. Der Excel-Export behält die Feldnamen (ASV).
 - `DataFormatter::groupByPage()` teilt die gefilterten Felder an jedem Seitenwechsel; jede Gruppe beginnt in `sections/data-table.php` mit einer Zeile `tr.page-heading`, die Zweierpaare beginnen je Seite neu.
+  Alles bleibt eine Tabelle (einheitliche Spaltenbreiten); `page-break-after: avoid` auf `tr.page-heading` verhindert, dass ein Balken allein am Seitenende steht.
   Nur eine Ebene: Panels ergeben keine Überschrift. Hat keine Gruppe einen Titel (Anmeldungen vor diesem Update, Seiten ohne Titel) oder ist `pdf.section_headings` aus, bleibt es bei einer Tabelle unter „Formulardaten“.
 - Die PDF-Vorschau (`PdfPreviewData::fromSurvey()`) erzeugt `_fieldTypes` in derselben Form aus der Survey-JSON.
 

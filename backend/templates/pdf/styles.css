@@ -139,6 +139,11 @@ h3 {
     border-top: 8px solid #fff;
 }
 
+/* Balken nie allein am Seitenende: mPDF hält die Zeile mit der folgenden zusammen */
+.data-table tbody tr.page-heading {
+    page-break-after: avoid;
+}
+
 .no-data {
     color: #999;
     font-style: italic;
