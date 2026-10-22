@@ -41,13 +41,31 @@ class ListColumnsTest extends TestCase
         );
     }
 
-    public function testCatalogUsesGermanTitleAndFallsBackToName(): void
+    public function testCatalogUsesDefaultTitleLikeTheFormAndFallsBackToName(): void
     {
         $catalog = ListColumns::catalog($this->survey());
 
-        $this->assertSame('Unterrichtsform', $catalog['form']['label']);
+        // Without a survey locale the form shows the default texts (bs.json: "Ausbilder" had a wrong "de" title)
+        $this->assertSame('Form', $catalog['form']['label']);
         $this->assertSame('Vorname', $catalog['vorname']['label']);
         $this->assertSame('schwerpunkt', $catalog['schwerpunkt']['label']);
+    }
+
+    public function testCatalogUsesTextsOfTheSurveyLocale(): void
+    {
+        $catalog = ListColumns::catalog(['locale' => 'de'] + $this->survey());
+
+        $this->assertSame('Unterrichtsform', $catalog['form']['label']);
+    }
+
+    public function testLocalizedTextWithoutDefaultUsesFirstEntry(): void
+    {
+        $catalog = ListColumns::catalog(['elements' => [
+            ['type' => 'dropdown', 'name' => 'b', 'title' => ['de' => 'Betrieb:'], 'choices' => [['value' => 'x', 'text' => ['de' => 'Ix']]]],
+        ]]);
+
+        $this->assertSame('Betrieb', $catalog['b']['label']);
+        $this->assertSame(['x' => 'Ix'], $catalog['b']['choices']);
     }
 
     public function testChoiceColumnMapsValuesToTexts(): void

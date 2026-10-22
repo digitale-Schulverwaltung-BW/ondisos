@@ -34,9 +34,11 @@ final class ListColumns
      */
     public static function catalog(array $survey, array $labels = []): array
     {
+        // Texts in the language the form shows: the survey's locale, otherwise its default texts
+        $locale  = is_string($survey['locale'] ?? null) && $survey['locale'] !== '' ? $survey['locale'] : 'default';
         $columns = [];
         foreach (SurveyFieldExtractor::elements($survey) as $name => $element) {
-            $column = self::column($name, $element, $labels);
+            $column = self::column($name, $element, $labels, $locale);
             if ($column !== null) {
                 $columns[$name] = $column;
             }
@@ -169,7 +171,7 @@ final class ListColumns
      * @param array{yes?:string, no?:string, other?:string} $labels
      * @return array{name:string, label:string, type:string, choices:array<string,string>, values:array<string,mixed>, multi:bool, numeric:bool, date:bool}|null
      */
-    private static function column(string $name, array $element, array $labels): ?array
+    private static function column(string $name, array $element, array $labels, string $locale): ?array
     {
         $type = is_string($element['type'] ?? null) ? $element['type'] : '';
         if (!in_array($type, self::TYPES, true)) {
@@ -180,7 +182,7 @@ final class ListColumns
             return null;
         }
         // Titles often end with a colon ("Vorname:"), which looks odd in a column header
-        $label  = rtrim(self::text($element['title'] ?? null) ?? $name, " \t:");
+        $label  = rtrim(self::text($element['title'] ?? null, $locale) ?? $name, " \t:");
         $label  = $label !== '' ? $label : $name;
         $column = self::make($name, $label, $type);
 
@@ -189,9 +191,9 @@ final class ListColumns
             case 'dropdown':
             case 'checkbox':
             case 'tagbox':
-                $column = self::withChoices($column, $element['choices'] ?? null);
+                $column = self::withChoices($column, $element['choices'] ?? null, $locale);
                 if (($element['showOtherItem'] ?? $element['hasOther'] ?? false) === true) {
-                    $column['choices']['other'] = self::text($element['otherText'] ?? null) ?? ($labels['other'] ?? 'Sonstiges');
+                    $column['choices']['other'] = self::text($element['otherText'] ?? null, $locale) ?? ($labels['other'] ?? 'Sonstiges');
                     $column['values']['other']  = 'other';
                 }
                 $column['multi'] = $type === 'checkbox' || $type === 'tagbox';
@@ -200,15 +202,15 @@ final class ListColumns
                 $true  = $element['valueTrue'] ?? true;
                 $false = $element['valueFalse'] ?? false;
                 $column['choices'] = [
-                    self::key($true)  => self::text($element['labelTrue'] ?? null) ?? ($labels['yes'] ?? 'Ja'),
-                    self::key($false) => self::text($element['labelFalse'] ?? null) ?? ($labels['no'] ?? 'Nein'),
+                    self::key($true)  => self::text($element['labelTrue'] ?? null, $locale) ?? ($labels['yes'] ?? 'Ja'),
+                    self::key($false) => self::text($element['labelFalse'] ?? null, $locale) ?? ($labels['no'] ?? 'Nein'),
                 ];
                 $column['values'] = [self::key($true) => $true, self::key($false) => $false];
                 break;
             case 'rating':
                 $column['numeric'] = true;
                 $column = is_array($element['rateValues'] ?? null) && $element['rateValues'] !== []
-                    ? self::withChoices($column, $element['rateValues'])
+                    ? self::withChoices($column, $element['rateValues'], $locale)
                     : self::withRatingSteps($column, $element);
                 break;
             case 'text':
@@ -232,7 +234,7 @@ final class ListColumns
      * @param array{choices:array<string,string>, values:array<string,mixed>} $column
      * @return array{choices:array<string,string>, values:array<string,mixed>}
      */
-    private static function withChoices(array $column, mixed $choices): array
+    private static function withChoices(array $column, mixed $choices, string $locale): array
     {
         foreach (is_array($choices) ? $choices : [] as $choice) {
             $value = is_array($choice) ? ($choice['value'] ?? null) : $choice;
@@ -240,7 +242,7 @@ final class ListColumns
                 continue;
             }
             $key = self::key($value);
-            $column['choices'][$key] = (is_array($choice) ? self::text($choice['text'] ?? null) : null) ?? $key;
+            $column['choices'][$key] = (is_array($choice) ? self::text($choice['text'] ?? null, $locale) : null) ?? $key;
             $column['values'][$key]  = $value;
         }
         return $column;
@@ -269,11 +271,14 @@ final class ListColumns
         return $column;
     }
 
-    /** A survey text: a plain string or the German/default entry of a localized one. */
-    private static function text(mixed $text): ?string
+    /**
+     * A survey text: a plain string or, of a localized one ({"default": "…", "de": "…"}), the entry the form shows:
+     * the survey's locale, then the default text, then the first one there is (as SurveyJS and PdfPreviewData do).
+     */
+    private static function text(mixed $text, string $locale): ?string
     {
         if (is_array($text)) {
-            $text = $text['de'] ?? $text['default'] ?? null;
+            $text = $text[$locale] ?? $text['default'] ?? reset($text);
         }
         return is_string($text) && trim($text) !== '' ? $text : null;
     }
