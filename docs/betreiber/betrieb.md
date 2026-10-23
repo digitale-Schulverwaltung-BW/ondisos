@@ -9,9 +9,10 @@ Dieses Dokument gilt für ein laufendes Backend. Die Befehle gehen vom Docker-St
 
 ```bash
 # 1. Sichern (siehe unten), vor allem die Datenbank
-# 2. Neuen Stand holen und Container neu bauen
+# 2. Neuen Stand holen und Container neu bauen (--pull holt ein aktuelles PHP-Basis-Image)
 git pull origin main                       # oder: git fetch --tags && git checkout <version>
-docker compose up -d --build backend
+docker compose build --pull backend
+docker compose up -d backend
 # 3. Prüfen: die Migration läuft beim Start mit
 docker compose logs backend | grep "Migration complete"
 curl http://localhost:9080/api/health.php
@@ -23,7 +24,11 @@ Dafür braucht er beim ersten Start nach einem solchen Update Zugang zum Interne
 Funktionen mit neuen Paketen scheitern dann mit `Class "…" not found` (siehe [Weitere Fehlerbilder](#weitere-fehlerbilder)). Vor 3.2.0a wurden neue Pakete nach einem `git pull` gar nicht installiert.
 
 Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.1.md](MIGRATION-3.1.md), [Upgrade auf 3.1.2](../entwicklung/releases/RELEASE-NOTES-3.1.2.md#upgrade-von-311).
-Ändert sich das Compose-File, genügt `docker compose up -d` (nicht `restart`). Nach einem Update des Basis-Images oder von PHP: `docker compose build --no-cache backend`.
+Ändert sich das Compose-File, genügt `docker compose up -d` (nicht `restart`).
+
+**PHP-Sicherheitsupdates:** Das Image baut auf `php:8.2-apache` auf. Ohne `--pull` verwendet `docker compose up -d --build` die lokal zwischengespeicherte Fassung dieses Images weiter,
+also auch eine verwundbare PHP-Version. Bei einer Sicherheitswarnung zu PHP genügt deshalb ohne `git pull`:
+`docker compose build --pull backend` und `docker compose up -d backend`. Danach zeigt `docker compose exec -T backend php -v` die Version, die im Container läuft.
 
 **Zurückrollen:** `git checkout <vorherige-version>` und `docker compose up -d --build backend`. Die Migrationen sind **nur vorwärts**: Hat die neue Version das Schema verändert,
 muss zum alten Code auch der Datenbank-Stand von vor dem Update zurückgespielt werden. Deshalb: vor jedem Update sichern.
@@ -36,6 +41,9 @@ cd backend && composer install --no-dev --optimize-autoloader
 php migrate.php                     # idempotent
 sudo systemctl reload apache2       # bzw. php8.2-fpm: leert OPcache
 ```
+
+PHP selbst kommt hier aus der Paketverwaltung der Distribution (`apt upgrade`, danach Apache bzw. PHP-FPM neu starten), beim WordPress-Plugin vom Hoster.
+Debian und Ubuntu übernehmen Sicherheitskorrekturen oft ohne neue Versionsnummer, deshalb im Changelog des Pakets nach der CVE-Nummer suchen.
 
 Frontend (Standalone): `git pull`, sonst nichts. Das WordPress-Plugin aktualisiert man über die neue ZIP ([Plugin-Anleitung](../../wordpress-plugin/INSTALL.md#aktualisieren)) bzw. bei Git-Installationen per `git pull` ([INSTALL-AUS-GIT.md](../../wordpress-plugin/INSTALL-AUS-GIT.md#aktualisieren)).
 
