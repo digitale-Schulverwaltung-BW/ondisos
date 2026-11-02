@@ -23,7 +23,7 @@ class DocsLinksTest extends TestCase
             if (!str_ends_with($path, '.md')) {
                 continue;
             }
-            if (preg_match('#(^|/)(vendor|node_modules|\.planning|\.claude|\.git|coverage|\.phpunit\.cache)/#', $path) === 1) {
+            if (preg_match('#(^|/)(vendor|node_modules|\.claude|\.git|coverage|\.phpunit\.cache)/#', $path) === 1) {
                 continue;
             }
             $files[] = $path;
