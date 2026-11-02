@@ -15,6 +15,13 @@
 
 Survey.Serializer.addProperty("question", { name: "placeholderExpression", type: "expression" });
 
+// SurveyJS' own texts (validation messages, "Weiter", "Abschließen") appear in German when the locale file is loaded.
+// Only the default locale is switched: survey.locale stays untouched, so the "default" strings of a survey are still
+// shown (the locale "de" would select the "de" strings of multilingual surveys instead).
+if (Survey.surveyLocalization && Survey.surveyLocalization.locales && Survey.surveyLocalization.locales["de"]) {
+    Survey.surveyLocalization.defaultLocale = "de";
+}
+
 class SurveyHandlerBase {
     /**
      * @param {Document|Element} root - Scope for DOM lookups.
@@ -42,10 +49,12 @@ class SurveyHandlerBase {
     /**
      * All questions of the survey, including those nested in a choice option (choices[].elements).
      * getAllQuestions() leaves the choice-nested ones out; with includeNested it also returns the inner
-     * questions of dynamic panels and matrices, which are no fields of their own (they have a parentQuestion).
+     * questions of dynamic panels and matrices, which are no fields of their own (their value lives in the
+     * parent's value). Since SurveyJS 3 the choice-nested ones also have a parentQuestion, but like other
+     * questions they keep their value in the survey's data.
      */
     questionsOf(survey) {
-        return survey.getAllQuestions(false, false, true).filter(q => !q.parentQuestion);
+        return survey.getAllQuestions(false, false, true).filter(q => !q.parentQuestion || q.data === survey);
     }
 
     /**

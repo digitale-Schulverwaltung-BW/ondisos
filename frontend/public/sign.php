@@ -31,7 +31,7 @@ ContentSecurityPolicy::send();
     <!-- No zoom: Safari kept zooming in on rotation or a double tap while signing; the page holds only the pad -->
     <meta name="robots" content="noindex, nofollow">
     <title><?= $t('page_title') ?></title>
-    <link href="assets/survey-core.fontless.min.css" rel="stylesheet">
+    <link href="assets/survey-core.min.css" rel="stylesheet">
     <script src="assets/survey.core.min.js"></script>
     <script src="assets/survey-js-ui.min.js"></script>
     <link href="<?= $v('assets/sign-page.css') ?>" rel="stylesheet">

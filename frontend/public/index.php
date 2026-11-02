@@ -151,9 +151,10 @@ $csrfToken = CsrfProtection::getToken();
     <title><?= htmlspecialchars($formKey) ?> - Anmeldung</title>
     
     <!-- SurveyJS Core -->
-    <link href="assets/survey-core.fontless.min.css" rel="stylesheet">
+    <link href="assets/survey-core.min.css" rel="stylesheet">
     <script src="assets/survey.core.min.js"></script>
     <script src="assets/survey-js-ui.min.js"></script>
+    <script src="assets/i18n/german.min.js"></script>
     
     <!-- Custom Fonts (DSGVO-konform) -->
     <style>
@@ -204,7 +205,7 @@ $csrfToken = CsrfProtection::getToken();
             border: none !important;
             border-radius: 0 !important;
             background: transparent !important;
-            line-height: calc(1.5 * var(--sjs-font-editorfont-size, var(--sjs-font-size, 16px))) !important;
+            line-height: 1.5 !important;
             box-sizing: content-box !important;
         }
     </style>

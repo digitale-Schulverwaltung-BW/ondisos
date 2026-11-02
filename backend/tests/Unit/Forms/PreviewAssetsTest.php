@@ -19,7 +19,8 @@ class PreviewAssetsTest extends TestCase
         return [
             'survey core'    => ['frontend/public/assets/survey.core.min.js', 'backend/public/assets/preview/survey.core.min.js'],
             'survey ui'      => ['frontend/public/assets/survey-js-ui.min.js', 'backend/public/assets/preview/survey-js-ui.min.js'],
-            'survey css'     => ['frontend/public/assets/survey-core.fontless.min.css', 'backend/public/assets/preview/survey-core.fontless.min.css'],
+            'survey css'     => ['frontend/public/assets/survey-core.min.css', 'backend/public/assets/preview/survey-core.min.css'],
+            'german locale'  => ['frontend/public/assets/i18n/german.min.js', 'backend/public/assets/preview/i18n/german.min.js'],
             'handler base'   => ['frontend/public/js/survey-handler-base.js', 'backend/public/assets/preview/survey-handler-base.js'],
             'font regular'   => ['frontend/public/assets/fonts/opensans/open-sans-v44-latin-regular.woff2', 'backend/public/assets/preview/fonts/open-sans-v44-latin-regular.woff2'],
             'font bold'      => ['frontend/public/assets/fonts/opensans/open-sans-v44-latin-700.woff2', 'backend/public/assets/preview/fonts/open-sans-v44-latin-700.woff2'],

@@ -221,7 +221,7 @@ class SurveyValidatorTest extends TestCase
     public function testKnownFunctionsMatchTheBundledSurveyJs(): void
     {
         $bundle = (string)file_get_contents(__DIR__ . '/../../../../frontend/public/assets/survey.core.min.js');
-        preg_match_all('/Instance\.register\("([A-Za-z]+)"/', $bundle, $m);
+        preg_match_all('/Instance\.register\(\{?(?:name:)?"([A-Za-z]+)"/', $bundle, $m);
         $registered = array_values(array_unique($m[1]));
         sort($registered);
         $known = SurveyValidator::KNOWN_FUNCTIONS;

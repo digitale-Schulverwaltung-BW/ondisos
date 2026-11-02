@@ -13,7 +13,7 @@ namespace App\Forms;
 final class HtmlPolicy
 {
     /** @var array<string, list<string>> tag => allowed attributes */
-    private const ALLOWED = [
+    public const ALLOWED = [
         'a'      => ['href', 'target', 'rel', 'title'],
         'b'      => [],
         'strong' => [],
@@ -35,7 +35,7 @@ final class HtmlPolicy
     ];
 
     /** URL schemes allowed in href. Relative URLs and anchors are fine. */
-    private const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel'];
+    public const SAFE_SCHEMES = ['http', 'https', 'mailto', 'tel'];
 
     /** True if the string contains something that looks like a tag or comment and needs checking. */
     public static function looksLikeHtml(string $value): bool

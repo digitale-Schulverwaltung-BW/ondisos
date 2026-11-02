@@ -126,7 +126,7 @@ class Signature_Handler
     <!-- No zoom: Safari kept zooming in on rotation or a double tap while signing; the page holds only the pad -->
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo $t('page_title'); ?></title>
-    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'survey-core.fontless.min.css?v=' . $version); ?>" rel="stylesheet">
+    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'survey-core.min.css?v=' . $version); ?>" rel="stylesheet">
     <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey.core.min.js?v=' . $version); ?>"></script>
     <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey-js-ui.min.js?v=' . $version); ?>"></script>
     <link href="<?php echo esc_url($assets->frontend_assets_url() . 'sign-page.css?v=' . $version); ?>" rel="stylesheet">

@@ -71,7 +71,7 @@ $asset = static function (string $file) use ($e): string {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vorschau</title>
 <?php if ($message === null): ?>
-    <link href="<?= $asset('survey-core.fontless.min.css') ?>" rel="stylesheet">
+    <link href="<?= $asset('survey-core.min.css') ?>" rel="stylesheet">
 <?php endif; ?>
     <style>
         @font-face { font-family: 'Open Sans'; font-weight: 400; font-style: normal; src: url('<?= $font('open-sans-v44-latin-regular.woff2') ?>') format('woff2'); }
@@ -109,7 +109,7 @@ $asset = static function (string $file) use ($e): string {
             border: none !important;
             border-radius: 0 !important;
             background: transparent !important;
-            line-height: calc(1.5 * var(--sjs-font-editorfont-size, var(--sjs-font-size, 16px))) !important;
+            line-height: 1.5 !important;
             box-sizing: content-box !important;
         }
         #preview-note { max-width: 900px; margin: 0 auto 12px; padding: 8px 14px; border-radius: 6px; background: #fff3cd; color: #664d03; font-size: 14px; }
@@ -136,6 +136,7 @@ $asset = static function (string $file) use ($e): string {
 
     <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey.core.min.js') ?>"></script>
     <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey-js-ui.min.js') ?>"></script>
+    <script nonce="<?= $e($nonce) ?>" src="<?= $asset('i18n/german.min.js') ?>"></script>
     <script nonce="<?= $e($nonce) ?>" src="<?= $asset('survey-handler-base.js') ?>"></script>
     <script nonce="<?= $e($nonce) ?>">
         window.previewConfig = {

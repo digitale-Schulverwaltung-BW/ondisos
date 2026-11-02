@@ -15,22 +15,22 @@ final class SurveyValidator
 {
     public const MAX_BYTES    = 524288; // 512 KB
     public const MAX_ELEMENTS = 2000;
-    private const MAX_DEPTH   = 32;
+    public const MAX_DEPTH    = 32;
 
     /**
      * Field names the system uses itself: '_fieldTypes' is metadata in anmeldungen.data, 'website_url' is the
      * honeypot field of the forms (a question with that name would be taken for a bot and silently dropped).
      */
-    private const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
+    public const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
 
     /** Keys whose values are expressions (not HTML), so "<" there is a comparison. */
     private const EXPRESSION_KEY = '/(If|Expression|expression)$/';
 
     /**
-     * Expression functions the bundled SurveyJS (1.9.130, frontend/public/assets/survey.core.min.js) registers;
+     * Expression functions the bundled SurveyJS (3.2.0, frontend/public/assets/survey.core.min.js) registers;
      * unknown ones are reported as warnings, because SurveyJS silently yields no value for them.
      * After a SurveyJS update, take the list from the bundle (SurveyValidatorTest fails until it matches):
-     *   grep -o 'Instance.register("[A-Za-z]*"' frontend/public/assets/survey.core.min.js | cut -d'"' -f2 | sort -u
+     *   grep -oE 'Instance\.register\(\{?(name:)?"[A-Za-z]+"' frontend/public/assets/survey.core.min.js | cut -d'"' -f2 | sort -u
      */
     public const KNOWN_FUNCTIONS = [
         'age', 'avg', 'avgInArray', 'count', 'countInArray', 'currentDate', 'currentYear', 'dateAdd', 'dateDiff',

@@ -1,6 +1,6 @@
 <?php
 // public/form_survey.php
-// Survey editor: paste the JSON from the SurveyJS Creator, check it, keep a draft, publish, restore.
+// Survey editor: build the survey graphically or as JSON (paste from the SurveyJS Creator), check it, keep a draft, publish, restore.
 
 declare(strict_types=1);
 
@@ -9,6 +9,7 @@ require_once __DIR__ . '/../inc/auth.php';
 require_once __DIR__ . '/../inc/csrf.php';
 require_once __DIR__ . '/../inc/form_editor.php';
 require_once __DIR__ . '/../inc/form_fields.php';
+require_once __DIR__ . '/../inc/survey_builder.php';
 
 use App\Forms\SurveyValidator;
 use App\Services\MessageService as M;
@@ -129,7 +130,8 @@ if ($view === null) {
     exit;
 }
 
-$editorText = $postedText ?? $view['editor_text'];
+$editorText    = $postedText ?? $view['editor_text'];
+$builderConfig = sb_config($view, $report);
 
 /** Link text for a finding: "Zeile 12" (jumps to the line in the editor via survey-editor.js) */
 function se_line(?int $line): string
@@ -143,7 +145,8 @@ function se_line(?int $line): string
 require __DIR__ . '/../inc/header.php';
 ?>
 
-<div class="container mt-4 mb-5">
+<link href="assets/survey-builder/builder.css" rel="stylesheet">
+<div class="container mt-4 mb-5" id="se-page">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="forms.php"><?= ff_e(M::get('forms.title', 'Formulare')) ?></a></li>
@@ -292,13 +295,7 @@ require __DIR__ . '/../inc/header.php';
     <!-- Editor ------------------------------------------------------------------------------------------------>
     <form method="post" action="<?= ff_e($self) ?>" id="survey-form">
         <?php csrf_field(); ?>
-        <div class="mb-2 d-flex justify-content-between align-items-end">
-            <label class="form-label mb-0" for="survey-text"><?= ff_e(M::get('survey_editor.editor', 'Survey (JSON)')) ?></label>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="se-copy"><?= ff_e(M::get('survey_editor.copy', 'JSON kopieren')) ?></button>
-        </div>
-        <textarea id="survey-text" name="survey_text" class="form-control font-monospace" rows="26" spellcheck="false" wrap="off"
-                  style="font-size: .8rem; white-space: pre;"><?= ff_e($editorText) ?></textarea>
-        <div class="form-text mb-3"><?= ff_e(M::get('survey_editor.editor_help', 'Hier das JSON aus dem SurveyJS-Creator einfügen (siehe Anleitung unten). Beim Prüfen und Speichern wird nichts veröffentlicht.')) ?></div>
+        <?php require __DIR__ . '/../inc/survey_builder_tabs.php'; // tabs: graphic builder and JSON editor; needs $builderConfig, $editorText ?>
 
         <div class="d-flex flex-wrap gap-2 mb-4">
             <button type="submit" name="action" value="check" class="btn btn-outline-primary"><?= ff_e(M::get('survey_editor.btn.check', 'Prüfen')) ?></button>
@@ -418,4 +415,6 @@ if ($report !== null) {
 <script src="assets/codemirror/survey-editor-cm.js"></script>
 <?php endif; ?>
 <script src="assets/survey-editor.js"></script>
+<script type="application/json" id="builder-config"><?= sb_json($builderConfig) ?></script>
+<script type="module" src="assets/survey-builder/app.js"></script>
 <?php require __DIR__ . '/../inc/footer.php'; ?>
