@@ -195,7 +195,7 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     const withChange = await text(p);
     check('gs: the code editor holds the builder text and the page is narrow again', (await p.evaluate(() => window.OndisosSurveyEditor.last.view.state.doc.toString())) === withChange && !(await p.$eval('#se-page', (e) => e.className)).includes('container-fluid'));
     await p.evaluate(() => window.OndisosSurveyEditor.last.view.focus());
-    await p.keyboard.press('Control+z');
+    await p.keyboard.press('ControlOrMeta+z');
     await p.waitForTimeout(200);
     check('gs: Ctrl+Z in the JSON tab takes back the last builder change', (await text(p)) !== withChange, `${lines(withChange, await text(p))}`);
     await p.keyboard.press('Control+y');
