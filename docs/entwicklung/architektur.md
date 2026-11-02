@@ -68,7 +68,7 @@ projekt/
     │   ├── form_pdf_preview.php · tenant_logo.php   # PDF-Vorschau mit Beispielangaben (GET gespeichert / POST aktuelle Formularwerte); Logo-Thumbnail
     │   ├── form_preview.php · form_preview_frame.php   # Vorschau (3.1): Entwurf/veröffentlichte Survey wie für Besucher, in einem per CSP sandboxed Frame
     │   ├── form_survey.php             # Survey-Editor (3.1): JSON einfügen/laden, prüfen (mit Zeilen), Diff, Entwurf, veröffentlichen, wiederherstellen
-    │   ├── assets/                     # preview/ (SurveyJS-Laufzeit, Kopie des Frontends; tools/sync-preview-assets.sh), survey-editor.js; survey-builder/ (3.2, grafischer Editor: json-doc.js, model.js, registry.js, names.js, ui.js, ui-props.js, dom.js, text-bridge.js, app.js, builder.css; Tests: `backend/tests/js`; Browserprüfung: `tools/survey-builder-harness/`); codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
+    │   ├── assets/                     # preview/ (SurveyJS-Laufzeit, Kopie des Frontends; tools/sync-preview-assets.sh), survey-editor.js; survey-builder/ (3.2, grafischer Editor: json-doc.js, model.js, registry.js, names.js, history.js, ui.js, ui-props.js, dom.js, text-bridge.js, app.js, builder.css; Tests: `backend/tests/js`; Browserprüfung: `tools/survey-builder-harness/`); codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
     │   ├── login.php · logout.php

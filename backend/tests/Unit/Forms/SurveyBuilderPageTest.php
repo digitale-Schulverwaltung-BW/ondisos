@@ -95,7 +95,7 @@ class SurveyBuilderPageTest extends TestCase
 
     public function testEveryFileThePageLoadsExists(): void
     {
-        foreach (['app.js', 'ui.js', 'ui-props.js', 'dom.js', 'text-bridge.js', 'model.js', 'registry.js', 'names.js', 'json-doc.js', 'builder.css'] as $file) {
+        foreach (['app.js', 'ui.js', 'ui-props.js', 'dom.js', 'text-bridge.js', 'model.js', 'registry.js', 'names.js', 'json-doc.js', 'history.js', 'builder.css'] as $file) {
             $this->assertFileExists(self::ROOT . '/public/assets/survey-builder/' . $file);
         }
         // every module imports only files that exist next to it

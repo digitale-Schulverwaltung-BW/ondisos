@@ -4,18 +4,22 @@
 // every change back through the text bridge. Nothing here decides what is valid; the model refuses what the registry and the
 // server's rules do not allow, and the server checks the text when it is saved.
 //
-// Keyboard: arrow keys move the selection, Alt+Up/Down moves the element, Delete removes it, Enter goes to its properties,
-// Escape comes back to the list. Everything is built with createElement/textContent (see dom.js).
+// Keyboard: arrow keys move the selection, Alt+Up/Down moves the element (at the end of a panel or page on into the next
+// container), Alt+Right into the panel above it, Alt+Left out of its panel, Ctrl/Cmd+D duplicates, Delete removes it,
+// Enter goes to its properties, Escape comes back to the list; Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z (or Ctrl+Y) undo and redo
+// outside text fields. With the mouse, elements and pages are dragged in the tree (native drag and drop, no library).
+// Everything is built with createElement/textContent (see dom.js).
 
 import { h, createT } from './dom.js';
 import {
-    loadModel, outline, setProp, renameElement, addElement, removeElement, moveElement, addPage, removePage, movePage,
-    countElements, formatPath, displayText,
+    loadModel, outline, setProp, renameElement, addElement, removeElement, moveElement, moveElementTo, duplicateElement,
+    addPage, removePage, movePage, countElements, formatPath, displayText,
 } from './model.js';
 import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
 import { findReferences, validateName } from './names.js';
 import { buildProperties } from './ui-props.js';
+import { createHistory } from './history.js';
 
 const EMPTY_SURVEY = '{\n  "pages": [\n    {\n      "name": "page1",\n      "elements": []\n    }\n  ]\n}';
 
@@ -34,7 +38,8 @@ export function createBuilder({ root, bridge, config, page = null }) {
     const taken = new Set(config.taken ?? []); // names of the published survey
     const removed = new Set();                 // names removed in this editing session
 
-    const state = { doc: null, error: null, selected: null, collapsed: new Set(), stale: false, active: false };
+    const state = { doc: null, error: null, selected: null, collapsed: new Set(), stale: false, active: false, dragging: null };
+    const history = createHistory();
 
     // ---- skeleton ------------------------------------------------------------------------------------------------
 
@@ -48,7 +53,10 @@ export function createBuilder({ root, bridge, config, page = null }) {
     const addPageBtn = btn(t('toolbar.add_page'), () => doAddPage());
     const upBtn = btn(`↑ ${t('toolbar.move_up')}`, () => doMove(-1));
     const downBtn = btn(`↓ ${t('toolbar.move_down')}`, () => doMove(1));
+    const dupBtn = btn(t('toolbar.duplicate'), () => doDuplicate());
     const delBtn = btn(t('toolbar.delete'), () => doDelete(), { class: 'btn btn-sm btn-outline-danger' });
+    const undoBtn = btn(`↶ ${t('toolbar.undo')}`, () => doUndo(), { title: t('toolbar.undo_keys') });
+    const redoBtn = btn(`↷ ${t('toolbar.redo')}`, () => doRedo(), { title: t('toolbar.redo_keys') });
 
     const menu = h('ul', { class: 'dropdown-menu sb-palette' });
     for (const group of palette()) {
@@ -66,8 +74,9 @@ export function createBuilder({ root, bridge, config, page = null }) {
         menu);
 
     const toolbar = h('div', { class: 'sb-toolbar d-flex flex-wrap gap-2 align-items-center mb-3', role: 'toolbar', 'aria-label': t('toolbar.label') },
-        addElementBtn, addPageBtn, upBtn, downBtn, delBtn, size);
-    const hints = h('div', { class: 'form-text mt-2' }, h('p', { class: 'mb-1' }, t('keys_hint')), h('p', { class: 'mb-0' }, t('add_hint')));
+        addElementBtn, addPageBtn, upBtn, downBtn, dupBtn, delBtn, h('span', { class: 'vr' }), undoBtn, redoBtn, size);
+    const hints = h('div', { class: 'form-text mt-2' }, h('p', { class: 'mb-1' }, t('keys_hint')), h('p', { class: 'mb-1' }, t('drag_hint')),
+        h('p', { class: 'mb-0' }, t('add_hint')));
     const main = h('div', { class: 'sb-main' },
         h('div', { class: 'sb-tree-col' }, h('h2', { class: 'h6 text-muted' }, t('structure')), tree, hints),
         h('div', { class: 'sb-props-col' }, props));
@@ -84,6 +93,13 @@ export function createBuilder({ root, bridge, config, page = null }) {
         if (event.key === 'Escape' && props.contains(el)) {
             event.preventDefault();
             focusSelected();
+        }
+        // undo/redo of the builder; in a text field the field's own undo applies
+        const mod = event.ctrlKey || event.metaKey;
+        const inField = el.matches('input, textarea, select, [contenteditable="true"]');
+        if (mod && !event.altKey && !inField && (event.code === 'KeyZ' || event.code === 'KeyY')) {
+            event.preventDefault();
+            event.code === 'KeyY' || event.shiftKey ? doRedo() : doUndo();
         }
     });
 
@@ -176,6 +192,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
                 class: `sb-item sb-${r.kind}${selected && hasSelected ? ' sb-selected' : ''}${own.length ? ' sb-flagged' : ''}`,
                 role: 'treeitem', 'aria-level': r.level, 'aria-selected': String(selected && hasSelected),
                 'aria-expanded': r.children ? String(r.open) : null, tabindex: selected ? 0 : -1, 'data-path': k,
+                draggable: r.kind === 'element' || !r.implicit ? 'true' : null,
                 title: own.map((f) => f.message).join('\n') || null,
             },
             r.children ? h('span', { class: 'sb-toggle', 'aria-hidden': 'true', 'data-toggle': k }, r.open ? '▾' : '▸') : h('span', { class: 'sb-toggle', 'aria-hidden': 'true' }, ''),
@@ -219,9 +236,11 @@ export function createBuilder({ root, bridge, config, page = null }) {
         case 'Home': go(0); break;
         case 'End': go(list.length - 1); break;
         case 'ArrowRight':
+            if (event.altKey) { doNest(); break; }
             if (row.children && !row.open) { state.collapsed.delete(key(row.path)); renderTree(); } else if (row.children) { go(index + 1); }
             break;
         case 'ArrowLeft':
+            if (event.altKey) { doUnnest(); break; }
             if (row.children && row.open) { state.collapsed.add(key(row.path)); renderTree(); } else {
                 for (let i = index - 1; i >= 0; i--) { if (list[i].level < row.level) { go(i); break; } }
             }
@@ -232,7 +251,9 @@ export function createBuilder({ root, bridge, config, page = null }) {
             break;
         }
         case 'Delete': doDelete(); break;
-        default: handled = false;
+        default:
+            // Ctrl/Cmd+D duplicates (event.code: with Alt or on other layouts event.key is another character)
+            if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey && event.code === 'KeyD') { doDuplicate(); } else { handled = false; }
         }
         if (handled) { event.preventDefault(); }
     });
@@ -296,6 +317,8 @@ export function createBuilder({ root, bridge, config, page = null }) {
     function adopt(doc) {
         state.doc = doc;
         bridge.set(doc.text);
+        history.record(doc.text, { before: state.selected, after: state.selected });
+        renderToolbar();
         state.stale = true;
         props.querySelectorAll('[data-sb-stale]').forEach((el) => { el.hidden = false; });
         renderAlerts();
@@ -319,9 +342,8 @@ export function createBuilder({ root, bridge, config, page = null }) {
         let canUp = false;
         let canDown = false;
         if (loc) {
-            const length = valueAt(state.doc, loc.arr)?.length ?? 0;
-            canUp = loc.index > 0;
-            canDown = loc.index < length - 1;
+            canUp = moveTarget(-1) !== null;
+            canDown = moveTarget(1) !== null;
         } else if (sel && isPagePath(sel)) {
             canUp = sel[1] > 0;
             canDown = sel[1] < pagesCount - 1;
@@ -332,7 +354,10 @@ export function createBuilder({ root, bridge, config, page = null }) {
         upBtn.disabled = !canUp;
         downBtn.disabled = !canDown;
         delBtn.disabled = !deletable;
+        dupBtn.disabled = !loc;
         addPageBtn.disabled = !ok;
+        undoBtn.disabled = !ok || !history.canUndo();
+        redoBtn.disabled = !ok || !history.canRedo();
     }
 
     function renderSize() {
@@ -379,10 +404,13 @@ export function createBuilder({ root, bridge, config, page = null }) {
     function commitStructure(result, { select: nextPath, announce } = {}) {
         if (!result.ok) { showMessage(errorMessage(result)); return false; }
         alerts.querySelectorAll('[data-sb-transient]').forEach((el) => el.remove());
+        const before = state.selected;
         state.doc = result.doc;
         bridge.set(result.doc.text);
         state.stale = true;
         if (nextPath !== undefined) { state.selected = nextPath; }
+        history.record(result.doc.text, { before, after: state.selected });
+        openParents(state.selected);
         render();
         focusSelected();
         if (announce) { say(announce); }
@@ -486,10 +514,195 @@ export function createBuilder({ root, bridge, config, page = null }) {
         if (!loc) { return; }
         const total = valueAt(state.doc, loc.arr).length;
         const to = loc.index + delta;
-        if (to < 0 || to >= total) { return; }
-        const result = moveElement(state.doc, sel, to);
-        commitStructure(result, { select: result.path, announce: result.ok ? t('announce.moved', { name: label(value), pos: to + 1, total }) : undefined });
+        if (to >= 0 && to < total) {
+            const result = moveElement(state.doc, sel, to);
+            commitStructure(result, { select: result.path, announce: result.ok ? t('announce.moved', { name: label(value), pos: to + 1, total }) : undefined });
+            return;
+        }
+        const target = moveTarget(delta);
+        if (target) { doMoveTo(sel, target.parent, target.index); }
     }
+
+    /**
+     * Where Alt+Up/Down takes the selected element when it is at the edge of its container: out of its panel (before or
+     * behind it), or to the end of the previous page / the start of the next one. Inside the container: one step.
+     * @returns {{parent:Array, index:number}|null} index: insertion point among the target's current elements
+     */
+    function moveTarget(delta) {
+        const loc = location();
+        if (!loc || !state.doc) { return null; }
+        const total = valueAt(state.doc, loc.arr)?.length ?? 0;
+        const to = loc.index + delta;
+        if (to >= 0 && to < total) { return { parent: loc.arr.slice(0, -1), index: delta > 0 ? to + 1 : to }; }
+        const parent = loc.arr.slice(0, -1);
+        if (parent.length >= 2 && parent[parent.length - 2] === 'elements') {
+            return { parent: parent.slice(0, -2), index: parent[parent.length - 1] + (delta > 0 ? 1 : 0) };
+        }
+        if (isPagePath(parent)) {
+            const pages = valueAt(state.doc, ['pages']);
+            const other = parent[1] + delta;
+            if (other < 0 || other >= pages.length) { return null; }
+            return { parent: ['pages', other], index: delta > 0 ? 0 : (pages[other]?.elements?.length ?? 0) };
+        }
+        return null;
+    }
+
+    function containerName(parent) {
+        if (parent.length === 0) { return t('page'); }
+        const v = valueAt(state.doc, parent);
+        return isPagePath(parent) ? (displayText(v?.title) || v?.name || t('page')) : label(v ?? {});
+    }
+
+    /** Moves the element at `path` into `parent` at insertion point `index` (among the elements it holds now). */
+    function doMoveTo(path, parent, index) {
+        const value = valueAt(state.doc, path);
+        const result = moveElementTo(state.doc, path, parent, index, { rules });
+        const into = containerName(parent);
+        commitStructure(result, { select: result.path, announce: result.ok ? t('announce.moved_into', { name: label(value), target: into }) : undefined });
+    }
+
+    /** Alt+Right: into the panel right above the element, at its end. */
+    function doNest() {
+        const loc = location();
+        if (!loc || loc.index === 0) { return; }
+        const above = [...loc.arr, loc.index - 1];
+        if (valueAt(state.doc, above)?.type !== 'panel') { return; }
+        doMoveTo(state.selected, above, valueAt(state.doc, above).elements?.length ?? 0);
+    }
+
+    /** Alt+Left: out of the panel the element is in, right behind it. */
+    function doUnnest() {
+        const loc = location();
+        if (!loc) { return; }
+        const parent = loc.arr.slice(0, -1);
+        if (!(parent.length >= 2 && parent[parent.length - 2] === 'elements')) { return; }
+        doMoveTo(state.selected, parent.slice(0, -2), parent[parent.length - 1] + 1);
+    }
+
+    /** Opens the pages and panels above `path`, so it shows in the tree. */
+    function openParents(path) {
+        if (path?.[0] === 'elements') { state.collapsed.delete(key([])); }
+        for (let i = 1; path && i < path.length; i += 1) {
+            if (path[i] === 'elements') { state.collapsed.delete(key(path.slice(0, i))); }
+        }
+    }
+
+    function doDuplicate() {
+        const sel = state.selected;
+        if (!state.doc || !location()) { return; }
+        const value = valueAt(state.doc, sel);
+        const result = duplicateElement(state.doc, sel, { rules, taken: takenNames() });
+        const copy = result.ok ? result.names[value.name] ?? '' : '';
+        commitStructure(result, { select: result.path, announce: result.ok ? t('announce.duplicated', { name: label(value), copy }) : undefined });
+    }
+
+    // ---- undo / redo ---------------------------------------------------------------------------------------------
+
+    function restore(step, announce) {
+        if (!step) { return; }
+        const model = loadModel(step.text);
+        if (!model.ok) { return; } // every recorded text was readable; nothing to do if not
+        state.doc = model.doc;
+        bridge.set(step.text);
+        state.stale = true;
+        state.selected = step.selected && valueAt(state.doc, step.selected) !== undefined ? step.selected : null;
+        openParents(state.selected);
+        alerts.querySelectorAll('[data-sb-transient]').forEach((el) => el.remove());
+        render();
+        focusSelected();
+        say(announce);
+    }
+
+    function doUndo() { if (state.doc) { restore(history.undo(), t('announce.undone')); } }
+    function doRedo() { if (state.doc) { restore(history.redo(), t('announce.redone')); } }
+
+    // ---- drag and drop -------------------------------------------------------------------------------------------
+
+    const DROP_CLASSES = ['sb-drop-before', 'sb-drop-after', 'sb-drop-into'];
+
+    function clearDrop() {
+        tree.querySelectorAll('.sb-drop-before, .sb-drop-after, .sb-drop-into').forEach((el) => el.classList.remove(...DROP_CLASSES));
+    }
+
+    /**
+     * What a drop on `item` at height `y` means. A page dragged onto a page: before or behind it. An element onto a page:
+     * at the start of that page. Onto a panel: into it (in the middle; an open panel with elements also in its lower part,
+     * that is where its first element shows), otherwise before or behind it. Onto a question: before or behind it.
+     * @returns {{zone:string, parent:Array, index:number}|{zone:string, page:number}|null}
+     */
+    function dropTarget(item, y) {
+        const src = state.dragging;
+        if (!src || !item) { return null; }
+        const path = JSON.parse(item.getAttribute('data-path'));
+        const rect = item.getBoundingClientRect();
+        const ratio = rect.height > 0 ? (y - rect.top) / rect.height : 0.5;
+        if (isPagePath(src)) {
+            if (!isPagePath(path)) { return null; }
+            const after = ratio >= 0.5;
+            const to = path[1] + (after ? 1 : 0);
+            return { zone: after ? 'after' : 'before', page: to > src[1] ? to - 1 : to };
+        }
+        if (path.length >= src.length && src.every((s, i) => path[i] === s)) { return null; } // onto itself or inside it
+        if (path.length === 0 || isPagePath(path)) { return { zone: 'into', parent: path, index: 0 }; }
+        const value = valueAt(state.doc, path);
+        const parent = path.slice(0, -2);
+        const index = path[path.length - 1];
+        if (value?.type === 'panel') {
+            const openWithKids = (value.elements?.length ?? 0) > 0 && !state.collapsed.has(key(path));
+            if (ratio < 0.3) { return { zone: 'before', parent, index }; }
+            if (openWithKids || ratio <= 0.7) { return { zone: 'into', parent: path, index: openWithKids ? 0 : (value.elements?.length ?? 0) }; }
+            return { zone: 'after', parent, index: index + 1 };
+        }
+        return ratio < 0.5 ? { zone: 'before', parent, index } : { zone: 'after', parent, index: index + 1 };
+    }
+
+    tree.addEventListener('dragstart', (event) => {
+        const item = event.target.closest?.('.sb-item[draggable="true"]');
+        if (!item || !state.doc) { return; }
+        state.dragging = JSON.parse(item.getAttribute('data-path'));
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', item.querySelector('.sb-label')?.textContent ?? '');
+        item.classList.add('sb-dragging');
+    });
+
+    tree.addEventListener('dragover', (event) => {
+        const item = event.target.closest?.('.sb-item');
+        const target = dropTarget(item, event.clientY);
+        clearDrop();
+        if (!target) { return; }
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'move';
+        item.classList.add(`sb-drop-${target.zone}`);
+    });
+
+    tree.addEventListener('dragleave', (event) => {
+        if (!tree.contains(event.relatedTarget)) { clearDrop(); }
+    });
+
+    tree.addEventListener('drop', (event) => {
+        const item = event.target.closest?.('.sb-item');
+        const target = dropTarget(item, event.clientY);
+        const src = state.dragging;
+        clearDrop();
+        if (!target || !src) { return; }
+        event.preventDefault();
+        state.dragging = null;
+        if (target.page !== undefined) {
+            if (target.page === src[1]) { return; }
+            const value = valueAt(state.doc, src);
+            const total = valueAt(state.doc, ['pages']).length;
+            const moved = movePage(state.doc, src[1], target.page);
+            commitStructure(moved, { select: moved.path, announce: moved.ok ? t('announce.moved', { name: displayText(value?.title) || value?.name || t('page'), pos: target.page + 1, total }) : undefined });
+            return;
+        }
+        doMoveTo(src, target.parent, target.index);
+    });
+
+    tree.addEventListener('dragend', () => {
+        state.dragging = null;
+        clearDrop();
+        tree.querySelectorAll('.sb-dragging').forEach((el) => el.classList.remove('sb-dragging'));
+    });
 
     // ---- loading -------------------------------------------------------------------------------------------------
 
@@ -523,6 +736,9 @@ export function createBuilder({ root, bridge, config, page = null }) {
             if (model.ok) {
                 state.doc = model.doc;
                 state.error = null;
+                // a change in the JSON tab is a step of its own: undo in the builder can take it back too
+                if (history.current() === undefined) { history.reset(text, state.selected); }
+                else { history.record(text, { before: state.selected, after: state.selected }); }
             } else {
                 state.doc = null;
                 state.error = model.error;

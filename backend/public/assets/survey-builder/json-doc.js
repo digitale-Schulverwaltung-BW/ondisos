@@ -252,22 +252,45 @@ export function removeMember(doc, objPath, key) {
     }
 }
 
-/** Inserts an item into the array at arrPath (index = items.length appends). */
-export function insertItem(doc, arrPath, index, value) {
+/**
+ * The text of the value at path as it is written, with the indentation of its line: what insertItem needs to put the
+ * very same text somewhere else (see `source` there).
+ * @returns {{text:string, indent:string}}
+ */
+export function sourceAt(doc, path) {
+    const node = nodeAt(doc, path);
+    if (!node) { throw new Error(`Nothing at ${JSON.stringify(path)}`); }
+    return { text: doc.text.slice(node.start, node.end), indent: lineIndentAt(doc.text, node.start) };
+}
+
+/** Text written at indentation `from`, moved to indentation `to`: every following line that starts with `from` gets `to`. */
+function reindent(doc, text, from, to) {
+    return text.split(/\r?\n/).map((line, i) => (i > 0 && line.startsWith(from) ? to + line.slice(from.length) : line)).join(doc.eol);
+}
+
+/**
+ * Inserts an item into the array at arrPath (index = items.length appends).
+ * With `source` (from sourceAt) the item is that text, only re-indented for its new place: a moved or copied element
+ * keeps its layout (compact lists, key order, escapes). `value` must be the same value; it is used where the
+ * neighbours are written on one line each.
+ */
+export function insertItem(doc, arrPath, index, value, source = null) {
     const arr = container(doc, arrPath, 'array');
     if (index < 0 || index > arr.items.length) { throw new RangeError('index out of range'); }
     const { eol } = doc;
+    const write = (ind) => (source ? reindent(doc, source.text, source.indent, ind) : render(doc, value, ind));
     if (arr.items.length === 0) {
         const indent = lineIndentAt(doc.text, arr.start);
-        return splice(doc, arr.start, arr.end, `[${eol}${indent}${doc.indentUnit}${render(doc, value, indent + doc.indentUnit)}${eol}${indent}]`);
+        return splice(doc, arr.start, arr.end, `[${eol}${indent}${doc.indentUnit}${write(indent + doc.indentUnit)}${eol}${indent}]`);
     }
     const multiline = isMultiline(doc, arr, arr.items[0].start);
     const indent = lineIndentAt(doc.text, arr.items[0].start);
     // an object or array among neighbours written on one line each is written on one line too
     const structured = arr.items.filter((it) => it.type === 'object' || it.type === 'array');
     const oneLine = value !== null && typeof value === 'object' && structured.length > 0
-        && structured.every((it) => !doc.text.slice(it.start, it.end).includes('\n'));
-    const item = (ind) => (oneLine ? inlineJson(value) : render(doc, value, ind));
+        && structured.every((it) => !doc.text.slice(it.start, it.end).includes('\n'))
+        && !(source && !source.text.includes('\n'));
+    const item = (ind) => (oneLine ? inlineJson(value) : write(ind));
     if (index === arr.items.length) {
         const last = arr.items[arr.items.length - 1];
         return splice(doc, last.end, last.end, multiline ? `,${eol}${indent}${item(indent)}` : `, ${item(indent)}`);

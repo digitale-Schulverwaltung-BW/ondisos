@@ -48,3 +48,10 @@
 .sb-props { min-width: 0; }
 .sb-props .sb-group > summary { cursor: pointer; }
 .sb-palette { max-height: 70vh; overflow: auto; }
+
+/* Drag and drop in the tree: a line where the element lands, a frame around the panel or page it goes into. */
+.sb-item[draggable="true"] { -webkit-user-drag: element; }
+.sb-item.sb-dragging { opacity: .5; }
+.sb-item.sb-drop-before { box-shadow: inset 0 3px 0 var(--bs-primary); }
+.sb-item.sb-drop-after { box-shadow: inset 0 -3px 0 var(--bs-primary); }
+.sb-item.sb-drop-into { outline: 2px dashed var(--bs-primary); outline-offset: -2px; background: var(--bs-primary-bg-subtle); }

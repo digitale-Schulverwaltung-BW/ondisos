@@ -45,6 +45,7 @@ const reportWarn = write('report-warn.json', JSON.stringify({
     warnings: [{ path: 'pages[0].elements[1].visibleIf', message: 'Unbekannte Funktion foo() im Ausdruck' }, { path: '', message: 'Hinweis ohne Pfad' }],
 }));
 render('gs', surveys('gs'));
+render('ap4', surveys('gs'));
 render('bs', surveys('bs'));
 render('vabo', surveys('vabo'));
 render('odd', odd);
@@ -406,6 +407,121 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     // the last added element (a text field on the new page) was moved and deleted again; every other type is present
     check('session: every added type is in the survey', types.filter((t) => t !== 'text').every((t) => allElements(final).some((e) => e.type === t)), types.filter((t) => !allElements(final).some((e) => e.type === t)).join(','));
     check('session: no console errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+}
+
+// ---- AP4: moving between containers by keyboard and mouse, duplicating, undo/redo ------------------------------------
+{
+    const original = readFileSync(surveys('gs'), 'utf8');
+    const p = await open('ap4', { width: 1400, height: 3600 }); // the whole tree without scrolling: a drag starts where the mouse went down
+    /** Path of the element (or page) with this name in the current text, as the tree writes it in data-path. */
+    const pathOf = async (name) => {
+        const s = await survey(p);
+        const find = (list, base) => {
+            for (const [i, e] of (list ?? []).entries()) {
+                if (e.name === name) { return [...base, i]; }
+                const inner = find(e.elements, [...base, i, 'elements']);
+                if (inner) { return inner; }
+            }
+            return null;
+        };
+        for (const [i, pg] of s.pages.entries()) {
+            if (pg.name === name) { return ['pages', i]; }
+            const found = find(pg.elements, ['pages', i, 'elements']);
+            if (found) { return found; }
+        }
+        return null;
+    };
+    const row = (path) => `.sb-item[data-path='${JSON.stringify(path)}']`;
+    const selected = () => p.evaluate(() => document.querySelector('.sb-item.sb-selected')?.getAttribute('data-path'));
+    const key = async (k) => { await p.keyboard.press(k); await p.waitForTimeout(150); };
+    const steps = [];
+    const step = async () => { steps.push(await text(p)); };
+
+    await p.click(row(await pathOf('Schulart')));
+    await key('Alt+ArrowUp');
+    check('ap4: Alt+Up at the top of a page moves to the end of the previous page; the selection follows',
+        JSON.stringify(await pathOf('Schulart')) === '["pages",2,"elements",3]' && await selected() === '["pages",2,"elements",3]', String(await pathOf('Schulart')));
+    await step();
+    await key('Alt+ArrowRight');
+    check('ap4: Alt+Right moves into the panel above, at its end', JSON.stringify(await pathOf('Schulart')) === '["pages",2,"elements",2,"elements",10]');
+    await step();
+    await key('Alt+ArrowLeft');
+    check('ap4: Alt+Left moves out of the panel, right behind it', JSON.stringify(await pathOf('Schulart')) === '["pages",2,"elements",3]');
+    await step();
+    await key('Alt+ArrowDown');
+    check('ap4: Alt+Down at the end of a page moves to the start of the next; the text is the original again', (await text(p)) === original);
+    await step();
+
+    await key('ControlOrMeta+d');
+    const afterDup = await survey(p);
+    check('ap4: Ctrl/Cmd+D puts a copy with a new name right behind it', afterDup.pages[3].elements[1]?.name === 'Schulart_2'
+        && JSON.stringify({ ...afterDup.pages[3].elements[1], name: 'x' }) === JSON.stringify({ ...afterDup.pages[3].elements[0], name: 'x' })
+        && await selected() === '["pages",3,"elements",1]');
+    await step();
+
+    const box = async (sel) => p.locator(sel).boundingBox();
+    const drag = async (from, to, where) => {
+        const b = await box(to);
+        const y = where === 'top' ? 3 : where === 'bottom' ? b.height - 3 : b.height / 2;
+        await p.dragAndDrop(from, to, { targetPosition: { x: Math.min(60, b.width / 2), y } });
+        await p.waitForTimeout(250);
+    };
+    await drag(row(await pathOf('Kindergarten')), row(['pages', 0]), 'middle');
+    check('ap4: an element dragged onto a page lands at its start', JSON.stringify(await pathOf('Kindergarten')) === '["pages",0,"elements",0]', String(await pathOf('Kindergarten')));
+    await step();
+    await drag(row(['pages', 5]), row(['pages', 0]), 'top');
+    check('ap4: a page dragged onto the upper half of a page goes before it', (await survey(p)).pages[0].name === 'page2');
+    await step();
+    const panel = await pathOf('panel_wohnort');
+    await drag(row(await pathOf('Anmerkungen')), row(panel), 'middle');
+    check('ap4: an element dragged onto an open panel goes in as its first element', JSON.stringify(await pathOf('Anmerkungen')) === JSON.stringify([...panel, 'elements', 0]));
+    await step();
+    await drag(row(await pathOf('Geburtsort')), row(await pathOf('Austausch_Kindergarten')), 'bottom');
+    const austausch = await pathOf('Austausch_Kindergarten');
+    check('ap4: dragged onto the lower half of a question it goes behind it, also from inside a panel',
+        JSON.stringify(await pathOf('Geburtsort')) === JSON.stringify([...austausch.slice(0, -1), austausch.at(-1) + 1]));
+    await step();
+    const beforeSelf = await text(p);
+    await drag(row(await pathOf('panel_kind')), row(await pathOf('Vorname')), 'middle');
+    await drag(row(['pages', 1]), row(await pathOf('Schulart')), 'middle');
+    check('ap4: a panel cannot go into itself, a page not into an element: nothing changes', (await text(p)) === beforeSelf);
+    check('ap4: the result is valid for the server', serverSays(await text(p)).errors.length === 0, JSON.stringify(serverSays(await text(p)).errors).slice(0, 200));
+
+    // undo/redo: every step back to the exact text, then forward again
+    const final = await text(p);
+    const undo = p.locator('.sb-toolbar button', { hasText: 'Rückgängig' });
+    const redo = p.locator('.sb-toolbar button', { hasText: 'Wiederholen' });
+    let exact = true;
+    for (let i = steps.length - 2; i >= -1; i--) {
+        await undo.click();
+        await p.waitForTimeout(120);
+        if ((await text(p)) !== (i >= 0 ? steps[i] : original)) { exact = false; }
+    }
+    check('ap4: undo goes back step by step to the exact texts, down to the original', exact && (await text(p)) === original && await undo.isDisabled(), `${steps.length} steps`);
+    check('ap4: after undo the moved element is selected where it was', await selected() === JSON.stringify(['pages', 3, 'elements', 0]));
+    for (let i = 0; i < steps.length; i++) { await redo.click(); await p.waitForTimeout(120); }
+    check('ap4: redo goes forward to the last state', (await text(p)) === final && await redo.isDisabled());
+
+    await p.click(row(['pages', 0]));
+    await key('ControlOrMeta+z');
+    check('ap4: Ctrl/Cmd+Z in the tree undoes the last step', (await text(p)) === steps[steps.length - 2]);
+    await key('ControlOrMeta+Shift+z');
+    check('ap4: Ctrl/Cmd+Shift+Z redoes it', (await text(p)) === final);
+    await p.click(row(await pathOf('Kindergarten')));
+    const title = p.locator('[data-prop="title"] input');
+    await title.fill('Kita');
+    await title.press('ControlOrMeta+z');
+    await p.waitForTimeout(150);
+    check('ap4: Ctrl/Cmd+Z in a text field is the field\'s own undo, not the builder\'s', (await text(p)) === final);
+    await title.press('Escape');
+
+    await p.click('#se-tab-json');
+    await p.waitForTimeout(300);
+    await p.click('#se-tab-graphic');
+    await p.waitForTimeout(300);
+    check('ap4: switching tabs without a change adds no step', !(await redo.isEnabled()) && (await text(p)) === final);
+    check('ap4: no console errors', errors.length === 0, errors.join(' | '));
     await p.close();
 }
 

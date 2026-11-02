@@ -2,14 +2,15 @@
 // The JSON text stays the single source of truth; every change is a splice into that text (see json-doc.js).
 //
 // Reading: loadModel, outline, flatten. Changing (all return a new document, the text changes only where the edit is):
-// setProp (registry-driven), renameElement, addElement / removeElement / moveElement, addPage / removePage / movePage.
+// setProp (registry-driven), renameElement, addElement / removeElement / moveElement / moveElementTo / duplicateElement,
+// addPage / removePage / movePage.
 // Every change reports {ok:true, doc, …} or {ok:false, code}: nothing throws for wrong user input, and nothing is
 // written that the registry does not know. Conditions come with AP5.
 //
 // Clean-room: written against the documented SurveyJS JSON format only (PLAN-3.2.0.md, "Lizenz und Clean-Room").
 
-import { parseDoc, nodeAt, toValue, valueAt, setValue, insertMember, removeMember, insertItem, removeItem, moveItem, JsonSyntaxError }
-    from './json-doc.js';
+import { parseDoc, nodeAt, toValue, valueAt, setValue, insertMember, removeMember, insertItem, removeItem, moveItem, sourceAt,
+    JsonSyntaxError } from './json-doc.js';
 import { PAGE, typeDef, propDef, isKnownType, template } from './registry.js';
 import { elementsOf, generateName, validateName, findReferences, replaceReferences } from './names.js';
 
@@ -313,12 +314,144 @@ export function removeElement(doc, path) {
     return ok(removeItem(doc, at.arrPath, at.index), { references });
 }
 
-/** Moves an element to another position in the same page or panel (cross-container moves: AP4). */
+/** Moves an element to another position in the same page or panel (to another container: moveElementTo). */
 export function moveElement(doc, path, to) {
     const at = elementLocation(doc, path);
     if (!at) { return fail('path'); }
     if (!Number.isInteger(to) || to < 0 || to >= at.length) { return fail('index'); }
     return ok(moveItem(doc, at.arrPath, at.index, to), { path: [...at.arrPath, to] });
+}
+
+const startsWith = (path, prefix) => prefix.length <= path.length && prefix.every((s, i) => path[i] === s);
+
+/** Levels of panels an element brings along: 1 for a question, 2 for a panel with questions, … */
+function height(value) {
+    const kids = Array.isArray(value?.elements) ? value.elements : [];
+    return 1 + kids.reduce((max, k) => Math.max(max, height(k)), 0);
+}
+
+/** Can `parentPath` hold elements? A page, a panel, or the survey itself when it keeps its elements at the top level. */
+function isContainer(doc, parentPath) {
+    const parent = nodeAt(doc, parentPath);
+    if (!parent || parent.type !== 'object') { return false; }
+    if (parentPath.length === 0) { return nodeAt(doc, ['pages']) === undefined; }
+    const typeName = typeAt(doc, parentPath);
+    return typeName === 'page' || typeName === 'panel';
+}
+
+/**
+ * Moves an element (a panel with everything inside) into another page or panel, or to another place in its own.
+ * `index` is the insertion point among the elements the target holds now (0 … length; in the element's own container
+ * the place it would be inserted before). The element's text moves as it is, re-indented for its new depth.
+ * @returns {{ok:true, doc, path} | {ok:false, code:string}}
+ */
+export function moveElementTo(doc, path, parentPath, index, { rules } = {}) {
+    const at = elementLocation(doc, path);
+    if (!at) { return fail('path'); }
+    if (startsWith(parentPath, path)) { return fail('intoItself'); }
+    if (!isContainer(doc, parentPath)) { return fail('notContainer'); }
+    const list = nodeAt(doc, [...parentPath, CONTAINER_KEY]);
+    if (list && list.type !== 'array') { return fail('path'); }
+    const length = list ? list.items.length : 0;
+    if (!Number.isInteger(index) || index < 0 || index > length) { return fail('index'); }
+    const value = valueAt(doc, path);
+    if (rules && elementsKeyCount(parentPath) + height(value) - 1 > rules.maxDepth) { return fail('tooDeep'); }
+
+    if (startsWith(at.arrPath, parentPath) && at.arrPath.length === parentPath.length + 1) {
+        return moveElement(doc, path, index > at.index ? index - 1 : index);
+    }
+    const source = sourceAt(doc, path);
+    const without = removeItem(doc, at.arrPath, at.index);
+    // the removal shifts the target when it sits behind the element in the same list
+    const target = [...parentPath];
+    if (startsWith(target, at.arrPath) && target[at.arrPath.length] > at.index) { target[at.arrPath.length] -= 1; }
+    const next = nodeAt(without, [...target, CONTAINER_KEY])
+        ? insertItem(without, [...target, CONTAINER_KEY], index, value, source)
+        : insertMember(without, target, CONTAINER_KEY, [value]);
+    return ok(next, { path: [...target, CONTAINER_KEY, index] });
+}
+
+/**
+ * Named elements inside an element, the element first, as paths relative to it: nested panels and questions in
+ * choice options (choices[].elements), whose names the server also counts.
+ */
+function namedInside(value) {
+    const out = [];
+    const walk = (v, rel) => {
+        if (!v || typeof v !== 'object' || Array.isArray(v)) { return; }
+        if (typeof v.name === 'string' && v.name !== '') { out.push({ rel, name: v.name }); }
+        (Array.isArray(v.elements) ? v.elements : []).forEach((k, i) => walk(k, [...rel, CONTAINER_KEY, i]));
+        (Array.isArray(v.choices) ? v.choices : []).forEach((c, i) => {
+            (Array.isArray(c?.elements) ? c.elements : []).forEach((k, j) => walk(k, [...rel, 'choices', i, CONTAINER_KEY, j]));
+        });
+    };
+    walk(value, []);
+    return out;
+}
+
+function typesInside(value) {
+    const out = [];
+    const walk = (v) => {
+        if (!v || typeof v !== 'object') { return; }
+        out.push(v.type);
+        (Array.isArray(v.elements) ? v.elements : []).forEach(walk);
+    };
+    walk(value);
+    return out;
+}
+
+/** A free name for a copy of `name`: name_2, name_3, … (not in `used`). */
+function copyName(name, used) {
+    const base = name.replace(/_\d+$/, '');
+    let n = 2;
+    while (used.has(`${base}_${n}`)) { n += 1; }
+    return `${base}_${n}`;
+}
+
+/**
+ * Puts a copy of an element right behind it. Every name in the copy is new (name_2, …: a name is the key of the
+ * answers, two fields must not share one); conditions and texts inside the copy that refer to names inside the copy
+ * refer to the copies, references to anything outside stay. The copy's text is the original's, so its layout is too.
+ * @param {{rules?:object, taken?:string[]}} options `taken`: names that must not be used (see generateName)
+ * @returns {{ok:true, doc, path, names:Record<string,string>} | {ok:false, code:string}}
+ */
+export function duplicateElement(doc, path, { rules, taken = [] } = {}) {
+    const at = elementLocation(doc, path);
+    if (!at) { return fail('path'); }
+    const value = valueAt(doc, path);
+    if (!typesInside(value).every(isKnownType)) { return fail('unknownType'); }
+    if (rules && countElements(doc) + typesInside(value).length > rules.maxElements) { return fail('tooManyElements'); }
+
+    const copyPath = [...at.arrPath, at.index + 1];
+    let next = insertItem(doc, at.arrPath, at.index + 1, value, sourceAt(doc, path));
+    // every name anywhere in the survey (pages, calculated values, questions in choice options): a copy takes none of them
+    const used = new Set([...taken, ...(rules?.reservedNames ?? [])]);
+    const collect = (v) => {
+        if (Array.isArray(v)) { v.forEach(collect); return; }
+        if (!v || typeof v !== 'object') { return; }
+        if (typeof v.name === 'string') { used.add(v.name); }
+        Object.values(v).forEach(collect);
+    };
+    collect(toValue(doc.root));
+    const names = {};
+    for (const { name } of namedInside(value)) {
+        if (names[name] === undefined) { names[name] = copyName(name, used); used.add(names[name]); }
+    }
+    // references first (only strings change, the structure stays), then the names themselves
+    const strings = [];
+    const walk = (node, rel) => {
+        if (node.type === 'string') { strings.push(rel); }
+        if (node.type === 'object') { node.members.forEach((m) => { if (m.key !== 'name') { walk(m.node, [...rel, m.key]); } }); }
+        if (node.type === 'array') { node.items.forEach((n, i) => walk(n, [...rel, i])); }
+    };
+    walk(nodeAt(next, copyPath), []);
+    for (const rel of strings) {
+        const text = valueAt(next, [...copyPath, ...rel]);
+        const changed = Object.entries(names).reduce((s, [from, to]) => replaceReferences(s, from, to), text);
+        if (changed !== text) { next = setValue(next, [...copyPath, ...rel], changed); }
+    }
+    for (const { rel, name } of namedInside(value)) { next = setValue(next, [...copyPath, ...rel, 'name'], names[name]); }
+    return ok(next, { path: copyPath, names });
 }
 
 function pagesList(doc) {
