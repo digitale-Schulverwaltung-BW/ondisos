@@ -85,7 +85,7 @@
         },
         {
           "type": "radiogroup",
-          "name": "Kursbeginn_Monat",
+          "name": "Kursbeginn_Monat_EG",
           "visibleIf": "{Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG'",
           "title": "Gewünschter Kursbeginn",
           "isRequired": true,
@@ -110,7 +110,7 @@
           "inputType": "number",
           "isRequired": true,
           "requiredErrorText": "Bitte ausfüllen.",
-          "defaultValueExpression": "iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat} = 'September', iif(month(today()) >= 9, currentYear() + 1, currentYear()), currentYear() + 1)",
+          "defaultValueExpression": "iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'September', iif(month(today()) >= 9, currentYear() + 1, currentYear()), currentYear() + 1)",
           "validators": [
             {
               "type": "expression",
@@ -120,7 +120,7 @@
             {
               "type": "expression",
               "text": "Dieser Kursbeginn ist nicht mehr möglich. Bitte ein späteres Jahr wählen.",
-              "expression": "{Kursbeginn_Jahr} empty or {Kursbeginn_Jahr} >= iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat} = 'September', iif(month(today()) >= 9, currentYear() + 1, currentYear()), currentYear() + 1)"
+              "expression": "{Kursbeginn_Jahr} empty or {Kursbeginn_Jahr} >= iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'September', iif(month(today()) >= 9, currentYear() + 1, currentYear()), currentYear() + 1)"
             },
             {
               "type": "expression",
@@ -131,10 +131,17 @@
         },
         {
           "type": "expression",
-          "name": "Kursbeginn_Stichtag",
+          "name": "Kursbeginn_Monat",
           "visible": false,
           "clearIfInvisible": "none",
-          "expression": "iif({Kursbeginn_Jahr} empty, '', iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat} = 'September', {Kursbeginn_Jahr} + '-09-01', iif({Unterrichtsform} = 'Teilzeitunterricht' or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'GSI') or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat} = 'Februar'), {Kursbeginn_Jahr} + '-02-01', '')))"
+          "expression": "iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'September', 'September', iif({Unterrichtsform} = 'Teilzeitunterricht' or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'GSI') or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'Februar'), 'Februar', ''))"
+        },
+        {
+          "type": "expression",
+          "name": "_Kursbeginn_Stichtag",
+          "visible": false,
+          "clearIfInvisible": "none",
+          "expression": "iif({Kursbeginn_Jahr} empty, '', iif({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'September', dateAdd('2000-09-01', {Kursbeginn_Jahr} - 2000, 'years'), iif({Unterrichtsform} = 'Teilzeitunterricht' or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'GSI') or ({Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG' and {Kursbeginn_Monat_EG} = 'Februar'), dateAdd('2000-02-01', {Kursbeginn_Jahr} - 2000, 'years'), '')))"
         },
         {
           "type": "radiogroup",
@@ -2556,7 +2563,7 @@
         {
           "type": "html",
           "name": "hinweis_stichtag_fehlt",
-          "visibleIf": "{Kursbeginn_Stichtag} empty",
+          "visibleIf": "{_Kursbeginn_Stichtag} empty",
           "html": "<p><b>Der gewünschte Kursbeginn ist noch nicht vollständig angegeben.</b> Bitte ergänzen Sie Unterrichtsform, gegebenenfalls Schwerpunkt und Startmonat sowie das Startjahr auf der Seite zur Kurswahl. Ohne diese Angaben kann die aktuelle Berufstätigkeit nicht berechnet werden.</p>"
         },
         {
@@ -2569,7 +2576,7 @@
             {
               "type": "expression",
               "text": "Bitte vervollständigen Sie zuerst den gewünschten Kursbeginn auf der Seite zur Kurswahl.",
-              "expression": "{Aktuell_berufstaetig} != 'ja' or {Kursbeginn_Stichtag} notempty"
+              "expression": "{Aktuell_berufstaetig} != 'ja' or {_Kursbeginn_Stichtag} notempty"
             }
           ],
           "choices": [
@@ -2585,46 +2592,25 @@
           "colCount": 2
         },
         {
-          "type": "html",
-          "name": "hinweis_aktuelle_berufstaetigkeit",
+          "type": "panel",
+          "name": "panel_aktuelle_berufstaetigkeit",
           "visibleIf": "{Aktuell_berufstaetig} = 'ja'",
-          "html": "<p>Bitte geben Sie im ersten Eintrag Ihre aktuelle Berufstätigkeit an. Für die Berechnung wird angenommen, dass diese bis zum gewünschten Kursbeginn fortbesteht. Als Stichtag gilt der 1. Februar beziehungsweise der 1. September des ausgewählten Startjahres.</p><p>Weitere Einträge sind für frühere Berufstätigkeiten vorgesehen.</p>"
-        },
-        {
-          "type": "paneldynamic",
-          "name": "_Berufstaetigkeit",
-          "visibleIf": "{Aktuell_berufstaetig} notempty",
-          "title": "Berufstätigkeiten",
-          "description": "Bitte geben Sie nur Tätigkeiten nach Abschluss Ihrer Berufsausbildung an. Erfassen Sie denselben Zeitraum nicht mehrfach.",
-          "descriptionLocation": "underTitle",
-          "clearIfInvisible": "none",
-          "templateElements": [
-            {
-              "type": "html",
-              "name": "titel_aktuelle_taetigkeit",
-              "visibleIf": "{Aktuell_berufstaetig} = 'ja' and {panelIndex} = 0",
-              "html": "<h4>Aktuelle Berufstätigkeit</h4>"
-            },
-            {
-              "type": "html",
-              "name": "titel_fruehere_taetigkeit",
-              "visibleIf": "{Aktuell_berufstaetig} != 'ja' or {panelIndex} > 0",
-              "html": "<h4>Frühere Berufstätigkeit</h4>"
-            },
+          "title": "Aktuelle Berufstätigkeit",
+          "description": "Für die Berechnung wird angenommen, dass Ihre aktuelle Berufstätigkeit bis zum gewünschten Kursbeginn fortbesteht. Als Stichtag gilt der 1. Februar beziehungsweise der 1. September des ausgewählten Startjahres.",
+          "elements": [
             {
               "type": "text",
-              "name": "Taetigkeit",
+              "name": "Aktuell_als",
               "title": "Berufstätigkeit als",
-              "requiredErrorText": "Bitte ausfüllen.",
-              "requiredIf": "({Aktuell_berufstaetig} = 'ja' and {panelIndex} = 0) or {panel.Seit} notempty or {panel.Von} notempty or {panel.Bis} notempty"
+              "isRequired": true,
+              "requiredErrorText": "Bitte ausfüllen."
             },
             {
               "type": "text",
-              "name": "Seit",
+              "name": "Aktuell_seit",
               "title": "Berufstätig seit",
               "inputType": "date",
-              "visibleIf": "{Aktuell_berufstaetig} = 'ja' and {panelIndex} = 0",
-              "clearIfInvisible": "onHidden",
+              "startWithNewLine": false,
               "isRequired": true,
               "requiredErrorText": "Bitte ausfüllen.",
               "maxValueExpression": "today()",
@@ -2633,31 +2619,53 @@
                 {
                   "type": "expression",
                   "text": "Der Beginn der Berufstätigkeit darf nicht nach dem gewünschten Kursbeginn liegen.",
-                  "expression": "{panel.Seit} empty or {Kursbeginn_Stichtag} empty or getDate({panel.Seit}) <= getDate({Kursbeginn_Stichtag})"
+                  "expression": "{Aktuell_seit} empty or {_Kursbeginn_Stichtag} empty or getDate({Aktuell_seit}) <= getDate({_Kursbeginn_Stichtag})"
                 }
               ]
             },
             {
+              "type": "expression",
+              "name": "Aktuell_Monate",
+              "title": "Angerechnete Monate bis Kursbeginn",
+              "expression": "iif({Aktuell_als} notempty and {Aktuell_seit} notempty and {_Kursbeginn_Stichtag} notempty and getDate({_Kursbeginn_Stichtag}) >= getDate({Aktuell_seit}), max(0, round((dateDiff({Aktuell_seit}, {_Kursbeginn_Stichtag}, 'days') + 1) / 30.44)), 0)",
+              "displayStyle": "decimal",
+              "maximumFractionDigits": 0
+            }
+          ]
+        },
+        {
+          "type": "paneldynamic",
+          "name": "_Fruehere_Berufstaetigkeit",
+          "visibleIf": "{Aktuell_berufstaetig} notempty",
+          "title": "Frühere Berufstätigkeiten",
+          "description": "Bitte geben Sie nur Tätigkeiten nach Abschluss Ihrer Berufsausbildung an. Erfassen Sie denselben Zeitraum nicht mehrfach.",
+          "descriptionLocation": "underTitle",
+          "clearIfInvisible": "none",
+          "templateElements": [
+            {
               "type": "text",
-              "name": "Von",
+              "name": "Beruf_als",
+              "title": "Berufstätigkeit als",
+              "requiredErrorText": "Bitte ausfüllen.",
+              "requiredIf": "{panel.Beruf_von} notempty or {panel.Beruf_bis} notempty"
+            },
+            {
+              "type": "text",
+              "name": "Beruf_von",
               "title": "Von",
               "inputType": "date",
-              "visibleIf": "{Aktuell_berufstaetig} != 'ja' or {panelIndex} > 0",
-              "clearIfInvisible": "onHidden",
-              "requiredIf": "{panel.Taetigkeit} notempty or {panel.Bis} notempty",
+              "requiredIf": "{panel.Beruf_als} notempty or {panel.Beruf_bis} notempty",
               "requiredErrorText": "Bitte ausfüllen.",
               "maxValueExpression": "today()",
               "maxErrorText": "Das Datum darf nicht in der Zukunft liegen."
             },
             {
               "type": "text",
-              "name": "Bis",
+              "name": "Beruf_bis",
               "title": "Bis",
               "inputType": "date",
-              "visibleIf": "{Aktuell_berufstaetig} != 'ja' or {panelIndex} > 0",
               "startWithNewLine": false,
-              "clearIfInvisible": "onHidden",
-              "requiredIf": "{panel.Taetigkeit} notempty or {panel.Von} notempty",
+              "requiredIf": "{panel.Beruf_als} notempty or {panel.Beruf_von} notempty",
               "requiredErrorText": "Bitte ausfüllen.",
               "maxValueExpression": "today()",
               "maxErrorText": "Das Datum darf nicht in der Zukunft liegen.",
@@ -2665,42 +2673,28 @@
                 {
                   "type": "expression",
                   "text": "Das Enddatum darf nicht vor dem Beginn liegen.",
-                  "expression": "{panel.Von} empty or {panel.Bis} empty or getDate({panel.Bis}) >= getDate({panel.Von})"
+                  "expression": "{panel.Beruf_von} empty or {panel.Beruf_bis} empty or getDate({panel.Beruf_bis}) >= getDate({panel.Beruf_von})"
                 },
                 {
                   "type": "expression",
                   "text": "Das Enddatum darf nicht nach dem gewünschten Kursbeginn liegen.",
-                  "expression": "{panel.Bis} empty or {Kursbeginn_Stichtag} empty or getDate({panel.Bis}) <= getDate({Kursbeginn_Stichtag})"
+                  "expression": "{panel.Beruf_bis} empty or {_Kursbeginn_Stichtag} empty or getDate({panel.Beruf_bis}) <= getDate({_Kursbeginn_Stichtag})"
                 }
               ]
             },
             {
               "type": "expression",
-              "name": "Beginn_Berechnung",
-              "visible": false,
-              "clearIfInvisible": "none",
-              "expression": "iif({Aktuell_berufstaetig} = 'ja' and {panelIndex} = 0, {panel.Seit}, {panel.Von})"
-            },
-            {
-              "type": "expression",
-              "name": "Ende_Berechnung",
-              "visible": false,
-              "clearIfInvisible": "none",
-              "expression": "iif({Aktuell_berufstaetig} = 'ja' and {panelIndex} = 0, {Kursbeginn_Stichtag}, {panel.Bis})"
-            },
-            {
-              "type": "expression",
-              "name": "Monate",
+              "name": "Beruf_Monate",
               "title": "Angerechnete Monate",
-              "expression": "iif({panel.Taetigkeit} notempty and {panel.Beginn_Berechnung} notempty and {panel.Ende_Berechnung} notempty and getDate({panel.Ende_Berechnung}) >= getDate({panel.Beginn_Berechnung}), max(0, round((dateDiff({panel.Beginn_Berechnung}, {panel.Ende_Berechnung}, 'days') + 1) / 30.44)), 0)",
+              "expression": "iif({panel.Beruf_als} notempty and {panel.Beruf_von} notempty and {panel.Beruf_bis} notempty and getDate({panel.Beruf_bis}) >= getDate({panel.Beruf_von}), max(0, round((dateDiff({panel.Beruf_von}, {panel.Beruf_bis}, 'days') + 1) / 30.44)), 0)",
               "displayStyle": "decimal",
               "maximumFractionDigits": 0
             }
           ],
-          "templateTitle": "Berufstätigkeit {panelIndex}",
+          "templateTitle": "Frühere Berufstätigkeit {panelIndex}",
           "panelCount": 1,
-          "minPanelCount": 1,
           "maxPanelCount": 3,
+          "noEntriesText": "Keine früheren Berufstätigkeiten erfasst.",
           "addPanelText": "Weitere frühere Berufstätigkeit hinzufügen",
           "removePanelText": "Eintrag entfernen",
           "confirmDeleteText": "Diesen Eintrag wirklich entfernen?"
@@ -2711,7 +2705,7 @@
           "visibleIf": "{Aktuell_berufstaetig} notempty",
           "title": "Berufstätigkeit gesamt (Monate)",
           "clearIfInvisible": "none",
-          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate')",
+          "expression": "iif({Aktuell_berufstaetig} = 'ja', {Aktuell_Monate}, 0) + sumInArray({_Fruehere_Berufstaetigkeit}, 'Beruf_Monate')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0
         },
@@ -2723,28 +2717,28 @@
           "templateElements": [
             {
               "type": "text",
-              "name": "Taetigkeit",
+              "name": "Sonstige_als",
               "title": "Sonstige Tätigkeit als",
               "requiredErrorText": "Bitte ausfüllen.",
-              "requiredIf": "{panel.Von} notempty or {panel.Bis} notempty"
+              "requiredIf": "{panel.Sonstige_von} notempty or {panel.Sonstige_bis} notempty"
             },
             {
               "type": "text",
-              "name": "Von",
+              "name": "Sonstige_von",
               "title": "Von",
               "inputType": "date",
-              "requiredIf": "{panel.Taetigkeit} notempty or {panel.Bis} notempty",
+              "requiredIf": "{panel.Sonstige_als} notempty or {panel.Sonstige_bis} notempty",
               "requiredErrorText": "Bitte ausfüllen.",
               "maxValueExpression": "today()",
               "maxErrorText": "Das Datum darf nicht in der Zukunft liegen."
             },
             {
               "type": "text",
-              "name": "Bis",
+              "name": "Sonstige_bis",
               "title": "Bis",
               "inputType": "date",
               "startWithNewLine": false,
-              "requiredIf": "{panel.Taetigkeit} notempty or {panel.Von} notempty",
+              "requiredIf": "{panel.Sonstige_als} notempty or {panel.Sonstige_von} notempty",
               "requiredErrorText": "Bitte ausfüllen.",
               "maxValueExpression": "today()",
               "maxErrorText": "Das Datum darf nicht in der Zukunft liegen.",
@@ -2752,16 +2746,16 @@
                 {
                   "type": "expression",
                   "text": "Das Enddatum darf nicht vor dem Beginn liegen.",
-                  "expression": "{panel.Von} empty or {panel.Bis} empty or getDate({panel.Bis}) >= getDate({panel.Von})"
+                  "expression": "{panel.Sonstige_von} empty or {panel.Sonstige_bis} empty or getDate({panel.Sonstige_bis}) >= getDate({panel.Sonstige_von})"
                 }
               ]
             },
             {
               "type": "expression",
-              "name": "Monate",
+              "name": "Sonstige_Monate",
               "startWithNewLine": false,
               "title": "Monate",
-              "expression": "iif({panel.Taetigkeit} notempty and {panel.Von} notempty and {panel.Bis} notempty and getDate({panel.Bis}) >= getDate({panel.Von}), max(0, round((dateDiff({panel.Von}, {panel.Bis}, 'days') + 1) / 30.44)), 0)",
+              "expression": "iif({panel.Sonstige_als} notempty and {panel.Sonstige_von} notempty and {panel.Sonstige_bis} notempty and getDate({panel.Sonstige_bis}) >= getDate({panel.Sonstige_von}), max(0, round((dateDiff({panel.Sonstige_von}, {panel.Sonstige_bis}, 'days') + 1) / 30.44)), 0)",
               "displayStyle": "decimal",
               "maximumFractionDigits": 0
             }
@@ -2776,10 +2770,10 @@
         {
           "type": "expression",
           "name": "Monate_Sonstige_gesamt",
-          "visibleIf": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate') > 0",
+          "visibleIf": "sumInArray({_Sonstige_Taetigkeiten}, 'Sonstige_Monate') > 0",
           "title": "Sonstige Tätigkeiten gesamt (Monate)",
           "clearIfInvisible": "none",
-          "expression": "sumInArray({_Sonstige_Taetigkeiten}, 'Monate')",
+          "expression": "sumInArray({_Sonstige_Taetigkeiten}, 'Sonstige_Monate')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0
         },
@@ -2789,7 +2783,7 @@
           "visible": false,
           "title": "Monate gesamt",
           "clearIfInvisible": "none",
-          "expression": "sumInArray({_Berufstaetigkeit}, 'Monate') + sumInArray({_Sonstige_Taetigkeiten}, 'Monate')",
+          "expression": "iif({Aktuell_berufstaetig} = 'ja', {Aktuell_Monate}, 0) + sumInArray({_Fruehere_Berufstaetigkeit}, 'Beruf_Monate') + sumInArray({_Sonstige_Taetigkeiten}, 'Sonstige_Monate')",
           "displayStyle": "decimal",
           "maximumFractionDigits": 0
         },
@@ -2809,171 +2803,171 @@
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit1_als",
+          "name": "Fruehere1_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[0].Taetigkeit} notempty, {_Berufstaetigkeit[0].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[0].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[0].Beruf_als}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit1_von",
+          "name": "Fruehere1_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[0].Taetigkeit} notempty and {_Berufstaetigkeit[0].Beginn_Berechnung} notempty, {_Berufstaetigkeit[0].Beginn_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[0].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[0].Beruf_von}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit1_bis",
+          "name": "Fruehere1_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[0].Taetigkeit} notempty and {_Berufstaetigkeit[0].Ende_Berechnung} notempty, {_Berufstaetigkeit[0].Ende_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[0].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[0].Beruf_bis}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit1_Monate",
+          "name": "Fruehere1_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[0].Taetigkeit} notempty, {_Berufstaetigkeit[0].Monate}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[0].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[0].Beruf_Monate}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit2_als",
+          "name": "Fruehere2_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[1].Taetigkeit} notempty, {_Berufstaetigkeit[1].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[1].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[1].Beruf_als}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit2_von",
+          "name": "Fruehere2_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[1].Taetigkeit} notempty and {_Berufstaetigkeit[1].Beginn_Berechnung} notempty, {_Berufstaetigkeit[1].Beginn_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[1].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[1].Beruf_von}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit2_bis",
+          "name": "Fruehere2_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[1].Taetigkeit} notempty and {_Berufstaetigkeit[1].Ende_Berechnung} notempty, {_Berufstaetigkeit[1].Ende_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[1].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[1].Beruf_bis}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit2_Monate",
+          "name": "Fruehere2_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[1].Taetigkeit} notempty, {_Berufstaetigkeit[1].Monate}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[1].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[1].Beruf_Monate}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit3_als",
+          "name": "Fruehere3_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[2].Taetigkeit} notempty, {_Berufstaetigkeit[2].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[2].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[2].Beruf_als}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit3_von",
+          "name": "Fruehere3_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[2].Taetigkeit} notempty and {_Berufstaetigkeit[2].Beginn_Berechnung} notempty, {_Berufstaetigkeit[2].Beginn_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[2].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[2].Beruf_von}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit3_bis",
+          "name": "Fruehere3_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[2].Taetigkeit} notempty and {_Berufstaetigkeit[2].Ende_Berechnung} notempty, {_Berufstaetigkeit[2].Ende_Berechnung}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[2].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[2].Beruf_bis}, '')"
         },
         {
           "type": "text",
-          "name": "Berufstaetigkeit3_Monate",
+          "name": "Fruehere3_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Berufstaetigkeit[2].Taetigkeit} notempty, {_Berufstaetigkeit[2].Monate}, '')"
+          "setValueExpression": "iif({_Fruehere_Berufstaetigkeit[2].Beruf_als} notempty, {_Fruehere_Berufstaetigkeit[2].Beruf_Monate}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige1_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[0].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[0].Sonstige_als}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige1_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[0].Von} notempty, {_Sonstige_Taetigkeiten[0].Von}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[0].Sonstige_von}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige1_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[0].Bis} notempty, {_Sonstige_Taetigkeiten[0].Bis}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[0].Sonstige_bis}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige1_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[0].Monate}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[0].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[0].Sonstige_Monate}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige2_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[1].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[1].Sonstige_als}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige2_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[1].Von} notempty, {_Sonstige_Taetigkeiten[1].Von}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[1].Sonstige_von}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige2_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[1].Bis} notempty, {_Sonstige_Taetigkeiten[1].Bis}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[1].Sonstige_bis}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige2_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[1].Monate}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[1].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[1].Sonstige_Monate}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige3_als",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[2].Taetigkeit}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[2].Sonstige_als}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige3_von",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[2].Von} notempty, {_Sonstige_Taetigkeiten[2].Von}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[2].Sonstige_von}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige3_bis",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Taetigkeit} notempty and {_Sonstige_Taetigkeiten[2].Bis} notempty, {_Sonstige_Taetigkeiten[2].Bis}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[2].Sonstige_bis}, '')"
         },
         {
           "type": "text",
           "name": "Sonstige3_Monate",
           "visible": false,
           "clearIfInvisible": "none",
-          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Taetigkeit} notempty, {_Sonstige_Taetigkeiten[2].Monate}, '')"
+          "setValueExpression": "iif({_Sonstige_Taetigkeiten[2].Sonstige_als} notempty, {_Sonstige_Taetigkeiten[2].Sonstige_Monate}, '')"
         },
         {
           "type": "html",
