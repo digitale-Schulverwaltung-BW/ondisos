@@ -38,6 +38,18 @@ final class SurveyValidator
     ];
 
     /**
+     * Operators the SurveyJS expression grammar accepts as words (matched case-insensitively there).
+     * Followed by "(" they look like calls, e.g. `{a} = 1 or ({b} = 2)`, but are not functions.
+     */
+    private const WORD_OPERATORS = [
+        'or', 'and', 'not', 'negate',
+        'empty', 'notempty',
+        'contains', 'contain', 'notcontains', 'notcontain', 'anyof', 'allof', 'noneof',
+        'equal', 'notequal', 'less', 'greater', 'lessorequal', 'greaterorequal',
+        'power',
+    ];
+
+    /**
      * @return array{result: ValidationResult, survey: ?array<string,mixed>} survey is null when it could not be parsed
      */
     public function validate(string $json): array
@@ -214,6 +226,9 @@ final class SurveyValidator
             return;
         }
         foreach (array_unique($m[1]) as $fn) {
+            if (in_array(strtolower($fn), self::WORD_OPERATORS, true)) {
+                continue;
+            }
             if (!in_array($fn, self::KNOWN_FUNCTIONS, true)) {
                 $result->addWarning($path, "Unbekannte Funktion {$fn}() im Ausdruck (SurveyJS kennt sie nicht)");
             }
