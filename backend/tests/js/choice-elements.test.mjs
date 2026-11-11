@@ -8,6 +8,7 @@ import { loadModel, outline, flatten, addElement, moveElementTo, duplicateElemen
     from '../../public/assets/survey-builder/model.js';
 import { toValue, valueAt } from '../../public/assets/survey-builder/json-doc.js';
 import { elementsOf, validateName, generateName } from '../../public/assets/survey-builder/names.js';
+import { choiceToLine, linesToChoices, matchChoices } from '../../public/assets/survey-builder/ui-props.js';
 
 const require = createRequire(import.meta.url);
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
@@ -127,4 +128,49 @@ test('duplicate and remove a question together with the questions in its options
     assert.equal(countElements(dup.doc), 12);
     const rm = good(removeElement(d, Q));
     assert.deepEqual(elementsOf(rm.doc).map((e) => e.value.name), ['g', 'x']);
+});
+
+test('answer list: an edited line keeps the questions of its answer (value, text, position)', () => {
+    const original = [{ value: 'vz', text: 'Vollzeit', elements: [{ type: 'text', name: 'a' }] }, { value: 2, elements: [{ type: 'text', name: 'b' }] }, 'c'];
+    const lines = original.map(choiceToLine);
+    assert.deepEqual(lines, ['vz | Vollzeit', '2', 'c']);
+
+    const text = matchChoices('vz | Vollzeit (Mo–Fr)\n2 | Zwei\nc', original);
+    assert.deepEqual(text.items, [
+        { value: 'vz', text: 'Vollzeit (Mo–Fr)', elements: original[0].elements },
+        { value: 2, elements: original[1].elements, text: 'Zwei' }, // the number value survives
+        'c',
+    ]);
+    assert.deepEqual(text.dropped, []);
+
+    const value = matchChoices('VZ | Vollzeit\nneu\n2\nc', original); // new value in place, a new line before an unchanged one
+    assert.deepEqual(value.items[0], { value: 'VZ', text: 'Vollzeit', elements: original[0].elements });
+    assert.equal(value.items[1], 'neu');
+    assert.strictEqual(value.items[2], original[1]);
+
+    const moved = matchChoices('c\n2\nvz | Vollzeit', original); // reordered: the same entries
+    assert.deepEqual(moved.items.map((i) => original.indexOf(i)), [2, 1, 0]);
+
+    const removed = matchChoices('vz | Vollzeit\nc', original);
+    assert.deepEqual(removed.dropped, [1]);
+});
+
+test('answer list: other settings and translated texts stay when a line changes', () => {
+    const original = [{ value: 'a', text: { default: 'A', en: 'A (en)' }, visibleIf: '{x} = 1' }];
+    assert.deepEqual(linesToChoices('b', original), [{ value: 'b', text: { default: 'A', en: 'A (en)' }, visibleIf: '{x} = 1' }]);
+    assert.deepEqual(linesToChoices('b | Neu', original), [{ value: 'b', text: 'Neu', visibleIf: '{x} = 1' }]);
+    assert.deepEqual(linesToChoices('a | Plain', [{ value: 'a', text: 'Old' }]), [{ value: 'a', text: 'Plain' }]);
+});
+
+test('answer list: setProp writes an edited line around the questions, which stay byte for byte', () => {
+    const d = load(SURVEY);
+    const before = valueAt(d, [...Q, 'choices']);
+    const next = good(setProp(d, Q, 'choices', linesToChoices('vz | Vollzeit (Mo–Fr)\ntz | Teilzeit\nother', before), { rules: RULES })).doc;
+    assert.deepEqual(valueAt(next, [...VZ, 'text']), 'Vollzeit (Mo–Fr)');
+    assert.deepEqual(valueAt(next, [...TZ, 'text']), 'Teilzeit');
+    const block = (doc) => JSON.stringify(valueAt(doc, [...VZ, 'elements']));
+    assert.equal(block(next), block(d));
+    assert.deepEqual(elementsOf(next).map((e) => e.value.name), elementsOf(d).map((e) => e.value.name));
+    const start = (doc) => doc.text.indexOf('"focus"');
+    assert.equal(next.text.slice(start(next), start(next) + 400), d.text.slice(start(d), start(d) + 400));
 });

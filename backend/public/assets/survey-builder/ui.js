@@ -302,6 +302,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
                 return result;
             },
             rename(newName) { return doRename(path, typeName, newName); },
+            confirm(message) { return window.confirm(message); },
         };
         props.append(buildProperties(ctx));
     }

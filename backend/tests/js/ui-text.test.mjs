@@ -96,7 +96,7 @@ test('unchanged lines give back their original answers (kinds and number values 
     assert.deepEqual(linesToChoices('', original), []);
 });
 
-test('answers with more than value and text are "advanced" and not written as lines', () => {
+test('answers with more than value and text are "advanced" (their settings stay, the list says so)', () => {
     assert.equal(hasAdvancedChoices(['a', { value: 'b', text: 'B' }]), false);
     assert.equal(hasAdvancedChoices(['a', { value: 'b', visibleIf: '{x} = 1' }]), true);
     assert.equal(hasAdvancedChoices([]), false);

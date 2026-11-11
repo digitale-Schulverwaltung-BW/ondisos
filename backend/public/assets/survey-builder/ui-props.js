@@ -20,6 +20,7 @@ const nextId = (name) => `sb-f-${name}-${(uid += 1)}`;
  * @property {boolean} stale                   the text changed since that check
  * @property {(name:string, value:*) => {ok:boolean, code?:string}} commit  writes a property
  * @property {(name:string) => {ok:boolean, code?:string, cancelled?:boolean}} rename  renames (asks for confirmation)
+ * @property {(message:string) => boolean} confirm  asks the user (window.confirm)
  * @property {(el:HTMLElement) => void} [onFindingShow]
  */
 
@@ -248,21 +249,93 @@ export function hasAdvancedChoices(items) {
     return items.some((item) => item && typeof item === 'object' && Object.keys(item).some((k) => k !== 'value' && k !== 'text'));
 }
 
+/** The settings of an answer beyond value and text (questions in it, conditions, …). */
+const extrasOf = (item) => (item && typeof item === 'object' && !Array.isArray(item)
+    ? Object.keys(item).filter((k) => k !== 'value' && k !== 'text') : []);
+
 /**
- * The lines → answers. A line that is unchanged gives back the answer it came from (number values, kinds of entries),
- * only edited and new lines are parsed.
+ * An edited line onto the answer it came from: value and text from the line, everything else (questions in the answer,
+ * conditions, a translated text the line does not show) stays. An answer with only value and text is simply the line.
  */
-export function linesToChoices(text, original) {
+function mergeChoice(item, line) {
+    const parsed = lineToChoice(line);
+    const value = typeof parsed === 'string' ? parsed : parsed.value;
+    const text = typeof parsed === 'string' ? undefined : parsed.text;
+    const oldValue = item && typeof item === 'object' ? item.value : item;
+    const keepValue = oldValue !== undefined && String(oldValue) === value ? oldValue : value;
+    if (extrasOf(item).length === 0) {
+        if (text === undefined) { return keepValue; }
+        return { value: keepValue, text };
+    }
+    const out = {};
+    for (const [k, v] of Object.entries(item)) {
+        if (k === 'value') { out.value = keepValue; } else if (k !== 'text' || text !== undefined || typeof v !== 'string') { out[k] = v; }
+    }
+    if (!('value' in out)) { out.value = keepValue; }
+    if (text !== undefined) { out.text = text; }
+    return out;
+}
+
+/**
+ * The lines → answers, and which answers were kept. A line that is unchanged gives back the answer it came from (number
+ * values, kinds of entries). An edited line takes the place of the answer it came from: the one with the same value, else
+ * the next unused answer between its unchanged neighbours. So an answer keeps its questions and conditions when its value
+ * or text changes. Answers that no line took are gone (`dropped`, indexes into `original`).
+ */
+export function matchChoices(text, original) {
+    const lines = text.split('\n').map((l) => l.replace(/\r$/, '')).filter((l) => l.trim() !== '');
+    const used = new Array(original.length).fill(false);
+    const from = new Array(lines.length).fill(-1);
     const pool = new Map();
-    original.forEach((item) => {
+    original.forEach((item, i) => {
         const line = choiceToLine(item);
-        pool.set(line, [...(pool.get(line) ?? []), item]);
+        pool.set(line, [...(pool.get(line) ?? []), i]);
     });
-    return text.split('\n').map((l) => l.replace(/\r$/, '')).filter((l) => l.trim() !== '').map((line) => {
+    lines.forEach((line, li) => {
         const queue = pool.get(line);
-        if (queue && queue.length) { return queue.shift(); }
-        return lineToChoice(line);
+        if (queue && queue.length) { from[li] = queue.shift(); used[from[li]] = true; }
     });
+    lines.forEach((line, li) => {
+        if (from[li] >= 0) { return; }
+        const parsed = lineToChoice(line);
+        const value = typeof parsed === 'string' ? parsed : parsed.value;
+        const same = original.findIndex((item, i) => !used[i] && String(item && typeof item === 'object' ? item.value : item) === value);
+        if (same >= 0) { from[li] = same; used[same] = true; }
+    });
+    lines.forEach((line, li) => {
+        if (from[li] >= 0) { return; }
+        let lo = -1;
+        for (let k = li - 1; k >= 0; k--) { if (from[k] >= 0) { lo = from[k]; break; } }
+        let hi = original.length;
+        for (let k = li + 1; k < lines.length; k++) { if (from[k] >= 0) { hi = from[k]; break; } }
+        for (let i = lo + 1; i < hi; i++) {
+            if (!used[i]) { from[li] = i; used[i] = true; break; }
+        }
+    });
+    const items = lines.map((line, li) => {
+        if (from[li] < 0) { return lineToChoice(line); }
+        const item = original[from[li]];
+        return choiceToLine(item) === line ? item : mergeChoice(item, line);
+    });
+    const dropped = original.map((_, i) => i).filter((i) => !used[i]);
+    return { items, dropped };
+}
+
+/** The lines → answers (see matchChoices). */
+export function linesToChoices(text, original) {
+    return matchChoices(text, original).items;
+}
+
+/** Number of elements inside an answer, at any depth (panels, answers of questions in it). */
+function elementsIn(item) {
+    let n = 0;
+    const walk = (v) => {
+        const own = Array.isArray(v?.elements) ? v.elements : [];
+        const inChoices = (Array.isArray(v?.choices) ? v.choices : []).flatMap((c) => (Array.isArray(c?.elements) ? c.elements : []));
+        [...own, ...inChoices].forEach((c) => { n += 1; walk(c); });
+    };
+    walk(item);
+    return n;
 }
 
 function choicesControl(ctx, def) {
@@ -272,16 +345,23 @@ function choicesControl(ctx, def) {
     const items = current();
     const advanced = hasAdvancedChoices(items);
     const nested = items.some((item) => Array.isArray(item?.elements));
-    const input = h('textarea', { class: 'form-control font-monospace', id, rows: Math.min(14, Math.max(4, items.length + 1)), value: items.map(choiceToLine).join('\n'), spellcheck: 'false', readOnly: advanced });
+    const input = h('textarea', { class: 'form-control font-monospace', id, rows: Math.min(14, Math.max(4, items.length + 1)), value: items.map(choiceToLine).join('\n'), spellcheck: 'false' });
     const count = h('div', { class: 'form-text' }, ctx.t('help.choices_count', { count: items.length }));
-    if (!advanced) {
-        commitOnChange(input, () => input.value, (v) => {
-            const next = linesToChoices(v, current());
-            const result = ctx.commit('choices', next);
-            if (result.ok) { count.textContent = ctx.t('help.choices_count', { count: next.length }); }
-            return result;
-        }, box, ctx, def, () => current().map(choiceToLine).join('\n'));
-    }
+    commitOnChange(input, () => input.value, (v) => {
+        const before = current();
+        const { items: next, dropped } = matchChoices(v, before);
+        const lost = dropped.map((i) => before[i]).filter((item) => elementsIn(item) > 0);
+        if (lost.length) {
+            const message = ctx.t('confirm.choices_nested', {
+                answers: lost.map((item) => `„${choiceToLine(item)}"`).join(', '),
+                count: lost.reduce((sum, item) => sum + elementsIn(item), 0),
+            });
+            if (!ctx.confirm(message)) { return { ok: false, cancelled: true }; }
+        }
+        const result = ctx.commit('choices', next);
+        if (result.ok) { count.textContent = ctx.t('help.choices_count', { count: next.length }); }
+        return result;
+    }, box, ctx, def, () => current().map(choiceToLine).join('\n'));
     const label = ctx.t('prop.choices');
     return h('div', { class: 'mb-3', 'data-prop': 'choices' },
         h('label', { class: 'form-label', for: id }, label), input, count,

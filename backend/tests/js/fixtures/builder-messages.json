@@ -52,7 +52,7 @@
         "row": "Antwort",
         "title": "Antwort mit Fragen",
         "info": "Die Antwort „{{text}}\"{{value}} der Frage „{{question}}\" enthält {{count}} Elemente. Das Formular zeigt sie, sobald diese Antwort gewählt ist.",
-        "hint": "Elemente hinzufügen, hineinziehen oder mit Alt + ← herausholen geht wie bei einer Gruppe. Wert und Text der Antwort ändern Sie im Tab „JSON\".",
+        "hint": "Elemente hinzufügen, hineinziehen oder mit Alt + ← herausholen geht wie bei einer Gruppe. Wert und Text der Antwort ändern Sie in der Antwortliste der Frage; die Elemente bleiben dabei erhalten.",
         "value": " (gespeicherter Wert: {{value}})",
         "goto_question": "Zur Frage"
     },
@@ -116,8 +116,8 @@
         "colCount": "0 = so viele Spalten, wie in die Zeile passen.",
         "defaultValue": "Wird beim Öffnen des Formulars vorausgefüllt.",
         "choices": "Eine Antwort pro Zeile. „Wert | Anzeigetext\" trennt den gespeicherten Wert vom angezeigten Text.",
-        "choices_advanced": "Einige Antworten haben weitere Einstellungen (z. B. Bedingungen) und lassen sich nur im Tab „JSON\" bearbeiten.",
-        "choices_nested": "Einige Antworten enthalten Fragen (im Aufbau unter dieser Frage). Die Liste der Antworten lässt sich daher nur im Tab „JSON\" bearbeiten, die Fragen darin hier.",
+        "choices_advanced": "Eine Antwort pro Zeile, „Wert | Anzeigetext\". Einige Antworten haben weitere Einstellungen (z. B. Bedingungen); sie bleiben erhalten, wenn Sie Wert oder Text ändern, und lassen sich im Tab „JSON\" bearbeiten.",
+        "choices_nested": "Eine Antwort pro Zeile, „Wert | Anzeigetext\". Einige Antworten enthalten Fragen (im Aufbau unter dieser Frage); sie bleiben erhalten, wenn Sie Wert oder Text ändern. Löschen Sie eine solche Zeile, fragt der Editor nach, denn ihre Fragen werden mitgelöscht.",
         "choices_count": "{{count}} Antworten",
         "html": "Erlaubt sind nur diese Elemente: {{tags}}. Der Server prüft das beim Speichern.",
         "html_bad": "Nicht erlaubt: {{tags}}. Der Server würde das Speichern ablehnen.",
@@ -161,6 +161,7 @@
         "page": "Seite „{{name}}\" mit {{count}} Elementen löschen?",
         "refs": " {{count}} Bedingungen oder Texte verweisen darauf und müssen danach angepasst werden.",
         "rename": "Der Name „{{old}}\" ist der Schlüssel der Antworten. Mit dem neuen Namen „{{new}}\" entsteht ein neues Feld: Excel-Export, PDF und Vorausfüll-Links kennen den alten Namen nicht mehr, bereits gespeicherte Anmeldungen behalten ihre Daten unter dem alten Namen.{{refs}} Fortfahren?",
+        "choices_nested": "{{count}} Elemente in {{answers}} werden mitgelöscht. Fortfahren?",
         "rename_refs": " {{count}} Verweise in Bedingungen und Texten werden angepasst."
     },
     "announce": {
