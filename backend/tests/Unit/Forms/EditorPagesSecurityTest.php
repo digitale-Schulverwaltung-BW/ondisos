@@ -18,7 +18,8 @@ class EditorPagesSecurityTest extends TestCase
     /** @return array<string,array{0:string}> */
     public static function editorPages(): array
     {
-        return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php'], 'form_preview' => ['form_preview.php'], 'form_preview_frame' => ['form_preview_frame.php']];
+        return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php'], 'form_preview' => ['form_preview.php'], 'form_preview_frame' => ['form_preview_frame.php'],
+                'form_preview_live' => ['form_preview_live.php'], 'form_preview_check' => ['form_preview_check.php']];
     }
 
     #[DataProvider('editorPages')]
@@ -93,6 +94,35 @@ class EditorPagesSecurityTest extends TestCase
         $data = strpos($php, 'formKeys()');
         $this->assertNotFalse($sig);
         $this->assertLessThan($data, $sig);
+    }
+
+    /** Live preview (AP4a): the check endpoint takes POST only, checks the token first, stores nothing. */
+    public function testTheLivePreviewCheckIsPostOnlyChecksTheTokenAndStoresNothing(): void
+    {
+        $php = (string)file_get_contents(self::PUBLIC . '/form_preview_check.php');
+
+        $post = strpos($php, "REQUEST_METHOD'] !== 'POST'");
+        $csrf = strpos($php, 'csrf_validate()');
+        $check = strpos($php, '->checkText(');
+        $this->assertNotFalse($post);
+        $this->assertNotFalse($csrf);
+        $this->assertNotFalse($check);
+        $this->assertLessThan($csrf, $post);
+        $this->assertLessThan($check, $csrf);
+        foreach (['saveDraft(', 'publish(', '->save(', 'discard(', 'restore(', '$surveyEditor'] as $call) {
+            $this->assertStringNotContainsString($call, $php, "the live check must not store anything ({$call})");
+        }
+    }
+
+    /** Its many small checks count separately, so they cannot use up the allowance for saving and publishing. */
+    public function testTheLivePreviewCheckHasItsOwnRateLimitBucket(): void
+    {
+        $php = (string)file_get_contents(self::PUBLIC . '/form_preview_check.php');
+
+        $scope = strpos($php, "define('EDITOR_RATE_LIMIT_SCOPE', 'preview')");
+        $this->assertNotFalse($scope);
+        $this->assertLessThan(strpos($php, 'inc/form_editor.php'), $scope, 'the scope must be set before the editor bootstrap counts the request');
+        $this->assertSame('preview', \App\Forms\EditorRateLimit::SCOPE_PREVIEW);
     }
 
     public function testTenantsPageStillRequiresThePlatformAdminBeforeCopying(): void

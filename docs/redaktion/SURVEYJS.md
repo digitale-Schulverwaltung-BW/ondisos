@@ -13,6 +13,7 @@
   - [Was „Prüfen“ meldet](#was-prüfen-meldet)
   - [Neues Formular erstellen](#neues-formular-erstellen)
   - [Vorschau](#vorschau)
+  - [Live-Vorschau](#live-vorschau)
   - [Verlauf und Wiederherstellen](#verlauf-und-wiederherstellen)
 - [Zusammenhang: Formular-Konfiguration ↔ Survey](#zusammenhang-formular-konfiguration--survey)
 - [Surveys als Dateien (Fallback)](#surveys-als-dateien-fallback)
@@ -147,6 +148,19 @@ Die Knöpfe des Formulars selbst prüfen wie bei Besuchern.
 Eingaben werden nicht gespeichert, „Abschicken“ sendet nichts. Die Vorschau läuft in einem abgeschotteten Rahmen und ändert nichts am Live-Formular.
 
 ![Vorschau des Formulars im Backend](../img/backend-vorschau.png)
+
+### Live-Vorschau
+
+Der Knopf **Live-Vorschau ↗** rechts über dem Editor öffnet das Formular in einem eigenen Fenster. Es zeigt den Stand im Editor, auch **ohne Speichern**, und folgt jeder Änderung nach einem kurzen Moment:
+grafisch, im Tab „JSON“ und beim Rückgängigmachen. Ihre Eingaben in der Vorschau und die gewählte Seite bleiben dabei stehen.
+Mit großem Bildschirm legen Sie das Fenster neben den Editor; ein zweiter Klick auf den Knopf holt es wieder nach vorn.
+
+- **Vom Editor zur Vorschau:** Wählen Sie im Aufbau ein Element, springt die Vorschau auf seine Seite und hebt es kurz mit einem Rahmen hervor.
+- **Von der Vorschau zum Editor:** Mit dem Schalter **Auswählen** (oder mit gedrückter Alt-Taste) wählt ein Klick in die Vorschau das Element im Aufbau, statt das Formular auszufüllen. Das gilt für Fragen, Gruppen, Seiten und Antworten mit Fragen.
+- **Ausgeblendete zeigen:** Elemente, deren Bedingung gerade nicht erfüllt ist, erscheinen dann trotzdem. Ohne den Schalter prüfen Sie Bedingungen durch Ausfüllen.
+- Die Vorschau zeigt nur, was die Prüfung des Servers erlaubt. Ist der Text gerade kein gültiges JSON oder lehnt die Prüfung ihn ab, bleibt der letzte gute Stand stehen und ein gelber Hinweis nennt den Grund.
+
+Gespeichert wird dabei nichts: Speichern und Veröffentlichen bleiben im Editor. Das Theme (Farben, Schrift) kommt wie in der Vorschau aus dem Backend.
 
 So sieht das Formular für Besucher aus:
 

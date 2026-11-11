@@ -140,7 +140,7 @@ Danach prüfen: `docker compose ps`, ein Test-Upload und eine Testanmeldung. Ein
 `docker stats` zeigt CPU- und Speicherverbrauch je Container. Prüfen Sie der Reihe nach: Last des Servers (`uptime`, `top`), laufende Datenbank-Abfragen
 (`docker compose exec mysql mysql -uroot -p… -e 'SHOW PROCESSLIST'`), große Datei-Uploads, volle Platte. Ein Neustart des Backends (`docker compose restart backend`) behebt kurzfristig Speicherprobleme;
 dauerhaft helfen mehr RAM oder höhere Limits in `docker-compose.prod.yml`. Das Backend begrenzt Schreibaktionen im Formular-Editor und API-Anfragen per Rate-Limit
-(`RATE_LIMIT_*`, `EDITOR_RATE_LIMIT_*` in der `backend/.env`).
+(`RATE_LIMIT_*`, `EDITOR_RATE_LIMIT_*`, für die Live-Vorschau `EDITOR_PREVIEW_RATE_LIMIT_MAX` in der `backend/.env`).
 
 ## 7. Update ging schief
 

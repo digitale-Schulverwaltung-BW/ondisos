@@ -8,6 +8,8 @@ use App\Services\MessageService as M;
  * #survey-text (the form posts it; both tabs work on that one text).
  *
  * Needs: $builderConfig (inc/survey_builder.php), $editorText. Included by form_survey.php inside its form.
+ * Optional: $livePreview = ['url' => …, 'window' => …, 'form' => …] shows the "Live-Vorschau" button (AP4a); the script
+ * (survey-builder/live-link.js) unhides it, without JavaScript it stays hidden.
  */
 ?>
 <?php $startJson = $builderConfig['startTab'] === 'json'; ?>
@@ -20,6 +22,13 @@ use App\Services\MessageService as M;
         <button class="nav-link<?= $startJson ? ' active' : '' ?>" id="se-tab-json" type="button" role="tab" data-bs-toggle="tab" data-bs-target="#se-pane-json"
                 aria-controls="se-pane-json" aria-selected="<?= $startJson ? 'true' : 'false' ?>"><?= ff_e(M::get('builder.tab.json', 'JSON')) ?></button>
     </li>
+    <?php if (isset($livePreview)): ?>
+        <li class="nav-item ms-auto d-flex align-items-center" role="presentation">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="se-live-preview" hidden
+                    data-url="<?= ff_e($livePreview['url']) ?>" data-window="<?= ff_e($livePreview['window']) ?>" data-form="<?= ff_e($livePreview['form']) ?>"
+                    title="<?= ff_e(M::get('live_preview.open_help', 'Zeigt das Formular in einem eigenen Fenster, wie Besucher es sehen. Es folgt jeder Änderung, auch ungespeichert.')) ?>"><?= ff_e(M::get('live_preview.open', 'Live-Vorschau')) ?> ↗</button>
+        </li>
+    <?php endif; ?>
 </ul>
 <div class="tab-content">
     <div class="tab-pane<?= $startJson ? '' : ' show active' ?>" id="se-pane-graphic" role="tabpanel" aria-labelledby="se-tab-graphic">

@@ -50,6 +50,19 @@ const nested = write('nested.json', JSON.stringify({
         { type: 'text', name: 'other', title: 'Sonstiges' },
     ] }],
 }, null, 2));
+const liveSurvey = write('live.json', JSON.stringify({
+    pages: [
+        { name: 'p1', title: 'Eins', elements: [
+            { type: 'radiogroup', name: 'form', title: 'Unterrichtsform', choices: [
+                { value: 'vz', text: 'Vollzeit', elements: [{ type: 'text', name: 'start_vz', title: 'Beginn Vollzeit' }] },
+                'tz',
+            ] },
+            { type: 'panel', name: 'grp', title: 'Gruppe', elements: [{ type: 'text', name: 'inner', title: 'Innen' }] },
+            { type: 'text', name: 'cond', title: 'Bedingt', visibleIf: "{form} = 'tz'" },
+        ] },
+        { name: 'p2', title: 'Zwei', elements: [{ type: 'text', name: 'later', title: 'Später' }] },
+    ],
+}, null, 2));
 const empty = write('empty.json', '');
 const broken = write('broken.json', '{"pages": [,]}');
 const reportBroken = write('report-broken.json', JSON.stringify({ valid: false, errors: [{ path: '', message: 'Allgemeiner Fehler' }], warnings: [] }));
@@ -67,12 +80,35 @@ render('empty', empty);
 render('broken', broken, reportBroken);
 render('warn', surveys('ausbildernachmittag'), reportWarn);
 render('nocm', surveys('ausbildernachmittag'), null, { SB_NO_CODEMIRROR: '1' });
+render('live', liveSurvey, null, { SB_LIVE: '1' });
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.woff2': 'font/woff2' };
+// the backend's policy (ContentSecurityPolicy::policy) and the sandbox policy of form_preview_frame.php, nonce "harness"
+const ADMIN_CSP = "default-src 'self'; script-src 'self' 'nonce-abc'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
+const FRAME_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'nonce-harness' 'unsafe-eval'; style-src * 'unsafe-inline' data:; font-src data:; img-src * data: blob:; connect-src *; frame-ancestors 'self'";
+let liveChecks = 0;
 const server = createServer((req, res) => {
-    const file = resolve(root, `.${decodeURIComponent(new URL(req.url, 'http://x').pathname)}`);
+    const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+    if (req.method === 'POST' && path.endsWith('/check')) { // form_preview_check.php: the server's validator decides
+        let body = '';
+        req.on('data', (c) => { body += c; });
+        req.on('end', () => {
+            const form = new URLSearchParams(body);
+            res.setHeader('content-type', 'application/json');
+            if (form.get('csrf_token') !== 'harness-token') { res.writeHead(403); res.end('{"ok":false,"error":"csrf"}'); return; }
+            liveChecks += 1;
+            const v = serverSays(form.get('survey_text') ?? '');
+            res.writeHead(200);
+            res.end(JSON.stringify({ ok: true, status: v.valid ? 'ok' : 'invalid', errors: v.errors.slice(0, 5).map((e) => ({ path: e.path, message: e.message })) }));
+        });
+        return;
+    }
+    const file = resolve(root, `.${path}`);
     if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) { res.writeHead(404); res.end(); return; }
-    res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' });
+    const headers = { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' };
+    if (path.startsWith('/live/') && path.endsWith('frame.html')) { headers['content-security-policy'] = FRAME_CSP; }
+    else if (path.startsWith('/live/') && path.endsWith('.html')) { headers['content-security-policy'] = ADMIN_CSP; }
+    res.writeHead(200, headers);
     createReadStream(file).pipe(res);
 });
 await new Promise((ok) => server.listen(0, '127.0.0.1', ok));
@@ -673,6 +709,148 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     await p.click('.sb-palette [data-type="text"]');
     await p.waitForTimeout(300);
     check('csp: the builder works under the backend policy without a violation', (await p.locator('.sb-item').count()) > 10 && (await p.inputValue('#survey-text')).includes('Unter CSP') && violations.length === 0, violations.join(' | '));
+    await context.close();
+}
+
+// ---- AP4a: live preview in its own window --------------------------------------------------------------------------
+{
+    const context = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+    const problems = [];
+    const watch = (pg, who) => {
+        pg.on('console', (m) => { if (m.type() === 'error' || /content security policy|refused to/i.test(m.text())) { problems.push(`${who}: ${m.text().slice(0, 200)}`); } });
+        pg.on('pageerror', (e) => problems.push(`${who} pageerror: ${e.message.slice(0, 200)}`));
+        pg.on('dialog', (d) => d.accept());
+    };
+    const p = await context.newPage();
+    watch(p, 'editor');
+    await p.goto(`${base}/live/index.html`);
+    await p.waitForTimeout(900);
+    check('live: the editor shows the "Live-Vorschau" button', await p.locator('#se-live-preview').isVisible());
+    const [win] = await Promise.all([p.waitForEvent('popup'), p.click('#se-live-preview')]);
+    watch(win, 'window');
+    await win.waitForLoadState();
+    await win.waitForTimeout(1800);
+    const F = win.frameLocator('#lp-frame');
+    const frame = () => win.frames().find((f) => f.url().endsWith('frame.html'));
+    const pageName = () => frame().evaluate(() => window.__preview.survey.currentPage?.name);
+    const row = (path) => p.locator(`.sb-item[data-path='${JSON.stringify(path)}']`);
+    const selected = () => p.locator('.sb-selected').getAttribute('data-path');
+    const notice = async () => ((await win.locator('#lp-notice').isHidden()) ? '' : await win.textContent('#lp-notice'));
+    const setText = (t) => p.evaluate((x) => { const v = window.OndisosSurveyEditor.last.view; v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: x } }); }, t);
+    const original = await text(p);
+
+    check('live: the window connects and renders the unsaved text in the sandboxed frame',
+        (await win.textContent('#lp-status')).includes('Verbunden') && await F.locator('[data-name="inner"]').count() === 1 && await F.locator('[data-name="cond"]').count() === 0);
+    check('live: the frame has no origin of its own (sandbox)', await frame().evaluate(() => window.origin) === 'null');
+
+    // answers and page stay when the text changes
+    await F.locator('[data-name="inner"] input').fill('Eingabe');
+    await F.locator('[data-name="inner"] input').press('Tab');
+    await F.locator('#preview-next').click();
+    await win.waitForTimeout(300);
+    await row(['pages', 1, 'elements', 0]).click();
+    const title = p.locator('[data-prop="title"] input');
+    await title.fill('Später (live)');
+    await title.press('Enter');
+    await win.waitForTimeout(1200);
+    check('live: a title change shows without saving; page and answers stay',
+        (await F.locator('[data-name="later"] .sd-question__title').textContent()).includes('(live)') && (await pageName()) === 'p2'
+        && await frame().evaluate(() => window.__preview.survey.data.inner) === 'Eingabe');
+
+    // tree → preview
+    await row(['pages', 0, 'elements', 1, 'elements', 0]).click();
+    await win.waitForTimeout(800);
+    check('live: selecting in the tree goes to the page and outlines the element (inside a panel)', (await pageName()) === 'p1' && await F.locator('[data-name="inner"].lp-flash').count() === 1);
+    await row(['pages', 0, 'elements', 0, 'choices', 0]).click();
+    await win.waitForTimeout(800);
+    check('live: an answer with questions is outlined as the option', await F.locator('[data-name="form"] .sd-item.lp-flash').count() === 1);
+
+    // add, move, delete, undo
+    const count = () => F.locator('.sd-question').count();
+    const before = await count();
+    await row(['pages', 0, 'elements', 2]).click();
+    await p.click('.sb-toolbar .dropdown-toggle');
+    await p.click('.sb-palette [data-type="comment"]');
+    await win.waitForTimeout(1000);
+    const added = await count();
+    await p.keyboard.press('Alt+ArrowUp');
+    await win.waitForTimeout(1000);
+    const order = await frame().evaluate(() => window.__preview.survey.currentPage.elements.map((e) => e.name));
+    await p.click('.sb-toolbar button:has-text("Rückgängig")');
+    await p.click('.sb-toolbar button:has-text("Rückgängig")');
+    await win.waitForTimeout(1200);
+    check('live: adding, moving and undoing arrive in the preview', added === before + 1 && order.length === 4 && order[3] === 'cond' && await count() === before && (await text(p)).trim() === original.trim().replace('"Später"', '"Später (live)"'),
+        `${before}/${added}/${await count()} ${order.join(',')}`);
+
+    // preview → tree: picking mode and Alt + click
+    await win.click('#lp-pick');
+    await F.locator('[data-name="inner"] .sd-question__title').click();
+    await p.waitForTimeout(400);
+    const pickedInner = await selected();
+    await F.locator('.sd-panel__title', { hasText: 'Gruppe' }).click();
+    await p.waitForTimeout(400);
+    const pickedPanel = await selected();
+    await F.locator('[data-name="form"] .sd-item__control-label', { hasText: 'Vollzeit' }).click();
+    await p.waitForTimeout(400);
+    const pickedChoice = await selected();
+    await F.locator('.sd-page__title').click();
+    await p.waitForTimeout(400);
+    const pickedPage = await selected();
+    check('live: picking selects question, panel, answer with questions and page in the tree',
+        pickedInner === JSON.stringify(['pages', 0, 'elements', 1, 'elements', 0]) && pickedPanel === JSON.stringify(['pages', 0, 'elements', 1])
+        && pickedChoice === JSON.stringify(['pages', 0, 'elements', 0, 'choices', 0]) && pickedPage === JSON.stringify(['pages', 0]),
+        [pickedInner, pickedPanel, pickedChoice, pickedPage].join(' '));
+    check('live: picking does not answer the form', await frame().evaluate(() => window.__preview.survey.data.form) === undefined);
+    await win.click('#lp-pick');
+    await F.locator('[data-name="form"] .sd-item__control-label', { hasText: 'tz' }).click({ modifiers: ['Alt'] });
+    await p.waitForTimeout(400);
+    check('live: Alt + click on a plain answer selects its question, without answering', (await selected()) === JSON.stringify(['pages', 0, 'elements', 0]) && await frame().evaluate(() => window.__preview.survey.data.form) === undefined);
+
+    // hidden elements
+    await row(['pages', 0, 'elements', 2]).click();
+    await win.waitForTimeout(800);
+    const hiddenNote = await notice();
+    await win.click('label[for=lp-invisible]');
+    await row(['pages', 0, 'elements', 0]).click();
+    await win.waitForTimeout(300);
+    await row(['pages', 0, 'elements', 2]).click();
+    await win.waitForTimeout(800);
+    check('live: a hidden element is named as hidden; "Ausgeblendete zeigen" shows it', hiddenNote.includes('ausgeblendet') && await F.locator('[data-name="cond"].lp-flash').count() === 1 && (await notice()) === '');
+    await win.click('label[for=lp-invisible]');
+    await win.waitForTimeout(300);
+
+    // what the server refuses is not rendered
+    const good = await text(p);
+    await p.click('#se-tab-json');
+    await p.waitForTimeout(300);
+    const evil = JSON.parse(good);
+    evil.pages[0].elements.push({ type: 'html', name: 'evil', html: '<img src=x onerror="document.title=1">' });
+    const checksBefore = liveChecks;
+    await setText(JSON.stringify(evil, null, 2));
+    await win.waitForTimeout(1200);
+    check('live: a text the server refuses is not rendered; the last good state stays with a notice',
+        (await notice()).includes('ablehnt') && await F.locator('[data-name="evil"]').count() === 0 && await F.locator('[data-name="inner"]').count() === 1 && liveChecks === checksBefore + 1);
+    await setText('{"pages": [');
+    await win.waitForTimeout(1000);
+    check('live: unreadable JSON is not even sent to the server', (await notice()).includes('kein lesbares JSON') && liveChecks === checksBefore + 1);
+    await setText(good);
+    await win.waitForTimeout(1000);
+    check('live: back to the last good text: the notice goes, no new check', (await notice()) === '' && liveChecks === checksBefore + 1);
+
+    // a reloaded editor finds its window again; the button brings it to the front instead of opening another
+    await p.click('#se-tab-graphic');
+    await p.reload();
+    await p.waitForTimeout(2500);
+    await row(['pages', 1, 'elements', 0]).click();
+    await win.waitForTimeout(900);
+    check('live: after reloading the editor the window is connected again and follows the selection', (await win.textContent('#lp-status')).includes('Verbunden') && (await pageName()) === 'p2' && await F.locator('[data-name="later"].lp-flash').count() === 1);
+    const windows = context.pages().length;
+    await p.click('#se-live-preview');
+    await p.waitForTimeout(500);
+    check('live: a second click on the button opens no second window', context.pages().length === windows);
+    check('live: few checks on the server (unchanged and known texts are not checked again)', liveChecks > 0 && liveChecks <= 12, String(liveChecks));
+    check('live: no console errors and no CSP violation in editor, window and frame', problems.length === 0, problems.join(' | '));
+    if (shots) { await win.screenshot({ path: join(shots, 'live-window.png') }); }
     await context.close();
 }
 

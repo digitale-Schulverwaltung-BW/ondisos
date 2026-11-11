@@ -11,6 +11,10 @@ declare(strict_types=1);
  * The markup comes from the same partial the page uses (inc/survey_builder_tabs.php), the configuration from the same
  * function (inc/survey_builder.php); the scripts are the ones of the page, in the same order. <output-dir>/assets points
  * at backend/public/assets. An optional report file (the result of SurveyEditorController::check as JSON) shows findings.
+ *
+ * SB_LIVE=1 adds the live preview (AP4a): the "Live-Vorschau" button, live.html (the window, from inc/live_preview_window.php)
+ * and frame.html (the frame, from inc/preview_frame.php). The checks of the server (form_preview_check.php) and the
+ * sandbox header of the frame come from the server of check.mjs (POST <dir>/check, CSRF token "harness-token").
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -43,9 +47,51 @@ if (!is_link($link)) {
     symlink(realpath(__DIR__ . '/../../public/assets'), $link);
 }
 
+$live = getenv('SB_LIVE') === '1';
+if ($live) {
+    $livePreview = ['url' => 'live.html', 'window' => 'sb-live-harness', 'form' => 'harness'];
+}
+
 ob_start();
 require __DIR__ . '/../../inc/survey_builder_tabs.php';
 $tabs = (string)ob_get_clean();
+
+if ($live) {
+    $e = static fn (mixed $v): string => htmlspecialchars((string)$v, ENT_QUOTES, 'UTF-8');
+    $nonce = 'harness';
+    $message = null;
+    $frameSurveyJson = null;
+    $frameThemeJson = '{}';
+    $frameLive = true;
+    ob_start();
+    require __DIR__ . '/../../inc/preview_frame.php';
+    file_put_contents(rtrim($outDir, '/') . '/frame.html', (string)ob_get_clean());
+
+    $liveForm = 'harness';
+    $liveFrameUrl = 'frame.html';
+    $liveCheckUrl = 'check';
+    $liveCsrf = 'harness-token';
+    $liveThemeMissing = true;
+    ob_start();
+    require __DIR__ . '/../../inc/live_preview_window.php';
+    $window = (string)ob_get_clean();
+    file_put_contents(rtrim($outDir, '/') . '/live.html', <<<HTML
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Live-Vorschau (Harness)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="assets/bootstrap/bootstrap.min.css" rel="stylesheet">
+<link href="assets/survey-builder/live-window.css" rel="stylesheet">
+</head>
+<body class="lp-body">
+{$window}
+<script type="module" src="assets/survey-builder/live-window.js"></script>
+</body>
+</html>
+HTML);
+}
 
 // SB_NO_CODEMIRROR=1 leaves the code editor out (the page then works with the plain text area)
 $cm = getenv('SB_NO_CODEMIRROR') === false && is_file(__DIR__ . '/../../public/assets/codemirror/survey-editor-cm.js') ? '<script src="assets/codemirror/survey-editor-cm.js"></script>' : '';

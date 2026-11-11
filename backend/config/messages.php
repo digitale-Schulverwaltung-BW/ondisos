@@ -777,4 +777,29 @@ return [
         'note' => 'Vorschau: Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.',
         'completed' => 'Vorschau: Das Formular wurde nicht abgeschickt, es wird nichts gespeichert.',
     ],
+
+    // Live-Vorschau des Survey-Editors (3.2.0, AP4a): eigenes Fenster, folgt jeder Änderung ohne Speichern
+    'live_preview' => [
+        'open' => 'Live-Vorschau',
+        'open_help' => 'Zeigt das Formular in einem eigenen Fenster, wie Besucher es sehen. Es folgt jeder Änderung, auch ungespeichert.',
+        'title' => 'Live-Vorschau',
+        'pick' => 'Auswählen',
+        'pick_help' => 'Ein Klick in die Vorschau wählt das Element im Editor, statt das Formular auszufüllen. Ohne diesen Schalter: Alt + Klick.',
+        'invisible' => 'Ausgeblendete zeigen',
+        'invisible_help' => 'Zeigt auch Elemente, deren Bedingung gerade nicht erfüllt ist (blass).',
+        'frame_note' => 'Live-Vorschau: zeigt den Stand im Editor, auch ungespeichert. Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.',
+        'status' => [
+            'waiting' => 'Wartet auf den Editor …',
+            'connected' => 'Verbunden',
+            'disconnected' => 'Keine Verbindung zum Editor. Die Vorschau zeigt den letzten Stand. Bitte im Editor erneut auf „Live-Vorschau“ klicken.',
+            'unreadable' => 'Der Text im Editor ist gerade kein lesbares JSON. Die Vorschau zeigt den letzten guten Stand.',
+            'invalid' => 'Der aktuelle Stand wird nicht angezeigt, weil die Prüfung ihn ablehnt. Die Vorschau zeigt den letzten guten Stand:',
+            'render_error' => 'SurveyJS kann diesen Stand nicht anzeigen. Die Vorschau zeigt den letzten guten Stand:',
+            'rate_limited' => 'Zu viele Prüfungen in kurzer Zeit. Die Vorschau folgt in {{seconds}} Sekunden wieder.',
+            'session' => 'Die Sitzung ist abgelaufen. Bitte im Editor neu anmelden und die Vorschau neu öffnen.',
+            'failed' => 'Die Prüfung ist fehlgeschlagen. Die Vorschau zeigt den letzten guten Stand.',
+            'hidden' => 'Das gewählte Element ist gerade ausgeblendet (Bedingung nicht erfüllt oder Antwort nicht gewählt). „Ausgeblendete zeigen“ blendet es ein.',
+            'missing' => 'Das gewählte Element steht noch nicht in der Vorschau.',
+        ],
+    ],
 ];

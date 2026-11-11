@@ -23,6 +23,9 @@ class SurveyPreviewController
     public const SOURCE_DRAFT = 'draft';
     public const SOURCE_LIVE  = 'live';
 
+    /** Errors the live preview reports per text; the full report stays with "Prüfen". */
+    public const MAX_REPORTED = 5;
+
     public function __construct(
         private readonly FormConfigRepository $configs,
         private readonly FormResourceRepository $resources,
@@ -73,23 +76,90 @@ class SurveyPreviewController
             return ['status' => 'invalid', 'errors' => $result->errors()] + $base;
         }
 
-        $themeName = $this->name($config['theme'] ?? null);
-        $theme     = $themeName !== null ? $this->resources->find(FormResourceRepository::KIND_THEME, $themeName) : null;
-        if ($theme !== null) {
-            $themeResult = $this->themeValidator->validate($theme['content'])['result'];
-            if ($themeResult->isValid()) {
-                $base['theme_json']         = $theme['content'];
-                $base['theme_from_backend'] = true;
-            } else {
-                $base['warnings'][] = ['path' => 'theme', 'message' => 'Das Theme enthält nicht erlaubte Inhalte und wird in der Vorschau nicht angewendet.'];
-            }
-        }
+        $theme = $this->theme($config);
+        $base['theme_json']         = $theme['theme_json'];
+        $base['theme_from_backend'] = $theme['theme_from_backend'];
+        array_push($base['warnings'], ...$theme['warnings']);
 
         try {
             return ['status' => 'ok', 'survey_json' => JsonEmbed::encode($text), 'theme_json' => JsonEmbed::encode($base['theme_json'])] + $base;
         } catch (\JsonException $e) {
             return ['status' => 'invalid', 'errors' => [['path' => '', 'message' => 'Kein gültiges JSON']]] + $base;
         }
+    }
+
+    /**
+     * The theme for the live preview (AP4a): the survey comes from the editor, the frame only needs the theme.
+     *
+     * @return array{status:'ok'|'not_found', theme_json:string, theme_from_backend:bool, warnings:list<array{path:string,message:string}>}
+     */
+    public function loadTheme(string $formKey): array
+    {
+        $form = Identifiers::isValidFormKey($formKey) ? $this->configs->find($formKey) : null;
+        if ($form === null) {
+            return ['status' => 'not_found', 'theme_json' => '{}', 'theme_from_backend' => false, 'warnings' => []];
+        }
+        $theme = $this->theme($form['config']);
+        try {
+            $theme['theme_json'] = JsonEmbed::encode($theme['theme_json']);
+        } catch (\JsonException $e) {
+            $theme = ['theme_json' => '{}', 'theme_from_backend' => false, 'warnings' => []];
+        }
+        return ['status' => 'ok'] + $theme;
+    }
+
+    /**
+     * May the live preview render this text (unsaved, straight from the editor)? The same rule as for stored surveys:
+     * only what SurveyValidator accepts. Nothing is stored.
+     *
+     * @return array{status:'ok'|'invalid'|'not_found', errors:list<array{path:string,message:string}>}
+     */
+    public function checkText(string $formKey, string $text): array
+    {
+        $form = Identifiers::isValidFormKey($formKey) ? $this->configs->find($formKey) : null;
+        if ($form === null) {
+            return ['status' => 'not_found', 'errors' => []];
+        }
+        return self::verdict($this->surveyValidator, $text);
+    }
+
+    /**
+     * The verdict on a text, without the database (unit-tested): at most MAX_REPORTED errors, path and message only.
+     *
+     * @return array{status:'ok'|'invalid', errors:list<array{path:string,message:string}>}
+     */
+    public static function verdict(SurveyValidator $validator, string $text): array
+    {
+        ['result' => $result] = $validator->validate($text);
+        if ($result->isValid()) {
+            return ['status' => 'ok', 'errors' => []];
+        }
+        $errors = array_map(
+            static fn (array $e): array => ['path' => (string)$e['path'], 'message' => (string)$e['message']],
+            array_slice($result->errors(), 0, self::MAX_REPORTED)
+        );
+        return ['status' => 'invalid', 'errors' => $errors];
+    }
+
+    /**
+     * The published theme of a form, if it passes ThemeValidator.
+     *
+     * @param array<string,mixed> $config
+     * @return array{theme_json:string, theme_from_backend:bool, warnings:list<array{path:string,message:string}>}
+     */
+    private function theme(array $config): array
+    {
+        $out = ['theme_json' => '{}', 'theme_from_backend' => false, 'warnings' => []];
+        $themeName = $this->name($config['theme'] ?? null);
+        $theme     = $themeName !== null ? $this->resources->find(FormResourceRepository::KIND_THEME, $themeName) : null;
+        if ($theme === null) {
+            return $out;
+        }
+        if ($this->themeValidator->validate($theme['content'])['result']->isValid()) {
+            return ['theme_json' => $theme['content'], 'theme_from_backend' => true, 'warnings' => []];
+        }
+        $out['warnings'][] = ['path' => 'theme', 'message' => 'Das Theme enthält nicht erlaubte Inhalte und wird in der Vorschau nicht angewendet.'];
+        return $out;
     }
 
     private function name(mixed $name): ?string

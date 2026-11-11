@@ -1,6 +1,6 @@
 # PLAN 3.2.0 – Grafischer Survey-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2 und AP4 umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
+**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2, AP4 und [AP4a Live-Vorschau](#ap4a-ergebnis-2026-11-11) umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Als Nächstes: AP5, danach AP6, AP7. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -91,6 +91,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 | **AP2** Oberfläche (MVP) | Seiten anlegen, umbenennen, löschen; Elemente hinzufügen, löschen, nach oben/unten; Eigenschaften-Panel; Auswahlliste bearbeiten; Pflichtfeld, Titelposition, Platzhalter; Fehleranzeige aus dem Prüfbericht | 3–4 Wochen | Ein bestehendes Formular (z. B. `ausbildernachmittag.json`) lässt sich komplett grafisch ändern; Tastaturbedienung möglich. **Erfüllt**, siehe [AP2-Ergebnis](#ap2-ergebnis-2026-10-12) |
 | **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung. **Größtenteils mit AP2 umgesetzt** (Tab statt Umschalter), siehe AP2-Ergebnis |
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her. **Erfüllt**, siehe [AP4-Ergebnis](#ap4-ergebnis-2026-11-02) |
+| **AP4a** Live-Vorschau | Vorschau in eigenem Fenster, folgt jeder Änderung ohne Speichern; Klick in der Vorschau wählt das Element im Baum, Auswahl im Baum zeigt es in der Vorschau; ausgeblendete Elemente zuschaltbar. Details: [AP4a](#ap4a-live-vorschau-geplant-2026-11-11) | 1–2 Wochen | Jede Änderung erscheint ohne Speichern in der Vorschau, Seite und Eingaben bleiben; Klick wählt in beide Richtungen; nur vom Server geprüfte Texte werden gerendert; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP4a-Ergebnis](#ap4a-ergebnis-2026-11-11) |
 | **AP5** Einfache Bedingungen | `visibleIf`/`requiredIf` als „Feld – Operator – Wert" (ein oder mehrere Ausdrücke mit UND/ODER); alles Komplexere bleibt als Text sichtbar und **unverändert** (nur lesbar anzeigen) | 3–4 Wochen | Von den 55 Bedingungen der vorhandenen Surveys wird der Anteil, den die Oberfläche darstellen kann, gemessen und dokumentiert; der Rest bleibt unangetastet |
 | **AP6** Vorlagen | Neues Formular aus Vorlage („Anmeldung", „Rückmeldung ohne E-Mail"), Bausteine für Standardfelder (Name, E-Mail, Datenschutz-Zustimmung `consent_…`, Unterschrift) | 1–2 Wochen | Neue Vorlage besteht *Prüfen* ohne Warnung |
 | **AP7** Doku und Abschluss | Redaktions-Doku neu ordnen ([SURVEYJS.md](../../redaktion/SURVEYJS.md)), `HelpLinks`-Ziele, Meldungstexte (`messages.php`, auch `messages.example.php`), Changelog, Release Notes, manuelle Tests, Version 3.2.0 an den vier Stellen | 1 Woche | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
@@ -222,6 +223,66 @@ Browserprüfung (Nachtrag): `check.mjs` hat einen Abschnitt `nested` (eigene kle
 
 **Offen:** nichts.
 
+## AP4a Live-Vorschau (geplant, 2026-11-11)
+
+**Anlass:** Beim Arbeiten mit dem Editor fehlt der Blick auf das echte Formular. Die bestehende Vorschau zeigt nur gespeicherte Entwürfe (*Entwurf speichern & Vorschau*). Der SurveyJS Creator ist auch kein WYSIWYG: Um die Elemente liegen Bedienelemente. Eine Vorschau, die das Formular **so zeigt, wie es Eltern und Schüler sehen**, und trotzdem zum Bearbeiten führt, wäre näher am Ergebnis als das Original.
+
+**Ziel:**
+- **Live:** Ein Knopf *Live-Vorschau* im Editor öffnet die Vorschau in einem eigenen Fenster. Sie folgt jeder Änderung ohne Speichern. Mit großem Monitor liegt sie daneben, mit kleinem holt man sie nach vorn.
+- **Vorschau → Baum:** Ein Klick auf ein Element in der Vorschau wählt es im Baum des Editors. Das gilt für Fragen, Gruppen, Seiten und Antworten mit Fragen.
+- **Baum → Vorschau:** Wählt man im Baum ein Element, springt die Vorschau auf seine Seite, scrollt hin und hebt es hervor.
+- **Ausgeblendete zeigen:** Ein Schalter blendet Elemente, deren Bedingung gerade nicht erfüllt ist, blass ein (SurveyJS `showInvisibleElements`). Ohne den Schalter testet man Bedingungen durch echtes Ausfüllen. Die Vorschau ist damit auch das Werkzeug für AP5.
+
+**Entwurf:**
+- **Fenster und Rahmen:** `window.open` mit festem Fensternamen je Formular, damit ein zweiter Klick dasselbe Fenster nach vorn holt. Darin liegt derselbe abgeschottete Rahmen wie heute: eine Variante von `form_preview_frame.php` mit `CSP: sandbox allow-scripts`, also undurchsichtiger Herkunft, keine Admin-Sitzung, Scripts nur per Nonce. Die Seitenleiste (‹ Seitenwahl ›) bleibt.
+- **Übertragung:** Der Editor schickt bei jeder Änderung des Texts kurz verzögert (etwa 300 ms) den ganzen Text per `postMessage`. Er beobachtet dafür nicht den DOM, er kennt jede Änderung ja selbst (`text-bridge.js`).
+  - Die Vorschau baut die Survey neu auf und behält dabei Seite und Eingaben (`currentPageNo`, `data`).
+  - Unlesbares JSON aus dem Tab „JSON“ und Texte, die die Prüfung nicht bestehen: Der letzte gute Stand bleibt stehen, darüber ein Hinweis.
+  - Absender und Ziel werden geprüft: `event.source` ist das bekannte Fenster bzw. der bekannte Rahmen. Nachrichten haben ein festes Format mit Typ und Version.
+  - Nach einem Neuladen des Editors meldet sich das Fenster wieder an (Handshake `hello`).
+- **Sicherheit:** Die Vorschau rendert weiterhin **nur Texte, die `SurveyValidator` akzeptiert**. Neu ist ein kleiner JSON-Endpunkt „prüfen ohne Speichern“ mit CSRF-Token und `EditorRateLimit`. Bisher ist *Prüfen* ein Formular-POST. Der Editor ruft den Endpunkt verzögert auf und gibt den Text erst danach weiter. Das kostet etwa einige hundert Millisekunden, die Schutzschichten bleiben vollständig. Zu entscheiden ist, ob der geprüfte Text vom Server in den Rahmen geht oder ob der Editor ihn nach dem Ja des Servers schickt.
+- **Klick-Zuordnung:** SurveyJS schreibt Name bzw. ID des Elements ins DOM (`data-name`, `id`). Die Vorschau sucht vom Klickziel aufwärts das nächste Element und meldet dem Editor **Art und Name**, also Frage, Gruppe, Seite oder Antwort (Frage plus Wert). Pfade meldet sie nicht. Der Editor findet daraus den Pfad (`elementsOf`, Namen sind eindeutig). Ausfüllen und Auswählen schließen sich aus:
+  - ein Umschalter *Auswählen* in der Vorschau-Leiste (Rahmen beim Überfahren, Klicks gehen nicht an das Formular);
+  - zusätzlich Alt + Klick im Ausfüll-Modus.
+- **Theme und Platzhalter:** wie in der bisherigen Vorschau, über `survey-handler-base.js` und das veröffentlichte Theme. Die Theme-Datei wird nicht live übertragen.
+- **Breite Bildschirme (später, optional):** die Vorschau als dritte Spalte im Tab „Grafisch“. Das Fenster bleibt der Normalfall.
+
+**Nicht Ziel:** Bearbeiten in der Vorschau (Texte anklicken und ändern, Ziehen in der Vorschau). Die Vorschau zeigt und wählt, bearbeitet wird im Baum und im Eigenschaftenfeld.
+
+**Risiken:**
+- Neuaufbau bei großen Surveys: messen. Bei Bedarf länger verzögern oder nur die aktuelle Seite neu aufbauen.
+- Popup-Blocker: Das Fenster öffnet nur auf einen Klick.
+- Rückgängig muss in der Vorschau ankommen wie jede andere Änderung. Das geht über dieselbe Textänderung.
+- Fokus-Wechsel zwischen den Fenstern beim Wählen: Der Editor holt sich den Fokus nicht ungefragt.
+
+**Abnahme:**
+- Titel, Antworten, Reihenfolge, Hinzufügen, Löschen und Rückgängig erscheinen ohne Speichern in der Vorschau. Seite und Eingaben bleiben.
+- Klick in der Vorschau wählt das richtige Element im Baum, auch in Gruppen und in Antworten. Auswahl im Baum zeigt es in der Vorschau.
+- Ein Text, den der Server ablehnt, wird nicht gerendert.
+- `check.mjs` hat einen eigenen Abschnitt; im Browser ohne Konsolenfehler und ohne CSP-Verletzung.
+
+## AP4a-Ergebnis (2026-11-11)
+
+**Entscheidung (offene Frage oben):** Das **Vorschaufenster** prüft. Der Editor schickt jeden Text an das Fenster (`form_preview_live.php`, gleiche Herkunft, Admin-Sitzung); das Fenster lässt ihn vom Server prüfen (`form_preview_check.php`) und reicht nach dem Ja **genau diesen Text** an den Rahmen weiter. So liegt die Prüfung an einer Stelle direkt vor dem Rendern, der Editor braucht keinen Zustand dafür, und der Text geht nur einmal an den Server (kein Echo von bis zu 512 KB).
+
+**Umfang:**
+- **Server:** `form_preview_check.php` (POST, CSRF, JSON; speichert nichts, gibt die Session-Sperre sofort frei), `SurveyPreviewController::checkText()`/`verdict()` (`SurveyValidator`, höchstens 5 Fehler mit Pfad und Text), `loadTheme()` für den Rahmen. Eigenes Rate-Limit: `EditorRateLimit` kennt Bereiche (`editor`, `preview`), die Prüfungen der Vorschau zählen getrennt (`EDITOR_PREVIEW_RATE_LIMIT_MAX`, Standard 300 je Minute) und verbrauchen nicht das Kontingent für Speichern und Veröffentlichen; 429 als JSON mit `retry_after`.
+- **Rahmen:** `form_preview_frame.php?live=1` mit derselben Sandbox-Richtlinie, das Markup für beide Fälle in `inc/preview_frame.php`. `survey-preview.js` baut im Live-Modus bei jedem Text neu auf und übernimmt Antworten, Seite (nach Name, sonst Position) und Scrollposition; der Neuaufbau von `meister.json` dauert etwa 60 ms. Die Seitenleiste bleibt.
+- **Fenster:** `form_preview_live.php` mit `inc/live_preview_window.php` und `live-window.js`: Status (*Verbunden*, *Keine Verbindung*), *Auswählen*, *Ausgeblendete zeigen* (`showInvisibleElements`), Breite. Unlesbares JSON geht gar nicht erst an den Server; abgelehnte Texte nennen die Fehler; der letzte gute Stand bleibt stehen. Geprüfte Texte merkt sich das Fenster (die letzten 12): Rückgängig und Wiederholen kosten keine Prüfung.
+- **Editor:** Knopf *Live-Vorschau ↗* neben den Tabs (`live-link.js`). `window.open` mit festem Namen je Tenant und Formular; ein bestehendes Fenster kommt ohne Neuladen nach vorn. Erkennung von Änderungen: Solange ein Fenster verbunden ist, vergleicht der Editor die Textarea alle 150 ms und sendet nach 300 ms Ruhe. Die Textarea hält immer den aktuellen Text, auch der Code-Editor schreibt sie (ohne Ereignis); so kommen Grafisch, JSON-Tab und Rückgängig auf einem Weg an, ohne Eingriff in den vorgebauten CodeMirror-Bundle.
+- **Zuordnung:** `live-targets.js` (reine Logik): `targetOf(doc, path)` und `pathOf(doc, target)` mit `{kind: page|question|panel|choice, name, value|index}`. Der Rahmen bestimmt das Element über die DOM-IDs der Fragen und Gruppen von SurveyJS (`question.id`, `panel.id`), Antworten über `.sd-item` und den Wert des Eingabefelds; ein Klick auf eine einfache Antwort wählt ihre Frage. Auswahl im Baum → Rahmen: Seite wechseln, warten, bis SurveyJS sie gezeichnet hat (bis zu 20 Frames), scrollen, Rahmen. Ausgeblendete und noch nicht gezeigte Elemente (Fragen einer nicht gewählten Antwort) meldet die Vorschau als *ausgeblendet*.
+- **Verbindung:** Das Fenster meldet sich alle 1,5 s beim Editor (`hello` mit einer ID je Seitenaufruf); ein neu geladener Editor findet es so wieder, ein neu geladenes Fenster bekommt den ganzen Stand. Geprüft werden Protokollname und Version, Herkunft und Absender (Editor: nur ein Fenster, dessen `opener` er ist; Fenster: nur `window.opener` und der eigene Rahmen; Rahmen: nur `window.parent`). Der Editor holt sich nie den Fokus.
+
+**Nachgewiesen:**
+- **PHP:** Unit-Tests 1369 (neu `SurveyPreviewVerdictTest`; `EditorRateLimitTest` für getrennte Bereiche; `EditorPagesSecurityTest`: Endpunkt nur POST, Token vor der Prüfung, speichert nichts, eigener Bereich vor dem Bootstrap; `PreviewAssetsTest`: Nonce an jedem Script des Rahmens, kein `allow-same-origin`, Rahmen hört nur auf `window.parent`). Integration 210 (neu: `loadTheme`, `checkText`, fremder Tenant, nichts gespeichert), im Docker-Stack gegen `anmeldung_test`.
+- **JS:** 122 Tests (neu `live-targets.test.mjs`: Zuordnung in beide Richtungen, Antworten mit und ohne Fragen, Zahlwerte als Text aus dem DOM; jedes benannte Element aller Surveys hin und zurück, SurveyJS kennt es unter diesem Namen; Seiten zählen wie im Text; Protokoll).
+- **Browserprüfung** (`check.mjs`, neuer Abschnitt `live`, 18 Prüfungen, insgesamt 123/123): Fenster öffnet und verbindet, Rahmen ohne eigene Herkunft, Titeländerung ohne Speichern bei erhaltener Seite und Eingabe, Auswahl im Baum (in Gruppe, Antwort), Hinzufügen, Verschieben, Rückgängig, Auswählen von Frage, Gruppe, Antwort mit Fragen und Seite, Alt + Klick, ausgeblendetes Element mit und ohne Schalter, abgelehnter Text nicht gerendert, unlesbarer Text ohne Serveranfrage, Rückkehr ohne neue Prüfung, Editor neu geladen, kein zweites Fenster, wenige Prüfungen, keine Konsolenfehler und keine CSP-Verletzung (Admin-Richtlinie im Fenster, Sandbox-Richtlinie im Rahmen). **Mutationsprüfung:** drei eingebaute Fehler (Rendern ohne Ja des Servers, Neuaufbau ohne Antworten und Seite, Klick auf Antwort wählt immer die Frage) schlagen alle fehl; beim ersten blockiert zusätzlich die Sandbox-Richtlinie den eingeschleusten Handler.
+- **Echte Seite im Docker-Stack** (Login mit zweitem Faktor, Tenant 1, Chrome über Playwright): `ausbildernachmittag` (16 Prüfungen) und die Datenbank-Fassung von `meister` mit Antworten mit Fragen über zwei Ebenen (10 Prüfungen), dazu die bisherige Vorschau-Seite unverändert, Endpunkt antwortet auf GET mit 405 und ohne Token mit 403. Einzige Konsolenmeldung: fehlendes `favicon.ico` (betrifft das ganze Backend).
+
+**Nicht geprüft:** andere Browser als Chrome/Chromium; Popup-Blocker mit strengen Einstellungen (das Fenster öffnet nur auf Klick; blockiert bleibt der Knopf bedienbar); Screenreader; sehr große Surveys über `meister` hinaus (Neuaufbau gemessen ~60 ms); zwei Editor-Tabs desselben Formulars gleichzeitig (gebaut ist: das Fenster bleibt bei dem Tab, der es geöffnet hat; der Knopf im zweiten Tab holt es nur nach vorn).
+
+**Offen (optional):** Vorschau als dritte Spalte auf breiten Bildschirmen (siehe Entwurf). Die Builder-Module ohne Versionsparameter (Nebenbefund AP4) betreffen auch `live-*.js`; Lösung in AP7.
+
 ## Tests
 
 - **Round-Trip** (Pflicht, wichtigster Test): jede Datei aus `frontend/surveys/*.json` nach Laden und Zurückschreiben unverändert; zusätzlich ein Survey mit unbekannten Typen und Eigenschaften.
@@ -248,7 +309,7 @@ Browserprüfung (Nachtrag): `check.mjs` hat einen Abschnitt `nested` (eigene kle
 - **Round-Trip:** Pflicht ist **Strukturgleichheit** (tiefer Vergleich) mit erhaltener Schlüsselreihenfolge. Ob auch der **Text** gleich bleibt (Einrückung, Escapes, Zeilenumbrüche), misst AP0; davon hängt ab, ob jede Änderung im Verlauf (`form_resources`) den ganzen Text umformatiert. Doppelte Schlüssel gehen beim Parsen verloren: der Editor muss sie erkennen und das Dokument ablehnen oder warnen.
 - **Umfang der Eigenschaften:** Reichen die ca. 25 genutzten Eigenschaften, oder braucht die Redaktion mehr (z. B. `maxSize` bei Datei-Uploads, `rows` bei Textbereichen)? Mit der Redaktion abstimmen.
 - **Mehrsprachige Texte:** Die Surveys tragen teils `{"de": …, "default": …}` (z. B. `completedHtml`, `html`). Wie zeigt der Editor das? Vorschlag: nur `default`/`de` bearbeiten, andere Sprachen unverändert lassen. Wichtig: In den vorhandenen Surveys (`bs`, `vabo`, `zq`) **unterscheiden** sich `de` und `default` inhaltlich. Angezeigt wird `default`, weil Ondisos `survey.locale` nicht setzt (3.2.0-Update: nur die Standardtexte von SurveyJS sind deutsch). Der Editor bearbeitet daher `default`, zeigt `de` schreibgeschützt und lässt es unverändert.
-- **Vorschau im Editor:** Seitenweise Live-Vorschau neben dem Editor oder weiter die bestehende Vorschau-Seite? Die bestehende genügt für den MVP.
+- **Vorschau im Editor:** *entschieden (2026-11-11).* Die bestehende Vorschau-Seite genügte für den MVP; dazu kommt eine Live-Vorschau in eigenem Fenster, siehe [AP4a](#ap4a-live-vorschau-geplant-2026-11-11).
 
 ## Übergabe an die Umsetzungs-Sitzung
 

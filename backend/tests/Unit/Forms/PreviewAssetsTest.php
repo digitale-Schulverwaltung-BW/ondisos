@@ -48,12 +48,15 @@ class PreviewAssetsTest extends TestCase
 
     public function testEveryScriptTagOfTheSandboxedFrameCarriesTheNonce(): void
     {
-        $php = (string)file_get_contents(self::ROOT . '/backend/public/form_preview_frame.php');
+        $page = (string)file_get_contents(self::ROOT . '/backend/public/form_preview_frame.php');
+        $html = (string)file_get_contents(self::ROOT . '/backend/inc/preview_frame.php'); // the frame's markup
+        $php  = $page . $html;
 
-        $this->assertStringContainsString('sandbox allow-scripts', $php, 'the frame must be sandboxed by its CSP header');
-        $this->assertStringContainsString("script-src 'nonce-", $php);
+        $this->assertStringContainsString('sandbox allow-scripts', $page, 'the frame must be sandboxed by its CSP header');
+        $this->assertStringContainsString("script-src 'nonce-", $page);
+        $this->assertStringContainsString("inc/preview_frame.php", $page);
         $this->assertSame(0, substr_count($php, '<script>'), 'a script tag without nonce would be blocked (and is a smell)');
-        preg_match_all('/<script\b[^>]*>/', $php, $m);
+        preg_match_all('/<script\b[^>]*>/', $html, $m);
         $this->assertNotEmpty($m[0]);
         foreach ($m[0] as $tag) {
             $this->assertStringContainsString('nonce=', $tag, $tag);
@@ -63,7 +66,21 @@ class PreviewAssetsTest extends TestCase
 
     public function testTheOuterPageDoesNotGrantTheFrameItsOrigin(): void
     {
-        $php = (string)file_get_contents(self::ROOT . '/backend/public/form_preview.php');
-        $this->assertStringNotContainsString('allow-same-origin', $php);
+        foreach (['backend/public/form_preview.php', 'backend/public/form_preview_live.php', 'backend/inc/live_preview_window.php'] as $file) {
+            $php = (string)file_get_contents(self::ROOT . '/' . $file);
+            $this->assertStringNotContainsString('allow-same-origin', $php, $file);
+            $this->assertStringNotContainsString('sandbox=', $php, "{$file}: the frame is sandboxed by its own header, an attribute could only loosen it");
+        }
+    }
+
+    /** The live frame accepts messages from its parent only and versions its protocol (AP4a). */
+    public function testTheLiveFrameOnlyListensToItsParent(): void
+    {
+        $js = (string)file_get_contents(self::ROOT . '/backend/public/assets/preview/survey-preview.js');
+
+        $this->assertStringContainsString('event.source !== window.parent', $js);
+        $this->assertStringContainsString("event.data.ondisos !== PROTOCOL", $js);
+        $this->assertStringNotContainsString('innerHTML', $js);
+        $this->assertStringNotContainsString('eval(', $js);
     }
 }

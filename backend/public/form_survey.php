@@ -132,6 +132,12 @@ if ($view === null) {
 
 $editorText    = $postedText ?? $view['editor_text'];
 $builderConfig = sb_config($view, $report);
+// Live preview (AP4a): one window per tenant and form, so a second click brings the same window to the front.
+$livePreview = [
+    'url'    => 'form_preview_live.php?form=' . urlencode($formKey),
+    'window' => 'ondisos-live-' . \App\Config\TenantContext::getTenantId() . '-' . $formKey,
+    'form'   => $formKey,
+];
 
 /** Link text for a finding: "Zeile 12" (jumps to the line in the editor via survey-editor.js) */
 function se_line(?int $line): string

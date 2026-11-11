@@ -53,6 +53,17 @@ class EditorRateLimitTest extends TestCase
         $this->assertNull($l->hit('anna', '10.0.0.2'), 'same user, another address');
     }
 
+    public function testThePreviewScopeHasItsOwnAllowance(): void
+    {
+        $editor  = new EditorRateLimit(new RateLimiter($this->dir, 1, 60, 0));
+        $preview = new EditorRateLimit(new RateLimiter($this->dir, 1, 60, 0), EditorRateLimit::SCOPE_PREVIEW);
+
+        $this->assertNull($preview->hit('anna', '10.0.0.1'));
+        $this->assertNotNull($preview->hit('anna', '10.0.0.1'), 'the preview has used up its own allowance');
+
+        $this->assertNull($editor->hit('anna', '10.0.0.1'), 'saving is still allowed');
+    }
+
     public function testIdentifiersWithOddCharactersDoNotEscapeTheStorageDirectory(): void
     {
         $l = $this->limit(5);

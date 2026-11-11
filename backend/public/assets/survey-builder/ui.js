@@ -29,9 +29,11 @@ const isPagePath = (path) => path.length === 2 && path[0] === 'pages';
 const stripTags = (html) => String(html).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
 
 /**
- * @param {{root:HTMLElement, bridge:{get:Function,set:Function}, config:object, page?:HTMLElement|null}} options
+ * @param {{root:HTMLElement, bridge:{get:Function,set:Function}, config:object, page?:HTMLElement|null,
+ *          onSelect?:(path:Array|null, doc:object|null) => void}} options
+ *   onSelect: the user selected an element in the tree (click, keyboard, "go to question"); the live preview follows it
  */
-export function createBuilder({ root, bridge, config, page = null }) {
+export function createBuilder({ root, bridge, config, page = null, onSelect = () => {} }) {
     const t = createT(config.messages ?? {});
     const rules = config.rules;
     const findings = Array.isArray(config.findings) ? config.findings : [];
@@ -271,12 +273,13 @@ export function createBuilder({ root, bridge, config, page = null }) {
 
     // ---- selection and properties --------------------------------------------------------------------------------
 
-    function select(path, focus = false) {
+    function select(path, focus = false, notify = true) {
         state.selected = path;
         renderTree();
         renderProps();
         renderToolbar();
         if (focus) { focusSelected(); }
+        if (notify) { onSelect(path, state.doc); }
     }
 
     function renderProps() {
@@ -819,6 +822,17 @@ export function createBuilder({ root, bridge, config, page = null }) {
         },
         reload,
         select: (path) => select(path, false),
+        /**
+         * Selects an element chosen elsewhere (a click in the live preview): opens its parents and scrolls it into view
+         * without taking the focus (the user is in the other window) and without reporting it back.
+         */
+        reveal(path) {
+            if (!state.doc || valueAt(state.doc, path) === undefined) { return false; }
+            openParents(path);
+            select(path, false, false);
+            tree.querySelector('.sb-selected')?.scrollIntoView({ block: 'nearest' });
+            return true;
+        },
         getState: () => ({ doc: state.doc, selected: state.selected, error: state.error }),
     };
 }

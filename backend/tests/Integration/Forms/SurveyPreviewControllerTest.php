@@ -79,6 +79,49 @@ class SurveyPreviewControllerTest extends FormEditorTestCase
         $this->assertTrue($live['has_draft']);
     }
 
+    public function testLivePreviewGetsTheThemeOfTheFormOnly(): void
+    {
+        $this->form();
+        $this->resources->save(Res::KIND_THEME, 't.json', '{"themeName":"x","cssVariables":{"--a":"1"}}', 'u');
+
+        $r = $this->preview()->loadTheme('bs');
+
+        $this->assertSame('ok', $r['status']);
+        $this->assertTrue($r['theme_from_backend']);
+        $this->assertStringContainsString('"themeName":"x"', $r['theme_json']);
+        $this->assertArrayNotHasKey('survey_json', $r, 'the live preview gets its survey from the editor, after the check');
+    }
+
+    public function testLivePreviewThemeOfAnUnknownFormOrAnotherTenantIsNotFound(): void
+    {
+        $this->form();
+        $this->assertSame('not_found', $this->preview()->loadTheme('gibtsnicht')['status']);
+        $this->asTenant($this->tenantB);
+        $this->assertSame('not_found', $this->preview()->loadTheme('bs')['status']);
+    }
+
+    public function testLiveCheckAcceptsWhatTheValidatorAcceptsAndStoresNothing(): void
+    {
+        $this->form();
+        $ok = $this->preview()->checkText('bs', $this->surveyJson('Vorname', 'email'));
+        $bad = $this->preview()->checkText('bs', (string)json_encode(['elements' => [['type' => 'html', 'name' => 'h', 'html' => '<script>alert(1)</script>']]]));
+
+        $this->assertSame('ok', $ok['status']);
+        $this->assertSame('invalid', $bad['status']);
+        $this->assertNotEmpty($bad['errors']);
+        $this->assertNull($this->drafts->find('bs'), 'checking stores no draft');
+        $this->assertNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
+    }
+
+    public function testLiveCheckForAFormOfAnotherTenantIsNotFound(): void
+    {
+        $this->form();
+        $this->asTenant($this->tenantB);
+
+        $this->assertSame('not_found', $this->preview()->checkText('bs', $this->surveyJson('a', 'email'))['status']);
+        $this->assertSame('not_found', $this->preview()->checkText('../x', '{}')['status']);
+    }
+
     public function testMissingThemeFallsBackToNoThemeAndSaysSo(): void
     {
         $this->form();

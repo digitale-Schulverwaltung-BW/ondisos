@@ -78,6 +78,7 @@ Eingeschleustes HTML, etwa aus einem Anmeldefeld, einer Survey oder einer Ausgab
 `nonce="<?= \App\Utils\ContentSecurityPolicy::nonce() ?>"`. `ContentSecurityPolicyTest` prüft das für alle Seiten in `backend/public` und `backend/inc`. Neue 2FA-Seiten (PLAN-3.1.2) folgen derselben Regel (WebAuthn-Skript als Datei oder mit Nonce).
 
 **Betrieb:** `CSP_MODE=enforce` (Standard), `report-only` (nur Meldungen in der Browser-Konsole, zum Diagnostizieren nach einem Update) oder `off`. Die Vorschau im Formular-Editor sendet ihre eigene, strengere Richtlinie (Sandbox mit Nonce).
+Die **Live-Vorschau** (3.2) nutzt denselben Rahmen; der ungespeicherte Text kommt per `postMessage` aus dem Editor. Das Vorschaufenster lässt jeden Text zuerst vom Server prüfen (`form_preview_check.php`: CSRF-Token, `SurveyValidator`, eigenes Rate-Limit, speichert nichts) und gibt nur genau den geprüften Text an den Rahmen weiter. Nachrichten haben ein festes Format mit Protokollname und Version; das Fenster nimmt sie nur vom Editor (`window.opener`, gleiche Herkunft) und vom eigenen Rahmen an, der Editor nur von einem Fenster, das er geöffnet hat, der Rahmen nur von seinem Elternfenster. Der Rahmen meldet zurück nur Art und Name eines Elements.
 Das **WordPress-Plugin** sendet keine CSP: Die Seite gehört WordPress (Theme, Sicherheits-Plugins). Wer dort eine CSP setzt, muss die Nonce-Skripte des Plugins berücksichtigen.
 Zusätzliche Header am Webserver gelten **gemeinsam** mit denen der Anwendung (die strengere gewinnt): keine zweite CSP in Apache oder Nginx setzen.
 
