@@ -55,3 +55,7 @@
 .sb-item.sb-drop-before { box-shadow: inset 0 3px 0 var(--bs-primary); }
 .sb-item.sb-drop-after { box-shadow: inset 0 -3px 0 var(--bs-primary); }
 .sb-item.sb-drop-into { outline: 2px dashed var(--bs-primary); outline-offset: -2px; background: var(--bs-primary-bg-subtle); }
+
+/* An answer option that holds questions (choices[].elements): a row under its question, its questions below it. */
+.sb-item.sb-choice .sb-label { font-style: italic; }
+.sb-item.sb-choice { cursor: pointer; }

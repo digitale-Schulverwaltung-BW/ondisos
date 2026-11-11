@@ -14,7 +14,8 @@ import { valueAt } from './json-doc.js';
 const PREFIX = { page: 'page', panel: 'panel' };
 
 /**
- * Every element of the survey with its path, in document order (pages' elements, nested panels, top-level elements).
+ * Every element of the survey with its path, in document order (pages' elements, nested panels, questions in choice
+ * options (`choices[].elements`, SurveyJS 2+), top-level elements). The server counts and checks the same elements.
  * @returns {{path:Array<string|number>, value:object}[]}
  */
 export function elementsOf(doc) {
@@ -26,6 +27,11 @@ export function elementsOf(doc) {
             const path = [...base, i];
             out.push({ path, value });
             walk(value.elements, [...path, 'elements']);
+            if (Array.isArray(value.choices)) {
+                value.choices.forEach((c, ci) => {
+                    if (c && typeof c === 'object' && !Array.isArray(c)) { walk(c.elements, [...path, 'choices', ci, 'elements']); }
+                });
+            }
         });
     };
     const pages = valueAt(doc, ['pages']);

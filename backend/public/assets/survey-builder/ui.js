@@ -13,7 +13,7 @@
 import { h, createT } from './dom.js';
 import {
     loadModel, outline, setProp, renameElement, addElement, removeElement, moveElement, moveElementTo, duplicateElement,
-    addPage, removePage, movePage, countElements, formatPath, displayText,
+    addPage, removePage, movePage, countElements, formatPath, displayText, isChoicePath,
 } from './model.js';
 import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
@@ -156,14 +156,24 @@ export function createBuilder({ root, bridge, config, page = null }) {
         return title !== '' ? title : (name ?? t('untitled'));
     }
 
-    /** The visible rows of the tree, in order. */
+    /**
+     * The visible rows of the tree, in order. Questions in answer options (choices[].elements) show under their question,
+     * grouped by an option row ("choice"): SurveyJS shows them when that option is chosen.
+     */
     function rows() {
         const out = [];
         const walk = (elements, level) => {
             for (const e of elements) {
                 const open = !state.collapsed.has(key(e.path));
-                out.push({ path: e.path, kind: 'element', level, type: e.type, name: e.name, title: e.title, children: e.children.length, open });
-                if (e.children.length && open) { walk(e.children, level + 1); }
+                const children = e.children.length + e.choices.length;
+                out.push({ path: e.path, kind: 'element', level, type: e.type, name: e.name, title: e.title, children, open });
+                if (!children || !open) { continue; }
+                walk(e.children, level + 1);
+                for (const c of e.choices) {
+                    const cOpen = !state.collapsed.has(key(c.path));
+                    out.push({ path: c.path, kind: 'choice', level: level + 1, text: c.text, children: c.children.length, open: cOpen });
+                    if (c.children.length && cOpen) { walk(c.children, level + 2); }
+                }
             }
         };
         for (const pg of outline(state.doc)) {
@@ -186,19 +196,20 @@ export function createBuilder({ root, bridge, config, page = null }) {
             const value = r.kind === 'element' ? valueAt(state.doc, r.path) : null;
             const text = r.kind === 'page'
                 ? (r.implicit ? t('page') : (displayText(valueAt(state.doc, r.path)?.title) || r.name || t('unnamed')))
-                : label(value);
-            const typeLabel = r.kind === 'page' ? t('page') : t(`type.${r.type}`).startsWith('[') ? String(r.type) : t(`type.${r.type}`);
+                : r.kind === 'choice' ? (r.text || t('untitled')) : label(value);
+            const typeLabel = r.kind === 'page' ? t('page') : r.kind === 'choice' ? t('choice.row')
+                : t(`type.${r.type}`).startsWith('[') ? String(r.type) : t(`type.${r.type}`);
             const el = h('div', {
                 class: `sb-item sb-${r.kind}${selected && hasSelected ? ' sb-selected' : ''}${own.length ? ' sb-flagged' : ''}`,
                 role: 'treeitem', 'aria-level': r.level, 'aria-selected': String(selected && hasSelected),
                 'aria-expanded': r.children ? String(r.open) : null, tabindex: selected ? 0 : -1, 'data-path': k,
-                draggable: r.kind === 'element' || !r.implicit ? 'true' : null,
+                draggable: r.kind === 'element' || (r.kind === 'page' && !r.implicit) ? 'true' : null,
                 title: own.map((f) => f.message).join('\n') || null,
             },
             r.children ? h('span', { class: 'sb-toggle', 'aria-hidden': 'true', 'data-toggle': k }, r.open ? '▾' : '▸') : h('span', { class: 'sb-toggle', 'aria-hidden': 'true' }, ''),
             h('span', { class: 'sb-type' }, typeLabel),
             h('span', { class: 'sb-label' }, text),
-            r.kind === 'page' && !r.implicit ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
+            (r.kind === 'page' && !r.implicit) || r.kind === 'choice' ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
             own.length ? h('span', { class: 'sb-mark', 'aria-label': t('findings.here') }, own.some((f) => f.severity === 'error') ? '✖' : '⚠') : null);
             el.style.setProperty('--sb-level', String(r.level));
             return el;
@@ -276,6 +287,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
         const value = currentValue(path);
         if (path.length === 0) { props.append(h('p', { class: 'text-muted' }, t('implicit_page'))); return; }
         if (!value || typeof value !== 'object') { props.append(h('p', { class: 'text-muted' }, t('select_hint'))); return; }
+        if (isChoicePath(path)) { props.append(choiceInfo(path, value)); return; }
         const typeName = typeNameOf(path, value);
         const ctx = {
             t,
@@ -292,6 +304,20 @@ export function createBuilder({ root, bridge, config, page = null }) {
             rename(newName) { return doRename(path, typeName, newName); },
         };
         props.append(buildProperties(ctx));
+    }
+
+    /** An answer option with questions inside: what it is, and the way to its question (its value and text are edited there). */
+    function choiceInfo(path, value) {
+        const question = path.slice(0, -2);
+        const qValue = currentValue(question) ?? {};
+        const stored = String(value.value ?? '');
+        const text = displayText(value.text) || stored;
+        const valueNote = text === stored ? '' : t('choice.value', { value: stored });
+        return h('div', { class: 'sb-props-body' },
+            h('h2', { class: 'h5 mb-1' }, t('choice.title')),
+            h('p', { class: 'mt-3' }, t('choice.info', { text, value: valueNote, question: label(qValue), count: value.elements?.length ?? 0 })),
+            h('p', { class: 'text-muted small' }, t('choice.hint')),
+            btn(t('choice.goto_question'), () => select(question, true)));
     }
 
     function doRename(path, typeName, newName) {
@@ -330,7 +356,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
 
     function location() {
         const path = state.selected;
-        if (!path || path.length === 0 || isPagePath(path)) { return null; }
+        if (!path || path.length === 0 || isPagePath(path) || isChoicePath(path)) { return null; }
         return { arr: path.slice(0, -1), index: path[path.length - 1] };
     }
 
@@ -425,7 +451,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
         }
         if (sel.length === 0) { return { parent: [], index: valueAt(state.doc, ['elements'])?.length ?? 0 }; }
         const value = valueAt(state.doc, sel);
-        if (isPagePath(sel) || value?.type === 'panel') { return { parent: sel, index: value?.elements?.length ?? 0 }; }
+        if (isPagePath(sel) || isChoicePath(sel) || value?.type === 'panel') { return { parent: sel, index: value?.elements?.length ?? 0 }; }
         return { parent: sel.slice(0, -2), index: sel[sel.length - 1] + 1 };
     }
 
@@ -453,11 +479,18 @@ export function createBuilder({ root, bridge, config, page = null }) {
         commitStructure(result, { select: result.path, announce: result.ok ? t('announce.page_added', { name: result.name }) : undefined });
     }
 
+    /** Elements directly inside an element: those of a panel and the questions in its answer options. */
+    function kidsOf(v) {
+        const own = Array.isArray(v?.elements) ? v.elements : [];
+        const inChoices = (Array.isArray(v?.choices) ? v.choices : []).flatMap((c) => (Array.isArray(c?.elements) ? c.elements : []));
+        return [...own, ...inChoices];
+    }
+
     function namesIn(value) {
         const out = [];
         const walk = (v) => {
             if (typeof v?.name === 'string') { out.push(v.name); }
-            (v?.elements ?? []).forEach(walk);
+            kidsOf(v).forEach(walk);
         };
         walk(value);
         return out;
@@ -465,7 +498,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
 
     function countIn(value) {
         let n = 0;
-        const walk = (v) => (v?.elements ?? []).forEach((c) => { n += 1; walk(c); });
+        const walk = (v) => kidsOf(v).forEach((c) => { n += 1; walk(c); });
         walk(value);
         return n;
     }
@@ -486,7 +519,8 @@ export function createBuilder({ root, bridge, config, page = null }) {
         }
         const references = typeof value.name === 'string' ? findReferences(state.doc, value.name).length : 0;
         const children = countIn(value);
-        const text = (value.type === 'panel' ? t('confirm.panel', { name, count: children }) : t('confirm.element', { name }))
+        const text = (value.type === 'panel' ? t('confirm.panel', { name, count: children })
+            : children ? t('confirm.element_nested', { name, count: children }) : t('confirm.element', { name }))
             + (references ? t('confirm.refs', { count: references }) : '');
         if (!window.confirm(text)) { return; }
         const arr = sel.slice(0, -1);
@@ -570,20 +604,21 @@ export function createBuilder({ root, bridge, config, page = null }) {
         doMoveTo(state.selected, above, valueAt(state.doc, above).elements?.length ?? 0);
     }
 
-    /** Alt+Left: out of the panel the element is in, right behind it. */
+    /** Alt+Left: out of the panel the element is in, right behind it; out of an answer option, right behind its question. */
     function doUnnest() {
         const loc = location();
         if (!loc) { return; }
         const parent = loc.arr.slice(0, -1);
-        if (!(parent.length >= 2 && parent[parent.length - 2] === 'elements')) { return; }
-        doMoveTo(state.selected, parent.slice(0, -2), parent[parent.length - 1] + 1);
+        const owner = isChoicePath(parent) ? parent.slice(0, -2) : parent;
+        if (!(owner.length >= 2 && owner[owner.length - 2] === 'elements')) { return; }
+        doMoveTo(state.selected, owner.slice(0, -2), owner[owner.length - 1] + 1);
     }
 
-    /** Opens the pages and panels above `path`, so it shows in the tree. */
+    /** Opens the pages, panels, questions and answer options above `path`, so it shows in the tree. */
     function openParents(path) {
         if (path?.[0] === 'elements') { state.collapsed.delete(key([])); }
         for (let i = 1; path && i < path.length; i += 1) {
-            if (path[i] === 'elements') { state.collapsed.delete(key(path.slice(0, i))); }
+            if (path[i] === 'elements' || path[i] === 'choices') { state.collapsed.delete(key(path.slice(0, i))); }
         }
     }
 
@@ -643,7 +678,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
             return { zone: after ? 'after' : 'before', page: to > src[1] ? to - 1 : to };
         }
         if (path.length >= src.length && src.every((s, i) => path[i] === s)) { return null; } // onto itself or inside it
-        if (path.length === 0 || isPagePath(path)) { return { zone: 'into', parent: path, index: 0 }; }
+        if (path.length === 0 || isPagePath(path) || isChoicePath(path)) { return { zone: 'into', parent: path, index: 0 }; }
         const value = valueAt(state.doc, path);
         const parent = path.slice(0, -2);
         const index = path[path.length - 1];

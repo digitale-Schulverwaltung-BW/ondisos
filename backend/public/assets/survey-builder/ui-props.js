@@ -271,6 +271,7 @@ function choicesControl(ctx, def) {
     const current = () => (Array.isArray(ctx.value.choices) ? ctx.value.choices : []);
     const items = current();
     const advanced = hasAdvancedChoices(items);
+    const nested = items.some((item) => Array.isArray(item?.elements));
     const input = h('textarea', { class: 'form-control font-monospace', id, rows: Math.min(14, Math.max(4, items.length + 1)), value: items.map(choiceToLine).join('\n'), spellcheck: 'false', readOnly: advanced });
     const count = h('div', { class: 'form-text' }, ctx.t('help.choices_count', { count: items.length }));
     if (!advanced) {
@@ -284,7 +285,7 @@ function choicesControl(ctx, def) {
     const label = ctx.t('prop.choices');
     return h('div', { class: 'mb-3', 'data-prop': 'choices' },
         h('label', { class: 'form-label', for: id }, label), input, count,
-        h('div', { class: 'form-text' }, ctx.t(advanced ? 'help.choices_advanced' : 'help.choices')), box);
+        h('div', { class: 'form-text' }, ctx.t(nested ? 'help.choices_nested' : advanced ? 'help.choices_advanced' : 'help.choices')), box);
 }
 
 const CONTROLS = {

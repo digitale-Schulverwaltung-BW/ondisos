@@ -1,6 +1,6 @@
 # PLAN 3.2.0 – Grafischer Survey-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-02); AP0 bis AP2 und AP4 umgesetzt, AP3 größtenteils. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
+**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2 und AP4 umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -200,6 +200,19 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 **Nebenbefunde:**
 - Die Builder-Module werden ohne Versionsparameter geladen (`app.js` und seine `import`s). Nach einem Update kann ein Browser eine alte und eine neue Datei mischen, wie es 3.2.0a bei der Vorschau passierte (`?v=<filemtime>`). Vor dem Release lösen (AP7), z. B. per Import-Map mit Versionen.
 - `meister.json` nutzt Eigenschaften, die die Registry nicht anbietet (`text.min/max/step`, `expression.displayStyle`, `maximumFractionDigits`, `visibleIf` am Ausdruck, `signaturepad.signatureWidth/placeholder`) und `paneldynamic`. Sie bleiben unverändert im Text; `registry.test.mjs` führt sie als Lücken. Kandidaten für die Registry.
+
+## Fragen in Auswahloptionen (2026-11-11)
+
+SurveyJS (ab 2) erlaubt Fragen in einer Antwort (`choices[i].elements`, beliebig tief); das Formular zeigt sie, sobald die Antwort gewählt ist. Server (`SurveyValidator`, `SurveyFieldExtractor`) und Frontend kannten sie seit 3.2.0a, der grafische Editor zeigte sie nicht und zählte sie nicht mit.
+
+**Umfang:**
+- **Modell:** `elementsOf` (`names.js`) liefert sie hinter ihrer Frage, wie der Server sie zählt: Namensprüfung (doppelte Namen), Namensvergabe und Elementzahl berücksichtigen sie. `outline` gibt je Element die Antworten mit Fragen (`choices`: Pfad, Text, Kinder), `flatten` erreicht sie. Eine Antwort, die ein Objekt mit `elements` ist, ist ein Container wie eine Gruppe (`isChoicePath`, `addElement`, `moveElementTo`); einfache Antworten (Text oder Objekt ohne `elements`) bleiben es nicht, der Editor macht aus keiner Antwort eine mit Fragen. Die Verschachtelungstiefe (`tooDeep`) zählt Antwort-Ebenen mit, wie der Server.
+- **Aufbau:** Unter der Frage je Antwort mit Fragen eine Zeile „Antwort“ (Text, sonst Wert; Anzahl der Elemente), darunter ihre Fragen. Die Zeile ist wählbar (Erklärung und *Zur Frage*), nicht zieh- oder löschbar. Hinzufügen, Hineinziehen, Verschieben innerhalb der Antwort, Alt + → in eine Gruppe darin und Alt + ← (aus der Antwort hinter ihre Frage) wie bei Gruppen; Alt + ↑/↓ hält am Rand der Antwort. Löschen und Duplizieren einer Frage nehmen die Fragen in ihren Antworten mit (Bestätigung nennt ihre Zahl).
+- **Antwortliste der Frage:** bleibt schreibgeschützt (eine geänderte Zeile würde die Fragen der Antwort verlieren), mit eigenem Hinweis (`help.choices_nested`). Wert und Text dieser Antworten ändert man im Tab „JSON“.
+
+**Nachgewiesen:** `choice-elements.test.mjs` (10 Tests: Zählung und Reihenfolge wie der Server, Namensprüfung, Eigenschaften, Hinzufügen nur in Antworten mit Fragen, Verschieben hinein, heraus und zwischen Antworten mit Bau durch SurveyJS, `intoItself`, `tooDeep`, Duplizieren und Löschen samt inneren Fragen); alle 110 JS-Tests grün. Im Browser (Harness-Seite mit dem ersten Entwurf von `meister.json`, zwei Ebenen): Anzeige, Auswahl einer Antwort, Alt + ←, Rückgängig, Ziehen auf eine Antwort. `check.mjs` lief nicht (Playwright auf dem Entwicklungsrechner nicht installiert).
+
+**Offen:** Antworten mit Fragen in der Antwortliste bearbeiten (Wert/Text ändern, ohne die Fragen zu verlieren) und Fragen in eine bisher einfache Antwort setzen; Fälle für `check.mjs`.
 
 ## Tests
 

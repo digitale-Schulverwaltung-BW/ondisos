@@ -18,6 +18,28 @@ import { elementsOf, generateName, validateName, findReferences, replaceReferenc
 const CONTAINER_KEY = 'elements';
 
 /**
+ * Is `path` an answer option ([…, 'choices', i])? An option that is an object with `elements` holds questions that
+ * SurveyJS shows when the option is chosen (SurveyJS 2+); the builder treats it as a container, like a panel.
+ */
+export function isChoicePath(path) {
+    return path.length >= 2 && path[path.length - 2] === 'choices' && Number.isInteger(path[path.length - 1]);
+}
+
+/** The questions inside the options of an element: [{index, value}] for every option that is an object with `elements`. */
+function choiceContainers(value) {
+    const list = Array.isArray(value?.choices) ? value.choices : [];
+    return list.map((c, index) => ({ index, value: c }))
+        .filter(({ value: c }) => c && typeof c === 'object' && !Array.isArray(c) && Array.isArray(c.elements));
+}
+
+/** Child elements of an element: its own (panel) and those in its options, each list as [relative path, elements]. */
+function childLists(value) {
+    const out = [[[CONTAINER_KEY], Array.isArray(value?.elements) ? value.elements : []]];
+    for (const c of choiceContainers(value)) { out.push([['choices', c.index, CONTAINER_KEY], c.value.elements]); }
+    return out;
+}
+
+/**
  * Loads survey text.
  * @returns {{ok:true, doc:object, warnings:string[]} | {ok:false, error:{message:string, line:number, column:number}}}
  */
@@ -61,10 +83,22 @@ function describe(doc, path, node) {
         name: typeof v.name === 'string' ? v.name : '',
         title: displayText(v.title),
         children: [],
+        choices: [],
     };
     const kids = nodeAt(doc, [...path, CONTAINER_KEY]);
     if (kids && kids.type === 'array') {
         item.children = kids.items.map((_, i) => describe(doc, [...path, CONTAINER_KEY, i], kids.items[i]));
+    }
+    // options with questions inside (choices[].elements): one entry per such option, its questions as children
+    for (const c of choiceContainers(v)) {
+        const cPath = [...path, 'choices', c.index];
+        const list = nodeAt(doc, [...cPath, CONTAINER_KEY]);
+        item.choices.push({
+            path: cPath,
+            value: c.value.value,
+            text: displayText(c.value.text) || (c.value.value === undefined ? '' : String(c.value.value)),
+            children: list.items.map((n, i) => describe(doc, [...cPath, CONTAINER_KEY, i], n)),
+        });
     }
     return item;
 }
@@ -90,10 +124,10 @@ export function outline(doc) {
     return [];
 }
 
-/** Elements in document order, panels before their children. */
+/** Elements in document order, panels before their children, questions before those in their options. */
 export function flatten(pages) {
     const out = [];
-    const walk = (items) => items.forEach((e) => { out.push(e); walk(e.children); });
+    const walk = (items) => items.forEach((e) => { out.push(e); walk(e.children); (e.choices ?? []).forEach((c) => walk(c.children)); });
     pages.forEach((p) => walk(p.elements));
     return out;
 }
@@ -101,11 +135,17 @@ export function flatten(pages) {
 const ok = (doc, extra = {}) => ({ ok: true, doc, ...extra });
 const fail = (code, extra = {}) => ({ ok: false, code, ...extra });
 
-/** 'page' for a page, otherwise the element's type (undefined when there is nothing at path). */
+/** 'page' for a page, 'choice' for an answer option, otherwise the element's type (undefined when there is nothing). */
 function typeAt(doc, path) {
     const v = valueAt(doc, path);
     if (!v || typeof v !== 'object' || Array.isArray(v)) { return undefined; }
-    return path[0] === 'pages' && path.length === 2 ? 'page' : v.type;
+    if (path[0] === 'pages' && path.length === 2) { return 'page'; }
+    return isChoicePath(path) ? 'choice' : v.type;
+}
+
+/** An answer option that holds questions (an object with an `elements` list). */
+function isChoiceContainer(doc, path) {
+    return typeAt(doc, path) === 'choice' && Array.isArray(valueAt(doc, [...path, CONTAINER_KEY]));
 }
 
 /**
@@ -284,7 +324,7 @@ export function addElement(doc, parentPath, index, typeName, { rules, texts, tak
     if (!parent || parent.type !== 'object') { return fail('path'); }
     const parentType = typeAt(doc, parentPath);
     const isRoot = parentPath.length === 0 && nodeAt(doc, ['pages']) === undefined;
-    if (!isRoot && parentType !== 'page' && parentType !== 'panel') { return fail('notContainer'); }
+    if (!isRoot && parentType !== 'page' && parentType !== 'panel' && !isChoiceContainer(doc, parentPath)) { return fail('notContainer'); }
     const list = nodeAt(doc, [...parentPath, 'elements']);
     if (list && list.type !== 'array') { return fail('path'); }
     if (!Number.isInteger(index) || index < 0 || index > (list ? list.items.length : 0)) { return fail('index'); }
@@ -324,19 +364,22 @@ export function moveElement(doc, path, to) {
 
 const startsWith = (path, prefix) => prefix.length <= path.length && prefix.every((s, i) => path[i] === s);
 
-/** Levels of panels an element brings along: 1 for a question, 2 for a panel with questions, … */
+/** Levels of nesting an element brings along: 1 for a question, 2 for a panel with questions or a question with questions in its options, … */
 function height(value) {
-    const kids = Array.isArray(value?.elements) ? value.elements : [];
+    const kids = childLists(value).flatMap(([, list]) => list);
     return 1 + kids.reduce((max, k) => Math.max(max, height(k)), 0);
 }
 
-/** Can `parentPath` hold elements? A page, a panel, or the survey itself when it keeps its elements at the top level. */
+/**
+ * Can `parentPath` hold elements? A page, a panel, an answer option that holds questions, or the survey itself when it
+ * keeps its elements at the top level.
+ */
 function isContainer(doc, parentPath) {
     const parent = nodeAt(doc, parentPath);
     if (!parent || parent.type !== 'object') { return false; }
     if (parentPath.length === 0) { return nodeAt(doc, ['pages']) === undefined; }
     const typeName = typeAt(doc, parentPath);
-    return typeName === 'page' || typeName === 'panel';
+    return typeName === 'page' || typeName === 'panel' || isChoiceContainer(doc, parentPath);
 }
 
 /**
@@ -394,7 +437,7 @@ function typesInside(value) {
     const walk = (v) => {
         if (!v || typeof v !== 'object') { return; }
         out.push(v.type);
-        (Array.isArray(v.elements) ? v.elements : []).forEach(walk);
+        childLists(v).forEach(([, list]) => list.forEach(walk));
     };
     walk(value);
     return out;
