@@ -45,8 +45,8 @@ final class SurveyValidator
      */
     public const OPERATOR_WORDS = [
         'and', 'or', 'negate', 'empty', 'notempty', 'contains', 'contain', 'notcontains', 'notcontain',
-        'anyof', 'allof', 'equal', 'notequal', 'greater', 'less', 'greaterorequal', 'lessorequal', 'power',
-        'true', 'false',
+        'anyof', 'allof', 'noneof', 'equal', 'notequal', 'greater', 'less', 'greaterorequal', 'lessorequal',
+        'power', 'true', 'false',
     ];
 
     /**

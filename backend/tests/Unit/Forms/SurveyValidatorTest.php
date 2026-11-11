@@ -285,6 +285,23 @@ class SurveyValidatorTest extends TestCase
         $this->assertSame([], $result->warnings());
     }
 
+    public function testWordOperatorsAreMatchedCaseInsensitively(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'text', 'name' => 'a', 'visibleIf' => '{b} = 1 OR NEGATE({c} = 2) And ({d} noneof([1, 2]))',
+        ]));
+        $this->assertSame([], $result->warnings());
+    }
+
+    public function testUnknownFunctionNextToWordOperatorStillWarns(): void
+    {
+        $result = $this->validate($this->survey([
+            'type' => 'text', 'name' => 'a', 'visibleIf' => '{b} = 1 or (evil({c}) = 2)',
+        ]));
+        $this->assertCount(1, $result->warnings());
+        $this->assertStringContainsString('evil()', $result->warnings()[0]['message']);
+    }
+
     public function testFunctionNamesInQuotedLiteralsAreIgnored(): void
     {
         $result = $this->validate($this->survey([
