@@ -5,7 +5,7 @@
 
 import { h } from './dom.js';
 import { PAGE, typeDef } from './registry.js';
-import { displayText, otherProperties } from './model.js';
+import { displayText, otherProperties, supportsChoiceElements } from './model.js';
 
 let uid = 0;
 const nextId = (name) => `sb-f-${name}-${(uid += 1)}`;
@@ -21,6 +21,7 @@ const nextId = (name) => `sb-f-${name}-${(uid += 1)}`;
  * @property {(name:string, value:*) => {ok:boolean, code?:string}} commit  writes a property
  * @property {(name:string) => {ok:boolean, code?:string, cancelled?:boolean}} rename  renames (asks for confirmation)
  * @property {(message:string) => boolean} confirm  asks the user (window.confirm)
+ * @property {(index:number) => {ok:boolean, code?:string}} [openChoice]  lets answer `index` hold questions (selects it)
  * @property {(el:HTMLElement) => void} [onFindingShow]
  */
 
@@ -365,7 +366,38 @@ function choicesControl(ctx, def) {
     const label = ctx.t('prop.choices');
     return h('div', { class: 'mb-3', 'data-prop': 'choices' },
         h('label', { class: 'form-label', for: id }, label), input, count,
-        h('div', { class: 'form-text' }, ctx.t(nested ? 'help.choices_nested' : advanced ? 'help.choices_advanced' : 'help.choices')), box);
+        h('div', { class: 'form-text' }, ctx.t(nested ? 'help.choices_nested' : advanced ? 'help.choices_advanced' : 'help.choices')), box,
+        ctx.openChoice && supportsChoiceElements(ctx.typeName) ? openChoiceControl(ctx, current) : null);
+}
+
+/** Answers without questions, as [index, line]: the ones that can get questions. */
+export function plainChoices(items) {
+    return items.map((item, i) => [i, item]).filter(([, item]) => !Array.isArray(item?.elements)).map(([i, item]) => [i, choiceToLine(item)]);
+}
+
+/** "Questions for an answer": pick a plain answer, it becomes one that holds questions (tree row, new elements go in). */
+function openChoiceControl(ctx, current) {
+    const id = nextId('open-choice');
+    const box = errorBox(`${id}-err`);
+    const fill = () => {
+        const keep = select.value;
+        select.replaceChildren(...plainChoices(current()).map(([i, line]) => h('option', { value: String(i) }, line)));
+        if ([...select.options].some((o) => o.value === keep)) { select.value = keep; }
+        button.disabled = select.options.length === 0;
+    };
+    const select = h('select', { class: 'form-select form-select-sm', id, 'aria-describedby': `${id}-help ${id}-err` });
+    const button = h('button', { type: 'button', class: 'btn btn-sm btn-outline-secondary text-nowrap' }, ctx.t('choices_open.button'));
+    select.addEventListener('focus', fill);
+    button.addEventListener('click', () => {
+        if (select.value === '') { return; }
+        const result = ctx.openChoice(Number(select.value));
+        if (!result.ok) { setError(box, select, errorText(ctx, result, null)); }
+    });
+    fill();
+    return h('div', { class: 'mt-2', 'data-sb-open-choice': '' },
+        h('label', { class: 'form-label small mb-1', for: id }, ctx.t('choices_open.label')),
+        h('div', { class: 'input-group input-group-sm' }, select, button),
+        h('div', { class: 'form-text', id: `${id}-help` }, ctx.t('choices_open.help')), box);
 }
 
 const CONTROLS = {

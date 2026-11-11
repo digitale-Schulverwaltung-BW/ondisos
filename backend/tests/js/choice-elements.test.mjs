@@ -4,11 +4,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { loadModel, outline, flatten, addElement, moveElementTo, duplicateElement, removeElement, countElements, isChoicePath, setProp }
+import { loadModel, outline, flatten, addElement, moveElementTo, duplicateElement, removeElement, countElements, isChoicePath, setProp,
+    openChoice, closeChoice, supportsChoiceElements }
     from '../../public/assets/survey-builder/model.js';
 import { toValue, valueAt } from '../../public/assets/survey-builder/json-doc.js';
 import { elementsOf, validateName, generateName } from '../../public/assets/survey-builder/names.js';
-import { choiceToLine, linesToChoices, matchChoices } from '../../public/assets/survey-builder/ui-props.js';
+import { choiceToLine, linesToChoices, matchChoices, plainChoices } from '../../public/assets/survey-builder/ui-props.js';
 
 const require = createRequire(import.meta.url);
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
@@ -173,4 +174,42 @@ test('answer list: setProp writes an edited line around the questions, which sta
     assert.deepEqual(elementsOf(next).map((e) => e.value.name), elementsOf(d).map((e) => e.value.name));
     const start = (doc) => doc.text.indexOf('"focus"');
     assert.equal(next.text.slice(start(next), start(next) + 400), d.text.slice(start(d), start(d) + 400));
+});
+
+test('openChoice: a plain answer gets questions (string, number, object), only where SurveyJS shows them', () => {
+    const d = load({ pages: [{ name: 'p', elements: [
+        { type: 'checkbox', name: 'c', choices: ['a', 2, { value: 'x', text: 'X', visibleIf: '{v} = 1' }] },
+        { type: 'dropdown', name: 'd', choices: ['a'] },
+    ] }] });
+    const C = ['pages', 0, 'elements', 0];
+    const s = good(openChoice(d, C, 0));
+    assert.deepEqual(s.path, [...C, 'choices', 0]);
+    assert.deepEqual(valueAt(s.doc, s.path), { value: 'a', elements: [] });
+    assert.deepEqual(valueAt(good(openChoice(d, C, 1)).doc, [...C, 'choices', 1]), { value: 2, elements: [] }, 'the number stays a number');
+    assert.deepEqual(valueAt(good(openChoice(d, C, 2)).doc, [...C, 'choices', 2]), { value: 'x', text: 'X', visibleIf: '{v} = 1', elements: [] });
+    assert.equal(good(openChoice(s.doc, C, 0)).doc, s.doc, 'already one: nothing changes');
+
+    assert.equal(openChoice(d, ['pages', 0, 'elements', 1], 0).code, 'noChoiceElements');
+    assert.equal(openChoice(d, C, 3).code, 'path');
+    assert.deepEqual(['radiogroup', 'checkbox', 'dropdown', 'tagbox'].map(supportsChoiceElements), [true, true, false, false]);
+
+    // the new answer is a container: a question goes in, SurveyJS shows it with the answer
+    const added = good(addElement(s.doc, s.path, 0, 'text', { rules: RULES }));
+    const survey = new Survey.Model(toValue(added.doc.root));
+    assert.ok(survey.getQuestionByName(added.name), 'SurveyJS knows the new question');
+    assert.deepEqual(outline(added.doc)[0].elements[0].choices.map((c) => c.text), ['a']);
+    assert.deepEqual(plainChoices(valueAt(added.doc, [...C, 'choices'])), [[1, '2'], [2, 'x | X']]);
+});
+
+test('closeChoice: an empty answer becomes plain again; one with questions stays', () => {
+    const d = load({ pages: [{ name: 'p', elements: [{ type: 'radiogroup', name: 'r', choices: ['a', { value: 'b', text: 'B' }] }] }] });
+    const R = ['pages', 0, 'elements', 0];
+    for (const i of [0, 1]) {
+        const opened = good(openChoice(d, R, i)).doc;
+        const closed = good(closeChoice(opened, [...R, 'choices', i])).doc;
+        assert.equal(closed.text, d.text, 'back to the very same text');
+    }
+    const withQuestion = good(addElement(good(openChoice(d, R, 0)).doc, [...R, 'choices', 0], 0, 'text', { rules: RULES })).doc;
+    assert.equal(closeChoice(withQuestion, [...R, 'choices', 0]).code, 'notEmpty');
+    assert.equal(closeChoice(d, [...R, 'choices', 0]).code, 'notContainer');
 });

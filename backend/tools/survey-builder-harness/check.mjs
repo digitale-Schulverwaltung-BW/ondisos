@@ -5,7 +5,8 @@
 // Needs: PHP with `composer install` in backend/, Node 22+, the `playwright` package and a Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, or CHROMIUM_PATH for the executable). It renders the editor tabs of form_survey.php with
 // render.php for several surveys (the real ones from frontend/surveys plus small odd ones), serves them and drives the
-// builder like a person would: edit, rename, add, move, delete, keyboard, tab switch, broken JSON, findings.
+// builder like a person would: edit, rename, add, move, delete, keyboard, tab switch, broken JSON, findings, questions in
+// answers.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -37,6 +38,18 @@ const odd = write('odd.json', JSON.stringify({
         { type: 'comment', name: 'k', rows: 3, placeholder: '' },
     ],
 }));
+const nested = write('nested.json', JSON.stringify({
+    pages: [{ name: 'p1', elements: [
+        { type: 'radiogroup', name: 'form', title: 'Unterrichtsform', choices: [
+            { value: 'vz', text: 'Vollzeit', elements: [{ type: 'text', name: 'start_vz', title: 'Beginn Vollzeit' }] },
+            'tz',
+            'abend',
+        ] },
+        { type: 'checkbox', name: 'teile', title: 'Teile', choices: ['I', 'II'] },
+        { type: 'dropdown', name: 'land', title: 'Land', choices: ['a', 'b'] },
+        { type: 'text', name: 'other', title: 'Sonstiges' },
+    ] }],
+}, null, 2));
 const empty = write('empty.json', '');
 const broken = write('broken.json', '{"pages": [,]}');
 const reportBroken = write('report-broken.json', JSON.stringify({ valid: false, errors: [{ path: '', message: 'Allgemeiner Fehler' }], warnings: [] }));
@@ -49,6 +62,7 @@ render('ap4', surveys('gs'));
 render('bs', surveys('bs'));
 render('vabo', surveys('vabo'));
 render('odd', odd);
+render('nested', nested);
 render('empty', empty);
 render('broken', broken, reportBroken);
 render('warn', surveys('ausbildernachmittag'), reportWarn);
@@ -277,7 +291,12 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     const moved = (await survey(p)).elements[2];
     check('odd: the unknown element can be moved and its content is the same', moved.type === 'matrix' && JSON.stringify(moved) === JSON.stringify(m0));
     await p.locator('.sb-item', { hasText: 'Dropdown' }).first().click();
-    check('odd: answers with conditions are read-only with an explanation', await p.locator('[data-prop="choices"] textarea[readonly]').count() === 1 && /weitere Einstellungen/.test(await p.textContent('[data-prop="choices"]')));
+    const answers = p.locator('[data-prop="choices"] textarea');
+    check('odd: answers with conditions are editable, with an explanation', await answers.isEditable() && /weitere Einstellungen/.test(await p.textContent('[data-prop="choices"]')));
+    await answers.fill('a | A (neu)\nb');
+    await answers.blur();
+    await p.waitForTimeout(250);
+    check('odd: a changed line keeps the condition of its answer', JSON.stringify(allElements(await survey(p)).find((e) => e.name === 'land').choices[0]) === '{"value":"a","text":"A (neu)","visibleIf":"{Name} notempty"}');
     await p.locator('.sb-item', { hasText: 'Mehrzeiliger Text' }).first().click();
     check('odd: an empty placeholder stays empty (it is not the same as none)', allElements(await survey(p)).find((e) => e.name === 'k').placeholder === '');
     const rows = p.locator('[data-prop="rows"] input');
@@ -522,6 +541,93 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     await p.waitForTimeout(300);
     check('ap4: switching tabs without a change adds no step', !(await redo.isEnabled()) && (await text(p)) === final);
     check('ap4: no console errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+}
+
+// ---- questions in answers (choices[].elements): tree, answer list, adding to a plain answer, moving -----------------
+{
+    const original = readFileSync(nested, 'utf8');
+    const p = await open('nested', { width: 1400, height: 1600 });
+    const Q = ['pages', 0, 'elements', 0];
+    const VZ = [...Q, 'choices', 0];
+    const TZ = [...Q, 'choices', 1];
+    const row = (path) => `.sb-item[data-path='${JSON.stringify(path)}']`;
+    const selected = () => p.evaluate(() => document.querySelector('.sb-item.sb-selected')?.getAttribute('data-path'));
+    const choicesOf = async () => (await survey(p)).pages[0].elements[0].choices;
+    const undo = p.locator('.sb-toolbar button', { hasText: 'Rückgängig' });
+
+    check('nested: an answer with questions is a row under its question, its question below it',
+        await p.locator(row(VZ)).count() === 1 && /Antwort/.test(await p.textContent(row(VZ))) && /Vollzeit/.test(await p.textContent(row(VZ)))
+        && await p.locator(row([...VZ, 'elements', 0])).count() === 1 && await p.locator(row(TZ)).count() === 0);
+    await p.click(row(VZ));
+    check('nested: selecting the answer explains it', (await p.textContent('.sb-props h2')) === 'Antwort mit Fragen' && /Beginn|1 Elemente/.test(await p.textContent('.sb-props')));
+    await p.click('.sb-props button:has-text("Zur Frage")');
+    await p.waitForTimeout(150);
+    check('nested: "Zur Frage" selects the question', await selected() === JSON.stringify(Q) && (await p.textContent('.sb-props h2')) === 'Einfachauswahl');
+
+    const list = p.locator('[data-prop="choices"] textarea');
+    check('nested: the answer list is editable', await list.isEditable() && (await list.inputValue()) === 'vz | Vollzeit\ntz\nabend');
+    const before = await text(p);
+    await list.fill('vz | Vollzeit (Mo–Fr)\ntz\nabend');
+    await list.blur();
+    await p.waitForTimeout(250);
+    const c1 = await choicesOf();
+    check('nested: a changed line changes the text of its answer, the question in it stays', c1[0].text === 'Vollzeit (Mo–Fr)' && c1[0].elements?.[0]?.name === 'start_vz'
+        && lines(before, await text(p)) === '1', lines(before, await text(p)));
+
+    dialogs = [];
+    const beforeDelete = await text(p);
+    await list.fill('tz\nabend');
+    await list.blur();
+    await p.waitForTimeout(250);
+    check('nested: removing an answer with questions asks first, then the question goes with it',
+        dialogs.length === 1 && /mitgelöscht/.test(dialogs[0]) && !(await text(p)).includes('start_vz'), dialogs[0]);
+    await undo.click();
+    await p.waitForTimeout(200);
+    check('nested: undo brings answer and question back', (await text(p)) === beforeDelete);
+
+    await p.click(row(Q));
+    const opener = p.locator('[data-sb-open-choice]');
+    check('nested: single choice offers questions for its plain answers', await opener.count() === 1
+        && JSON.stringify(await opener.locator('option').allTextContents()) === '["tz","abend"]');
+    await opener.locator('select').selectOption({ label: 'tz' });
+    await opener.locator('button').click();
+    await p.waitForTimeout(250);
+    check('nested: the answer becomes one with questions, shows up in the tree and is selected',
+        JSON.stringify((await choicesOf())[1]) === '{"value":"tz","elements":[]}' && await selected() === JSON.stringify(TZ)
+        && /Keine Fragen in dieser Antwort/.test(await p.textContent('.sb-props')));
+    await p.click('.sb-toolbar .dropdown-toggle');
+    await p.waitForSelector('.sb-palette.show');
+    await p.click('.sb-palette [data-type="text"]');
+    await p.waitForTimeout(250);
+    const added = (await choicesOf())[1].elements?.[0]?.name;
+    check('nested: a new element from the palette goes into the selected answer', typeof added === 'string' && await selected() === JSON.stringify([...TZ, 'elements', 0]));
+    await p.locator('.sb-item.sb-selected').focus();
+    await p.keyboard.press('Alt+ArrowLeft');
+    await p.waitForTimeout(250);
+    const s1 = await survey(p);
+    check('nested: Alt+Left moves it out of the answer, right behind its question',
+        s1.pages[0].elements[1]?.name === added && s1.pages[0].elements[0].choices[1].elements.length === 0 && await selected() === '["pages",0,"elements",1]');
+    await p.click(row(TZ));
+    await p.click('.sb-props button:has-text("Keine Fragen in dieser Antwort")');
+    await p.waitForTimeout(250);
+    check('nested: an empty answer becomes a plain one again', (await choicesOf())[1] === 'tz' && await p.locator(row(TZ)).count() === 0 && await selected() === JSON.stringify(Q));
+
+    const otherAt = async () => { const s = await survey(p); return s.pages[0].elements.findIndex((e) => e.name === 'other'); };
+    const b = await p.locator(row(VZ)).boundingBox();
+    await p.dragAndDrop(row(['pages', 0, 'elements', await otherAt()]), row(VZ), { targetPosition: { x: Math.min(60, b.width / 2), y: b.height / 2 } });
+    await p.waitForTimeout(250);
+    check('nested: an element dragged onto an answer goes into it', (await choicesOf())[0].elements.some((e) => e.name === 'other') && (await otherAt()) === -1);
+
+    const at = async (name) => (await survey(p)).pages[0].elements.findIndex((e) => e.name === name);
+    await p.click(row(['pages', 0, 'elements', await at('teile')]));
+    const checkboxHas = await p.locator('[data-sb-open-choice]').count();
+    await p.click(row(['pages', 0, 'elements', await at('land')]));
+    check('nested: multiple choice offers it too, a dropdown does not (SurveyJS shows no questions there)', checkboxHas === 1 && await p.locator('[data-sb-open-choice]').count() === 0);
+
+    const verdict = serverSays(await text(p));
+    check('nested: the server accepts the result', verdict.valid && (await text(p)) !== original, JSON.stringify(verdict.errors).slice(0, 200));
+    check('nested: no console errors', errors.length === 0, errors.join(' | '));
     await p.close();
 }
 

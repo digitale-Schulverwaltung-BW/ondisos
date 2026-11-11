@@ -528,6 +528,13 @@ return [
             'hint' => 'Elemente hinzufügen, hineinziehen oder mit Alt + ← herausholen geht wie bei einer Gruppe. Wert und Text der Antwort ändern Sie in der Antwortliste der Frage; die Elemente bleiben dabei erhalten.',
             'value' => ' (gespeicherter Wert: {{value}})',
             'goto_question' => 'Zur Frage',
+            'empty' => 'Diese Antwort enthält noch keine Elemente. Neue Elemente aus der Werkzeugleiste kommen hinein, solange die Antwort gewählt ist; vorhandene ziehen Sie auf die Zeile der Antwort.',
+            'close' => 'Keine Fragen in dieser Antwort',
+        ],
+        'choices_open' => [
+            'label' => 'Fragen zu einer Antwort',
+            'button' => 'Fragen hinzufügen',
+            'help' => 'Das Formular zeigt die Fragen, sobald diese Antwort gewählt ist. Die Antwort erscheint dann im Aufbau unter der Frage.',
         ],
         'type' => [
             'text' => 'Textfeld',
@@ -631,6 +638,8 @@ return [
             'duplicated' => 'Dupliziert: {{name}} (neuer Name {{copy}})',
             'undone' => 'Rückgängig gemacht',
             'redone' => 'Wiederhergestellt',
+            'choice_opened' => 'Die Antwort kann jetzt Fragen enthalten',
+            'choice_closed' => 'Die Antwort ist wieder eine einfache Antwort',
         ],
         'new' => [
             'title' => 'Neue Frage',
@@ -657,6 +666,8 @@ return [
             'tooManyElements' => 'Die Survey hat die Obergrenze von {{max}} Elementen erreicht.',
             'tooDeep' => 'Gruppen sind zu tief verschachtelt (höchstens {{max}} Ebenen).',
             'notContainer' => 'Hier kann nichts eingefügt werden.',
+            'noChoiceElements' => 'Fragen in Antworten gibt es nur bei Einfach- und Mehrfachauswahl.',
+            'notEmpty' => 'Die Antwort enthält noch Elemente.',
             'intoItself' => 'Eine Gruppe kann nicht in sich selbst verschoben werden.',
             'lastPage' => 'Die letzte Seite kann nicht gelöscht werden.',
             'implicitPage' => 'Diese Survey hat keine Seiten (die Elemente stehen direkt im Dokument): bitte im Tab „JSON" ändern.',

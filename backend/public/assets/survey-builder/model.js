@@ -3,7 +3,7 @@
 //
 // Reading: loadModel, outline, flatten. Changing (all return a new document, the text changes only where the edit is):
 // setProp (registry-driven), renameElement, addElement / removeElement / moveElement / moveElementTo / duplicateElement,
-// addPage / removePage / movePage.
+// addPage / removePage / movePage, openChoice / closeChoice (answers that hold questions).
 // Every change reports {ok:true, doc, …} or {ok:false, code}: nothing throws for wrong user input, and nothing is
 // written that the registry does not know. Conditions come with AP5.
 //
@@ -146,6 +146,49 @@ function typeAt(doc, path) {
 /** An answer option that holds questions (an object with an `elements` list). */
 function isChoiceContainer(doc, path) {
     return typeAt(doc, path) === 'choice' && Array.isArray(valueAt(doc, [...path, CONTAINER_KEY]));
+}
+
+/** Question types whose answers can hold questions (SurveyJS: supportElementsInChoice). */
+export const CHOICE_ELEMENT_TYPES = Object.freeze(['radiogroup', 'checkbox']);
+
+export function supportsChoiceElements(typeName) {
+    return CHOICE_ELEMENT_TYPES.includes(typeName);
+}
+
+/**
+ * Lets the answer `index` of the question at `path` hold questions: "b" or 2 becomes {"value": "b", "elements": []},
+ * an object gets "elements": []. The answer then appears in the tree, new elements go into it (addElement).
+ * @returns {{ok:true, doc:object, path:Array} | {ok:false, code:string}}
+ */
+export function openChoice(doc, path, index) {
+    const question = valueAt(doc, path);
+    if (!question || typeof question !== 'object' || !supportsChoiceElements(question.type)) { return fail('noChoiceElements'); }
+    const list = valueAt(doc, [...path, 'choices']);
+    if (!Array.isArray(list) || !Number.isInteger(index) || index < 0 || index >= list.length) { return fail('path'); }
+    const at = [...path, 'choices', index];
+    const item = list[index];
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+        if (Array.isArray(item[CONTAINER_KEY])) { return ok(doc, { path: at }); }
+        if (item[CONTAINER_KEY] !== undefined || item.value === undefined) { return fail('path'); }
+        return ok(insertMember(doc, at, CONTAINER_KEY, []), { path: at });
+    }
+    if (typeof item !== 'string' && typeof item !== 'number') { return fail('path'); }
+    return ok(setValue(doc, at, { value: item, [CONTAINER_KEY]: [] }), { path: at });
+}
+
+/**
+ * The reverse of openChoice for an answer without questions: "elements" goes; an answer that then has only its value
+ * becomes the plain value again.
+ */
+export function closeChoice(doc, path) {
+    if (!isChoiceContainer(doc, path)) { return fail('notContainer'); }
+    const item = valueAt(doc, path);
+    if (item[CONTAINER_KEY].length > 0) { return fail('notEmpty'); }
+    const keys = Object.keys(item).filter((k) => k !== CONTAINER_KEY);
+    if (keys.length === 1 && keys[0] === 'value' && (typeof item.value === 'string' || typeof item.value === 'number')) {
+        return ok(setValue(doc, path, item.value), { path });
+    }
+    return ok(removeMember(doc, path, CONTAINER_KEY), { path });
 }
 
 /**

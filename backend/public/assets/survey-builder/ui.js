@@ -13,7 +13,7 @@
 import { h, createT } from './dom.js';
 import {
     loadModel, outline, setProp, renameElement, addElement, removeElement, moveElement, moveElementTo, duplicateElement,
-    addPage, removePage, movePage, countElements, formatPath, displayText, isChoicePath,
+    addPage, removePage, movePage, countElements, formatPath, displayText, isChoicePath, openChoice, closeChoice,
 } from './model.js';
 import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
@@ -303,6 +303,7 @@ export function createBuilder({ root, bridge, config, page = null }) {
             },
             rename(newName) { return doRename(path, typeName, newName); },
             confirm(message) { return window.confirm(message); },
+            openChoice(index) { return doOpenChoice(path, index); },
         };
         props.append(buildProperties(ctx));
     }
@@ -318,7 +319,25 @@ export function createBuilder({ root, bridge, config, page = null }) {
             h('h2', { class: 'h5 mb-1' }, t('choice.title')),
             h('p', { class: 'mt-3' }, t('choice.info', { text, value: valueNote, question: label(qValue), count: value.elements?.length ?? 0 })),
             h('p', { class: 'text-muted small' }, t('choice.hint')),
-            btn(t('choice.goto_question'), () => select(question, true)));
+            (value.elements?.length ?? 0) === 0 ? h('p', { class: 'small' }, t('choice.empty')) : null,
+            h('div', { class: 'd-flex flex-wrap gap-2' },
+                btn(t('choice.goto_question'), () => select(question, true)),
+                (value.elements?.length ?? 0) === 0 ? btn(t('choice.close'), () => doCloseChoice(path)) : null));
+    }
+
+    /** An answer of the question at `path` gets questions: it shows up in the tree, selected, new elements go into it. */
+    function doOpenChoice(path, index) {
+        const result = openChoice(state.doc, path, index, { rules });
+        if (!result.ok) { return result; }
+        state.collapsed.delete(key(path));
+        commitStructure(result, { select: result.path, announce: t('announce.choice_opened') });
+        return result;
+    }
+
+    /** An answer without questions becomes a plain answer again. */
+    function doCloseChoice(path) {
+        const result = closeChoice(state.doc, path);
+        commitStructure(result, { select: path.slice(0, -2), announce: result.ok ? t('announce.choice_closed') : undefined });
     }
 
     function doRename(path, typeName, newName) {
