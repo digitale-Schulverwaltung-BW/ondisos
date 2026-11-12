@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** Entwurf (Stand 2026-11-12), nichts umgesetzt. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** in Arbeit (Stand 2026-11-12); [AP0 erledigt](#ap0-ergebnis-2026-11-12), als Nächstes AP1. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -35,7 +35,7 @@ Danach ist `import-surveys.php` für Themes nur noch Migrationswerkzeug, und die
 4. **Bearbeitet wird ein Theme, nicht ein Formular.** Eigene Seite `themes.php` (Liste) und `theme_edit.php?name=…`, erreichbar von *Formulare*. Die Liste zeigt die Theme-Namen des Tenants (aus `form_resources` und aus den Konfigurationen) und je Theme die Formulare, die es nutzen. Vor *Veröffentlichen* nennt die Seite diese Formulare („Die Änderung betrifft: bs, vabo, zq“).
 5. **Neue Themes entstehen über die Konfiguration.** Ein Plattform-Admin trägt einen neuen Namen bei einem Formular ein; das Theme erscheint dann in der Liste als „noch nicht angelegt“ und startet beim Bearbeiten mit der eingebauten Vorgabe (6). Kein eigener Anlege-Dialog.
 6. **Eingebaute Vorgabe im Backend.** Der Inhalt des heutigen `frontend/surveys/survey_theme.json` kommt als Vorgabe ins Backend (der Container sieht `frontend/` nicht). Sie dient als Startpunkt für noch nicht angelegte Themes und für *Auf Vorgabe zurücksetzen*.
-   Ort (z. B. `backend/resources/default-theme.json`) und ob die Vorgabe schon das SurveyJS-3-Format nutzt, klärt AP0.
+   Die Vorgabe nutzt das SurveyJS-3-Format und gibt das Aussehen von 2.3.15 wieder ([AP0-Ergebnis](#ap0-ergebnis-2026-11-12)); den Ablageort legt AP1 fest (z. B. `backend/resources/default-theme.json`).
 7. **Verlauf in `form_revisions` mit Pseudo-Schlüssel.** Theme-Revisionen bekommen `form_key = '@theme'`, `kind = 'theme'`, `name = <Theme-Name>`. `@` ist in Formular-Schlüsseln nicht erlaubt (`Identifiers::isValidFormKey()`), es gibt also keine Kollision und keine Migration.
    `latest()`, `list()` und `pruneOldest()` bekommen einen optionalen Namensfilter, damit die 50 Revisionen je Theme gelten, nicht für alle Themes zusammen. Wie bei Surveys wird ein Altbestand (z. B. importiert) vor der ersten Änderung als „Stand vor der Änderung“ gesichert.
 8. **Optimistische Sperre.** Die Seite merkt sich den SHA-256 des geladenen Themes; *Veröffentlichen* übergibt ihn an `FormResourceRepository::save($expectedSha)`. Hat jemand anderes inzwischen veröffentlicht, gibt es eine Konfliktmeldung statt Überschreiben (wie `ConflictException` im Survey-Editor).
@@ -45,32 +45,91 @@ Danach ist `import-surveys.php` für Themes nur noch Migrationswerkzeug, und die
 11. **Audit:** `theme_published`, `theme_rolled_back`, `theme_rejected` (abgelehnter Inhalt: nur Anzahl und Pfade der Fehler, nie der Inhalt, wie `form_survey_rejected`).
 12. **Texte über den `MessageService`**, Hilfe-Zuordnung in `HelpLinks` für die neuen Seiten.
 
-## Felder (Vorschlag, AP0 prüft gegen SurveyJS 3.2)
+## Felder (festgelegt in AP0)
+
+Die Felder schreiben nur `--sjs2-*`-Variablen. Steht im JSON noch die alte Variable (`--sjs-*`), zeigt das Feld deren Wert und ersetzt sie beim Ändern durch die neue (alte Schlüssel entfernen, neue setzen).
 
 | Feld | Theme-Eigenschaft | Bemerkung |
 |---|---|---|
-| Markenfarbe | `cssVariables` (Brand-Farbe) | Farbwähler plus Textfeld; welche Variable(n) genau, entscheidet AP0 (`--sjs-primary-backcolor` wird übersetzt, `--sjs2-color-project-brand-600` direkt) |
-| Schrift | Schrift-Variable | Auswahl: Systemschrift, *Open Sans* (liegt lokal bei, `assets/preview/fonts/`), eigene Angabe; externe Schriften lösen die vorhandene Datenschutz-Warnung aus |
-| Schriftgröße | Schriftgrößen-Variable | z. B. 14–20 px |
-| Hell/Dunkel | `colorPalette` | `light` / `dark` |
-| Karten | `isPanelless` | „Fragen als Karten“ an/aus |
-| Hintergrund | Hintergrundfarbe, `backgroundImage`, `backgroundOpacity` | Bild nur als URL; externe URL ⇒ Warnung |
-| Titelfarbe, Kartenradius | `--sjs2-*` | nur falls AP0 zeigt, dass damit das alte Aussehen (TODO „Theme im SurveyJS-3-Format“) mit wenigen Feldern erreichbar ist |
+| Markenfarbe | `--sjs2-color-project-brand-600` | Farbwähler plus Textfeld. Alle Brand-Töne (Buttons, Fokus, Auswahl, Hover) leitet SurveyJS daraus ab (`hsl(from …)`) |
+| Titel in Markenfarbe | `--sjs2-color-component-survey-header-default-title` = `var(--sjs2-color-project-brand-600)` | Schalter; aus ⇒ Schlüssel entfernen (Standard von 3.2: dunkelgrau) |
+| Schrift | `--sjs2-typography-font-family-text` | Auswahl *Open Sans (mitgeliefert)* oder *Systemschrift* (`system-ui, sans-serif`), dazu eigene Angabe mit Hinweis. Ein Theme kann keine Schrift laden (kein `@font-face`), und die Frontend-CSP erlaubt nur `font-src 'self' data:` |
+| Schriftgröße | `--sjs2-base-unit-font-size` und `--sjs2-base-unit-line-height` | Je **halbe** Schriftgröße (16 px ⇒ `8px`), so übersetzt auch `applyTheme` das alte `--sjs-font-size`. Auswahl 14–20 px |
+| Hintergrund | `--sjs2-color-utility-surface-survey` | Farbe hinter den Karten. Ohne Angabe ist er in 3.2 fest türkis (`#EDF9F7`), unabhängig von der Markenfarbe; die Vorgabe setzt `#F3F3F3` |
+| Hintergrundbild | `backgroundImage`, `backgroundOpacity`, `backgroundImageFit` | Nur URL; externe URL ⇒ vorhandene Datenschutz-Warnung. In 3.2 geprüft: wirkt |
+| Ecken | `--sjs2-base-unit-radius`, `--sjs2-radius-component-panel`, `…-action`, `…-formbox` | Ein Wert für alle vier (Vorgabe `4px`, Standard von 3.2: Karten 12 px) |
+| Fragen als Karten | `isPanelless` und Kartenschatten | Aus ⇒ `isPanelless: true` **und** die Schatten-Variablen entfernen: Der Vorgabe-Schatten auf `…-panel-simple-default` würde sonst auch ohne Karten stehen bleiben (in AP0 beobachtet) |
 
-Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darstellen kann, werden schreibgeschützt mit Hinweis „im JSON bearbeiten“ angezeigt.
+**Entfällt:** *Hell/Dunkel* (`colorPalette`). In 3.2 ändert `colorPalette: "dark"` allein nichts; Dunkel-Themes bringt SurveyJS nur als eigenes Paket mit vollständigem Variablensatz. Wer sie will, fügt ein solches Theme als JSON ein.
+
+Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darstellen kann (z. B. `var(…)` bei der Markenfarbe), werden schreibgeschützt mit Hinweis „im JSON bearbeiten“ angezeigt.
 
 ## Arbeitspakete
 
 | AP | Inhalt | Aufwand | Abnahme |
 |---|---|---|---|
-| **AP0** Klärung | Welche `--sjs2-*`-Variablen entsprechen Markenfarbe, Schrift, Größe, Hintergrund, Titelfarbe, Kartenradius; wie mischt `applyTheme` alte und neue Variablen; Vorgabe-Theme im 3.2-Format, das dem bisherigen Aussehen nahekommt; welche Schriften die Frontend-CSP zulässt. Felderliste festschreiben. | 2–3 Tage | Felderliste mit Variablen; Vorgabe-Theme sieht in der Vorschau aus wie das heutige Formular (Screenshot-Vergleich) |
+| **AP0** Klärung | Welche `--sjs2-*`-Variablen entsprechen Markenfarbe, Schrift, Größe, Hintergrund, Titelfarbe, Kartenradius; wie mischt `applyTheme` alte und neue Variablen; Vorgabe-Theme im 3.2-Format, das dem bisherigen Aussehen nahekommt; welche Schriften die Frontend-CSP zulässt. Felderliste festschreiben. | 2–3 Tage | Felderliste mit Variablen; Vorgabe-Theme sieht in der Vorschau aus wie das heutige Formular (Screenshot-Vergleich). **Erfüllt**, siehe [AP0-Ergebnis](#ap0-ergebnis-2026-11-12) |
 | **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name |
 | **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule |
 | **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün |
 | **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel |
 | **AP5** Doku und Abschluss | [SURVEYJS.md](../../redaktion/SURVEYJS.md): neuer Abschnitt „Design (Theme) ändern“; MIGRATION-3.1 und Fallback-Abschnitt verweisen für Themes darauf (Import nur noch für die Übernahme); TODO-Eintrag „Theme im SurveyJS-3-Format“ aktualisieren; `HelpLinks`, Meldungstexte (`messages.php`, `messages.example.php`), Changelog, manuelle Tests | 2–3 Tage | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
-**Kern: AP0–AP2** (etwa 2 Wochen) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
+**Kern: AP0–AP2** (etwa 2 Wochen; AP0 erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
+
+## AP0-Ergebnis (2026-11-12)
+
+Gemessen an `bs.json` mit dem heutigen `survey_theme.json`, gerendert einmal mit SurveyJS 2.3.15 (Stand vor `c908ded`) und einmal mit 3.2.0, jeweils mit lokalem Open Sans wie im Frontend; verglichen per Screenshot und berechneten Stilen (`getComputedStyle`).
+
+**Wie `applyTheme` alte Themes übersetzt:** SurveyJS 3.2 hat eine feste Tabelle `--sjs-*` → `--sjs2-*` (z. B. `--sjs-primary-backcolor` → `--sjs2-color-project-brand-600` und einige Komponentenfarben, `--sjs-font-family` → `--sjs2-typography-font-family-text`, `--sjs-corner-radius` → `--sjs2-base-unit-radius`).
+`--sjs-font-size` wird halbiert zu `--sjs2-base-unit-font-size`/`-line-height`. Die alten Schlüssel entfernt `applyTheme`; steht dieselbe `--sjs2-*`-Variable auch direkt im Theme, gewinnt die direkte Angabe. Mischen ist also möglich, die Felder schreiben trotzdem nur `--sjs2-*`.
+
+**Unterschiede 2.3.15 → 3.2.0 mit dem heutigen Theme:**
+
+| | 2.3.15 | 3.2.0 ohne Anpassung |
+|---|---|---|
+| Titel | Markenfarbe, 32 px, fett (700) | dunkelgrau, 28 px, 600 |
+| Hintergrund hinter den Karten | `#F3F3F3` | `#EDF9F7` (türkis, fest) |
+| Karten | Radius 4 px, weicher Schatten `0 1px 2px rgba(0,0,0,.15)` | Radius 12 px, grauer 1-px-Rahmen |
+| Start-Button | Radius 4 px, weicher Schatten | Radius 8 px, grauer Rahmen |
+| Eingabefelder | Innenschatten ohne Rahmen | sichtbarer Rahmen (besser erkennbar; bleibt so) |
+
+**Vorgabe-Theme im 3.2-Format** (gleicht alles außer den Eingabefeldern aus; `ThemeValidator` ohne Fehler und Warnungen; mit anderer Markenfarbe geprüft: Titel und Linie unter dem Kopf folgen):
+
+```json
+{
+    "themeName": "default",
+    "colorPalette": "light",
+    "isPanelless": false,
+    "backgroundImage": "",
+    "backgroundImageFit": "cover",
+    "backgroundImageAttachment": "scroll",
+    "backgroundOpacity": 1,
+    "cssVariables": {
+        "--sjs2-color-project-brand-600": "rgba(0, 163, 215, 1)",
+        "--sjs2-typography-font-family-text": "Open Sans",
+        "--sjs2-base-unit-font-size": "8px",
+        "--sjs2-color-utility-surface-survey": "#F3F3F3",
+        "--sjs2-color-component-survey-header-default-title": "var(--sjs2-color-project-brand-600)",
+        "--sjs2-typography-font-size-component-survey-header-title": "32px",
+        "--sjs2-typography-font-weight-component-survey-header-title": "700",
+        "--sjs2-base-unit-radius": "4px",
+        "--sjs2-radius-component-panel": "4px",
+        "--sjs2-radius-component-action": "4px",
+        "--sjs2-radius-component-formbox": "4px",
+        "--sjs2-border-effect-component-panel-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)",
+        "--sjs2-border-effect-component-panel-simple-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)",
+        "--sjs2-border-effect-component-action-brand-tertiary-surface-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)"
+    },
+    "headerView": "basic"
+}
+```
+
+Titelgröße, Titelgewicht und Schatten haben bewusst kein eigenes Feld (bleiben im JSON). `frontend/surveys/survey_theme.json` bleibt vorerst im alten Format (Fallback für Frontends ohne Backend-Theme); mit AP5 kann es durch die Vorgabe ersetzt werden.
+
+**Schriften:** Frontend (`ContentSecurityPolicy`: `font-src 'self' data:`) und Plugin (`class-assets.php`) binden nur Open Sans 400 und 700 lokal ein. Externe Webfonts sind über ein Theme also gar nicht möglich; das Feld bietet deshalb nur Open Sans, Systemschrift und eine eigene Angabe (installierte Schrift).
+
+**Aufwand:** AP0 bestätigt die Schätzungen. AP4 wird eher kleiner (acht Felder, kein Hell/Dunkel); dafür braucht AP4 die Sonderregeln oben (Halbierung der Schriftgröße, Schatten bei „ohne Karten“, alte Schlüssel ersetzen).
 
 ## Tests
 
