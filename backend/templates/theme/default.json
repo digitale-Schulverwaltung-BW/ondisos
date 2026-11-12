@@ -1,0 +1,26 @@
+{
+    "themeName": "default",
+    "colorPalette": "light",
+    "isPanelless": false,
+    "backgroundImage": "",
+    "backgroundImageFit": "cover",
+    "backgroundImageAttachment": "scroll",
+    "backgroundOpacity": 1,
+    "cssVariables": {
+        "--sjs2-color-project-brand-600": "rgba(0, 163, 215, 1)",
+        "--sjs2-typography-font-family-text": "Open Sans",
+        "--sjs2-base-unit-font-size": "8px",
+        "--sjs2-color-utility-surface-survey": "#F3F3F3",
+        "--sjs2-color-component-survey-header-default-title": "var(--sjs2-color-project-brand-600)",
+        "--sjs2-typography-font-size-component-survey-header-title": "32px",
+        "--sjs2-typography-font-weight-component-survey-header-title": "700",
+        "--sjs2-base-unit-radius": "4px",
+        "--sjs2-radius-component-panel": "4px",
+        "--sjs2-radius-component-action": "4px",
+        "--sjs2-radius-component-formbox": "4px",
+        "--sjs2-border-effect-component-panel-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)",
+        "--sjs2-border-effect-component-panel-simple-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)",
+        "--sjs2-border-effect-component-action-brand-tertiary-surface-default": "0px 1px 2px 0px rgba(0, 0, 0, 0.15)"
+    },
+    "headerView": "basic"
+}

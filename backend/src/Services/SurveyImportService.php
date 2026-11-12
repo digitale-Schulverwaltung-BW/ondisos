@@ -76,6 +76,9 @@ class SurveyImportService
             }
             if ($kind === FormResourceRepository::KIND_SURVEY && !$dryRun) {
                 $this->keepPreviousState($name, $existing['content'], $user);
+            } elseif (!$dryRun) {
+                // Themes have one history per name (theme editor, 3.2.0b)
+                $this->revisions->keepThemeState($name, $existing['content'], 'Stand vor dem Import', $user);
             }
         }
 

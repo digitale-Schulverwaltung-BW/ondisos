@@ -314,6 +314,10 @@ class FormCopyService
             return self::RESOURCE_KEPT;
         }
         if (!$dryRun) {
+            if ($res['kind'] === FormResourceRepository::KIND_THEME) {
+                // keep the target's theme in its history (theme editor, 3.2.0b)
+                $this->revisions->keepThemeState($res['name'], $existing['content'], 'Stand vor dem Kopieren', $user);
+            }
             $this->resources->save($res['kind'], $res['name'], $res['content'], "{$user} (kopiert von {$sourceSlug})");
         }
         return self::RESOURCE_OVERWRITTEN;

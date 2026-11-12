@@ -13,12 +13,18 @@ use mysqli;
  * scoped to the current tenant.
  *
  * Revisions are never updated. pruneOldest() only removes the oldest ones beyond a retention count.
+ *
+ * Themes are shared by several forms, so their history is not kept per form but under the pseudo key THEME_KEY
+ * ("@theme" can never be a form key) and told apart by name: latest(), list() and pruneOldest() take a name filter.
  */
 class FormRevisionRepository
 {
     public const KIND_CONFIG = 'config';
     public const KIND_SURVEY = 'survey';
     public const KIND_THEME  = 'theme';
+
+    /** form_key of theme revisions (not a valid form key, see Identifiers::isValidFormKey()). */
+    public const THEME_KEY = '@theme';
 
     private mysqli $db;
 
@@ -57,16 +63,25 @@ class FormRevisionRepository
     /**
      * Newest revision of a kind for a form (used to avoid storing the same state twice).
      *
+     * @param string|null $name only revisions of this resource name (themes)
      * @return array{id: int, sha256: string}|null
      */
-    public function latest(string $formKey, string $kind): ?array
+    public function latest(string $formKey, string $kind, ?string $name = null): ?array
     {
         $tenantId = TenantContext::getTenantId();
-        $stmt = $this->db->prepare(
-            'SELECT id, sha256 FROM form_revisions WHERE tenant_id = ? AND form_key = ? AND kind = ?
-             ORDER BY id DESC LIMIT 1'
-        );
-        $stmt->bind_param('iss', $tenantId, $formKey, $kind);
+        if ($name === null) {
+            $stmt = $this->db->prepare(
+                'SELECT id, sha256 FROM form_revisions WHERE tenant_id = ? AND form_key = ? AND kind = ?
+                 ORDER BY id DESC LIMIT 1'
+            );
+            $stmt->bind_param('iss', $tenantId, $formKey, $kind);
+        } else {
+            $stmt = $this->db->prepare(
+                'SELECT id, sha256 FROM form_revisions WHERE tenant_id = ? AND form_key = ? AND kind = ? AND name = ?
+                 ORDER BY id DESC LIMIT 1'
+            );
+            $stmt->bind_param('isss', $tenantId, $formKey, $kind, $name);
+        }
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
 
@@ -74,16 +89,35 @@ class FormRevisionRepository
     }
 
     /**
+     * Store a state of a theme in its history unless it already is the newest revision of that theme.
+     * Used before a theme is replaced (editor, import, copy), so no published state is lost.
+     */
+    public function keepThemeState(string $name, string $content, string $note, ?string $createdBy): void
+    {
+        $latest = $this->latest(self::THEME_KEY, self::KIND_THEME, $name);
+        if ($latest === null || !hash_equals($latest['sha256'], hash('sha256', $content))) {
+            $this->add(self::THEME_KEY, self::KIND_THEME, $name, $content, $note, $createdBy);
+        }
+    }
+
+    /**
      * Revision list without contents, newest first.
      *
+     * @param string|null $name only revisions of this resource name (themes; needs $kind)
      * @return list<array{id: int, kind: string, name: ?string, sha256: string, note: ?string, created_by: ?string, created_at: string}>
      */
-    public function list(string $formKey, ?string $kind = null, int $limit = 50): array
+    public function list(string $formKey, ?string $kind = null, int $limit = 50, ?string $name = null): array
     {
         $tenantId = TenantContext::getTenantId();
         $limit    = max(1, min(200, $limit));
 
-        if ($kind === null) {
+        if ($kind !== null && $name !== null) {
+            $stmt = $this->db->prepare(
+                'SELECT id, kind, name, sha256, note, created_by, created_at FROM form_revisions
+                 WHERE tenant_id = ? AND form_key = ? AND kind = ? AND name = ? ORDER BY id DESC LIMIT ?'
+            );
+            $stmt->bind_param('isssi', $tenantId, $formKey, $kind, $name, $limit);
+        } elseif ($kind === null) {
             $stmt = $this->db->prepare(
                 'SELECT id, kind, name, sha256, note, created_by, created_at FROM form_revisions
                  WHERE tenant_id = ? AND form_key = ? ORDER BY id DESC LIMIT ?'
@@ -142,12 +176,29 @@ class FormRevisionRepository
     }
 
     /**
-     * Keep only the newest $keep revisions per form and kind.
+     * Keep only the newest $keep revisions per form and kind (and name, if given).
      */
-    public function pruneOldest(string $formKey, string $kind, int $keep = 50): int
+    public function pruneOldest(string $formKey, string $kind, int $keep = 50, ?string $name = null): int
     {
         $tenantId = TenantContext::getTenantId();
         $keep     = max(1, $keep);
+
+        if ($name !== null) {
+            $stmt = $this->db->prepare(
+                'DELETE FROM form_revisions
+                 WHERE tenant_id = ? AND form_key = ? AND kind = ? AND name = ?
+                   AND id NOT IN (
+                       SELECT id FROM (
+                           SELECT id FROM form_revisions WHERE tenant_id = ? AND form_key = ? AND kind = ? AND name = ?
+                           ORDER BY id DESC LIMIT ?
+                       ) AS newest
+                   )'
+            );
+            $stmt->bind_param('isssisssi', $tenantId, $formKey, $kind, $name, $tenantId, $formKey, $kind, $name, $keep);
+            $stmt->execute();
+
+            return $stmt->affected_rows;
+        }
 
         $stmt = $this->db->prepare(
             'DELETE FROM form_revisions

@@ -73,6 +73,19 @@ class SurveyImportServiceTest extends FormEditorTestCase
         $this->assertCount(0, $this->revisions->list('anderes'));
     }
 
+    public function testOverwritingAThemeKeepsThePreviousStateInTheThemeHistory(): void
+    {
+        $this->import->importResource(Res::KIND_THEME, 't.json', '{"themeName":"alt"}', 'cli');
+
+        $this->import->importResource(Res::KIND_THEME, 't.json', '{"themeName":"neu"}', 'cli', overwrite: true);
+        $this->import->importResource(Res::KIND_THEME, 't.json', '{"themeName":"neuer"}', 'cli', overwrite: true, dryRun: true);
+
+        $revs = $this->revisions->list(Rev::THEME_KEY, Rev::KIND_THEME, 50, 't.json');
+        $this->assertCount(1, $revs, 'one revision, none from the dry run');
+        $this->assertSame('Stand vor dem Import', $revs[0]['note']);
+        $this->assertSame('{"themeName":"alt"}', $this->revisions->find($revs[0]['id'])['content']);
+    }
+
     public function testInvalidContentIsRejectedAndNotStored(): void
     {
         $bad = '{"pages":[{"elements":[{"type":"html","name":"h","html":"<img src=x onerror=alert(1)>"}]}]}';

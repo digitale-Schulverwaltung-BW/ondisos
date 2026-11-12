@@ -201,6 +201,22 @@ class FormCopyServiceTest extends FormEditorTestCase
         });
     }
 
+    public function testOverwritingAThemeOfTheTargetKeepsItInTheThemeHistory(): void
+    {
+        $this->seedSource();
+        $this->inTarget(fn () => $this->resources->save(Res::KIND_THEME, 'survey_theme.json', '{"themeName":"eigenes"}', 'b'));
+
+        $r = $this->service()->copy($this->tenantA, $this->tenantB, null, true, S::ROLE_PLATFORM, 'root');
+
+        $this->assertSame(Copy::RESOURCE_OVERWRITTEN, array_column($r['forms']['bs']['resources'], 'status', 'kind')['theme']);
+        $this->inTarget(function (): void {
+            $revs = $this->revisions->list(Rev::THEME_KEY, Rev::KIND_THEME, 50, 'survey_theme.json');
+            $this->assertSame(['Stand vor dem Kopieren'], array_column($revs, 'note'));
+            $this->assertSame('{"themeName":"eigenes"}', $this->revisions->find($revs[0]['id'])['content']);
+        });
+        $this->assertSame([], $this->revisions->list(Rev::THEME_KEY, Rev::KIND_THEME, 50, 'survey_theme.json'), 'source untouched');
+    }
+
     public function testExistingDifferentSurveyOfTheTargetIsKeptWithoutOverwrite(): void
     {
         $this->seedSource();

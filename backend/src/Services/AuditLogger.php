@@ -164,6 +164,17 @@ class AuditLogger
     }
 
     /**
+     * Log a change of a theme through the theme editor (3.2.0b).
+     *
+     * @param string $event   theme_published, theme_rolled_back, theme_rejected
+     * @param array<string,mixed> $details no theme contents: hashes, revision ids, error counts and paths
+     */
+    public static function themeEvent(string $event, string $themeName, array $details = []): void
+    {
+        self::log($event, ['theme' => $themeName] + $details);
+    }
+
+    /**
      * A signature handoff request with an unknown session or a wrong token (3.2.0a).
      * Expired codes are normal and not logged.
      *

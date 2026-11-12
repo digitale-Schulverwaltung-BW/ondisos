@@ -103,11 +103,13 @@ projekt/
     │   │                  FormPublishService · FormDeliveryService · SurveyImportService · FormSeedService · FormCopyService  (3.1)
     │   │                  TenantLogoService · PdfLogoResolver  (Schul-Logo: Upload durch Tenant-Admins, Reihenfolge der Logo-Quellen)
     │   │                  SignatureHandoffService  (3.2.0a: Tokens, Ablauf, Einmaligkeit, PNG-Prüfung)
+    │   │                  ThemeService  (3.2.0b: Themes eines Tenants auflisten, prüfen, veröffentlichen, wiederherstellen)
     │   ├── Cli/           CliArgs · ImportSurveysCommand · CopyFormsCommand  (Logik der CLI-Skripte, testbar)
     │   ├── Validators/    AnmeldungValidator
     │   └── Utils/         ClientIp · DataFormatter · FilenameSanitizer · NullableHelpers
     ├── inc/               bootstrap · auth · csrf · header · footer · form_editor · form_fields · form_copy (Editor-Helfer)
     ├── templates/pdf/     base.php · styles.css · sections/
+    ├── templates/theme/   default.json (Vorgabe-Theme im SurveyJS-3-Format, 3.2.0b)
     ├── config/            messages.php (+ messages.local.php, forms-config.php als Seed-Fallback)
     ├── scripts/           generate-password-hash.php
     ├── uploads/           tenant-<id>/ je Tenant · cache/ · logs/ (audit.log)

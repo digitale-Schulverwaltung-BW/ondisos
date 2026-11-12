@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-12); [AP0 erledigt](#ap0-ergebnis-2026-11-12), als Nächstes AP1. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** in Arbeit (Stand 2026-11-12); [AP0](#ap0-ergebnis-2026-11-12) und [AP1](#ap1-ergebnis-2026-11-12) erledigt, als Nächstes AP2. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -35,7 +35,7 @@ Danach ist `import-surveys.php` für Themes nur noch Migrationswerkzeug, und die
 4. **Bearbeitet wird ein Theme, nicht ein Formular.** Eigene Seite `themes.php` (Liste) und `theme_edit.php?name=…`, erreichbar von *Formulare*. Die Liste zeigt die Theme-Namen des Tenants (aus `form_resources` und aus den Konfigurationen) und je Theme die Formulare, die es nutzen. Vor *Veröffentlichen* nennt die Seite diese Formulare („Die Änderung betrifft: bs, vabo, zq“).
 5. **Neue Themes entstehen über die Konfiguration.** Ein Plattform-Admin trägt einen neuen Namen bei einem Formular ein; das Theme erscheint dann in der Liste als „noch nicht angelegt“ und startet beim Bearbeiten mit der eingebauten Vorgabe (6). Kein eigener Anlege-Dialog.
 6. **Eingebaute Vorgabe im Backend.** Der Inhalt des heutigen `frontend/surveys/survey_theme.json` kommt als Vorgabe ins Backend (der Container sieht `frontend/` nicht). Sie dient als Startpunkt für noch nicht angelegte Themes und für *Auf Vorgabe zurücksetzen*.
-   Die Vorgabe nutzt das SurveyJS-3-Format und gibt das Aussehen von 2.3.15 wieder ([AP0-Ergebnis](#ap0-ergebnis-2026-11-12)); den Ablageort legt AP1 fest (z. B. `backend/resources/default-theme.json`).
+   Die Vorgabe nutzt das SurveyJS-3-Format und gibt das Aussehen von 2.3.15 wieder ([AP0-Ergebnis](#ap0-ergebnis-2026-11-12)); sie liegt in `backend/templates/theme/default.json` (AP1).
 7. **Verlauf in `form_revisions` mit Pseudo-Schlüssel.** Theme-Revisionen bekommen `form_key = '@theme'`, `kind = 'theme'`, `name = <Theme-Name>`. `@` ist in Formular-Schlüsseln nicht erlaubt (`Identifiers::isValidFormKey()`), es gibt also keine Kollision und keine Migration.
    `latest()`, `list()` und `pruneOldest()` bekommen einen optionalen Namensfilter, damit die 50 Revisionen je Theme gelten, nicht für alle Themes zusammen. Wie bei Surveys wird ein Altbestand (z. B. importiert) vor der ersten Änderung als „Stand vor der Änderung“ gesichert.
 8. **Optimistische Sperre.** Die Seite merkt sich den SHA-256 des geladenen Themes; *Veröffentlichen* übergibt ihn an `FormResourceRepository::save($expectedSha)`. Hat jemand anderes inzwischen veröffentlicht, gibt es eine Konfliktmeldung statt Überschreiben (wie `ConflictException` im Survey-Editor).
@@ -69,13 +69,13 @@ Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darste
 | AP | Inhalt | Aufwand | Abnahme |
 |---|---|---|---|
 | **AP0** Klärung | Welche `--sjs2-*`-Variablen entsprechen Markenfarbe, Schrift, Größe, Hintergrund, Titelfarbe, Kartenradius; wie mischt `applyTheme` alte und neue Variablen; Vorgabe-Theme im 3.2-Format, das dem bisherigen Aussehen nahekommt; welche Schriften die Frontend-CSP zulässt. Felderliste festschreiben. | 2–3 Tage | Felderliste mit Variablen; Vorgabe-Theme sieht in der Vorschau aus wie das heutige Formular (Screenshot-Vergleich). **Erfüllt**, siehe [AP0-Ergebnis](#ap0-ergebnis-2026-11-12) |
-| **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name |
+| **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name. **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-11-12) |
 | **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule |
 | **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün |
 | **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel |
 | **AP5** Doku und Abschluss | [SURVEYJS.md](../../redaktion/SURVEYJS.md): neuer Abschnitt „Design (Theme) ändern“; MIGRATION-3.1 und Fallback-Abschnitt verweisen für Themes darauf (Import nur noch für die Übernahme); TODO-Eintrag „Theme im SurveyJS-3-Format“ aktualisieren; `HelpLinks`, Meldungstexte (`messages.php`, `messages.example.php`), Changelog, manuelle Tests | 2–3 Tage | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
-**Kern: AP0–AP2** (etwa 2 Wochen; AP0 erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
+**Kern: AP0–AP2** (etwa 2 Wochen; AP0 und AP1 erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
 
 ## AP0-Ergebnis (2026-11-12)
 
@@ -131,6 +131,22 @@ Titelgröße, Titelgewicht und Schatten haben bewusst kein eigenes Feld (bleiben
 
 **Aufwand:** AP0 bestätigt die Schätzungen. AP4 wird eher kleiner (acht Felder, kein Hell/Dunkel); dafür braucht AP4 die Sonderregeln oben (Halbierung der Schriftgröße, Schatten bei „ohne Karten“, alte Schlüssel ersetzen).
 
+## AP1-Ergebnis (2026-11-12)
+
+**Umgesetzt:**
+- `App\Services\ThemeService`: `themes()` (gespeicherte und von Formularen genannte Namen, je mit den nutzenden Formularen), `load()` (nicht gespeicherte Themes mit der Vorgabe), `usage()`, `check()`, `publish()`, `revisions()`, `restoreRevision()`, `defaultTheme()`.
+  Namen, die weder gespeichert noch von einem Formular genannt sind, gelten als nicht gefunden (auch beim Veröffentlichen): Neue Themes entstehen weiter über die Konfiguration.
+- **Sperre:** `publish()` bekommt den SHA-256 vom Laden, `null` heißt „gab es noch nicht“. Weicht der Stand ab (auch: inzwischen von jemand anderem angelegt), folgt `ConflictException`; das Ganze läuft in einer Transaktion mit `SELECT … FOR UPDATE`. Unveränderter Inhalt schreibt keine Revision.
+- **Verlauf:** `FormRevisionRepository::THEME_KEY = '@theme'`, `latest()`, `list()` und `pruneOldest()` mit optionalem Namen, `keepThemeState()` (alten Stand sichern, wenn er nicht schon die neueste Revision ist). 50 Revisionen je Theme.
+- **Audit:** `AuditLogger::themeEvent()` mit `theme_published`, `theme_rolled_back`, `theme_rejected` (nur Anzahl und Pfade der Fehler).
+- **Vorgabe-Theme** aus AP0 in `backend/templates/theme/default.json` (das Docker-Image kopiert `backend/` vollständig).
+- **Import und Kopieren:** `import-surveys.php --overwrite` und `copy-forms.php --overwrite` ersetzten ein Theme bisher ohne Spur. Jetzt sichern beide den alten Stand mit `keepThemeState()` („Stand vor dem Import“ bzw. „Stand vor dem Kopieren“), damit eine im Editor gepflegte Fassung wiederherstellbar bleibt.
+
+**Tests:** `tests/Integration/Forms/ThemeServiceTest.php` (16 Tests: Liste, Laden mit Vorgabe, unbekannte Namen, Anlegen, Altbestand im Verlauf, Konflikt bei veraltetem und bei fehlendem SHA, Ablehnung ohne Inhalt im Audit, unveränderter Inhalt, Restore, fremde Revisionen, Prune je Name, Tenant-Trennung), je ein Test in `SurveyImportServiceTest` und `FormCopyServiceTest`, `tests/Unit/Forms/DefaultThemeTest.php`.
+Gegenprobe: Ohne Konfliktprüfung schlagen die beiden Konflikttests fehl. Unit-Suite (1371) und Integration-Suite (228) grün.
+
+**Lokal ausführen:** Die eingecheckte `backend/.env.test` meldet sich als `root` an; gegen die Docker-MySQL des Entwicklungsstacks klappt das nur mit dem Benutzer `test`. Dafür genügt ein eigener Bootstrap, der nach `tests/bootstrap.php` `DB_USER`/`DB_PASS` überschreibt (`vendor/bin/phpunit --bootstrap <datei> --testsuite=Integration`).
+
 ## Tests
 
 - **Unit (PHP):** `ThemeService` wie in AP1; `ThemeValidator` bleibt die einzige Instanz für Gültigkeit, die Seite hat keine eigene Prüflogik.
@@ -153,7 +169,7 @@ Titelgröße, Titelgewicht und Schatten haben bewusst kein eigenes Feld (bleiben
 - **Kontrastprüfung:** Warnung bei zu schwachem Kontrast der Markenfarbe? Vorschlag: ja, nur als Hinweis (in AP4).
 - **Pseudo-Schlüssel `@theme` oder eigene Spalte:** Der Pseudo-Schlüssel spart eine Migration. Falls später auch Surveys unabhängig vom Formular versioniert werden sollen, wäre eine Spalte `resource_name` sauberer.
 - **Ungenutzte Themes:** Löschen erlauben, wenn kein Formular sie nutzt? Vorerst nein.
-- **`copy-forms.php`:** kopiert das Theme mit; überschreibt es ein geändertes Theme der Zielschule? Verhalten in AP1 prüfen und dokumentieren.
+- **`copy-forms.php`:** *geklärt (AP1).* Ohne `--overwrite` bleibt ein abweichendes Theme der Zielschule erhalten (`kept`), mit `--overwrite` wird es ersetzt; der alte Stand kommt seit AP1 in den Theme-Verlauf. Für die Betreiber-Doku in AP5 vormerken.
 
 ## Übergabe an die Umsetzungs-Sitzung
 
