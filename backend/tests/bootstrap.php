@@ -21,6 +21,12 @@ if (file_exists($envPath)) {
     App\Config\EnvLoader::load($envPath);
 }
 
+// Local overrides (not in Git, see .gitignore ".env.*.local"), e.g. the database user of the Docker stack
+$localEnvPath = __DIR__ . '/../.env.test.local';
+if (file_exists($localEnvPath)) {
+    App\Config\EnvLoader::load($localEnvPath);
+}
+
 // Set timezone
 date_default_timezone_set('Europe/Berlin');
 

@@ -54,6 +54,13 @@ composer test -- --testsuite=Unit
 composer test -- --testsuite=Integration
 ```
 
+Die Zugangsdaten zur Test-Datenbank stehen in `backend/.env.test` (Benutzer `root`). Passen sie lokal nicht, überschreiben Sie einzelne Werte in `backend/.env.test.local`; der Test-Bootstrap lädt die Datei nach `.env.test`, Git ignoriert sie (`.env.*.local`).
+Für die MySQL des Docker-Entwicklungsstacks (Port 3306 auf `127.0.0.1`) genügt der Benutzer `test`:
+
+```bash
+printf 'DB_USER=test\nDB_PASS=test\n' > backend/.env.test.local
+```
+
 **5. Spezifische Test-Klasse:**
 ```bash
 composer test:filter RateLimiterTest

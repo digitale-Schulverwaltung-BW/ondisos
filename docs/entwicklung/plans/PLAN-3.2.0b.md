@@ -145,7 +145,7 @@ Titelgröße, Titelgewicht und Schatten haben bewusst kein eigenes Feld (bleiben
 **Tests:** `tests/Integration/Forms/ThemeServiceTest.php` (16 Tests: Liste, Laden mit Vorgabe, unbekannte Namen, Anlegen, Altbestand im Verlauf, Konflikt bei veraltetem und bei fehlendem SHA, Ablehnung ohne Inhalt im Audit, unveränderter Inhalt, Restore, fremde Revisionen, Prune je Name, Tenant-Trennung), je ein Test in `SurveyImportServiceTest` und `FormCopyServiceTest`, `tests/Unit/Forms/DefaultThemeTest.php`.
 Gegenprobe: Ohne Konfliktprüfung schlagen die beiden Konflikttests fehl. Unit-Suite (1371) und Integration-Suite (228) grün.
 
-**Lokal ausführen:** Die eingecheckte `backend/.env.test` meldet sich als `root` an; gegen die Docker-MySQL des Entwicklungsstacks klappt das nur mit dem Benutzer `test`. Dafür genügt ein eigener Bootstrap, der nach `tests/bootstrap.php` `DB_USER`/`DB_PASS` überschreibt (`vendor/bin/phpunit --bootstrap <datei> --testsuite=Integration`).
+**Lokal ausführen:** Die eingecheckte `backend/.env.test` meldet sich als `root` an; gegen die Docker-MySQL des Entwicklungsstacks klappt das nur mit dem Benutzer `test`. Seit AP1 lädt der Test-Bootstrap dafür eine optionale `backend/.env.test.local` ([tests.md](../tests.md)).
 
 ## Tests
 
