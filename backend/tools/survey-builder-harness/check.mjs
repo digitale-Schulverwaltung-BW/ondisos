@@ -816,7 +816,28 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     await row(['pages', 0, 'elements', 2]).click();
     await win.waitForTimeout(800);
     check('live: a hidden element is named as hidden; "Ausgeblendete zeigen" shows it', hiddenNote.includes('ausgeblendet') && await F.locator('[data-name="cond"].lp-flash').count() === 1 && (await notice()) === '');
+
+    // questions in an answer that is not chosen: "Ausgeblendete zeigen" opens every answer, faded
+    const nestedShown = () => F.locator('[data-name="start_vz"]').count();
+    const opacity = () => F.locator('[data-name="start_vz"]').evaluate((el) => getComputedStyle(el.closest('.sd-item + .sd-panel')).opacity);
+    check('live: with "Ausgeblendete zeigen" the questions of an answer that is not chosen show, faded', await nestedShown() === 1 && await opacity() === '0.35', await nestedShown() ? await opacity() : 'not rendered');
+    await row(['pages', 0, 'elements', 0, 'choices', 0, 'elements', 0]).click();
+    await win.waitForTimeout(800);
+    check('live: such a question can be shown from the tree', await F.locator('[data-name="start_vz"].lp-flash').count() === 1 && (await notice()) === '');
+    await F.locator('[data-name="form"] .sd-item__control-label', { hasText: 'tz' }).click();
+    await win.waitForTimeout(300);
+    const afterChoosingOther = await nestedShown();
+    await F.locator('[data-name="form"] .sd-item__control-label', { hasText: 'Vollzeit' }).click();
+    await win.waitForTimeout(1000);
+    const chosenOpacity = await opacity();
     await win.click('label[for=lp-invisible]');
+    await win.waitForTimeout(400);
+    const offChosen = await nestedShown();
+    await F.locator('[data-name="form"] .sd-item__control-label', { hasText: 'tz' }).click();
+    await win.waitForTimeout(400);
+    check('live: answering keeps them open; the chosen answer\'s questions are not faded; switched off, SurveyJS\'s own rule applies again',
+        afterChoosingOther === 1 && chosenOpacity === '1' && offChosen === 1 && await nestedShown() === 0, `${afterChoosingOther} ${chosenOpacity} ${offChosen} ${await nestedShown()}`);
+    await frame().evaluate(() => { window.__preview.survey.clearValue('form'); });
     await win.waitForTimeout(300);
 
     // what the server refuses is not rendered

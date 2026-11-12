@@ -86,6 +86,8 @@ $jsonText = static fn (string $key, string $default): string => json_encode(M::g
         .lp-flash.lp-fade { outline-color: transparent !important; }
         body.lp-picking #surveyContainer, body.lp-picking #surveyContainer * { cursor: pointer !important; }
         .lp-hover { outline: 2px dashed #0d6efd !important; outline-offset: 2px; background-color: rgba(13, 110, 253, .05) !important; }
+        /* "show hidden": questions of an answer that is not chosen, faded like SurveyJS's hidden elements (.sd-element--invisible) */
+        body.lp-show-invisible .sd-item:not(.sd-item--checked) + .sd-panel { opacity: .35; } /* SurveyJS puts the answer's panel right after its .sd-item */
 <?php endif; ?>
     </style>
 </head>

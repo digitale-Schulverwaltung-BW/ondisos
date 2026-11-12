@@ -63,6 +63,9 @@
                 }
             }
 
+            var self = this;
+            survey.onValueChanged.add(function () { self._showChoicePanels(survey); }); // a choice resets its answers' panels
+            this._showChoicePanels(survey);
             survey.render(this.container);
             this.survey = survey;
             if (old) { old.dispose(); }
@@ -222,9 +225,35 @@
                 if (!this.picking) { this._hover(null); }
                 if (Boolean(data.invisible) !== this.showInvisible) {
                     this.showInvisible = Boolean(data.invisible);
-                    if (this.survey) { this.survey.showInvisibleElements = this.showInvisible; }
+                    document.body.classList.toggle('lp-show-invisible', this.showInvisible);
+                    if (this.survey) {
+                        this.survey.showInvisibleElements = this.showInvisible;
+                        this._showChoicePanels(this.survey);
+                    }
                 }
             }
+        }
+
+        /**
+         * Questions in answer options (choices[].elements) show only while their answer is chosen; SurveyJS decides that
+         * per answer (setIsPanelShowing), showInvisibleElements does not reach it (checked against SurveyJS 3.2.0; after an
+         * update of SurveyJS check.mjs, section "live", shows whether this still holds). With "show hidden" every answer shows
+         * its questions (faded by CSS while the answer is not chosen); without, SurveyJS's own rule applies again.
+         */
+        _showChoicePanels(survey) {
+            var on = this.showInvisible;
+            this.questionsOf(survey).forEach(function (q) {
+                if (typeof q.supportElementsInChoice !== 'function' || !q.supportElementsInChoice() || !Array.isArray(q.choices)) { return; }
+                q.choices.forEach(function (choice) {
+                    if (!choice || !choice.supportElements || !choice.hasElements) { return; }
+                    if (!on) { q.updateItemIsPanelShowing(choice); return; }
+                    choice.setIsPanelShowing(true);
+                    // SurveyJS builds the rows of an answer's panel when it is first shown by choosing the answer;
+                    // shown this way, build them and render again (else the panel stays empty).
+                    if (typeof choice.panelFirstRendering === 'function') { choice.panelFirstRendering(); }
+                    choice.renderedIsPanelShowing = true;
+                });
+            });
         }
 
         /** Maps of the current survey: DOM id → question / panel. */
