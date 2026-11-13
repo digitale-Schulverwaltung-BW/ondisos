@@ -103,31 +103,7 @@ Weitere Zugänge für einzelne Schulen legen Sie später im Backend an ([MULTI-T
 
 **Zwei-Faktor-Anmeldung:** Im Mehrschul-Betrieb (`MULTI_TENANT_ENABLED=true`) richtet der Platform-Admin sie nach der Anmeldung ein (die ersten 10 Anmeldungen sind noch ohne möglich, danach führt ein Assistent durch die Einrichtung). Dafür muss `TWO_FACTOR_KEY` in Schritt 2 gesetzt sein. Ablauf und Wiederherstellung: [zwei-faktor.md](zwei-faktor.md).
 
-## 5. Formulare einspielen
-
-Ohne Formular-Konfiguration gibt es nichts anzuzeigen. Die Vorlage `frontend/config/forms-config-dist.php` enthält Beispielformulare:
-
-```bash
-cp frontend/config/forms-config-dist.php frontend/config/forms-config.php
-nano frontend/config/forms-config.php        # Formulare und Empfänger anpassen (Vorlage: @example.com-Adressen!)
-docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
-```
-
-Der Container sieht das Verzeichnis `frontend/` nicht, deshalb wird die Datei über STDIN hineingereicht (`-T` ist nötig). Das Skript fügt neue Formulare hinzu
-und **überschreibt nie** Vorhandenes. Danach lässt sich `forms-config.php` löschen.
-
-**Surveys übernehmen.** Die Formulare selbst (Fragen, Seiten) liegen zunächst als Dateien in `frontend/surveys/`. Damit Schulen sie im Backend bearbeiten können und die Frontends
-sie von dort beziehen, importieren Sie sie einmal in die Datenbank (der Container braucht dafür eine Kopie des Verzeichnisses):
-
-```bash
-docker compose cp frontend/surveys backend:/tmp/surveys
-docker compose exec backend php import-surveys.php /tmp/surveys        # Option --dry-run prüft nur
-```
-
-Danach steht in der Spalte *Survey* unter *Formulare* statt „Datei im Frontend" der Wert „Backend“, und die Datenbank-Fassung hat Vorrang vor der Datei. Formulare ohne passende Datei im Verzeichnis (hier z. B. `bk`) bleiben bei „Datei im Frontend“. Der Import ist wiederholbar. Bestehende Formulare pflegen die Schulen im Backend unter **Formulare**
-([Redaktion](../redaktion/SURVEYJS.md)). Neue Schulen starten mit den Formularen einer anderen Schule ([MULTI-TENANT.md](MULTI-TENANT.md)).
-
-## 6. Prüfen
+## 5. Prüfen
 
 ```bash
 curl http://localhost:9080/api/health.php
@@ -136,17 +112,47 @@ curl http://localhost:9080/api/health.php
 curl -i -X POST "http://localhost:9080/api/submit.php?tenant=default" -d '{}'
 # HTTP/1.1 401 – {"error":"Unauthorized"}: unsignierte Anfragen werden abgewiesen
 
-curl "http://localhost:9080/api/form-config.php?form=bs&tenant=default"
-# {"success":true,"config":{…}}
-
 curl -s -o /dev/null -w '%{http_code} %{redirect_url}\n' http://localhost:9080/index.php
 # 302 …/login.php: ohne Anmeldung kommt man nicht ins Backend
 
 docker compose ps          # backend: healthy
 ```
 
-Öffnen Sie dann `http://<server>:9080/login.php` und melden Sie sich mit dem Zugang aus Schritt 4 an. Ab hier geht es mit dem
-[Betriebsmodell](betriebsmodell.md) weiter: HTTPS einrichten, die API für das Frontend erreichbar machen, die erste Schule anbinden.
+## 6. Erstes Formular anlegen
+
+Formulare entstehen im Backend, eine Konfigurationsdatei brauchen Sie dafür nicht:
+
+1. `http://<server>:9080/login.php` öffnen und mit dem Zugang aus Schritt 4 anmelden (im Mehrschul-Betrieb zuerst die Schule wählen).
+2. **Formulare** → *Neues Formular anlegen*: Schlüssel eingeben (z. B. `anmeldung`), *Anlegen*. Es öffnen sich die Einstellungen: mindestens *Benachrichtigung an* setzen, *Speichern*.
+3. In der Liste *Survey bearbeiten*: Der leere Editor bietet **Vorlagen** (einfaches Formular, Rückmeldung, Veranstaltung, Schüleranmeldung mit den Feldnamen für ASV-BW) und Beispiele echter Anmeldungen. Eine wählen, anpassen (mindestens den Link zur Datenschutzerklärung), *Prüfen*, *Veröffentlichen*.
+
+Danach liefert die API die Konfiguration aus:
+
+```bash
+curl "http://localhost:9080/api/form-config.php?form=anmeldung&tenant=default"
+# {"success":true,"config":{…}}
+```
+
+Farben und Schrift ändern Sie unter **Formulare** → *Design*; ohne eigenes Design nutzt das Formular das des Frontends. Weitere Formulare legen die Schulen selbst an
+([Redaktion](../redaktion/SURVEYJS.md)), neue Schulen können auch mit den Formularen einer anderen Schule starten ([MULTI-TENANT.md](MULTI-TENANT.md)).
+
+### Vorhandene `forms-config.php` übernehmen
+
+Nur wer von einer älteren Installation kommt (Formulare in `frontend/config/forms-config.php` und `frontend/surveys/`), spielt sie einmal in die Datenbank ein:
+
+```bash
+docker compose exec -T backend php seed-forms.php - < frontend/config/forms-config.php
+docker compose cp frontend/surveys backend:/tmp/surveys
+docker compose exec backend php import-surveys.php /tmp/surveys        # Option --dry-run prüft nur
+```
+
+Der Container sieht das Verzeichnis `frontend/` nicht, deshalb kommt die Konfiguration über STDIN (`-T` ist nötig) und das Verzeichnis als Kopie. Beide Skripte fügen nur hinzu
+und **überschreiben nie** Vorhandenes; sie sind wiederholbar. Danach steht unter *Formulare* in der Spalte *Survey* „Backend“ statt „Datei im Frontend“, und `forms-config.php`
+lässt sich löschen. Ablauf beim Umstieg von 2.x: [MIGRATION-3.0.md](MIGRATION-3.0.md).
+
+## Weiter
+
+Ab hier geht es mit dem [Betriebsmodell](betriebsmodell.md) weiter: HTTPS einrichten, die API für das Frontend erreichbar machen, die erste Schule anbinden.
 
 > **Nicht ohne Reverse-Proxy veröffentlichen.** Port 9080 spricht unverschlüsseltes HTTP und liefert auch die Verwaltungsoberfläche aus. Ist das Backend nur im **Verwaltungsnetz** (Sekretariat und Schulleitung, vom Schüler- und Lehrernetz getrennt) erreichbar,
 > genügt das für den ersten Test; ohne Login (`AUTH_ENABLED=false`) ist nur dieses Netz zulässig, siehe [Verwaltungsoberfläche: Verwaltungsnetz oder Login](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login). Muss es dagegen von außen erreichbar sein (zum Beispiel für die Frontends externer Schulen), gehört ein Reverse-Proxy davor, der TLS beendet, nur die API-Pfade durchlässt

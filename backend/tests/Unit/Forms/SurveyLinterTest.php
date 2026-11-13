@@ -219,14 +219,11 @@ class SurveyLinterTest extends TestCase
 
         foreach ($forms as $key => $config) {
             $file = __DIR__ . '/../../../../frontend/surveys/' . ($config['form'] ?? '');
-            if (!is_file($file)) {
-                continue; // example entries without a survey file (e.g. "bk")
-            }
+            $this->assertFileExists($file, "{$key}: every entry of the template has its survey file");
             $survey = json_decode((string)file_get_contents($file), true);
             $result = $linter->lint($config, $survey);
             $this->assertSame([], $result->errors(), $key);
             $this->assertNotEmpty(SurveyFieldExtractor::dataKeys($survey), $key);
         }
-        $this->addToAssertionCount(1);
     }
 }

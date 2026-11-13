@@ -63,17 +63,23 @@ ADMIN_PASSWORD_HASH='$2y$10$…'      # in einfachen Anführungszeichen
 TWO_FACTOR_KEY=…                    # openssl rand -hex 32; Zwei-Faktor-Anmeldung, siehe zwei-faktor.md
 ```
 
-## 4. Migration und Formulare
+## 4. Migration
 
 ```bash
 php migrate.php            # Pflicht, auch bei Neuinstallation: setzt das Secret von Tenant 1 auf API_SECRET_KEY
-cp ../frontend/config/forms-config-dist.php ../frontend/config/forms-config.php
-nano ../frontend/config/forms-config.php      # Formulare und Empfänger anpassen
-php seed-forms.php         # liest ../frontend/config/forms-config.php
 ```
 
 `migrate.php` ist idempotent und läuft bei jedem Update erneut. Ohne diesen Schritt trägt Tenant 1 ein Platzhalter-Secret, und das Backend lehnt alle API-Anfragen ab.
-`seed-forms.php` fügt nur neue Formulare hinzu und überschreibt nie.
+
+Formulare legen Sie nach der Anmeldung im Backend an, mit einer Vorlage als Start: wie in der Docker-Anleitung unter
+[Erstes Formular anlegen](installation.md#6-erstes-formular-anlegen). Nur wer eine vorhandene `forms-config.php` samt `frontend/surveys/` übernimmt, spielt sie einmal ein:
+
+```bash
+php seed-forms.php                             # liest ../frontend/config/forms-config.php
+php import-surveys.php ../frontend/surveys     # Option --dry-run prüft nur
+```
+
+Beide Skripte fügen nur hinzu und überschreiben nie.
 
 ## 5. Webserver
 

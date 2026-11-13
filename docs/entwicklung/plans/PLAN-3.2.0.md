@@ -376,7 +376,7 @@ Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei de
 - **Die fünf Anmeldungen wiederholen dieselben Blöcke:** Datenschutz-Seite (Hinweis plus `consent_DatenschutzOk`), Person (`Geschlecht`, `Vorname`, `Name`, `Geburtstag`, `Geburtsort`, `Geburtsland`), Herkunft (`Land`, `Religion`, `Muttersprache`), Anschrift (`Strasse`, `HausNr`, `PLZ`, `Ort`, `Teilort`, Telefon, E-Mail), Erziehungsberechtigte 1 und 2 (je zehn Felder `Erz1…`/`Erz2…`), Seite *Absenden* mit `Anmerkungen`; in `meister` dazu die Unterschrift (`Unterschrift_Ort`, `confirm_truthful`, `signaturepad`).
 - **Die Feldnamen sind Schnittstelle, nicht Geschmack:** Der Excel-Export behält sie als Spaltennamen für den Import in ASV-BW ([ASV.md](../../sekretariat/ASV.md)); `Strasse`, `HausNr`, `PLZ`, `Ort` und `Teilort = _autofill` steuern die Teilort-Ermittlung im Export (`ExportService::enrichTeilort()`); `Name` und `email`/`email1` sucht der Linter und braucht das Absenden; `consent_…` wird nicht gespeichert.
 - **Die Dateien weichen schon voneinander ab:** `LAND` (zq) statt `Land`; Telefon als `Handy1` (bs), `Telefon_1` (gs, vabo, zq), `Telefon` (meister); E-Mail als `email1` bzw. `email` (meister), in `gs` steht `email1` im Block des ersten Erziehungsberechtigten und `Erz1Email` fehlt. Bausteine sind der Ort, an dem eine Benennung verbindlich wird.
-- Nebenbefund: `forms-config-dist.php` verweist auf `bk.json`, die Datei gibt es nicht.
+- Nebenbefund: `forms-config-dist.php` verwies auf `bk.json`, die Datei gab es nicht (Eintrag entfernt 2026-11-13).
 
 ### Entscheidungen (2026-11-13)
 
@@ -425,10 +425,10 @@ Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei de
 
 ### `frontend/surveys/` ablösen
 
-Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3 und 4 folgen später.
+Ja, in vier Schritten. AP6 erledigt Schritt 1; Schritt 2 ist gestrichen, 3 und 4 folgen später.
 
 1. **Testkorpus** nach `backend/tests/fixtures/surveys/` (AP6; **erledigt 2026-11-13**). Tests hängen danach nicht mehr am ausgelieferten Verzeichnis. Umgestellt sind alle Tests, die Code an realistischen Surveys messen (JS-Tests, `check.mjs`, `JsonLocator`, `SurveyDiff`, `SurveyFieldExtractor`, Teile von `SurveyLinterTest`, Editor, Vorschau, Auslieferung). Auf `frontend/surveys/` bleiben die Tests, die die ausgelieferten Dateien selbst prüfen (Gültigkeit, Verweise, `forms-config-dist.php`, Theme, `SurveySource`, Import); sie ziehen mit Schritt 2 bis 4 um. Regel in [UNITTESTS.md](../../../backend/UNITTESTS.md#formular-editor-31). Die Beispiele in `backend/resources/survey-templates/` sind bis Schritt 4 Kopien der Frontend-Dateien; ein Test meldet, wenn sie auseinanderlaufen (`meister` ändert sich noch, siehe [TODO.md](../TODO.md)).
-2. **Seed aus Vorlagen** (AP6 oder 3.2.x): `seed-forms.php` legt die Demo-Formulare mit einer Survey aus den Vorlagen direkt in `form_resources` an; `pdf.json`, `prefill.json`, `ausbildernachmittag.json` entfallen als Dateien, `bk` verschwindet aus `forms-config-dist.php`. `survey_theme.json` ersetzt die Theme-Vorgabe des Backends (offen in [TODO.md](../TODO.md)).
+2. ~~**Seed aus Vorlagen**~~ (**gestrichen 2026-11-13**): Mit den Vorlagen im Editor braucht eine Neuinstallation keinen Seed mehr; Formulare entstehen im Backend (*Neues Formular anlegen*, dann eine Vorlage wählen). Die Installationsanleitungen sind so umgestellt ([installation.md](../../betreiber/installation.md#6-erstes-formular-anlegen)). `seed-forms.php` und `import-surveys.php` bleiben Werkzeuge für die **Übernahme** einer vorhandenen `forms-config.php` samt Survey-Dateien (Upgrade) und für den Entwicklungsstack; `forms-config-dist.php` bleibt Muster der Konfiguration und Seed des Entwicklungsstacks, ohne den toten Eintrag `bk`. Die Demo-Dateien (`pdf.json`, `prefill.json`, `ausbildernachmittag.json`) gehen mit Schritt 4. `survey_theme.json` statt der Theme-Vorgabe des Backends bleibt in [TODO.md](../TODO.md) offen.
 3. **Beispiele** leben nur noch im Backend (`backend/resources/survey-templates/`), nicht mehr im Frontend.
 4. **Laufzeit-Fallback abschaffen** (eigenes Release, Termin offen): `health.php` und `migrate.php` melden vorher Formulare ohne Survey in der Datenbank; danach entfallen `SurveySource`-Fallback, Verzeichnis im Frontend und im Plugin-ZIP. `import-surveys.php` bleibt für Dateien, die Schulen selbst mitbringen.
 
@@ -463,7 +463,7 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3
 **Sollte noch rein (klein):**
 
 - [ ] **Vorgabe-Theme:** entscheiden, ob die Markenfarbe der Vorgabe dunkler wird (heute etwa 2,9 : 1, der Theme-Editor warnt bei der eigenen Vorgabe) oder bewusst bleibt ([PLAN-3.2.0b.md](PLAN-3.2.0b.md#offene-fragen))
-- [ ] **AP6 Schritt 2 (Seed aus Vorlagen)**; erledigt nebenbei `survey_theme.json` im Seed und den toten Verweis auf `bk.json` in `forms-config-dist.php`. Ohne Schritt 2 zumindest den `bk`-Eintrag entfernen
+- [x] ~~AP6 Schritt 2 (Seed aus Vorlagen)~~ gestrichen; der `bk`-Eintrag ist aus `forms-config-dist.php` entfernt, die Installationsanleitungen beginnen mit einer Vorlage (2026-11-13)
 - [ ] **Offene GitHub-Branches** entscheiden: `claude/sharp-lovelace-9jmddv` (`SurveyValidator` warnt bei Namenskollisionen in `paneldynamic`-Vorlagen) übernehmen oder löschen; `claude/blissful-gates-exrtbp` siehe Signaturmodus
 - [ ] `favicon.ico` im Backend (einzige Konsolenmeldung)
 

@@ -91,17 +91,6 @@ return [
         ],
     ],
 
-    'bk' => [
-        'db' => true,
-        'form'  => 'bk.json',
-        'theme' => 'survey_theme.json',
-        'version' => '2026-01-v2',
-        'notify_email' => '',
-
-        // PDF disabled for this form
-        // 'pdf' => ['enabled' => false],
-    ],
-
     // 'db' => false means: this form is NOT stored in the backend database - the submission is only sent by e-mail
     // to 'notify_email'. A form with db=false and without a valid notify_email would discard every submission, so the
     // frontend refuses to show it (and seed-forms.php warns about it). Use db=false only together with notify_email.

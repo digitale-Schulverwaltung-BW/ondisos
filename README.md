@@ -80,7 +80,7 @@ nano .env    # DB-Passwörter setzen, bevor der erste Start die Datenbank anlegt
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 ```
 
-Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), die **Formulare** (`seed-forms.php`) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
+Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), das erste **Formular** (im Backend, aus einer Vorlage) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
 Diese Schritte, Prüfungen und Stolperfallen (Hash in einfachen Anführungszeichen!) stehen vollständig in der
 **[Installationsanleitung](docs/betreiber/installation.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md).
 
