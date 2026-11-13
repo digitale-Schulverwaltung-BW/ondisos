@@ -1,6 +1,6 @@
 # PLAN 3.2.0 – Grafischer Survey-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2, AP4 und [AP4a Live-Vorschau](#ap4a-ergebnis-2026-11-11) umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Als Nächstes: [AP5](#ap5-bedingungen-2026-11-13) (Stufe B umgesetzt, Stufe C offen), danach AP6, AP7. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
+**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2, AP4 und [AP4a Live-Vorschau](#ap4a-ergebnis-2026-11-11) umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). AP5 mit Stufe B erfüllt (Stufe C zurückgestellt). Als Nächstes: [AP6 Vorlagen](#ap6-vorlagen-geplant-2026-11-13) (geplant 2026-11-13), danach AP7. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -108,7 +108,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her. **Erfüllt**, siehe [AP4-Ergebnis](#ap4-ergebnis-2026-11-02) |
 | **AP4a** Live-Vorschau | Vorschau in eigenem Fenster, folgt jeder Änderung ohne Speichern; Klick in der Vorschau wählt das Element im Baum, Auswahl im Baum zeigt es in der Vorschau; ausgeblendete Elemente zuschaltbar. Details: [AP4a](#ap4a-live-vorschau-geplant-2026-11-11) | 1–2 Wochen | Jede Änderung erscheint ohne Speichern in der Vorschau, Seite und Eingaben bleiben; Klick wählt in beide Richtungen; nur vom Server geprüfte Texte werden gerendert; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP4a-Ergebnis](#ap4a-ergebnis-2026-11-11) |
 | **AP5** Bedingungen | Stufe B: Hilfe beim Text (Vervollständigen, Klartext, Prüfung von Feldnamen und Werten, „Verwendet in“); Stufe C (Dialog *Bedingung zusammenstellen*) zurückgestellt. Details: [AP5](#ap5-bedingungen-2026-11-13) | B 1–1,5 Wochen | Der Anteil der Bedingungen, den der einfache Parser erkennt, ist gemessen (Stand: 79 von 81); jede Bedingung bleibt Text und wird nur geändert, wo der Benutzer tippt oder einen Vorschlag übernimmt. **Erfüllt** (Stufe B), siehe [AP5-Abschluss](#abschluss-ap5-2026-11-13); Restpunkte dort |
-| **AP6** Vorlagen | Neues Formular aus Vorlage („Anmeldung", „Rückmeldung ohne E-Mail"), Bausteine für Standardfelder (Name, E-Mail, Datenschutz-Zustimmung `consent_…`, Unterschrift) | 1–2 Wochen | Neue Vorlage besteht *Prüfen* ohne Warnung |
+| **AP6** Vorlagen | Leerer Editor bietet Vorlagen (leer, Rückmeldung mit/ohne E-Mail, Veranstaltung, Schüleranmeldung) und die vorhandenen Anmeldungen als Beispiele; Bausteine für Standardfelder (Datenschutz, Person, Anschrift, Erziehungsberechtigte, Unterschrift …), bei Schulanmeldungen mit verbindlichen ASV-Namen; Testkorpus aus `frontend/surveys/` lösen. Details: [AP6](#ap6-vorlagen-geplant-2026-11-13) | 2–3 Wochen (zuvor 1–2) | Jede Vorlage besteht *Prüfen* ohne Warnung (bis auf den Platzhalter-Link zur Datenschutzerklärung); Bausteine nur mit Namen aus der ASV-Spaltenliste, Kollisionen abgelehnt |
 | **AP7** Doku und Abschluss | Redaktions-Doku neu ordnen ([SURVEYJS.md](../../redaktion/SURVEYJS.md)), `HelpLinks`-Ziele, Meldungstexte (`messages.php`, auch `messages.example.php`), Changelog, Release Notes, manuelle Tests, Version 3.2.0 an den vier Stellen | 1 Woche | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
 **Kern (MVP): AP0–AP3**, etwa **6–10 Wochen**. **AP4–AP7** machen daraus ein gut nutzbares Werkzeug (zusammen weitere **2–4 Monate**). AP5 war als unsicherster Teil eingestuft; mit dem Zuschnitt vom 2026-11-13 (Text bleibt, der Editor hilft) entfällt der Rückweg von einer Struktur zum Text und damit das Hauptrisiko.
@@ -358,6 +358,92 @@ Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei de
 | ~~Der Server prüft keine Verweise in `visibleIf`, `requiredIf` und `*Expression`; *Prüfen* meldet unbekannte Felder nur im grafischen Editor (die Fehler in `zq` und `vabo` blieben so unbemerkt)~~ | Lücke | **erledigt 2026-11-13:** `SurveyValidator` warnt (`checkReferences`, nicht `SurveyLinter`: die Prüfung braucht nur die Survey und läuft so auch bei Vorschau und Import). Erkennt die beiden alten Fehler (9 × `{Alter}` in `zq`, `{_Ausbildungsberuf}` in `vabo`), die aktuellen Surveys sind ohne Befund. Variablen von SurveyJS (`CONTEXT_VARIABLES`) teilen Server und `conditions.js`, ein Test hält beide gleich |
 | Die Korrekturen in `zq` (`{age}`) und `vabo` betreffen nur die Datei-Fassung in `frontend/surveys/`. Haben Schulen die Surveys schon nach `form_resources` übernommen, steckt der Fehler dort weiter (`import-surveys.php` überschreibt nur mit `--overwrite`) | Hinweis | Release Notes 3.2.0 (AP7) |
 | Die zwei Bedingungen, die der Parser nicht erkennt (Klammern mit gemischtem `and`/`or`, Funktion), bekommen keinen Klartext | bewusst | – |
+
+## AP6 Vorlagen (geplant, 2026-11-13)
+
+### Ausgangslage
+
+- **Ein neues Formular beginnt leer.** `createForm()` legt nur die Konfiguration an; der Survey-Editor zeigt `editor_text = ''`, solange es weder Entwurf noch veröffentlichte Survey gibt (`SurveyEditorController::load()`). Wer nicht JSON schreibt, muss heute ein vorhandenes Formular kopieren.
+- **`frontend/surveys/` hat vier Rollen**, die getrennt gehören:
+
+  | Rolle | Dateien | Wer hängt daran |
+  |---|---|---|
+  | Laufzeit-Fallback | alle | `SurveySource` (Frontend), `class-shortcode.php` (Plugin) |
+  | Seed und Demo | `bs`, `ausbildernachmittag`, `prefill`, `pdf`, `survey_theme.json` | `forms-config-dist.php`, `seed-forms.php`, `import-surveys.php` |
+  | Beispiele echter Anmeldungen | `bs`, `gs`, `vabo`, `zq`, `meister` (30–100 KB, mit schulspezifischen Links, Berufen, Klassen) | Redaktion als Vorbild |
+  | Testkorpus | alle | rund 25 PHP- und JS-Testdateien, `check.mjs` |
+
+- **Die fünf Anmeldungen wiederholen dieselben Blöcke:** Datenschutz-Seite (Hinweis plus `consent_DatenschutzOk`), Person (`Geschlecht`, `Vorname`, `Name`, `Geburtstag`, `Geburtsort`, `Geburtsland`), Herkunft (`Land`, `Religion`, `Muttersprache`), Anschrift (`Strasse`, `HausNr`, `PLZ`, `Ort`, `Teilort`, Telefon, E-Mail), Erziehungsberechtigte 1 und 2 (je zehn Felder `Erz1…`/`Erz2…`), Seite *Absenden* mit `Anmerkungen`; in `meister` dazu die Unterschrift (`Unterschrift_Ort`, `confirm_truthful`, `signaturepad`).
+- **Die Feldnamen sind Schnittstelle, nicht Geschmack:** Der Excel-Export behält sie als Spaltennamen für den Import in ASV-BW ([ASV.md](../../sekretariat/ASV.md)); `Strasse`, `HausNr`, `PLZ`, `Ort` und `Teilort = _autofill` steuern die Teilort-Ermittlung im Export (`ExportService::enrichTeilort()`); `Name` und `email`/`email1` sucht der Linter und braucht das Absenden; `consent_…` wird nicht gespeichert.
+- **Die Dateien weichen schon voneinander ab:** `LAND` (zq) statt `Land`; Telefon als `Handy1` (bs), `Telefon_1` (gs, vabo, zq), `Telefon` (meister); E-Mail als `email1` bzw. `email` (meister), in `gs` steht `email1` im Block des ersten Erziehungsberechtigten und `Erz1Email` fehlt. Bausteine sind der Ort, an dem eine Benennung verbindlich wird.
+- Nebenbefund: `forms-config-dist.php` verweist auf `bk.json`, die Datei gibt es nicht.
+
+### Entscheidungen (2026-11-13)
+
+1. **ASV-Namen sind verbindlich für alles, was Schulanmeldung ist:** die Vorlage *Schüleranmeldung* und die Bausteine Person, Herkunft, Anschrift, Erziehungsberechtigte, Ausbildungsbetrieb. Maßstab ist die Import-Vorlage von ASV-BW (`ASV-BW_Import.xlsx`, Stand Februar 2026, Link in [ASV.md](../../sekretariat/ASV.md)); ihre Spaltennamen werden als Fixture eingecheckt und von einem Test gegen die Bausteine geprüft.
+2. **Rückmeldungen und Veranstaltungen** (mit oder ohne E-Mail) halten sich nicht an ASV; für sie gelten nur die Regeln des Linters (`Name` bzw. eine Adresse aus `SurveyLinter::EMAIL_FIELDS`).
+3. **Die echten Anmeldungen kommen als Beispiele in die Vorlagen-Auswahl** (`bs`, `gs`, `vabo`, `zq`, `meister`), deutlich getrennt von den Vorlagen und mit dem Hinweis, dass sie schulspezifisch sind und angepasst werden müssen. Erscheint die Auswahl damit überladen, fliegen sie wieder heraus; das ist ein Eintrag im Manifest.
+4. **Vorlagen und Bausteine liegen als Dateien im Backend**, nicht in der Datenbank: `backend/resources/survey-templates/` mit `manifest.json` (Schlüssel, Art *Vorlage*/*Beispiel*/*Baustein*, Message-Schlüssel für Titel und Beschreibung, Datei) und reinen SurveyJS-Dateien (Vorlagen, Beispiele) bzw. Element-Listen (Bausteine). Versioniert mit dem Code, getestet, für alle Tenants gleich. Eigene Vorlagen einer Schule sind nicht Teil von AP6.
+5. **Eine Vorlage ändert nur den Text im Editor**, nicht die Formular-Konfiguration (Ziel: keine Änderung an `form_configs`). Hinweise wie „für iCal die Einstellung *Kalender* setzen“ stehen in der Beschreibung der Vorlage.
+
+### Umfang
+
+**Vorlagen** (vollständige Surveys; bestehen *Prüfen* ohne Warnung):
+
+| Vorlage | Inhalt | ASV |
+|---|---|---|
+| Leeres Formular | eine Seite, `Name` und `email` als Pflichtfelder (Entscheidung 7) | – |
+| Rückmeldung | Name, E-Mail, Zusage ja/nein, Anmerkungen (Muster `ausbildernachmittag`) | – |
+| Rückmeldung ohne E-Mail | nur `Name` als Pflichtfeld (Datensparsamkeit) | – |
+| Veranstaltung | Teilnahme, Name, E-Mail, Anzahl Personen; Hinweis auf iCal in der Beschreibung | – |
+| Schüleranmeldung (Grundgerüst) | Datenschutz-Seite, Schülerdaten (Person, Herkunft, Anschrift), Erziehungsberechtigte 1 und 2 (Pflicht abhängig vom Alter wie in `bs`), Absenden | ja |
+
+**Beispiele** (die Dateien aus `frontend/surveys/`, unverändert; Warnungen erlaubt und sichtbar): `bs` Berufsschule, `gs` Grundschule, `vabo`, `zq`, `meister` Meisterschule.
+
+**Bausteine** (Element-Gruppen für die Werkzeugleiste):
+
+| Baustein | Felder | ASV |
+|---|---|---|
+| Datenschutz-Zustimmung | Hinweis (HTML mit Link) und `consent_DatenschutzOk` | – |
+| Name und E-Mail | `Name`, `email` (für Rückmeldungen) | – |
+| Person | `Geschlecht`, `Vorname`, `Name`, `Geburtstag`, `Geburtsort`, `Geburtsland` | ja |
+| Herkunft | `Land`, `Religion`, `Muttersprache` | ja |
+| Anschrift | `Strasse`, `HausNr`, `PLZ`, `Ort`, `Teilort`, Telefon, E-Mail | ja |
+| Erziehungsberechtigte/r | Nummer 1 oder 2 als Parameter → Präfix `Erz1`/`Erz2` | ja |
+| Ausbildungsbetrieb | `Ausbildungsbetrieb`, `Ausbilder`, `Ausb…` (Muster `bs` `panel7`) | ja |
+| Unterschrift | `Unterschrift_Ort`, `confirm_truthful`, `signaturepad` (PNG) | – |
+| Anmerkungen | `Anmerkungen` (Textbereich) | – |
+
+**Oberfläche:**
+- **Leerer Editor:** statt des leeren Textes eine Auswahl *Mit Vorlage beginnen* (Vorlagen oben, Beispiele darunter, je Titel und Beschreibung); die Wahl setzt den Text im Editor (ungespeichert, *Rückgängig* möglich), danach wie gewohnt *Prüfen* → *Entwurf* → *Veröffentlichen*. *Leer beginnen* bleibt möglich (JSON-Tab).
+- **Nicht leerer Editor:** keine Vorlage (würde den Text ersetzen); wer neu anfangen will, leert den Text im JSON-Tab.
+- **Bausteine:** eigene Gruppe in der Werkzeugleiste, einfügen an der markierten Stelle wie ein Element (`insertItem`, Einrückung der Umgebung). Bausteine mit mehreren Feldern kommen als Gruppe (`panel`).
+- **Namenskollision:** Anders als beim Duplizieren wird **nicht** umbenannt (`Vorname_2` erkennt ASV nicht). Gibt es einen Namen des Bausteins schon, lehnt der Editor ab und nennt die Felder (bei *Erziehungsberechtigte/r* mit dem Vorschlag, die andere Nummer zu wählen). Für Bausteine ohne ASV-Bezug gilt dasselbe, damit Verweise in Bedingungen eindeutig bleiben.
+- Titel und Beschreibungen in der Auswahl über `M::get('builder.templates.…')`; der Inhalt der Vorlagen (Fragetexte) steht deutsch in den Dateien.
+
+**Datenschutz-Link:** Vorlage und Baustein brauchen eine URL, die die Schule einsetzen muss. Platzhalter `https://www.example.com/datenschutz/` (wie in `gs`) und eine **neue Warnung** im `SurveyValidator`: Links auf `example.com`/`example.org` in HTML-Elementen und Texten. Die Vorlage besteht *Prüfen* damit nicht ohne Warnung; das ist gewollt und die Abnahme nimmt diese eine Warnung aus.
+
+### `frontend/surveys/` ablösen
+
+Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3 und 4 folgen später.
+
+1. **Testkorpus** nach `backend/tests/fixtures/surveys/` (AP6). Tests hängen danach nicht mehr am ausgelieferten Verzeichnis. Die Beispiele in `backend/resources/survey-templates/` sind bis Schritt 4 Kopien der Frontend-Dateien; ein Test meldet, wenn sie auseinanderlaufen (`meister` ändert sich noch, siehe [TODO.md](../TODO.md)).
+2. **Seed aus Vorlagen** (AP6 oder 3.2.x): `seed-forms.php` legt die Demo-Formulare mit einer Survey aus den Vorlagen direkt in `form_resources` an; `pdf.json`, `prefill.json`, `ausbildernachmittag.json` entfallen als Dateien, `bk` verschwindet aus `forms-config-dist.php`. `survey_theme.json` ersetzt die Theme-Vorgabe des Backends (offen in [TODO.md](../TODO.md)).
+3. **Beispiele** leben nur noch im Backend (`backend/resources/survey-templates/`), nicht mehr im Frontend.
+4. **Laufzeit-Fallback abschaffen** (eigenes Release, Termin offen): `health.php` und `migrate.php` melden vorher Formulare ohne Survey in der Datenbank; danach entfallen `SurveySource`-Fallback, Verzeichnis im Frontend und im Plugin-ZIP. `import-surveys.php` bleibt für Dateien, die Schulen selbst mitbringen.
+
+### Abnahme und Tests
+
+- Jede **Vorlage** besteht `SurveyValidator` und `SurveyLinter` ohne Fehler und ohne Warnung außer dem Platzhalter-Link (PHP-Unit-Test über das Manifest); SurveyJS baut sie (`node --test`).
+- Jeder **Baustein** lässt sich in jede Vorlage einfügen, in die er passt, ohne doppelte Namen; danach ist der Text gültig und SurveyJS baut ihn. Ein Baustein, dessen Namen schon vorkommen, wird abgelehnt und ändert nichts.
+- **ASV:** Alle Feldnamen der ASV-Bausteine und der Vorlage *Schüleranmeldung* stehen in der eingecheckten Spaltenliste.
+- **Manifest:** jede Datei vorhanden, jeder Message-Schlüssel in `messages.php`, keine Datei ohne Eintrag.
+- Browser (`check.mjs`): leerer Editor zeigt die Auswahl, Vorlage übernehmen, *Rückgängig*, Baustein einfügen, Kollision abgelehnt.
+
+### Offen
+
+- **ASV-Spalten klären:** Welche Spalte ist die E-Mail und das Telefon der Schülerin bzw. des Schülers (`email1`? `Handy1` oder `Telefon_1`?), heißt die Staatsangehörigkeit `Land`? Aus `ASV-BW_Import.xlsx` ablesen, bevor die Bausteine entstehen; Abweichungen der Beispiele (`LAND` in `zq`, `email1` in `gs`) dann in den Frontend-Dateien korrigieren oder bewusst lassen (Release Notes: betrifft nur die Datei-Fassung, wie bei AP5).
+- **Aufwand:** größer als die 1–2 Wochen der Tabelle (fünf Vorlagen, neun Bausteine mit ASV-Abgleich, Auswahl-Oberfläche, Umzug des Testkorpus): **2–3 Wochen**, Schritt 2 (Seed) nicht eingerechnet.
 
 ## Tests
 
