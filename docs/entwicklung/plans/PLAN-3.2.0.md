@@ -54,7 +54,22 @@ Regeln für die Umsetzung (gelten auch für KI-Assistenten):
 3. Der Editor trägt keinen Namen und keine Marken von SurveyJS („Creator", „Survey Creator" o. ä.).
 4. Grundlage sind allein das JSON-Format (dokumentiert, von der MIT-Library gelesen) und die MIT-Library selbst.
 
-**Empfehlung, offen:** schriftliche Anfrage an SurveyJS (Support/Sales): *„Ondisos ist eine freie Schulanmeldung. Wir planen einen eigenen, quelloffenen Formular-Editor, der ausschließlich das offene SurveyJS-JSON erzeugt, ohne Code des Creators. Ist das zulässig?"* Die Antwort hier eintragen. Bis dahin ist AP0 (Spike) unbedenklich, vor einer Veröffentlichung des Editors sollte sie vorliegen.
+### Antwort von SurveyJS (2026-11-13)
+
+Auf die schriftliche Anfrage (eigener, quelloffener Editor, der nur das offene SurveyJS-JSON erzeugt, ohne Code des Creators) hat Devsoft Baltic OÜ per Mail (CEO) **zugestimmt**. Zwei Bedingungen:
+
+1. Der **MIT-Copyright-Hinweis** der Form Library bleibt erhalten. Umgesetzt: `frontend/public/assets/LICENSES.txt` und ab jetzt dieselbe Datei neben den Vorschau-Kopien (`backend/public/assets/preview/LICENSES.txt`; `sync-preview-assets.sh` kopiert sie mit, `PreviewAssetsTest` prüft die Gleichheit). Die Bundles tragen den Hinweis außerdem im Kopf.
+2. Der Editor wird **nicht als SurveyJS benannt oder gestaltet** (eingetragene Marke). Das ist Regel 3 oben; sie gilt auch für Menüpunkte, Seitentitel, Meldungen (`messages.php`) und die Redaktions-Doku (AP7). Beschreibende Nennung („erzeugt SurveyJS-JSON", „nutzt die SurveyJS Form Library") bleibt zulässig.
+
+Damit ist die Veröffentlichung des Editors freigegeben. Die Clean-Room-Regeln 1, 3 und 4 gelten weiter (das Urheberrecht am Creator-Code berührt die Zustimmung nicht); Regel 2 bleibt für die Arbeit am Editor bestehen.
+
+**Weitere Angebote aus der Antwort** (nicht Teil von 3.2.0, schließen den eigenen Editor nicht aus; Einschätzung, keine Entscheidung):
+
+| Angebot | Einschätzung |
+|---|---|
+| **Monaco** als JSON-Editor mit JSON-Schema (Autovervollständigung, Prüfung) | Das Backend hat mit CodeMirror 6 schon einen JSON-Editor; Monaco wäre deutlich größer und braucht Web-Worker (CSP). Den Nutzen erreicht man eher mit einem Schema in CodeMirror: `survey-core` bringt `Serializer.generateSchema()` mit (im Bundle vorhanden, ungeprüft). Idee für später. |
+| **Creator-Seite auf der Ondisos-Website** (eine Entwicklerlizenz beim Projekt; lädt und speichert über die eigene Instanz) | Passt schlecht zum [Betriebsmodell](../../betreiber/betriebsmodell.md): Die Verwaltungsoberfläche liegt im Intranet, eine fremde Seite müsste mit Admin-Sitzung und CORS darauf zugreifen; fremder Code im Admin-Kontext widerspricht der digitalen Souveränität. Nicht verfolgen. |
+| **Optionaler eingebauter Creator** (Betreiber kauft Lizenz, domaingebundener Schlüssel in `.env`; ohne Schlüssel greift der eigene Editor) | Denkbar als spätere Erweiterung: Creator-Dateien werden nicht mitgeliefert, sondern vom Betreiber installiert. Kollidiert mit Regel 2, solange am eigenen Editor gearbeitet wird; daher frühestens nach 3.2.0 und als eigener Plan. SurveyJS bietet dafür Partnerseite und Hinweise im Blog an. |
 
 ## Randbedingungen aus dem bestehenden Code
 
@@ -100,7 +115,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 
 ## AP0-Ergebnis (2026-10-12)
 
-**Lizenz:** geprüft, siehe [Lizenz und Clean-Room](#lizenz-und-clean-room); die schriftliche Bestätigung von SurveyJS steht aus.
+**Lizenz:** geprüft, siehe [Lizenz und Clean-Room](#lizenz-und-clean-room); die schriftliche Bestätigung von SurveyJS liegt seit 2026-11-13 vor ([Antwort](#antwort-von-surveyjs-2026-11-13)).
 
 **Messung an den vorhandenen Surveys** (7 Surveys, zusammen 4003 Zeichenketten, 22 Seiten, 247 Elemente einschließlich Panels; keine doppelten Schlüssel):
 
@@ -299,14 +314,14 @@ Browserprüfung (Nachtrag): `check.mjs` hat einen Abschnitt `nested` (eigene kle
 | Der Editor zerstört handgeschriebene oder fremde Surveys | Verlustfreier Round-Trip als harte Anforderung; AP0 misst ihn an allen vorhandenen Dateien; unbekannte Teile bleiben unangetastet |
 | Bedingungen zu komplex für die Oberfläche | Einfacher Editor nur für das Darstellbare; sonst Text anzeigen und nicht verändern; Rückfall auf den JSON-Editor |
 | Umbenannte Felder zerreißen Excel-Export und PDF | Namen stabil; Warnung beim Umbenennen; `SurveyDiff`-Bericht bleibt |
-| Lizenz: Nachbau eines Editors für eine proprietäre Software | Clean-Room, nichts aus dem Creator übernehmen; Lizenzseite in AP0 prüfen |
+| Lizenz: Nachbau eines Editors für eine proprietäre Software | Clean-Room, nichts aus dem Creator übernehmen; Lizenzseite in AP0 geprüft; SurveyJS hat am 2026-11-13 schriftlich zugestimmt |
 | Wartung bei neuen SurveyJS-Funktionen | Registry begrenzt den Umfang; unbekannte Eigenschaften bleiben erhalten; Funktionen, die die Oberfläche nicht kennt, bleiben im JSON-Editor erreichbar |
 | Barrierefreiheit von Drag-and-drop | Tastatur-Alternative (Pfeile/Buttons) ab AP2; Drag-and-drop in AP4 nur als Ergänzung |
 | Aufwand unterschätzt | AP0 als Durchstich mit Entscheidungspunkt: danach MVP **oder** Abbruch |
 
 ## Offene Fragen
 
-- **Lizenz:** geprüft, siehe [Lizenz und Clean-Room](#lizenz-und-clean-room); offen ist die schriftliche Bestätigung durch SurveyJS.
+- ~~**Lizenz:** schriftliche Bestätigung durch SurveyJS~~ erledigt: Zustimmung am 2026-11-13 unter zwei Bedingungen (MIT-Hinweis, keine SurveyJS-Marke), siehe [Antwort von SurveyJS](#antwort-von-surveyjs-2026-11-13).
 - **JavaScript-Tests:** *entschieden.* Die CI ist GitLab (`.gitlab-ci.yml`, Image `php:8.2-cli`, kein Node, kein `package.json`). Modelltests laufen mit `node --test` ohne Abhängigkeiten, als eigener Job `test_js` mit `node:22-alpine` (`before_script: []`, wie `lint_php`). Kein zweites Modell in PHP.
 - **Round-Trip:** Pflicht ist **Strukturgleichheit** (tiefer Vergleich) mit erhaltener Schlüsselreihenfolge. Ob auch der **Text** gleich bleibt (Einrückung, Escapes, Zeilenumbrüche), misst AP0; davon hängt ab, ob jede Änderung im Verlauf (`form_resources`) den ganzen Text umformatiert. Doppelte Schlüssel gehen beim Parsen verloren: der Editor muss sie erkennen und das Dokument ablehnen oder warnen.
 - **Umfang der Eigenschaften:** Reichen die ca. 25 genutzten Eigenschaften, oder braucht die Redaktion mehr (z. B. `maxSize` bei Datei-Uploads, `rows` bei Textbereichen)? Mit der Redaktion abstimmen.

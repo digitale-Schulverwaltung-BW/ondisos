@@ -14,5 +14,6 @@ mkdir -p "$DST/i18n"
 cp "$SRC/assets/i18n/german.min.js"            "$DST/i18n/german.min.js"
 cp "$SRC/js/survey-handler-base.js"            "$DST/survey-handler-base.js"
 cp "$SRC/assets/fonts/opensans/"*.woff2        "$DST/fonts/"
+cp "$SRC/assets/LICENSES.txt"                  "$DST/LICENSES.txt"   # MIT notice of SurveyJS must travel with the copies
 echo "Preview assets updated from $SRC"
 echo "After a SurveyJS update also refresh App\\Forms\\SurveyValidator::KNOWN_FUNCTIONS (see its comment; SurveyValidatorTest checks it)."

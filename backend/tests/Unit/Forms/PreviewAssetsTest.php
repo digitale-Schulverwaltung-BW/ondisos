@@ -24,6 +24,7 @@ class PreviewAssetsTest extends TestCase
             'handler base'   => ['frontend/public/js/survey-handler-base.js', 'backend/public/assets/preview/survey-handler-base.js'],
             'font regular'   => ['frontend/public/assets/fonts/opensans/open-sans-v44-latin-regular.woff2', 'backend/public/assets/preview/fonts/open-sans-v44-latin-regular.woff2'],
             'font bold'      => ['frontend/public/assets/fonts/opensans/open-sans-v44-latin-700.woff2', 'backend/public/assets/preview/fonts/open-sans-v44-latin-700.woff2'],
+            'licenses'       => ['frontend/public/assets/LICENSES.txt', 'backend/public/assets/preview/LICENSES.txt'],
         ];
     }
 
