@@ -6,6 +6,7 @@
 import { h } from './dom.js';
 import { PAGE, SURVEY, typeDef } from './registry.js';
 import { displayText, otherProperties, supportsChoiceElements } from './model.js';
+import { CONDITION_PROPS, checkExpression, describeSimple, parseSimple, suggest } from './conditions.js';
 
 let uid = 0;
 const nextId = (name) => `sb-f-${name}-${(uid += 1)}`;
@@ -21,6 +22,9 @@ const nextId = (name) => `sb-f-${name}-${(uid += 1)}`;
  * @property {(name:string, value:*) => {ok:boolean, code?:string}} commit  writes a property
  * @property {(name:string) => {ok:boolean, code?:string, cancelled?:boolean}} rename  renames (asks for confirmation)
  * @property {(message:string) => boolean} confirm  asks the user (window.confirm)
+ * @property {() => Map<string, object>} [fields]  what conditions can refer to (conditions.js fieldsOf)
+ * @property {{path:Array, label:string, prop:string}[]} [usedIn]  elements whose expressions or texts refer to this one
+ * @property {(path:Array) => void} [select]  selects another element (tree and panel)
  * @property {(index:number) => {ok:boolean, code?:string}} [openChoice]  lets answer `index` hold questions (selects it)
  * @property {(el:HTMLElement) => void} [onFindingShow]
  */
@@ -292,12 +296,141 @@ function enumControl(ctx, def) {
     return field(ctx, def, id, input, { notes: box });
 }
 
+// ---- expressions and conditions (AP5) -----------------------------------------------------------------------------
+//
+// The expression stays text: the control suggests what fits at the cursor (a combobox: "{" lists the fields, then
+// operators, the answers of the field, and/or), reads a simple condition back in plain language and warns about field
+// names and answers that do not exist. It never rewrites what the user typed.
+
+/** Kinds of suggestions that open by themselves while typing; and/or only on request or once a letter is typed. */
+const AUTO_OPEN = new Set(['field', 'operator', 'value']);
+
 function expressionControl(ctx, def) {
     const id = nextId(def.name);
     const box = errorBox(`${id}-err`);
-    const input = h('input', { type: 'text', class: 'form-control font-monospace', id, value: typeof ctx.value[def.name] === 'string' ? ctx.value[def.name] : '', spellcheck: 'false', autocomplete: 'off' });
-    commitOnChange(input, () => input.value, (v) => ctx.commit(def.name, v), box, ctx, def, () => (typeof ctx.value[def.name] === 'string' ? ctx.value[def.name] : ''));
-    return field(ctx, def, id, input, { notes: box });
+    const stored = () => (typeof ctx.value[def.name] === 'string' ? ctx.value[def.name] : '');
+    const listId = `${id}-list`;
+    const input = h('input', {
+        type: 'text', class: 'form-control font-monospace', id, value: stored(), spellcheck: 'false', autocomplete: 'off',
+        role: 'combobox', 'aria-autocomplete': 'list', 'aria-expanded': 'false', 'aria-controls': listId,
+    });
+    const list = h('ul', { class: 'sb-suggest', id: listId, role: 'listbox', 'aria-label': ctx.t('cond.suggestions'), hidden: true });
+    const isCondition = CONDITION_PROPS.includes(def.name);
+    const reads = isCondition ? h('div', { class: 'form-text sb-cond-reads', id: `${id}-reads`, hidden: true }) : null;
+    const warn = h('ul', { class: 'form-text sb-cond-warn', id: `${id}-warn`, hidden: true });
+    let fields = null;
+    const getFields = () => { fields ??= ctx.fields ? ctx.fields() : new Map(); return fields; };
+    const self = typeof ctx.value.name === 'string' ? ctx.value.name : null;
+
+    // ---- plain language and warnings ----
+    const typing = () => document.activeElement === input;
+    function update() {
+        const text = input.value;
+        if (reads) {
+            const parsed = parseSimple(text);
+            reads.hidden = !(parsed.ok || (parsed.reason === 'complex' && !typing()));
+            reads.textContent = parsed.ok ? ctx.t('cond.reads', { text: describeSimple(parsed, getFields(), ctx.t) })
+                : parsed.reason === 'complex' ? ctx.t('cond.complex') : '';
+        }
+        // while typing, an open brace or quote is not finished yet, not a mistake
+        const found = checkExpression(text, getFields())
+            .filter((w) => !(typing() && (w.code === 'unclosedBrace' || w.code === 'unclosedString' || w.code === 'parens')));
+        warn.replaceChildren(...found.map((w) => h('li', {}, ctx.t(`cond.warn.${w.code}`, {
+            ...w,
+            list: (getFields().get(w.field)?.values ?? []).map((v) => (typeof v === 'string' ? `'${v}'` : String(v))).join(', '),
+        }))));
+        warn.hidden = found.length === 0;
+    }
+
+    // ---- suggestions (combobox) ----
+    let current = null; // the result of suggest() on display
+    let active = -1;
+    function close() {
+        current = null;
+        active = -1;
+        list.hidden = true;
+        list.replaceChildren();
+        input.setAttribute('aria-expanded', 'false');
+        input.removeAttribute('aria-activedescendant');
+    }
+    function setActive(i) {
+        active = i;
+        [...list.children].forEach((li, k) => li.setAttribute('aria-selected', k === i ? 'true' : 'false'));
+        const li = list.children[i];
+        if (li) {
+            input.setAttribute('aria-activedescendant', li.id);
+            li.scrollIntoView?.({ block: 'nearest' });
+        } else {
+            input.removeAttribute('aria-activedescendant');
+        }
+    }
+    function open(force) {
+        const result = suggest(input.value, input.selectionStart ?? input.value.length, getFields(), { self });
+        const wanted = force || AUTO_OPEN.has(result.kind) || (result.kind === 'join' && result.query !== '');
+        if (!wanted || result.items.length === 0) { close(); return; }
+        current = result;
+        list.replaceChildren(...result.items.slice(0, 50).map((item, k) => h('li', {
+            id: `${listId}-${k}`, role: 'option', class: 'sb-suggest-item', 'aria-selected': 'false',
+            onmousedown: (e) => { e.preventDefault(); accept(k); },
+        }, h('code', {}, item.label), item.detail ? h('span', { class: 'sb-suggest-detail' }, item.detail) : null)));
+        list.hidden = false;
+        input.setAttribute('aria-expanded', 'true');
+        setActive(0);
+    }
+    function accept(k) {
+        const item = current?.items[k];
+        if (!item) { return; }
+        const text = input.value;
+        input.value = text.slice(0, current.from) + item.insert + text.slice(current.to);
+        const caret = current.from + item.insert.length;
+        input.setSelectionRange(caret, caret);
+        update();
+        open(false); // the next step: after a field the operators, after "=" the answers
+    }
+
+    input.addEventListener('input', () => { update(); open(false); });
+    input.addEventListener('click', () => { if (current) { open(false); } });
+    input.addEventListener('blur', () => { close(); update(); });
+    input.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && (e.key === ' ' || e.code === 'Space')) {
+            e.preventDefault();
+            open(true);
+            return;
+        }
+        if (!current) { return; }
+        const count = list.children.length;
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            setActive((active + (e.key === 'ArrowDown' ? 1 : count - 1)) % count);
+        } else if (e.key === 'Enter' || e.key === 'Tab') {
+            if (active < 0) { return; }
+            e.preventDefault();
+            e.stopPropagation(); // Enter would otherwise commit the field (ui.js)
+            accept(active);
+        } else if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation(); // Esc would otherwise go back to the tree (ui.js)
+            close();
+        } else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End') {
+            close();
+        }
+    });
+
+    commitOnChange(input, () => input.value, (v) => ctx.commit(def.name, v), box, ctx, def, stored);
+    update();
+    const control = h('div', { class: 'sb-combo' }, input, list);
+    return field(ctx, def, id, control, { notes: [reads, warn, box] });
+}
+
+/** "Used in": the elements whose conditions, expressions or texts refer to this one, each a link to it. */
+function usedInSection(ctx) {
+    const id = nextId('used-in');
+    const tip = infoTip(ctx, `${id}-help`, ctx.t('cond.used_in_help'));
+    return h('section', { class: 'mt-3 sb-used-in', 'aria-labelledby': id },
+        h('div', { class: 'd-flex align-items-center gap-2 position-relative' }, h('h3', { class: 'h6 mb-0', id }, ctx.t('cond.used_in')), tip.button, tip.el),
+        h('ul', { class: 'list-unstyled small mb-0 mt-1' }, ctx.usedIn.map((u) => h('li', {},
+            h('button', { type: 'button', class: 'btn btn-link btn-sm p-0 align-baseline', onclick: () => ctx.select?.(u.path) }, u.label),
+            h('span', { class: 'text-muted' }, ` · ${u.prop}`)))));
 }
 
 function valueControl(ctx, def) {
@@ -548,6 +681,8 @@ export function buildProperties(ctx) {
             }
         }
     }
+
+    if (ctx.usedIn?.length) { root.append(usedInSection(ctx)); }
 
     const others = def ? otherProperties(ctx.value, ctx.typeName) : Object.keys(ctx.value).filter((k) => k !== 'elements');
     if (others.length) {

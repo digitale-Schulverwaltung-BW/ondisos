@@ -122,3 +122,23 @@
 .sb-palette-item { display: flex; align-items: center; gap: .6rem; }
 .sb-icon { flex: none; width: 1rem; height: 1rem; color: var(--bs-secondary-color); }
 .sb-palette-item:hover .sb-icon, .sb-palette-item:focus .sb-icon, .sb-palette-item:active .sb-icon { color: currentColor; }
+
+/* Conditions and expressions (AP5): suggestions under the field, plain language and warnings below it. */
+.sb-combo { position: relative; }
+.sb-suggest {
+    position: absolute; top: calc(100% + 2px); left: 0; z-index: 30;
+    min-width: 100%; max-width: min(32rem, 90vw); max-height: 16rem; overflow-y: auto;
+    margin: 0; padding: .25rem 0; list-style: none;
+    background: var(--bs-body-bg); color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color); border-radius: .375rem;
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .15);
+}
+.sb-suggest[hidden] { display: none; }
+.sb-suggest-item { display: flex; gap: .75rem; align-items: baseline; padding: .2rem .75rem; cursor: pointer; white-space: nowrap; }
+.sb-suggest-item code { color: inherit; }
+.sb-suggest-item[aria-selected="true"] { background: var(--bs-primary-bg-subtle); }
+.sb-suggest-detail { color: var(--bs-secondary-color); font-size: .875em; overflow: hidden; text-overflow: ellipsis; }
+.sb-cond-reads { font-style: italic; }
+.sb-cond-warn { margin: .25rem 0 0; padding-left: 1.1rem; color: var(--bs-warning-text-emphasis); }
+.sb-cond-warn[hidden], .sb-cond-reads[hidden] { display: none; }
+.sb-used-in .sb-tip { top: calc(100% + .25rem); left: 0; right: auto; }

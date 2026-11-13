@@ -19,6 +19,7 @@ import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
 import { findReferences, validateName } from './names.js';
 import { buildProperties } from './ui-props.js';
+import { fieldsOf } from './conditions.js';
 import { typeIcon } from './icons.js';
 import { createHistory } from './history.js';
 
@@ -324,11 +325,37 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             rename(newName) { return doRename(path, typeName, newName); },
             confirm(message) { return window.confirm(message); },
             openChoice(index) { return doOpenChoice(path, index); },
+            fields() { return fieldsOf(state.doc); },
+            usedIn: usedIn(path, value, typeName),
+            select(target) { select(target, true); },
         };
         const body = buildProperties(ctx);
         // a survey without pages: its elements are edited here too, but pages are not created in the builder
         if (typeName === 'survey' && !hasPages()) { body.querySelector('h2')?.after(h('p', { class: 'text-muted small mt-2 mb-0' }, t('implicit_page'))); }
         props.append(body);
+    }
+
+    /**
+     * The elements whose expressions or texts refer to the element at `path` (findReferences), one entry per element and
+     * property: {path, label, prop}. Pages and the survey are not referred to by name.
+     */
+    function usedIn(path, value, typeName) {
+        if (typeName === 'page' || typeName === 'survey' || typeof value.name !== 'string' || value.name === '') { return []; }
+        const seen = new Set();
+        const out = [];
+        for (const ref of findReferences(state.doc, value.name)) {
+            const owner = ownerOf(ref.path);
+            if (owner === null || samePath(owner, path)) { continue; }
+            const prop = [...ref.path].reverse().find((seg) => typeof seg === 'string') ?? '';
+            const k = `${key(owner)}|${prop}`;
+            if (seen.has(k)) { continue; }
+            seen.add(k);
+            const ownerValue = currentValue(owner) ?? {};
+            const name = owner.length === 0 ? t('cond.survey') : isPagePath(owner) ? `${t('page')} ${label(ownerValue)}` : label(ownerValue);
+            const propText = t(`prop.${prop}`);
+            out.push({ path: owner, label: name, prop: propText.startsWith('[') ? prop : propText });
+        }
+        return out;
     }
 
     /** An answer option with questions inside: what it is, and the way to its question (its value and text are edited there). */

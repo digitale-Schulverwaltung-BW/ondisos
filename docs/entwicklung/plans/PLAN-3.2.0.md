@@ -1,6 +1,6 @@
 # PLAN 3.2.0 – Grafischer Survey-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2, AP4 und [AP4a Live-Vorschau](#ap4a-ergebnis-2026-11-11) umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Als Nächstes: AP5, danach AP6, AP7. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
+**Status:** in Arbeit (Stand 2026-11-11); AP0 bis AP2, AP4 und [AP4a Live-Vorschau](#ap4a-ergebnis-2026-11-11) umgesetzt, AP3 größtenteils, dazu [Fragen in Auswahloptionen](#fragen-in-auswahloptionen-2026-11-11). Als Nächstes: [AP5](#ap5-bedingungen-2026-11-13) (Stufe B umgesetzt, Stufe C offen), danach AP6, AP7. Voraussetzung erfüllt: die SurveyJS-Library ist auf 3.2.0 aktualisiert (siehe [changelog.md](../changelog.md)), der Editor arbeitet gegen diese Version. Eigenes Release **3.2.0**, weitgehend unabhängig von den übrigen Vorhaben (Passkeys 3.1.3, WordPress-Plugin ohne Shell, SMTP).
 Die Aufwände sind Schätzungen für eine Person und nicht an einem Prototyp gemessen; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -107,11 +107,11 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 | **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung. **Größtenteils mit AP2 umgesetzt** (Tab statt Umschalter), siehe AP2-Ergebnis |
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her. **Erfüllt**, siehe [AP4-Ergebnis](#ap4-ergebnis-2026-11-02) |
 | **AP4a** Live-Vorschau | Vorschau in eigenem Fenster, folgt jeder Änderung ohne Speichern; Klick in der Vorschau wählt das Element im Baum, Auswahl im Baum zeigt es in der Vorschau; ausgeblendete Elemente zuschaltbar. Details: [AP4a](#ap4a-live-vorschau-geplant-2026-11-11) | 1–2 Wochen | Jede Änderung erscheint ohne Speichern in der Vorschau, Seite und Eingaben bleiben; Klick wählt in beide Richtungen; nur vom Server geprüfte Texte werden gerendert; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP4a-Ergebnis](#ap4a-ergebnis-2026-11-11) |
-| **AP5** Einfache Bedingungen | `visibleIf`/`requiredIf` als „Feld – Operator – Wert" (ein oder mehrere Ausdrücke mit UND/ODER); alles Komplexere bleibt als Text sichtbar und **unverändert** (nur lesbar anzeigen) | 3–4 Wochen | Von den 55 Bedingungen der vorhandenen Surveys wird der Anteil, den die Oberfläche darstellen kann, gemessen und dokumentiert; der Rest bleibt unangetastet |
+| **AP5** Bedingungen | Stufe B: Hilfe beim Text (Vervollständigen, Klartext, Prüfung von Feldnamen und Werten, „Verwendet in“); Stufe C (optional, nach B entscheiden): Dialog *Bedingung zusammenstellen*, der Text schreibt. Details: [AP5](#ap5-bedingungen-2026-11-13) | B 1–1,5 Wochen, C etwa 1 Woche | Der Anteil der Bedingungen, den der einfache Parser erkennt, ist gemessen (Stand: 79 von 81); jede Bedingung bleibt Text und wird nur geändert, wo der Benutzer tippt oder einen Vorschlag übernimmt |
 | **AP6** Vorlagen | Neues Formular aus Vorlage („Anmeldung", „Rückmeldung ohne E-Mail"), Bausteine für Standardfelder (Name, E-Mail, Datenschutz-Zustimmung `consent_…`, Unterschrift) | 1–2 Wochen | Neue Vorlage besteht *Prüfen* ohne Warnung |
 | **AP7** Doku und Abschluss | Redaktions-Doku neu ordnen ([SURVEYJS.md](../../redaktion/SURVEYJS.md)), `HelpLinks`-Ziele, Meldungstexte (`messages.php`, auch `messages.example.php`), Changelog, Release Notes, manuelle Tests, Version 3.2.0 an den vier Stellen | 1 Woche | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
-**Kern (MVP): AP0–AP3**, etwa **6–10 Wochen**. **AP4–AP7** machen daraus ein gut nutzbares Werkzeug (zusammen weitere **2–4 Monate**). AP5 ist der unsicherste Teil und kann bei Bedarf zuerst entfallen; Bedingungen bleiben dann im JSON-Editor.
+**Kern (MVP): AP0–AP3**, etwa **6–10 Wochen**. **AP4–AP7** machen daraus ein gut nutzbares Werkzeug (zusammen weitere **2–4 Monate**). AP5 war als unsicherster Teil eingestuft; mit dem Zuschnitt vom 2026-11-13 (Text bleibt, der Editor hilft) entfällt der Rückweg von einer Struktur zum Text und damit das Hauptrisiko.
 
 ## AP0-Ergebnis (2026-10-12)
 
@@ -310,6 +310,38 @@ Die oberste Ebene der Survey (`title`, `completedHtml`, Knopftexte, `firstPageIs
 - **Stelle im Text:** Neue Einstellungen stehen vor `"pages"` (bzw. `"elements"`), wo die Exporte sie führen (`insertMember(…, { before })`); vorhandene ändern sich an ihrer Stelle, auch wenn ein Creator-Export sie hinter die Seiten geschrieben hat.
 - **Erläuterungen:** `help_survey.<name>` überschreibt `help.<name>`, wo eine Eigenschaft für das Formular anderes bedeutet (Titel). Das HTML-Feld nennt jetzt auch weitere Sprachen (`completedHtml` mit `de` und `default`).
 - **Geprüft:** JS-Tests (176), Unit-Tests; im Browser an `meister` (Dev-Stack): Einfügen vor `pages`, Titel im Baum folgt, geleerter Knopftext verschwindet, Rückgängig stellt her, Survey ohne Seiten. `check.mjs` angepasst (Zeile „Formular“ statt impliziter Seite, neue Prüfung an `bs`), aber hier nicht gelaufen (Playwright fehlt).
+
+## AP5 Bedingungen (2026-11-13)
+
+**Bestand** (`frontend/surveys/*.json`, Stand 2026-11-13): **81** Bedingungen, 36 × `visibleIf` und 45 × `requiredIf` (die 55 der Tabelle waren der Stand 3.1.2; `meister` mit `paneldynamic` kam dazu).
+
+| Form | Anzahl | Beispiel |
+|---|---|---|
+| ein Ausdruck: Feld, Operator, Wert | 70 | `{Alter} < 18`, `{Erz1AnschriftWieKind} = false`, `{Kindergarten} notempty` |
+| mehrere Ausdrücke, nur `and` oder nur `or` | 3 | `{Unterrichtsform} = 'Vollzeitunterricht' and {Vollzeit_Schwerpunkt} = 'EG'` |
+| dasselbe mit `{panel.…}` (in `paneldynamic`) | 6 | `{panel.Beruf_von} notempty or {panel.Beruf_bis} notempty` |
+| Klammern mit gemischtem `and`/`or` | 1 | `A or (B and C)` |
+| Funktion | 1 | `sumInArray(…) > 0` |
+
+Ein Parser für flaches UND/ODER mit `panel.`-Verweisen erkennt **79 von 81**. Berechnungen (`expression`, `setValueExpression`, `defaultValueExpression` mit `iif`, `dateDiff` …) gehören nicht zu AP5.
+
+**Entscheidung:** Bedingungen nutzen vor allem erfahrene Anwender. Statt eines Baukastens (Feld ▾ – Operator ▾ – Wert ▾ mit Rückweg vom Text in die Struktur) bleibt die Bedingung **Text**, und der Editor hilft beim Schreiben. So gibt es keinen Rückweg, der etwas verlieren kann, und die Hilfe gilt für alle 81 Bedingungen.
+
+**Stufe B: Hilfe beim Text**
+- **Vervollständigen** im Feld: nach `{` die Feldnamen (mit Titel), nach einem Feld die Operatoren, nach `=`, `!=`, `contains`, `anyof` … die Werte des Felds (aus `choices`, bei `boolean` `true`/`false`), nach einem vollständigen Ausdruck `and`/`or`. Tastatur: ↑/↓, Enter oder Tab übernimmt, Esc schließt (Combobox nach ARIA).
+- **Klartext** unter dem Feld, beim Tippen aktualisiert: „Sichtbar, wenn *Unterrichtsform* ist „Vollzeitunterricht““ mit Titeln statt Namen und Antworttexten statt Werten. Was der Parser nicht erkennt, bleibt ohne Klartext (Hinweis „nur als Text“).
+- **Prüfung** (Warnung, blockiert nichts; der Server bleibt die Instanz): unbekannte Feldnamen, Werte, die es in den Antworten des Felds nicht gibt (die häufigste stille Fehlerquelle: die Frage erscheint nie), offene Klammern und Anführungszeichen.
+- **Verwendet in:** Bei einem Feld nennt das Eigenschaftenfeld die Elemente, deren Bedingungen oder Texte darauf verweisen (`findReferences`), mit Sprung dorthin.
+- **Umsetzung:** `conditions.js` (reine Logik, ohne DOM: Zerlegen in Tokens mit Positionen, einfacher Parser, Prüfung, Vorschläge an einer Cursorposition), Tests mit `node --test` an allen Bedingungen der Surveys; die Oberfläche in `ui-props.js`.
+
+**Ergebnis Stufe B (2026-11-13):**
+- **Umgesetzt:** `conditions.js` (`tokenize`, `parseSimple`, `fieldsOf`, `checkExpression`, `suggest`, `describeSimple`); im Eigenschaftenfeld wird jedes Feld der Art `expression` eine Combobox mit Vorschlagsliste (`ui-props.js`), Bedingungen (`CONDITION_PROPS`) zeigen zusätzlich den Klartext. Warnungen zu offenen Klammern und Anführungszeichen erscheinen erst beim Verlassen des Felds, nicht beim Tippen. *Verwendet in* (`ui.js`, `usedIn`) listet je Element und Eigenschaft die Verweise, ein Klick wählt das Element. Texte unter `builder.cond.*`, Erläuterungen `help.visibleIf`, `help.requiredIf`, `help.setValueExpression`.
+- **Gemessen:** `parseSimple` erkennt 79 von 81 Bedingungen der Surveys (`conditions.test.mjs` verlangt mindestens 95 % und prüft, dass nur Klammern und Funktionen übrig bleiben).
+- **Befunde in den vorhandenen Surveys** (Datei-Fassung in `frontend/surveys/`; behoben am 2026-11-13: `zq` verweist jetzt auf `{age}`, in `vabo` ist der Ausdruck entfernt): In `zq.json` verweisen neun `requiredIf` auf `{Alter}`, der berechnete Wert heißt dort aber `age` (in `bs` und `vabo` heißt er `Alter`); die Felder der Erziehungsberechtigten werden damit nie zur Pflicht. In `vabo.json` verweist `setValueExpression` von `Klasse` auf `{_Ausbildungsberuf}`, das es dort nicht gibt (in `bs` ist es ein Feld; ein Vorausfüll-Link könnte den Wert liefern).
+- **Geprüft:** JS-Tests 193 (neu `conditions.test.mjs`, 17 Tests); im Browser (Dev-Stack, `bs`): Vorschläge für Feld → Vergleich → Antwort → `or` nur mit Tastatur, der übernommene Text landet unverändert im Dokument, Klartext und die drei Warnungen, *Verwendet in* mit Sprung, keine Konsolenfehler. PHP-Unit-Tests ohne neue Fehler (zwei bekannte Umgebungsfehler im Container: `DocsLinksTest` wegen fehlender `.gitlab-ci.yml`, `TwoFactorCryptoTest` wegen gesetztem Schlüssel).
+- **Offen:** Abschnitt in `check.mjs` (Playwright fehlt hier); Screenreader-Test der Combobox; Felder in `templateElements` sind im Aufbau nicht wählbar, daher bietet der Editor `{panel.…}` dort noch nicht an (die Logik kann es, `inTemplate`).
+
+**Stufe C (optional, nach B entscheiden):** Knopf *Bedingung zusammenstellen …* mit Zeilen Feld – Operator – Wert und „alle/eine davon“. Der Dialog schreibt Text ins Feld; vorbelegt wird er nur, wenn der Parser die vorhandene Bedingung erkennt.
 
 ## Tests
 
