@@ -107,7 +107,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 | **AP3** Integration | Umschalter *Grafisch*/*JSON* in `form_survey.php`, gemeinsamer Text, Dirty-Zustand, *Prüfen*/*Vorschau*/*Speichern*/*Veröffentlichen* unverändert; Warnung beim Wechsel, wenn der Text nicht lesbar ist | 1 Woche | Beide Ansichten zeigen nach jedem Wechsel denselben Stand; JSON-Fehler blockieren den Wechsel mit klarer Meldung. **Größtenteils mit AP2 umgesetzt** (Tab statt Umschalter), siehe AP2-Ergebnis |
 | **AP4** Komfort | Drag-and-drop, Verschachteln in Panels, Duplizieren, Undo/Redo | 2–3 Wochen | Reihenfolge per Maus und Tastatur; Undo stellt den Text exakt wieder her. **Erfüllt**, siehe [AP4-Ergebnis](#ap4-ergebnis-2026-11-02) |
 | **AP4a** Live-Vorschau | Vorschau in eigenem Fenster, folgt jeder Änderung ohne Speichern; Klick in der Vorschau wählt das Element im Baum, Auswahl im Baum zeigt es in der Vorschau; ausgeblendete Elemente zuschaltbar. Details: [AP4a](#ap4a-live-vorschau-geplant-2026-11-11) | 1–2 Wochen | Jede Änderung erscheint ohne Speichern in der Vorschau, Seite und Eingaben bleiben; Klick wählt in beide Richtungen; nur vom Server geprüfte Texte werden gerendert; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP4a-Ergebnis](#ap4a-ergebnis-2026-11-11) |
-| **AP5** Bedingungen | Stufe B: Hilfe beim Text (Vervollständigen, Klartext, Prüfung von Feldnamen und Werten, „Verwendet in“); Stufe C (optional, nach B entscheiden): Dialog *Bedingung zusammenstellen*, der Text schreibt. Details: [AP5](#ap5-bedingungen-2026-11-13) | B 1–1,5 Wochen, C etwa 1 Woche | Der Anteil der Bedingungen, den der einfache Parser erkennt, ist gemessen (Stand: 79 von 81); jede Bedingung bleibt Text und wird nur geändert, wo der Benutzer tippt oder einen Vorschlag übernimmt |
+| **AP5** Bedingungen | Stufe B: Hilfe beim Text (Vervollständigen, Klartext, Prüfung von Feldnamen und Werten, „Verwendet in“); Stufe C (Dialog *Bedingung zusammenstellen*) zurückgestellt. Details: [AP5](#ap5-bedingungen-2026-11-13) | B 1–1,5 Wochen | Der Anteil der Bedingungen, den der einfache Parser erkennt, ist gemessen (Stand: 79 von 81); jede Bedingung bleibt Text und wird nur geändert, wo der Benutzer tippt oder einen Vorschlag übernimmt. **Erfüllt** (Stufe B), siehe [AP5-Abschluss](#abschluss-ap5-2026-11-13); Restpunkte dort |
 | **AP6** Vorlagen | Neues Formular aus Vorlage („Anmeldung", „Rückmeldung ohne E-Mail"), Bausteine für Standardfelder (Name, E-Mail, Datenschutz-Zustimmung `consent_…`, Unterschrift) | 1–2 Wochen | Neue Vorlage besteht *Prüfen* ohne Warnung |
 | **AP7** Doku und Abschluss | Redaktions-Doku neu ordnen ([SURVEYJS.md](../../redaktion/SURVEYJS.md)), `HelpLinks`-Ziele, Meldungstexte (`messages.php`, auch `messages.example.php`), Changelog, Release Notes, manuelle Tests, Version 3.2.0 an den vier Stellen | 1 Woche | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
@@ -341,7 +341,23 @@ Ein Parser für flaches UND/ODER mit `panel.`-Verweisen erkennt **79 von 81**. B
 - **Geprüft:** JS-Tests 193 (neu `conditions.test.mjs`, 17 Tests); im Browser (Dev-Stack, `bs`): Vorschläge für Feld → Vergleich → Antwort → `or` nur mit Tastatur, der übernommene Text landet unverändert im Dokument, Klartext und die drei Warnungen, *Verwendet in* mit Sprung, keine Konsolenfehler. PHP-Unit-Tests ohne neue Fehler (zwei bekannte Umgebungsfehler im Container: `DocsLinksTest` wegen fehlender `.gitlab-ci.yml`, `TwoFactorCryptoTest` wegen gesetztem Schlüssel).
 - **Offen:** Abschnitt in `check.mjs` (Playwright fehlt hier); Screenreader-Test der Combobox; Felder in `templateElements` sind im Aufbau nicht wählbar, daher bietet der Editor `{panel.…}` dort noch nicht an (die Logik kann es, `inTemplate`).
 
-**Stufe C (optional, nach B entscheiden):** Knopf *Bedingung zusammenstellen …* mit Zeilen Feld – Operator – Wert und „alle/eine davon“. Der Dialog schreibt Text ins Feld; vorbelegt wird er nur, wenn der Parser die vorhandene Bedingung erkennt.
+**Stufe C (zurückgestellt, Entscheidung 2026-11-13):** Knopf *Bedingung zusammenstellen …* mit Zeilen Feld – Operator – Wert und „alle/eine davon“. Der Dialog schreibt Text ins Feld; vorbelegt wird er nur, wenn der Parser die vorhandene Bedingung erkennt.
+Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei den einfachen; Bedingungen schreiben vor allem erfahrene Anwender. Wieder aufgreifen, wenn die Redaktion nach dem Release danach fragt.
+
+### Abschluss AP5 (2026-11-13)
+
+**AP5 ist mit Stufe B erfüllt.** Abnahme: 79 von 81 Bedingungen erkannt (gemessen in `conditions.test.mjs`), Text bleibt unverändert außer an der Stelle, an der der Benutzer tippt oder einen Vorschlag übernimmt (im Browser geprüft).
+
+**Restpunkte (technische Schulden, in [TODO.md](../TODO.md) übernommen):**
+
+| Punkt | Art | Wann |
+|---|---|---|
+| Abschnitt *Bedingungen* in `check.mjs` (Combobox mit Tastatur, Klartext, Warnungen, *Verwendet in*). Playwright fehlt auf den Entwicklungsrechnern, daher sind auch die Abschnitte zu AP4a und den Formular-Einstellungen seit dem 2026-11-13 nicht gelaufen | Test | vor dem Release (AP7) |
+| Screenreader-Test der Combobox (z. B. VoiceOver: werden Vorschläge und die Auswahl mit ↑/↓ angesagt?) | manuell | vor dem Release (AP7, manuelle Testliste) |
+| `{panel.…}` wird nicht vorgeschlagen: Felder in `templateElements` sind im Aufbau nicht wählbar, `paneldynamic` steht nicht in der Registry. Die Logik kann es (`inTemplate`); betroffen sind 6 Bedingungen in `meister` | Lücke | mit `paneldynamic` in der Registry, nach 3.2.0 |
+| `SurveyLinter` prüft keine Verweise in `visibleIf`, `requiredIf` und `*Expression`. *Prüfen* meldet unbekannte Felder daher nur im grafischen Editor, nicht im JSON-Editor oder beim Import (die Fehler in `zq` und `vabo` blieben so unbemerkt). Vorschlag: Warnung „Bedingung verweist auf unbekanntes Feld“, Namen zwischen `{…}` ohne vollständigen Parser, `panel.` und `calculatedValues` berücksichtigen | Lücke | klein, vor oder mit 3.2.0 |
+| Die Korrekturen in `zq` (`{age}`) und `vabo` betreffen nur die Datei-Fassung in `frontend/surveys/`. Haben Schulen die Surveys schon nach `form_resources` übernommen, steckt der Fehler dort weiter (`import-surveys.php` überschreibt nur mit `--overwrite`) | Hinweis | Release Notes 3.2.0 (AP7) |
+| Die zwei Bedingungen, die der Parser nicht erkennt (Klammern mit gemischtem `and`/`or`, Funktion), bekommen keinen Klartext | bewusst | – |
 
 ## Tests
 
@@ -355,7 +371,7 @@ Ein Parser für flaches UND/ODER mit `panel.`-Verweisen erkennt **79 von 81**. B
 | Risiko | Gegenmaßnahme |
 |---|---|
 | Der Editor zerstört handgeschriebene oder fremde Surveys | Verlustfreier Round-Trip als harte Anforderung; AP0 misst ihn an allen vorhandenen Dateien; unbekannte Teile bleiben unangetastet |
-| Bedingungen zu komplex für die Oberfläche | Einfacher Editor nur für das Darstellbare; sonst Text anzeigen und nicht verändern; Rückfall auf den JSON-Editor |
+| Bedingungen zu komplex für die Oberfläche | Entschärft (AP5): Bedingungen bleiben Text, der Editor hilft nur beim Schreiben (Vorschläge, Klartext, Warnungen); was der Parser nicht erkennt, bleibt ohne Klartext und unverändert |
 | Umbenannte Felder zerreißen Excel-Export und PDF | Namen stabil; Warnung beim Umbenennen; `SurveyDiff`-Bericht bleibt |
 | Lizenz: Nachbau eines Editors für eine proprietäre Software | Clean-Room, nichts aus dem Creator übernehmen; Lizenzseite in AP0 geprüft; SurveyJS hat am 2026-11-13 schriftlich zugestimmt |
 | Wartung bei neuen SurveyJS-Funktionen | Registry begrenzt den Umfang; unbekannte Eigenschaften bleiben erhalten; Funktionen, die die Oberfläche nicht kennt, bleiben im JSON-Editor erreichbar |
