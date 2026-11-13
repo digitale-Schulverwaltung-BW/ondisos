@@ -464,8 +464,8 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1; Schritt 2 ist gestrichen, 3 und 4
 
 - [ ] **Vorgabe-Theme:** entscheiden, ob die Markenfarbe der Vorgabe dunkler wird (heute etwa 2,9 : 1, der Theme-Editor warnt bei der eigenen Vorgabe) oder bewusst bleibt ([PLAN-3.2.0b.md](PLAN-3.2.0b.md#offene-fragen))
 - [x] ~~AP6 Schritt 2 (Seed aus Vorlagen)~~ gestrichen; der `bk`-Eintrag ist aus `forms-config-dist.php` entfernt, die Installationsanleitungen beginnen mit einer Vorlage (2026-11-13)
-- [ ] **Offene GitHub-Branches** entscheiden: `claude/sharp-lovelace-9jmddv` (`SurveyValidator` warnt bei Namenskollisionen in `paneldynamic`-Vorlagen) übernehmen oder löschen; `claude/blissful-gates-exrtbp` siehe Signaturmodus
-- [ ] `favicon.ico` im Backend (einzige Konsolenmeldung)
+- [x] **Offene GitHub-Branches** (2026-11-13): `claude/sharp-lovelace-9jmddv` übernommen (`SurveyValidator` warnt bei Namenskollisionen in `paneldynamic`-Vorlagen; keine der mitgelieferten Surveys und Vorlagen ist betroffen). Von `claude/blissful-gates-exrtbp` ist AP1 (`strict`) übernommen, der Rest (Passkeys, PLAN-3.1.3) bleibt dort für 3.1.3/3.3
+- [x] `favicon.ico` im Backend (2026-11-13): `backend/public/favicon.ico` (16/32/48 px, Haken auf blauem Grund, ohne Bibliothek erzeugt); der 404 in der Konsole entfällt
 
 **Bewusst nicht in 3.2.0:** `paneldynamic` in der Registry (mit `{panel.…}`-Vorschlägen), Stufe C der Bedingungen, Passkeys, SMTP, Datei-Fallback abschaffen (Schritte 3 und 4), optionaler eingebauter Creator.
 
