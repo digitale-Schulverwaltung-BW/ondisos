@@ -63,6 +63,13 @@ const liveSurvey = write('live.json', JSON.stringify({
         { name: 'p2', title: 'Zwei', elements: [{ type: 'text', name: 'later', title: 'Später' }] },
     ],
 }, null, 2));
+const condSurvey = write('cond.json', JSON.stringify({
+    pages: [{ name: 'p1', elements: [
+        { type: 'radiogroup', name: 'form', title: 'Unterrichtsform', choices: [{ value: 'vz', text: 'Vollzeit' }, { value: 'tz', text: 'Teilzeit' }] },
+        { type: 'text', name: 'start', title: 'Beginn', visibleIf: "{form} = 'vz'" },
+        { type: 'text', name: 'other', title: 'Sonstiges' },
+    ] }],
+}, null, 2));
 const empty = write('empty.json', '');
 const broken = write('broken.json', '{"pages": [,]}');
 const reportBroken = write('report-broken.json', JSON.stringify({ valid: false, errors: [{ path: '', message: 'Allgemeiner Fehler' }], warnings: [] }));
@@ -76,6 +83,7 @@ render('bs', surveys('bs'));
 render('vabo', surveys('vabo'));
 render('odd', odd);
 render('nested', nested);
+render('cond', condSurvey);
 render('empty', empty);
 render('broken', broken, reportBroken);
 render('warn', surveys('ausbildernachmittag'), reportWarn);
@@ -635,7 +643,7 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     check('nested: single choice offers questions for its plain answers', await opener.count() === 1
         && JSON.stringify(await opener.locator('option').allTextContents()) === '["tz","abend"]');
     await opener.locator('select').selectOption({ label: 'tz' });
-    await opener.locator('button').click();
+    await opener.locator('button:not(.sb-info)').click();
     await p.waitForTimeout(250);
     check('nested: the answer becomes one with questions, shows up in the tree and is selected',
         JSON.stringify((await choicesOf())[1]) === '{"value":"tz","elements":[]}' && await selected() === JSON.stringify(TZ)
@@ -672,6 +680,108 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     const verdict = serverSays(await text(p));
     check('nested: the server accepts the result', verdict.valid && (await text(p)) !== original, JSON.stringify(verdict.errors).slice(0, 200));
     check('nested: no console errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+}
+
+// ---- AP5: conditions (suggestions by keyboard, plain language, warnings, "used in") ---------------------------------
+{
+    const p = await open('cond', { width: 1400, height: 1400 });
+    const row = (i) => `.sb-item[data-path='${JSON.stringify(['pages', 0, 'elements', i])}']`;
+    const selected = () => p.evaluate(() => document.querySelector('.sb-item.sb-selected')?.getAttribute('data-path'));
+    const field = p.locator('[data-prop="visibleIf"] input');
+    const list = p.locator('[data-prop="visibleIf"] .sb-suggest');
+    const reads = p.locator('[data-prop="visibleIf"] .sb-cond-reads');
+    const warn = p.locator('[data-prop="visibleIf"] .sb-cond-warn');
+    const options = () => list.locator('[role="option"]').allTextContents();
+    /** Moves the active suggestion to the first one whose text contains `want`, by arrow keys, and takes it with Enter. */
+    const take = async (want) => {
+        const all = await options();
+        const k = all.findIndex((o) => o.includes(want));
+        if (k < 0) { return false; }
+        for (let i = 0; i < k; i++) { await field.press('ArrowDown'); }
+        const active = await field.getAttribute('aria-activedescendant');
+        await field.press('Enter');
+        await p.waitForTimeout(100);
+        return active === `${await list.getAttribute('id')}-${k}`;
+    };
+    const visibleIfOf = async (i) => (await survey(p)).pages[0].elements[i].visibleIf;
+
+    await p.click(row(2));
+    const group = p.locator('details.sb-group', { has: field });
+    if (!(await group.evaluate((d) => d.open))) { await group.locator('summary').click(); }
+    const before = await text(p);
+    await field.focus();
+    await field.press('{');
+    await p.waitForTimeout(100);
+    const fieldsOffered = await options();
+    check('cond: "{" opens the list of fields as a combobox, with titles, without the element itself',
+        await list.isVisible() && (await field.getAttribute('aria-expanded')) === 'true' && (await list.getAttribute('role')) === 'listbox'
+        && fieldsOffered.some((o) => o.includes('form') && o.includes('Unterrichtsform')) && !fieldsOffered.some((o) => o.startsWith('other')),
+        JSON.stringify(fieldsOffered));
+    const tookField = await take('Unterrichtsform');
+    const ops = await options();
+    check('cond: Enter takes the active field, then the comparisons follow', tookField && (await field.inputValue()) === '{form}' && ops.includes('=') && ops.includes('notempty'),
+        `${await field.inputValue()} ${JSON.stringify(ops)}`);
+    const tookOp = await take('=');
+    const values = await options();
+    check('cond: after "=" the answers of the field, with their texts', tookOp && values.some((o) => o.includes("'tz'") && o.includes('Teilzeit')), JSON.stringify(values));
+    await take('Teilzeit');
+    check('cond: the condition is built by keyboard alone; nothing is written before the field is left',
+        (await field.inputValue()) === "{form} = 'tz'" && (await text(p)) === before && !(await list.isVisible()), await field.inputValue());
+    check('cond: the plain language reads titles and answer texts', await reads.isVisible() && /Bedeutet: .*Unterrichtsform.*Teilzeit/.test(await reads.textContent()), await reads.textContent());
+    await field.press('Enter');
+    await p.waitForTimeout(200);
+    const committed = await text(p);
+    const added = committed.split('\n').filter((l) => !before.split('\n').includes(l));
+    check('cond: Enter commits the text as typed (a new line in the JSON, a comma before it) and does not submit the form',
+        (await visibleIfOf(2)) === "{form} = 'tz'" && committed.split('\n').length === before.split('\n').length + 1
+        && added.length === 2 && added[1].includes('"visibleIf"') && !(await submitted(p)), JSON.stringify(added));
+
+    await field.press('End');
+    await p.keyboard.press(process.platform === 'darwin' ? 'Meta+Space' : 'Control+Space');
+    await p.waitForTimeout(100);
+    const joins = await options();
+    check('cond: Ctrl+Space offers and/or after a complete comparison', await list.isVisible() && joins.includes('and') && joins.includes('or'), JSON.stringify(joins));
+    await field.press('Escape');
+    await p.waitForTimeout(100);
+    check('cond: Esc closes the list and keeps the focus in the field', !(await list.isVisible()) && await field.evaluate((e) => document.activeElement === e)
+        && (await field.getAttribute('aria-expanded')) === 'false');
+
+    await field.fill("{forn} = 'tz'");
+    await p.waitForTimeout(100);
+    check('cond: an unknown field is warned about while typing', await warn.isVisible() && /Kein Feld „forn"/.test(await warn.textContent()), await warn.textContent());
+    await field.fill("{form} = 'abend'");
+    await p.waitForTimeout(100);
+    check('cond: a value that is no answer of the field is warned about, with the possible ones',
+        /„abend" ist keine Antwort/.test(await warn.textContent()) && /'vz', 'tz'/.test(await warn.textContent()), await warn.textContent());
+    await field.fill("({form} = 'vz'");
+    await p.waitForTimeout(100);
+    const whileTyping = await warn.isVisible();
+    await p.click(row(2)); // leaving the field
+    await p.waitForTimeout(200);
+    await p.click(row(2));
+    await p.waitForTimeout(150);
+    check('cond: unbalanced parentheses are not a mistake while typing, but after leaving the field (no plain language then)',
+        !whileTyping && /Klammern sind nicht ausgeglichen/.test(await warn.textContent()) && !/Bedeutet/.test(await reads.textContent()),
+        `${whileTyping} ${await warn.textContent()} ${await reads.textContent()}`);
+    await field.fill("{form} = 'tz'");
+    await field.press('Enter');
+    await p.waitForTimeout(200);
+    check('cond: setting the condition back gives the committed text again', (await text(p)) === committed);
+
+    await p.click(row(0));
+    await p.waitForTimeout(150);
+    const used = p.locator('.sb-used-in');
+    const usedText = await used.textContent().catch(() => '');
+    check('cond: "used in" lists the elements that refer to the field, with the property', /Beginn/.test(usedText) && /Sonstiges/.test(usedText) && /visibleIf|Sichtbar/.test(usedText), usedText);
+    await used.locator('button', { hasText: 'Sonstiges' }).click();
+    await p.waitForTimeout(150);
+    check('cond: a click there selects that element', await selected() === JSON.stringify(['pages', 0, 'elements', 2]));
+
+    const verdict = serverSays(await text(p));
+    check('cond: the server accepts the result without warnings', verdict.valid && verdict.warnings.length === 0, JSON.stringify([verdict.errors, verdict.warnings]).slice(0, 200));
+    check('cond: no console errors', errors.length === 0, errors.join(' | '));
+    if (shots) { await p.screenshot({ path: join(shots, 'cond.png'), fullPage: true }); }
     await p.close();
 }
 
