@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12), [AP1](#ap1-ergebnis-2026-11-12) und [AP2](#ap2-ergebnis-2026-11-13) erledigt, als Nächstes AP3. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12) bis [AP3](#ap3-ergebnis-2026-11-13) erledigt, als Nächstes AP4. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -71,7 +71,7 @@ Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darste
 | **AP0** Klärung | Welche `--sjs2-*`-Variablen entsprechen Markenfarbe, Schrift, Größe, Hintergrund, Titelfarbe, Kartenradius; wie mischt `applyTheme` alte und neue Variablen; Vorgabe-Theme im 3.2-Format, das dem bisherigen Aussehen nahekommt; welche Schriften die Frontend-CSP zulässt. Felderliste festschreiben. | 2–3 Tage | Felderliste mit Variablen; Vorgabe-Theme sieht in der Vorschau aus wie das heutige Formular (Screenshot-Vergleich). **Erfüllt**, siehe [AP0-Ergebnis](#ap0-ergebnis-2026-11-12) |
 | **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name. **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-11-12) |
 | **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule. **Erfüllt**, siehe [AP2-Ergebnis](#ap2-ergebnis-2026-11-13) |
-| **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün |
+| **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP3-Ergebnis](#ap3-ergebnis-2026-11-13) |
 | **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel |
 | **AP5** Doku und Abschluss | [SURVEYJS.md](../../redaktion/SURVEYJS.md): neuer Abschnitt „Design (Theme) ändern“; MIGRATION-3.1 und Fallback-Abschnitt verweisen für Themes darauf (Import nur noch für die Übernahme); TODO-Eintrag „Theme im SurveyJS-3-Format“ aktualisieren; `HelpLinks`, Meldungstexte (`messages.php`, `messages.example.php`), Changelog, manuelle Tests | 2–3 Tage | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
@@ -167,6 +167,21 @@ Gegenprobe: Ohne Konfliktprüfung schlagen die beiden Konflikttests fehl. Unit-S
 Die Tenant-Trennung ist per Integrationstest belegt, nicht mit einem Schul-Admin im Browser.
 
 **Für AP5 vorgemerkt:** `HelpLinks` für `themes.php` und `theme_edit.php` (bis dahin führt „?“ zum Doku-Index), `messages.example.php`, Doku-Abschnitt.
+
+## AP3-Ergebnis (2026-11-13)
+
+**Umgesetzt** als Theme-Modus der vorhandenen Live-Vorschau (AP4a), nicht als zweites Fenster:
+- *Live-Vorschau* in `theme_edit.php` öffnet `theme_preview_live.php?name=…` (ein Fenster je Tenant und Theme). Die Verbindung zum Editor ist dieselbe wie beim Survey-Editor (`live-link.js`, über `assets/theme-editor.js`); das Theme-Feld ist das Textfeld, das CodeMirror aktuell hält.
+- Das Fenster (`inc/live_preview_window.php` und `live-window.js` mit `mode: 'theme'`) prüft jeden Text bei `theme_preview_check.php` (POST, CSRF, eigener Rate-Limit-Topf `preview`, höchstens 5 Fehler) und schickt ihn erst nach `ok` als Nachricht `theme` an den Frame. *Auswählen* und *Ausgeblendete zeigen* entfallen.
+- **Formularauswahl:** alle Formulare, die das Theme nutzen; ohne Survey im Backend nicht wählbar („Survey nur als Datei“). Ein Wechsel lädt den Frame neu, der das aktuelle Theme wieder bekommt. Hat kein Formular eine Survey im Backend, nennt das Fenster das.
+- **Frame:** `form_preview_frame.php?theme=1&form=…` bettet die veröffentlichte Survey ein (bis zur ersten Nachricht mit dem gespeicherten Theme). `survey-preview.js` nimmt im Theme-Modus nur `theme` vom Elternfenster an und baut die Survey neu auf (Seite und Antworten bleiben). Neu aufbauen statt `applyTheme()` auf dem alten Modell: Variablen, die das neue Theme weglässt, bleiben sonst stehen.
+  Der Frame bleibt `sandbox allow-scripts` ohne eigene Origin.
+- `ThemeService::exists()`, `ThemeEditorController::previewVerdict()`; Texte `live_preview.theme_*`, `theme_editor.live_help`. `sync-preview-assets.sh` erinnert nach SurveyJS-Updates an `check.mjs` (Abschnitte `live` und `theme`) und an die Variablentabelle aus AP0.
+
+**Tests:** drei Integrationstests in `ThemeEditorControllerTest` (gültig, höchstens 5 Fehler, fremder Tenant/ungültiger Name), `EditorPagesSecurityTest` (neue Seiten; Prüf-Endpunkt nur POST, CSRF vor der Prüfung, speichert nichts, Topf `preview`), `PreviewAssetsTest` (beide Empfänger prüfen den Absender).
+`check.mjs` hat den Abschnitt `theme` (10 Prüfungen: Verbindung, Sandbox, Farbe ändert sich ungespeichert mit Seite und Antworten, entfernte Variable bleibt nicht stehen, abgelehnter Text erreicht den Frame nicht, unlesbares JSON geht nicht an den Server, Formularwechsel, keine Konsolen- oder CSP-Fehler); 136/136 grün. Unit (1380), Integration (244) und `node --test` grün.
+
+**Im Dev-Stack geprüft** (Playwright mit Chrome, Platform-Admin, Tenant *Default*): Fenster verbunden, Markenfarbe im Editor geändert ⇒ Vorschau zeigt sie, auch nach dem Wechsel auf `bs`; das veröffentlichte Theme bleibt unverändert. Das Browser-Pane der Desktop-App blockiert die Skripte des Sandbox-Frames (`ERR_BLOCKED_BY_CLIENT`, auch bei der bestehenden Survey-Vorschau) und öffnet keine Popups; dort lässt sich die Vorschau nicht prüfen.
 
 ## Tests
 

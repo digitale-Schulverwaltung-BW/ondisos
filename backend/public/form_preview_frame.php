@@ -39,9 +39,13 @@ $source  = is_string($_GET['source'] ?? null) ? $_GET['source'] : SurveyPreviewC
 // Live preview (AP4a, form_preview_live.php): the survey comes from the editor by postMessage, after the server checked
 // it (form_preview_check.php); the frame itself only brings the theme.
 $live    = ($_GET['live'] ?? '') === '1';
+// Theme preview (3.2.0b AP3, theme_preview_live.php): the published survey of the form; the theme comes from the theme
+// editor by postMessage, after the server checked it (theme_preview_check.php). Until then the form's stored theme shows.
+$themeLive = !$live && ($_GET['theme'] ?? '') === '1';
 
 $controller = new SurveyPreviewController($configs, $resources, $drafts);
-$preview    = $live ? ['survey_json' => null] + $controller->loadTheme($formKey) : $controller->load($formKey, $source);
+$preview    = $live ? ['survey_json' => null] + $controller->loadTheme($formKey)
+    : $controller->load($formKey, $themeLive ? SurveyPreviewController::SOURCE_LIVE : $source);
 
 $message = null;
 switch ($preview['status']) {
@@ -61,4 +65,5 @@ switch ($preview['status']) {
 $frameSurveyJson = $preview['survey_json'];
 $frameThemeJson  = $preview['theme_json'];
 $frameLive       = $live;
+$frameThemeLive  = $themeLive;
 require __DIR__ . '/../inc/preview_frame.php';

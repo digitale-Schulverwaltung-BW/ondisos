@@ -108,6 +108,17 @@ class ThemeService
         return $this->usageByName()[$name] ?? [];
     }
 
+    /** Whether the theme can be opened in this tenant (stored, or named by a form). */
+    public function exists(string $name): bool
+    {
+        try {
+            $this->assertKnown($name);
+            return true;
+        } catch (NotFoundException) {
+            return false;
+        }
+    }
+
     /** Check a theme text without storing anything. */
     public function check(string $json): ValidationResult
     {

@@ -17,3 +17,4 @@ cp "$SRC/assets/fonts/opensans/"*.woff2        "$DST/fonts/"
 cp "$SRC/assets/LICENSES.txt"                  "$DST/LICENSES.txt"   # MIT notice of SurveyJS must travel with the copies
 echo "Preview assets updated from $SRC"
 echo "After a SurveyJS update also refresh App\\Forms\\SurveyValidator::KNOWN_FUNCTIONS (see its comment; SurveyValidatorTest checks it)."
+echo "Then run backend/tools/survey-builder-harness/check.mjs: the sections \"live\" and \"theme\" show whether the live previews (survey and theme) still work, and compare the theme variables of PLAN-3.2.0b (AP0)."

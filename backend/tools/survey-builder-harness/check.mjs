@@ -81,12 +81,14 @@ render('broken', broken, reportBroken);
 render('warn', surveys('ausbildernachmittag'), reportWarn);
 render('nocm', surveys('ausbildernachmittag'), null, { SB_NO_CODEMIRROR: '1' });
 render('live', liveSurvey, null, { SB_LIVE: '1' });
+render('theme', join(repo, 'backend/templates/theme/default.json'), null, { SB_THEME: '1' });
 
 const MIME = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.woff2': 'font/woff2' };
 // the backend's policy (ContentSecurityPolicy::policy) and the sandbox policy of form_preview_frame.php, nonce "harness"
 const ADMIN_CSP = "default-src 'self'; script-src 'self' 'nonce-abc'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'";
 const FRAME_CSP = "sandbox allow-scripts; default-src 'none'; script-src 'nonce-harness' 'unsafe-eval'; style-src * 'unsafe-inline' data:; font-src data:; img-src * data: blob:; connect-src *; frame-ancestors 'self'";
 let liveChecks = 0;
+let themeChecks = 0;
 const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (req.method === 'POST' && path.endsWith('/check')) { // form_preview_check.php: the server's validator decides
@@ -96,8 +98,10 @@ const server = createServer((req, res) => {
             const form = new URLSearchParams(body);
             res.setHeader('content-type', 'application/json');
             if (form.get('csrf_token') !== 'harness-token') { res.writeHead(403); res.end('{"ok":false,"error":"csrf"}'); return; }
-            liveChecks += 1;
-            const v = serverSays(form.get('survey_text') ?? '');
+            const isTheme = path.startsWith('/theme/'); // theme_preview_check.php: ThemeValidator, and the theme must exist
+            if (isTheme && form.get('name') !== 'harness_theme.json') { res.writeHead(404); res.end('{"ok":false,"error":"not_found"}'); return; }
+            if (isTheme) { themeChecks += 1; } else { liveChecks += 1; }
+            const v = isTheme ? serverSays(form.get('theme_text') ?? '', 'theme') : serverSays(form.get('survey_text') ?? '');
             res.writeHead(200);
             res.end(JSON.stringify({ ok: true, status: v.valid ? 'ok' : 'invalid', errors: v.errors.slice(0, 5).map((e) => ({ path: e.path, message: e.message })) }));
         });
@@ -106,8 +110,9 @@ const server = createServer((req, res) => {
     const file = resolve(root, `.${path}`);
     if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) { res.writeHead(404); res.end(); return; }
     const headers = { 'content-type': MIME[extname(file)] ?? 'application/octet-stream' };
-    if (path.startsWith('/live/') && path.endsWith('frame.html')) { headers['content-security-policy'] = FRAME_CSP; }
-    else if (path.startsWith('/live/') && path.endsWith('.html')) { headers['content-security-policy'] = ADMIN_CSP; }
+    const previewDir = path.startsWith('/live/') || path.startsWith('/theme/');
+    if (previewDir && path.endsWith('frame.html')) { headers['content-security-policy'] = FRAME_CSP; }
+    else if (previewDir && path.endsWith('.html')) { headers['content-security-policy'] = ADMIN_CSP; }
     res.writeHead(200, headers);
     createReadStream(file).pipe(res);
 });
@@ -134,7 +139,7 @@ async function open(name, viewport = { width: 1400, height: 1000 }) {
 }
 const text = (p) => p.inputValue('#survey-text');
 /** What the server's SurveyValidator says about a text. */
-const serverSays = (t) => JSON.parse(execFileSync('php', [join(here, 'validate.php')], { input: t, encoding: 'utf8' }));
+const serverSays = (t, kind = 'survey') => JSON.parse(execFileSync('php', [join(here, 'validate.php'), ...(kind === 'theme' ? ['theme'] : [])], { input: t, encoding: 'utf8' }));
 const survey = async (p) => JSON.parse(await text(p));
 const lines = (a, c) => { const x = a.split('\n'); const y = c.split('\n'); return x.length !== y.length ? `lines ${x.length}->${y.length}` : String(x.filter((l, i) => l !== y[i]).length); };
 const allElements = (s) => (s.pages ?? [{ elements: s.elements }]).flatMap((pg) => pg.elements).flatMap(function f(e) { return [e, ...(e.elements ?? []).flatMap(f)]; });
@@ -872,6 +877,74 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     check('live: few checks on the server (unchanged and known texts are not checked again)', liveChecks > 0 && liveChecks <= 12, String(liveChecks));
     check('live: no console errors and no CSP violation in editor, window and frame', problems.length === 0, problems.join(' | '));
     if (shots) { await win.screenshot({ path: join(shots, 'live-window.png') }); }
+    await context.close();
+}
+
+// ---- 3.2.0b AP3: live preview of the theme editor ---------------------------------------------------------------------
+{
+    const context = await browser.newContext({ viewport: { width: 1400, height: 1000 } });
+    const problems = [];
+    const watch = (pg, who) => {
+        pg.on('console', (m) => { if (m.type() === 'error' || /content security policy|refused to/i.test(m.text())) { problems.push(`${who}: ${m.text().slice(0, 200)}`); } });
+        pg.on('pageerror', (e) => problems.push(`${who} pageerror: ${e.message.slice(0, 200)}`));
+        pg.on('dialog', (d) => d.accept());
+    };
+    const p = await context.newPage();
+    watch(p, 'theme editor');
+    await p.goto(`${base}/theme/index.html`);
+    await p.waitForTimeout(900);
+    check('theme: the editor shows the "Live-Vorschau" button', await p.locator('#te-live-preview').isVisible());
+    const [win] = await Promise.all([p.waitForEvent('popup'), p.click('#te-live-preview')]);
+    watch(win, 'theme window');
+    await win.waitForLoadState();
+    await win.waitForTimeout(1800);
+    const F = win.frameLocator('#lp-frame');
+    const frame = () => win.frames().find((f) => /frame\.html/.test(f.url()));
+    const brand = () => frame().evaluate(() => getComputedStyle(document.querySelector('.sd-root-modern')).getPropertyValue('--sjs2-color-project-brand-600').trim());
+    const pageName = () => frame().evaluate(() => window.__preview.survey.currentPage?.name);
+    const notice = async () => ((await win.locator('#lp-notice').isHidden()) ? '' : await win.textContent('#lp-notice'));
+    const setText = (t) => p.evaluate((x) => { const v = window.OndisosSurveyEditor.last.view; v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: x } }); }, t);
+    const withBrand = (color) => { const t = JSON.parse(readFileSync(join(repo, 'backend/templates/theme/default.json'), 'utf8')); t.cssVariables['--sjs2-color-project-brand-600'] = color; return JSON.stringify(t, null, 4); };
+
+    check('theme: the window connects; the frame shows the published survey with the theme from the editor',
+        (await win.textContent('#lp-status')).includes('Verbunden') && await F.locator('[data-name="vorname"]').count() === 1 && (await brand()) === 'rgba(0, 163, 215, 1)', await brand());
+    check('theme: the frame has no origin of its own (sandbox)', await frame().evaluate(() => window.origin) === 'null');
+    check('theme: picking and "show hidden" are not offered; a form without survey cannot be chosen',
+        await win.locator('#lp-pick').count() === 0 && await win.locator('#lp-invisible').count() === 0 && await win.locator('#lp-form option[value="ohne"]').isDisabled());
+
+    // a colour change follows without saving; page and answers stay
+    await F.locator('[data-name="vorname"] input').fill('Ada');
+    await F.locator('#preview-next').click();
+    await win.waitForTimeout(300);
+    await setText(withBrand('rgba(200, 30, 60, 1)'));
+    await win.waitForTimeout(1500);
+    check('theme: an unsaved colour change shows; page and answers stay',
+        (await brand()) === 'rgba(200, 30, 60, 1)' && (await pageName()) === 'p2' && await frame().evaluate(() => window.__preview.survey.data.vorname) === 'Ada', await brand());
+
+    // a variable the new theme leaves out goes back to SurveyJS's default (new model, not applyTheme on the old one)
+    const without = JSON.parse(withBrand('x')); delete without.cssVariables['--sjs2-color-project-brand-600'];
+    await setText(JSON.stringify(without, null, 4));
+    await win.waitForTimeout(1500);
+    const fallback = await brand();
+    check('theme: a removed variable does not stay', fallback !== 'rgba(200, 30, 60, 1)' && fallback !== 'x', fallback);
+
+    const checksBefore = themeChecks;
+    await setText(JSON.stringify({ cssVariables: { '--sjs2-color-project-brand-600': 'rgb(1, 2, 3)', '--x': '<b>' } }));
+    await win.waitForTimeout(1500);
+    check('theme: a text the server refuses is not applied; the last good state stays with a notice',
+        (await notice()).includes('ablehnt') && (await brand()) === fallback && themeChecks === checksBefore + 1, await notice());
+    await setText('{"cssVariables": ');
+    await win.waitForTimeout(1200);
+    check('theme: unreadable JSON is not even sent to the server', (await notice()).includes('kein lesbares JSON') && themeChecks === checksBefore + 1);
+
+    await setText(withBrand('rgba(10, 120, 40, 1)'));
+    await win.waitForTimeout(1500);
+    await win.selectOption('#lp-form', 'zwei');
+    await win.waitForTimeout(2000);
+    check('theme: another form of the theme loads with the current theme',
+        /form=zwei/.test(frame().url()) && (await brand()) === 'rgba(10, 120, 40, 1)' && (await notice()) === '', await brand());
+    check('theme: no console errors and no CSP violation in editor, window and frame', problems.length === 0, problems.join(' | '));
+    if (shots) { await win.screenshot({ path: join(shots, 'theme-window.png') }); }
     await context.close();
 }
 

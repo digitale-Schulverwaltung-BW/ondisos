@@ -103,6 +103,9 @@ $editorText = $postedText ?? $view['content'];
 // The lock stays at the state the editor was opened with; only after a conflict does the page move on to the new
 // live state (the admin has seen the difference and publishes again on purpose).
 $basedOn = ($postedSha !== null && !$conflict) ? $postedSha : (string)($view['sha256'] ?? '');
+// Live preview (AP3): one window per tenant and theme, so a second click brings the same window to the front.
+$livePreviewUrl    = 'theme_preview_live.php?name=' . urlencode($view['name']);
+$livePreviewWindow = 'ondisos-theme-' . \App\Config\TenantContext::getTenantId() . '-' . $view['name'];
 $formsText = $view['forms'] !== [] ? implode(', ', $view['forms']) : M::get('theme_editor.unused', 'kein Formular');
 
 /** Link text for a finding: "Zeile 12" (jumps to the line in the editor via survey-editor.js) */
@@ -206,7 +209,12 @@ require __DIR__ . '/../inc/header.php';
 
         <div class="mb-2 d-flex justify-content-between align-items-end">
             <label class="form-label mb-0" for="survey-text"><?= ff_e(M::get('theme_editor.editor', 'Theme (JSON)')) ?></label>
-            <button type="button" class="btn btn-sm btn-outline-secondary" id="se-copy"><?= ff_e(M::get('survey_editor.copy', 'JSON kopieren')) ?></button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="te-live-preview" hidden
+                        data-url="<?= ff_e($livePreviewUrl) ?>" data-window="<?= ff_e($livePreviewWindow) ?>" data-form="<?= ff_e($view['name']) ?>"
+                        title="<?= ff_e(M::get('theme_editor.live_help', 'Zeigt ein Formular, das dieses Theme nutzt, in einem eigenen Fenster mit dem Theme aus dem Editor. Es folgt jeder Änderung, auch ungespeichert.')) ?>"><?= ff_e(M::get('live_preview.open', 'Live-Vorschau')) ?> ↗</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" id="se-copy"><?= ff_e(M::get('survey_editor.copy', 'JSON kopieren')) ?></button>
+            </div>
         </div>
         <textarea id="survey-text" name="theme_text" class="form-control font-monospace" rows="26" spellcheck="false" wrap="off"
                   <?= $postedText !== null && trim($postedText) !== trim($view['content']) ? 'data-unsaved="1"' : '' ?>
@@ -295,4 +303,5 @@ if ($report !== null) {
 <script src="assets/codemirror/survey-editor-cm.js"></script>
 <?php endif; ?>
 <script src="assets/survey-editor.js"></script>
+<script type="module" src="assets/theme-editor.js"></script>
 <?php require __DIR__ . '/../inc/footer.php'; ?>

@@ -805,10 +805,17 @@ return [
             'hidden' => 'Das gewählte Element ist gerade ausgeblendet (Bedingung nicht erfüllt oder Antwort nicht gewählt). „Ausgeblendete zeigen“ blendet es ein.',
             'missing' => 'Das gewählte Element steht noch nicht in der Vorschau.',
         ],
+        // Theme-Modus (3.2.0b AP3): veröffentlichtes Formular mit dem Theme aus dem Theme-Editor
+        'theme_title' => 'Live-Vorschau Theme',
+        'theme_form' => 'Formular',
+        'theme_no_survey' => '(Survey nur als Datei)',
+        'theme_no_forms' => 'Kein Formular, das dieses Theme nutzt, hat eine Survey im Backend. Die Vorschau braucht ein solches Formular.',
+        'theme_frame_note' => 'Live-Vorschau des Themes: das veröffentlichte Formular mit dem Theme aus dem Editor, auch ungespeichert. Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.',
     ],
 
     // Theme-Editor (3.2.0b): Design der Formulare einer Schule
     'theme_editor' => [
+        'live_help' => 'Zeigt ein Formular, das dieses Theme nutzt, in einem eigenen Fenster mit dem Theme aus dem Editor. Es folgt jeder Änderung, auch ungespeichert.',
         'affects' => 'Die Änderung betrifft: {{forms}}',
         'back' => '← Zurück zur Theme-Liste',
         'btn' => [

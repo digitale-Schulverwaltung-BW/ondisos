@@ -9,6 +9,10 @@
 // it again, and it can tell when the editor is gone. Messages are accepted from the opener only if it is of the same
 // origin, from the frame only if they come from the frame's window; both carry the protocol name and version.
 // Unreadable text is not sent to the server (typing in the JSON tab); the last good state stays on screen with a notice.
+//
+// Theme mode (3.2.0b AP3, theme_preview_live.php, config.mode = 'theme'): the editor is the theme editor and config.form is
+// the theme's name. Texts are checked by theme_preview_check.php and go to the frame as "theme"; the frame shows the
+// published survey of the form chosen in #lp-form. Choosing another form loads a new frame, which gets the theme again.
 
 import { message, isMessage } from './live-targets.js';
 
@@ -17,6 +21,7 @@ const LOST = 5000;
 const CACHE = 12;
 
 const config = JSON.parse(document.getElementById('live-config')?.textContent || '{}');
+const themeMode = config.mode === 'theme';
 const texts = config.texts ?? {};
 const frame = document.getElementById('lp-frame');
 const status = document.getElementById('lp-status');
@@ -71,6 +76,7 @@ const toEditor = (type, payload = {}) => {
 };
 
 function sendOptions() {
+    if (themeMode) { return; }
     toFrame('options', { pick: pickButton.getAttribute('aria-pressed') === 'true', invisible: invisible.checked });
 }
 
@@ -78,7 +84,9 @@ function sendOptions() {
 
 async function verdictFor(text) {
     if (verdicts.has(text)) { return verdicts.get(text); }
-    const body = new URLSearchParams({ csrf_token: config.csrf ?? '', form: config.form ?? '', survey_text: text });
+    const body = new URLSearchParams(themeMode
+        ? { csrf_token: config.csrf ?? '', name: config.form ?? '', theme_text: text }
+        : { csrf_token: config.csrf ?? '', form: config.form ?? '', survey_text: text });
     let response;
     try {
         response = await fetch(config.checkUrl, { method: 'POST', body, credentials: 'same-origin', headers: { Accept: 'application/json' } });
@@ -121,7 +129,7 @@ async function pump() {
     if (text !== state.wanted) { pump(); return; } // a newer text came in meanwhile: check that one
     if (verdict.status === 'ok') {
         state.seq += 1;
-        toFrame('render', { text, seq: state.seq });
+        toFrame(themeMode ? 'theme' : 'render', { text, seq: state.seq });
         state.shown = text; // the frame answers "rendered"; a failure there brings the notice
         setNotice('');
         flushShow();
@@ -199,8 +207,15 @@ function setPicking(on) {
     pickButton.setAttribute('aria-pressed', on ? 'true' : 'false');
     sendOptions();
 }
-pickButton.addEventListener('click', () => setPicking(pickButton.getAttribute('aria-pressed') !== 'true'));
-invisible.addEventListener('change', sendOptions);
+pickButton?.addEventListener('click', () => setPicking(pickButton.getAttribute('aria-pressed') !== 'true'));
+invisible?.addEventListener('change', sendOptions);
+
+// Theme mode: another form of this theme in the frame. The new frame says "ready" and gets the current theme again.
+const formSelect = document.getElementById('lp-form');
+formSelect?.addEventListener('change', () => {
+    state.frameReady = false;
+    frame.src = config.frameBase + encodeURIComponent(formSelect.value);
+});
 
 const widths = document.getElementById('lp-width');
 widths?.querySelectorAll('button').forEach((button) => {

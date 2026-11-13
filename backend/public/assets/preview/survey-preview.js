@@ -2,12 +2,14 @@
 // Loaded after survey.core, survey-js-ui and survey-handler-base.js (which registers placeholderExpression and
 // provides the same dynamic placeholders as the real form).
 //
-// Two modes (window.previewConfig.live):
+// Three modes (window.previewConfig.live / .themeLive):
 //   - stored survey (form_preview.php): the survey is embedded in the page;
 //   - live preview (AP4a, form_preview_live.php): the survey comes from the surrounding window by postMessage, after the
 //     server accepted it. Every new text rebuilds the survey; page and answers stay. The window can ask to show an
 //     element, and a click while picking (or Alt + click) tells the window which element it was: kind and name, never
-//     a path (the editor finds the path itself).
+//     a path (the editor finds the path itself);
+//   - theme preview (3.2.0b AP3, theme_preview_live.php): the stored survey is embedded, the theme comes from the window
+//     by postMessage ("theme"), after the server accepted it. Every new theme rebuilds the survey; page and answers stay.
 // The frame is sandboxed (opaque origin): it only accepts messages from its parent and only sends kinds and names.
 (function () {
     'use strict';
@@ -25,11 +27,13 @@
             this.picking = false;
             this.hovered = null;
             this._refreshPages = function () {};
+            this.json = null;
         }
 
         /** Builds the survey from a JSON object; with keep = true, page, answers and scroll position stay. */
         build(json, keep) {
             var old = this.survey;
+            this.json = json;
             var survey = new Survey.Model(json);
             this._setupDynamicPlaceholders(survey);
 
@@ -198,6 +202,18 @@
             this._send('ready', {});
         }
 
+        /** Theme preview: only "theme" messages from the parent; no picking, no other options. */
+        startThemeLive() {
+            var self = this;
+            window.addEventListener('message', function (event) {
+                if (event.source !== window.parent || !event.data || event.data.ondisos !== PROTOCOL || event.data.v !== VERSION) {
+                    return;
+                }
+                if (event.data.type === 'theme') { self._receive(event.data); }
+            });
+            this._send('ready', {});
+        }
+
         _send(type, payload) {
             var message = Object.assign({ ondisos: PROTOCOL, v: VERSION, type: type }, payload);
             // The parent is the live preview window of the admin (frame-ancestors 'self'); this frame has no origin of its
@@ -211,6 +227,18 @@
                 try {
                     json = JSON.parse(data.text);
                     this.build(json, true);
+                } catch (e) {
+                    this._send('rendered', { ok: false, error: String(e && e.message ? e.message : e).slice(0, 300) });
+                    return;
+                }
+                this._send('rendered', { ok: true, seq: data.seq });
+            } else if (data.type === 'theme' && typeof data.text === 'string') {
+                try {
+                    var theme = JSON.parse(data.text);
+                    if (!theme || typeof theme !== 'object' || Array.isArray(theme)) { throw new Error('Das Theme ist kein JSON-Objekt'); }
+                    cfg.theme = theme;
+                    // A new model instead of applyTheme() on the old one: variables the new theme leaves out must not stay.
+                    if (this.json) { this.build(this.json, true); }
                 } catch (e) {
                     this._send('rendered', { ok: false, error: String(e && e.message ? e.message : e).slice(0, 300) });
                     return;
@@ -379,6 +407,7 @@
         preview.startLive();
     } else {
         preview.build(cfg.survey, false);
+        if (cfg.themeLive) { preview.startThemeLive(); }
     }
     window.__preview = preview;
 })();

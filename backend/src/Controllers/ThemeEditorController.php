@@ -146,6 +146,28 @@ class ThemeEditorController
         return ['status' => $result->revisionId === null ? 'unchanged' : 'restored', 'result' => $result->validation];
     }
 
+    /**
+     * May the live preview apply this unsaved theme text (AP3)? Only what ThemeValidator accepts; nothing is stored.
+     *
+     * @return array{status: 'ok'|'invalid'|'not_found', errors: list<array{path: string, message: string}>}
+     *   at most SurveyPreviewController::MAX_REPORTED errors; the full report stays with "Prüfen"
+     */
+    public function previewVerdict(string $name, string $text): array
+    {
+        if (!$this->service->exists($name)) {
+            return ['status' => 'not_found', 'errors' => []];
+        }
+        $result = $this->service->check($text);
+        if ($result->isValid()) {
+            return ['status' => 'ok', 'errors' => []];
+        }
+        $errors = array_map(
+            static fn (array $e): array => ['path' => (string)$e['path'], 'message' => (string)$e['message']],
+            array_slice($result->errors(), 0, SurveyPreviewController::MAX_REPORTED)
+        );
+        return ['status' => 'invalid', 'errors' => $errors];
+    }
+
     /** The built-in default, for "Auf Vorgabe zurücksetzen" (fills the editor, stores nothing). */
     public function defaultTheme(): string
     {

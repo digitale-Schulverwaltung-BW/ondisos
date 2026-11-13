@@ -67,7 +67,7 @@ class PreviewAssetsTest extends TestCase
 
     public function testTheOuterPageDoesNotGrantTheFrameItsOrigin(): void
     {
-        foreach (['backend/public/form_preview.php', 'backend/public/form_preview_live.php', 'backend/inc/live_preview_window.php'] as $file) {
+        foreach (['backend/public/form_preview.php', 'backend/public/form_preview_live.php', 'backend/public/theme_preview_live.php', 'backend/inc/live_preview_window.php'] as $file) {
             $php = (string)file_get_contents(self::ROOT . '/' . $file);
             $this->assertStringNotContainsString('allow-same-origin', $php, $file);
             $this->assertStringNotContainsString('sandbox=', $php, "{$file}: the frame is sandboxed by its own header, an attribute could only loosen it");
@@ -79,7 +79,8 @@ class PreviewAssetsTest extends TestCase
     {
         $js = (string)file_get_contents(self::ROOT . '/backend/public/assets/preview/survey-preview.js');
 
-        $this->assertStringContainsString('event.source !== window.parent', $js);
+        $this->assertSame(2, substr_count($js, 'event.source !== window.parent'), 'both listeners (survey and theme preview) check the sender');
+        $this->assertSame(2, substr_count($js, 'event.data.v !== VERSION'));
         $this->assertStringContainsString("event.data.ondisos !== PROTOCOL", $js);
         $this->assertStringNotContainsString('innerHTML', $js);
         $this->assertStringNotContainsString('eval(', $js);

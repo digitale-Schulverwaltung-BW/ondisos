@@ -8,6 +8,7 @@ use App\Services\MessageService as M;
  *
  * Needs: $nonce, $message (?string: shown instead of the survey), $frameSurveyJson (?string, JSON safe for a script
  * element; null in the live preview), $frameThemeJson (string, same), $frameLive (bool), $e (HTML escaping).
+ * Optional: $frameThemeLive (bool, theme preview of the theme editor: the survey is embedded, the theme arrives by message).
  * The page that includes this sends the sandbox CSP header.
  */
 
@@ -22,6 +23,8 @@ $asset = static function (string $file) use ($e): string {
     $mtime = @filemtime(__DIR__ . '/../public/assets/preview/' . $file);
     return $e('assets/preview/' . $file . ($mtime !== false ? '?v=' . $mtime : ''));
 };
+
+$frameThemeLive ??= false;
 
 $jsonText = static fn (string $key, string $default): string => json_encode(M::get($key, $default), JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE);
 ?><!DOCTYPE html>
@@ -97,7 +100,9 @@ $jsonText = static fn (string $key, string $default): string => json_encode(M::g
 <?php else: ?>
     <div id="preview-note"><?= $e($frameLive
         ? M::get('live_preview.frame_note', 'Live-Vorschau: zeigt den Stand im Editor, auch ungespeichert. Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.')
-        : M::get('preview.note', 'Vorschau: Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.')) ?></div>
+        : ($frameThemeLive
+            ? M::get('live_preview.theme_frame_note', 'Live-Vorschau des Themes: das veröffentlichte Formular mit dem Theme aus dem Editor, auch ungespeichert. Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.')
+            : M::get('preview.note', 'Vorschau: Eingaben werden nicht gespeichert, „Abschicken" sendet nichts.'))) ?></div>
     <nav id="preview-pages" hidden>
         <button type="button" id="preview-prev" title="<?= $e(M::get('preview.page_prev', 'Vorherige Seite (ohne Prüfung der Pflichtfelder)')) ?>">&lsaquo;</button>
         <select id="preview-page-select" aria-label="<?= $e(M::get('preview.page_select', 'Seite direkt aufrufen')) ?>"></select>
@@ -112,6 +117,7 @@ $jsonText = static fn (string $key, string $default): string => json_encode(M::g
     <script nonce="<?= $e($nonce) ?>">
         window.previewConfig = {
             live: <?= $frameLive ? 'true' : 'false' ?>,
+            themeLive: <?= $frameThemeLive ? 'true' : 'false' ?>,
             survey: <?= $frameSurveyJson ?? 'null' ?>,
             theme: <?= $frameThemeJson ?>,
             completedNote: <?= $jsonText('preview.completed', 'Vorschau: Das Formular wurde nicht abgeschickt, es wird nichts gespeichert.') ?>,

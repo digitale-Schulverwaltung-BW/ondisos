@@ -20,7 +20,8 @@ class EditorPagesSecurityTest extends TestCase
     {
         return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php'], 'form_preview' => ['form_preview.php'], 'form_preview_frame' => ['form_preview_frame.php'],
                 'form_preview_live' => ['form_preview_live.php'], 'form_preview_check' => ['form_preview_check.php'],
-                'themes' => ['themes.php'], 'theme_edit' => ['theme_edit.php']];
+                'themes' => ['themes.php'], 'theme_edit' => ['theme_edit.php'], 'theme_preview_live' => ['theme_preview_live.php'],
+                'theme_preview_check' => ['theme_preview_check.php']];
     }
 
     #[DataProvider('editorPages')]
@@ -113,6 +114,27 @@ class EditorPagesSecurityTest extends TestCase
         foreach (['saveDraft(', 'publish(', '->save(', 'discard(', 'restore(', '$surveyEditor'] as $call) {
             $this->assertStringNotContainsString($call, $php, "the live check must not store anything ({$call})");
         }
+    }
+
+    /** Live preview of the theme editor (3.2.0b AP3): the same rules as the survey's check endpoint. */
+    public function testTheThemePreviewCheckIsPostOnlyChecksTheTokenAndStoresNothing(): void
+    {
+        $php = (string)file_get_contents(self::PUBLIC . '/theme_preview_check.php');
+
+        $post  = strpos($php, "REQUEST_METHOD'] !== 'POST'");
+        $csrf  = strpos($php, 'csrf_validate()');
+        $check = strpos($php, '->previewVerdict(');
+        $this->assertNotFalse($post);
+        $this->assertNotFalse($csrf);
+        $this->assertNotFalse($check);
+        $this->assertLessThan($csrf, $post);
+        $this->assertLessThan($check, $csrf);
+        foreach (['publish(', '->save(', 'restore(', 'Restore('] as $call) {
+            $this->assertStringNotContainsString($call, $php, "the theme check must not store anything ({$call})");
+        }
+        $scope = strpos($php, "define('EDITOR_RATE_LIMIT_SCOPE', 'preview')");
+        $this->assertNotFalse($scope);
+        $this->assertLessThan(strpos($php, 'inc/form_editor.php'), $scope);
     }
 
     /** Its many small checks count separately, so they cannot use up the allowance for saving and publishing. */

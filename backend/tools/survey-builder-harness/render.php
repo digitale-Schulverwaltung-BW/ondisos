@@ -15,6 +15,11 @@ declare(strict_types=1);
  * SB_LIVE=1 adds the live preview (AP4a): the "Live-Vorschau" button, live.html (the window, from inc/live_preview_window.php)
  * and frame.html (the frame, from inc/preview_frame.php). The checks of the server (form_preview_check.php) and the
  * sandbox header of the frame come from the server of check.mjs (POST <dir>/check, CSRF token "harness-token").
+ *
+ * SB_THEME=1 renders the theme editor's live preview (3.2.0b AP3) instead: index.html is a minimal theme editor (the text
+ * area of theme_edit.php with its "Live-Vorschau" button and scripts) holding the theme <survey.json> is taken as,
+ * live.html the window in theme mode (forms "eins" and "zwei"; "ohne" has no survey) and frame.html the frame with the
+ * small survey of render_theme.php embedded. The checks come from POST <dir>/check (ThemeValidator).
  */
 
 if (php_sapi_name() !== 'cli') {
@@ -45,6 +50,11 @@ if (!is_dir($outDir) && !mkdir($outDir, 0775, true)) {
 $link = rtrim($outDir, '/') . '/assets';
 if (!is_link($link)) {
     symlink(realpath(__DIR__ . '/../../public/assets'), $link);
+}
+
+if (getenv('SB_THEME') === '1') {
+    require __DIR__ . '/render_theme.php';
+    exit(0);
 }
 
 $live = getenv('SB_LIVE') === '1';

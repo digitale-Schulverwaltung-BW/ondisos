@@ -186,4 +186,38 @@ class ThemeEditorControllerTest extends FormEditorTestCase
         $this->assertNull($this->editor()->load('schule_a.json'));
         $this->assertSame('not_found', $this->editor()->publish('schule_a.json', $this->theme('#b00'), '', null)['status']);
     }
+
+    // ---- live preview (AP3) ------------------------------------------------------------------
+
+    public function testPreviewVerdictAcceptsAValidTextAndStoresNothing(): void
+    {
+        $this->addForm('bs');
+
+        $this->assertSame(['status' => 'ok', 'errors' => []], $this->editor()->previewVerdict(self::NAME, $this->theme('#c00')));
+        $this->assertNull($this->resources->find(Res::KIND_THEME, self::NAME));
+    }
+
+    public function testPreviewVerdictRefusesForbiddenContentWithAtMostFiveErrors(): void
+    {
+        $this->addForm('bs');
+        $vars = [];
+        for ($i = 0; $i < 8; $i++) {
+            $vars["--x{$i}"] = '<b>';
+        }
+
+        $v = $this->editor()->previewVerdict(self::NAME, json_encode(['cssVariables' => $vars], JSON_THROW_ON_ERROR));
+
+        $this->assertSame('invalid', $v['status']);
+        $this->assertCount(5, $v['errors']);
+        $this->assertSame(['path', 'message'], array_keys($v['errors'][0]));
+    }
+
+    public function testPreviewVerdictOfAThemeOfAnotherTenantIsNotFound(): void
+    {
+        $this->addForm('bs', 'schule_a.json');
+        $this->asTenant($this->tenantB);
+
+        $this->assertSame('not_found', $this->editor()->previewVerdict('schule_a.json', $this->theme('#c00'))['status']);
+        $this->assertSame('not_found', $this->editor()->previewVerdict('../x.json', '{}')['status']);
+    }
 }
