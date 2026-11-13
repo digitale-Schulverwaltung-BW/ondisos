@@ -1,0 +1,50 @@
+{
+  "title": "Anmeldung",
+  "description": "Schuljahr, Bildungsgang",
+  "completeText": "Absenden",
+  "completedHtml": "Vielen Dank für die Anmeldung. Ihre Daten wurden übermittelt.",
+  "pagePrevText": "Zurück",
+  "pageNextText": "Weiter",
+  "calculatedValues": [
+    { "name": "Alter", "expression": "age({Geburtstag})" }
+  ],
+  "pages": [
+    {
+      "name": "page_datenschutz",
+      "title": "Datenschutz",
+      "elements": [
+        { "$block": "datenschutz" }
+      ]
+    },
+    {
+      "name": "page_schueler",
+      "title": "Angaben zur Schülerin / zum Schüler",
+      "elements": [
+        { "$block": "person" },
+        { "$block": "herkunft" },
+        { "$block": "anschrift" }
+      ]
+    },
+    {
+      "name": "page_eltern",
+      "title": "Erziehungsberechtigte",
+      "visibleIf": "{Alter} < 18",
+      "elements": [
+        {
+          "type": "html",
+          "name": "hinweis_eltern",
+          "html": "Bei minderjährigen Schülerinnen und Schülern bitte mindestens eine erziehungsberechtigte Person angeben. Alleinerziehende tragen sich als Erziehungsberechtigte(r) 1 ein."
+        },
+        { "$block": "erziehungsberechtigte_1", "require": ["Erz1Art", "Erz1Vorname", "Erz1Name", "Erz1Strasse", "Erz1HausNr", "Erz1PLZ", "Erz1Ort"] },
+        { "$block": "erziehungsberechtigte_2" }
+      ]
+    },
+    {
+      "name": "page_absenden",
+      "title": "Absenden",
+      "elements": [
+        { "$block": "anmerkungen" }
+      ]
+    }
+  ]
+}

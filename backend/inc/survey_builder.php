@@ -11,6 +11,7 @@ declare(strict_types=1);
 use App\Forms\SurveyBlocks;
 use App\Forms\SurveyBuilderFindings;
 use App\Forms\SurveyBuilderRules;
+use App\Forms\SurveyTemplates;
 use App\Services\MessageService as M;
 
 /**
@@ -28,6 +29,8 @@ function sb_config(array $view, ?array $report): array
         'findings' => SurveyBuilderFindings::fromReport($report),
         // building blocks (AP6): groups of standard fields; ASV names for school registrations
         'blocks'   => sb_blocks(),
+        // templates and examples (AP6): only an empty editor offers them (they are large: the examples are whole surveys)
+        'templates' => ($view['editor_text'] ?? '') === '' ? sb_templates() : [],
         // JSON errors point at lines, which only the JSON tab shows
         'startTab' => ($report !== null && !$report['valid']) ? 'json' : 'graphic',
     ];
@@ -44,6 +47,21 @@ function sb_blocks(): array
         return SurveyBlocks::all();
     } catch (\RuntimeException $e) {
         error_log('Survey builder: building blocks unavailable: ' . $e->getMessage());
+        return [];
+    }
+}
+
+/**
+ * Templates and examples to start an empty survey from, or none if their files are broken (logged, as with the blocks).
+ *
+ * @return list<array{key:string, kind:string, text:string}>
+ */
+function sb_templates(): array
+{
+    try {
+        return SurveyTemplates::all();
+    } catch (\RuntimeException $e) {
+        error_log('Survey builder: templates unavailable: ' . $e->getMessage());
         return [];
     }
 }

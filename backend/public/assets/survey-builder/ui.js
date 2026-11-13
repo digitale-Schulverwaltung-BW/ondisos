@@ -494,7 +494,9 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         if (state.error) {
             if (state.error.empty) {
                 alerts.append(h('div', { class: 'alert alert-info d-flex align-items-center gap-3' }, t('empty'),
-                    btn(t('create_empty'), () => { bridge.set(EMPTY_SURVEY); reload(); }, { class: 'btn btn-sm btn-primary' })));
+                    btn(t('create_empty'), () => { bridge.set(EMPTY_SURVEY); reload(); }, { class: 'btn btn-sm btn-outline-primary' })));
+                const picker = templatePicker();
+                if (picker) { alerts.append(picker); }
             } else {
                 alerts.append(h('div', { class: 'alert alert-danger d-flex align-items-center gap-3', role: 'alert' },
                     t('invalid', { message: state.error.message, line: state.error.line, column: state.error.column }),
@@ -510,6 +512,37 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
                 h('strong', {}, t('findings.title')), state.stale ? h('div', { class: 'text-muted' }, t('findings.stale')) : null,
                 h('ul', { class: 'mb-0 ps-3' }, globalFindings.map((f) => h('li', {}, f.message)))));
         }
+    }
+
+    /**
+     * Templates and examples (AP6) for an empty survey, from the server (config.templates; only sent while the editor is
+     * empty). A choice puts its text into the editor, nothing is saved; back to the choice: empty the "JSON" tab.
+     */
+    function templatePicker() {
+        const list = Array.isArray(config.templates) ? config.templates : [];
+        if (!list.length) { return null; }
+        const box = h('div', { class: 'sb-templates mb-3' }, h('h2', { class: 'h6' }, t('templates.heading')));
+        for (const kind of ['template', 'example']) {
+            const inKind = list.filter((tpl) => tpl.kind === kind);
+            if (!inKind.length) { continue; }
+            box.append(h('p', { class: 'small text-muted mb-1 mt-2' }, t(`templates.group.${kind}`)));
+            box.append(h('div', { class: 'list-group' }, inKind.map((tpl) => h('button', {
+                type: 'button', class: 'list-group-item list-group-item-action', 'data-template': tpl.key,
+                onclick: () => useTemplate(tpl),
+            }, h('div', { class: 'fw-semibold' }, t(`templates.${tpl.key}.title`)),
+            h('div', { class: 'small text-muted' }, t(`templates.${tpl.key}.description`))))));
+        }
+        box.append(h('p', { class: 'form-text mb-0 mt-2' }, t('templates.hint')));
+        return box;
+    }
+
+    function useTemplate(tpl) {
+        bridge.set(tpl.text);
+        reload();
+        state.selected = state.doc ? [] : null;
+        render();
+        focusSelected();
+        say(t('announce.template_used', { name: t(`templates.${tpl.key}.title`) }));
     }
 
     function showJsonTab() {

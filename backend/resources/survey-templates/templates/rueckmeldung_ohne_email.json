@@ -1,0 +1,29 @@
+{
+  "title": "Rückmeldung",
+  "completeText": "Absenden",
+  "completedHtml": "Vielen Dank für Ihre Rückmeldung!",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Zusage",
+          "title": "Ich nehme teil",
+          "isRequired": true,
+          "choices": [
+            { "value": "ja", "text": "ja" },
+            { "value": "nein", "text": "nein" }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Name",
+          "title": "Name",
+          "isRequired": true
+        },
+        { "$block": "anmerkungen" }
+      ]
+    }
+  ]
+}

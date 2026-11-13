@@ -415,7 +415,7 @@ Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei de
 | Anmerkungen | `Anmerkungen` (Textbereich) | – |
 
 **Oberfläche:**
-- **Leerer Editor:** statt des leeren Textes eine Auswahl *Mit Vorlage beginnen* (Vorlagen oben, Beispiele darunter, je Titel und Beschreibung); die Wahl setzt den Text im Editor (ungespeichert, *Rückgängig* möglich), danach wie gewohnt *Prüfen* → *Entwurf* → *Veröffentlichen*. *Leer beginnen* bleibt möglich (JSON-Tab).
+- **Leerer Editor:** statt des leeren Textes eine Auswahl *Mit Vorlage beginnen* (Vorlagen oben, Beispiele darunter, je Titel und Beschreibung); die Wahl setzt den Text im Editor (ungespeichert), danach wie gewohnt *Prüfen* → *Entwurf* → *Veröffentlichen*. *Leere Survey anlegen* bleibt. ~~*Rückgängig* möglich~~ (umgesetzt 2026-11-13: zurück zur Auswahl durch Leeren des JSON-Tabs; der Verlauf des Editors beginnt mit der Vorlage).
 - **Nicht leerer Editor:** keine Vorlage (würde den Text ersetzen); wer neu anfangen will, leert den Text im JSON-Tab.
 - **Bausteine:** eigene Gruppe in der Werkzeugleiste, einfügen an der markierten Stelle wie ein Element (`insertItem`, Einrückung der Umgebung). Bausteine mit mehreren Feldern kommen als Gruppe (`panel`).
 - **Namenskollision:** Anders als beim Duplizieren wird **nicht** umbenannt (`Vorname_2` erkennt ASV nicht). Gibt es einen Namen des Bausteins schon, lehnt der Editor ab und nennt die Felder (bei *Erziehungsberechtigte/r* mit dem Vorschlag, die andere Nummer zu wählen). Für Bausteine ohne ASV-Bezug gilt dasselbe, damit Verweise in Bedingungen eindeutig bleiben.
@@ -512,6 +512,18 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3
 **Geprüft:** `SurveyBlocksTest` (10 Tests: Fixture gleich, Parameter, jeder Baustein besteht den Validator ohne Warnung außer dem Platzhalter-Link, alle außer *Name und E-Mail* passen zusammen in eine Survey, Feldnamen der ASV-Bausteine sind ASV-Spalten, alle über 500 Antwortwerte sind ASV-Schlüssel, Teilort, kaputtes Manifest); `blocks.test.mjs` (10 Tests: wörtlich eingefügt und von SurveyJS gebaut, alle nacheinander, Kollisionen ändern nichts, `bs.json` lehnt *Person* ab, Seiten-/berechnete/reservierte Namen, Container und Tiefe, Text um den Baustein Byte für Byte). Unit 1404, Integration 244, JS 204 grün. Im Browser (Dev-Stack, Formular ohne Survey): alle Bausteine nacheinander eingefügt, zweimal *Erziehungsberechtigte(r) 1* und *Name und E-Mail* neben *Person* abgelehnt mit Nennung der Namen, *Prüfen* ohne Fehler mit genau einer Warnung (Platzhalter-Link), Linter findet `Name` und `email1` als Pflichtfelder.
 
 **Offen:** Abschnitt *Bausteine* in `check.mjs`; Vorlagen und Auswahl im leeren Editor (der leere Editor bietet bisher nur *Leere Survey anlegen*); Probe-Import in ASV (Geschlecht `d`, Groß-/Kleinschreibung).
+
+### Vorlagen: Ergebnis (2026-11-13)
+
+**Umgesetzt:**
+- **Dateien:** im Manifest neben `blocks` die Abschnitte `templates` (fünf Vorlagen in `templates/`) und `examples` (`bs`, `gs`, `vabo`, `zq`, `meister` als Kopien in `examples/`). Eine Vorlage ist eine SurveyJS-Survey, in der ein Element ein Baustein sein kann: `{"$block": "person"}`, mit `"require": [Feldnamen]` werden Felder darin Pflicht. ASV-Namen und Auswahllisten gibt es damit nur einmal, in den Bausteinen.
+- **Vorlagen:** *Einfaches Formular* (Name und E-Mail), *Rückmeldung*, *Rückmeldung ohne E-Mail*, *Veranstaltung* (Anzahl Personen nur bei Zusage), *Schüleranmeldung* (Datenschutz; Person, Herkunft, Anschrift; Seite *Erziehungsberechtigte* nur bei `{Alter} < 18` mit `Alter = age({Geburtstag})`, erste Person mit Pflichtfeldern; Anmerkungen).
+- **Server:** `App\Forms\SurveyTemplates` setzt die Bausteine ein und schreibt den Text wie der Creator (zwei Leerzeichen); Beispiele unverändert. `App\Forms\ResourceJson` liest die Dateien (auch für `SurveyBlocks`). `sb_config()` bettet Vorlagen und Beispiele **nur bei leerem Editor** ein (rund 560 KB, ein Formular mit Survey bekommt keine). Kaputte Dateien landen im Log, der Editor bietet dann keine Vorlagen.
+- **Oberfläche:** Unter „Es gibt noch keine Survey“ die Auswahl *Mit einer Vorlage beginnen*, gruppiert nach Vorlagen und *Beispiele aus einer Schule (… bitte anpassen)*. Texte unter `builder.templates.*` und `builder.announce.template_used`.
+
+**Geprüft:** `SurveyTemplatesTest` (12 Tests): Abnahme von AP6, jede Vorlage besteht Validator und Linter ohne Warnung bis auf den Platzhalter-Link; Name und E-Mail Pflicht, wo die Vorlage beides fragt, bei *Rückmeldung ohne E-Mail* keine E-Mail; Schreibweise; *Schüleranmeldung* nur mit ASV-Spalten (außer `consent_DatenschutzOk` und `Anmerkungen`), Pflicht der ersten Person nur bei Minderjährigen; Bausteine unverändert übernommen; Beispiele Byte für Byte gleich `frontend/surveys/` (fällt mit Schritt 4 weg); jede Datei im Manifest; Titel und Beschreibung für jeden Eintrag; unbekannte Bausteine, Felder oder Angaben sind ein Fehler. Unit 1416, JS 204 grün. Im Browser (Dev-Stack, Formular ohne Survey): Auswahl mit zehn Einträgen, *Schüleranmeldung* übernommen (vier Seiten), *Prüfen* ohne Fehler mit genau der Platzhalter-Warnung, Name und `email1` als Pflichtfelder erkannt; `bs` bekommt keine Vorlagen.
+
+**Offen:** Abschnitt *Vorlagen* in `check.mjs` (zusammen mit *Bausteine*); Schritt 2 (Seed aus Vorlagen).
 
 ## Tests
 

@@ -30,7 +30,7 @@ final class SurveyBlocks
     public static function all(?string $dir = null): array
     {
         $dir      = rtrim($dir ?? self::DIR, '/');
-        $manifest = self::readJson($dir . '/manifest.json');
+        $manifest = ResourceJson::readObject($dir . '/manifest.json');
         $out      = [];
 
         foreach ($manifest['blocks'] ?? [] as $i => $entry) {
@@ -38,11 +38,11 @@ final class SurveyBlocks
             $file  = is_array($entry) ? ($entry['file'] ?? null) : null;
             $group = is_array($entry) ? ($entry['group'] ?? null) : null;
             if (!is_string($key) || preg_match('/^[a-z][a-z0-9_]*$/', $key) !== 1
-                || !is_string($file) || preg_match('#^[a-z0-9_/-]+\.json$#', $file) !== 1 || str_contains($file, '..')
+                || !ResourceJson::isSafeFile($file)
                 || !in_array($group, self::GROUPS, true)) {
                 throw new \RuntimeException("Baustein Nr. {$i} im Manifest ist unvollständig oder ungültig");
             }
-            $element = self::readJson($dir . '/' . $file);
+            $element = ResourceJson::readObject($dir . '/' . $file);
 
             $param = $entry['param'] ?? null;
             if ($param === null) {
@@ -92,24 +92,6 @@ final class SurveyBlocks
         };
         $walk($element);
         return $names;
-    }
-
-    /** @return array<string,mixed> */
-    private static function readJson(string $file): array
-    {
-        $text = is_file($file) ? file_get_contents($file) : false;
-        if ($text === false) {
-            throw new \RuntimeException('Datei fehlt: ' . basename($file));
-        }
-        try {
-            $data = json_decode($text, true, 64, JSON_THROW_ON_ERROR);
-        } catch (\JsonException $e) {
-            throw new \RuntimeException(basename($file) . ': kein gültiges JSON (' . $e->getMessage() . ')');
-        }
-        if (!is_array($data) || array_is_list($data)) {
-            throw new \RuntimeException(basename($file) . ': kein JSON-Objekt');
-        }
-        return $data;
     }
 
     private static function replace(mixed $node, string $placeholder, string $value): mixed

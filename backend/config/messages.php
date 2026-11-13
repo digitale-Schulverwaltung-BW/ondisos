@@ -517,6 +517,24 @@ return [
             'unterschrift' => ['title' => 'Unterschrift', 'description' => 'Bestätigung der Angaben, Ort und Datum, Unterschriftsfeld.'],
             'anmerkungen' => ['title' => 'Anmerkungen', 'description' => 'Freies Textfeld für Anmerkungen.'],
         ],
+        'templates' => [
+            'heading' => 'Mit einer Vorlage beginnen',
+            'group' => [
+                'template' => 'Vorlagen',
+                'example' => 'Beispiele aus einer Schule (Links, Bildungsgänge und Texte bitte anpassen)',
+            ],
+            'hint' => 'Die Vorlage kommt in den Editor, gespeichert wird erst mit „Entwurf speichern" oder „Veröffentlichen". Zurück zur Auswahl: im Tab „JSON" den Text löschen.',
+            'leer' => ['title' => 'Einfaches Formular', 'description' => 'Eine Seite mit Name und E-Mail-Adresse als Pflichtfeldern; alles Weitere fügen Sie selbst hinzu.'],
+            'rueckmeldung' => ['title' => 'Rückmeldung', 'description' => 'Zusage ja/nein, Name, E-Mail-Adresse, Anmerkungen.'],
+            'rueckmeldung_ohne_email' => ['title' => 'Rückmeldung ohne E-Mail', 'description' => 'Zusage ja/nein, Name, Anmerkungen. Datensparsam: keine Rückfragen per E-Mail möglich.'],
+            'veranstaltung' => ['title' => 'Veranstaltung', 'description' => 'Teilnahme, Anzahl Personen, Name, E-Mail-Adresse, Anmerkungen. Für eine Kalenderdatei in der Bestätigung die Einstellung „Kalender (iCal)" des Formulars setzen.'],
+            'schueleranmeldung' => ['title' => 'Schüleranmeldung', 'description' => 'Datenschutz, Angaben zur Person, Staatsangehörigkeit, Anschrift, Erziehungsberechtigte (nur bei Minderjährigen, Pflicht für die erste Person), Anmerkungen. Feldnamen und Auswahllisten für den Import in ASV-BW. Den Link zur Datenschutzerklärung anpassen.'],
+            'bs' => ['title' => 'Berufsschule', 'description' => 'Anmeldung mit Ausbildungsberuf, Ausbildungsbetrieb, Vorbildung, Uploads.'],
+            'gs' => ['title' => 'Grundschule', 'description' => 'Einschulung mit Betreuung, Sorgerecht und Religionsunterricht.'],
+            'vabo' => ['title' => 'VABO', 'description' => 'Vorqualifizierungsjahr Arbeit/Beruf für Jugendliche ohne Deutschkenntnisse: Herkunft, Sprachen, Upload eines Prüfungsergebnisses.'],
+            'zq' => ['title' => 'Zusatzqualifikation Fachhochschulreife', 'description' => 'Zusatzqualifikation neben der Ausbildung: Vorbildung, Ausbildungsberuf, Ausbildungsbetrieb, Berufsschule.'],
+            'meister' => ['title' => 'Meisterschule', 'description' => 'Vorbereitungslehrgang mit Berufspraxis (dynamische Tabellen), Berechnungen, Uploads und Unterschrift.'],
+        ],
         'palette_group' => [
             'input' => 'Eingabe',
             'choice' => 'Auswahl',
@@ -735,6 +753,7 @@ return [
             'choice_opened' => 'Die Antwort kann jetzt Fragen enthalten',
             'choice_closed' => 'Die Antwort ist wieder eine einfache Antwort',
             'block_added' => 'Baustein eingefügt: {{block}} ({{count}} Elemente)',
+            'template_used' => 'Vorlage übernommen: {{name}}',
         ],
         'new' => [
             'title' => 'Neue Frage',

@@ -172,6 +172,9 @@ class MeinServiceTest extends TestCase
   sich nur, wenn man sie bewusst aktualisiert (`cp frontend/surveys/*.json backend/tests/fixtures/surveys/`, danach gemessene
   Zahlen in den Tests prüfen). Tests, die die **ausgelieferten** Dateien prüfen (gültig, keine Verweise ins Leere, passt zu
   `forms-config-dist.php`, Theme, `SurveySource`, Import), lesen weiter `frontend/surveys/`.
+- Vorlagen, Beispiele und Bausteine (3.2.0, AP6) liegen in `resources/survey-templates/`; `SurveyBlocksTest` und `SurveyTemplatesTest`
+  prüfen sie gegen Validator, Linter und die ASV-Spalten (`tests/fixtures/asv/asv-bw-import.json`). Die Beispiele müssen bis zum Ende
+  des Datei-Fallbacks Byte für Byte `frontend/surveys/` entsprechen: wer dort eine Survey ändert, kopiert sie auch nach `examples/`.
   `FormEditorSchemaDriftTest` hält `schema.sql`, `migrations/add_form_editor_tables.sql` und `migrate.php` deckungsgleich.
 - `tests/Integration/Forms/`: Repositories (Tenant-Isolierung, IDOR-Protokoll, Konflikterkennung), `FormPublishService`
   (Entwurf → Veröffentlichen → Wiederherstellen, Atomarität) und `SurveyImportService` gegen eine echte Datenbank.

@@ -10,5 +10,19 @@
     { "key": "ausbildungsbetrieb", "file": "blocks/ausbildungsbetrieb.json", "group": "asv" },
     { "key": "unterschrift", "file": "blocks/unterschrift.json", "group": "general" },
     { "key": "anmerkungen", "file": "blocks/anmerkungen.json", "group": "general" }
+  ],
+  "templates": [
+    { "key": "leer", "file": "templates/leer.json" },
+    { "key": "rueckmeldung", "file": "templates/rueckmeldung.json" },
+    { "key": "rueckmeldung_ohne_email", "file": "templates/rueckmeldung_ohne_email.json" },
+    { "key": "veranstaltung", "file": "templates/veranstaltung.json" },
+    { "key": "schueleranmeldung", "file": "templates/schueleranmeldung.json" }
+  ],
+  "examples": [
+    { "key": "bs", "file": "examples/bs.json" },
+    { "key": "gs", "file": "examples/gs.json" },
+    { "key": "vabo", "file": "examples/vabo.json" },
+    { "key": "zq", "file": "examples/zq.json" },
+    { "key": "meister", "file": "examples/meister.json" }
   ]
 }

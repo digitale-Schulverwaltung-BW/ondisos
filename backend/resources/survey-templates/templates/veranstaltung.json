@@ -1,0 +1,36 @@
+{
+  "title": "Anmeldung zur Veranstaltung",
+  "description": "Datum, Uhrzeit, Ort",
+  "completeText": "Absenden",
+  "completedHtml": "Vielen Dank für Ihre Anmeldung!",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Teilnahme",
+          "title": "Ich nehme an der Veranstaltung teil",
+          "isRequired": true,
+          "choices": [
+            { "value": "ja", "text": "ja" },
+            { "value": "nein", "text": "nein" }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Personen",
+          "title": "Anzahl Personen",
+          "visibleIf": "{Teilnahme} = 'ja'",
+          "requiredIf": "{Teilnahme} = 'ja'",
+          "inputType": "number",
+          "min": 1,
+          "max": 20,
+          "defaultValue": 1
+        },
+        { "$block": "name_email" },
+        { "$block": "anmerkungen" }
+      ]
+    }
+  ]
+}

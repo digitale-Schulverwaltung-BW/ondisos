@@ -1,0 +1,13 @@
+{
+  "title": "Neues Formular",
+  "completeText": "Absenden",
+  "completedHtml": "Vielen Dank! Ihre Angaben wurden übermittelt.",
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        { "$block": "name_email" }
+      ]
+    }
+  ]
+}
