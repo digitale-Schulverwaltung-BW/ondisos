@@ -1135,7 +1135,7 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     const withBrand = (color) => { const t = JSON.parse(readFileSync(join(repo, 'backend/templates/theme/default.json'), 'utf8')); t.cssVariables['--sjs2-color-project-brand-600'] = color; return JSON.stringify(t, null, 4); };
 
     check('theme: the window connects; the frame shows the published survey with the theme from the editor',
-        (await win.textContent('#lp-status')).includes('Verbunden') && await F.locator('[data-name="vorname"]').count() === 1 && (await brand()) === 'rgba(0, 163, 215, 1)', await brand());
+        (await win.textContent('#lp-status')).includes('Verbunden') && await F.locator('[data-name="vorname"]').count() === 1 && (await brand()) === 'rgba(0, 115, 165, 1)', await brand());
     check('theme: the frame has no origin of its own (sandbox)', await frame().evaluate(() => window.origin) === 'null');
     check('theme: picking and "show hidden" are not offered; a form without survey cannot be chosen',
         await win.locator('#lp-pick').count() === 0 && await win.locator('#lp-invisible').count() === 0 && await win.locator('#lp-form option[value="ohne"]').isDisabled());
@@ -1176,10 +1176,14 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     await p.waitForTimeout(500);
     const fieldVal = (id) => p.inputValue(`#${id}`);
     check('fields: shown and read from the JSON (brand, title, cards, size, radius)',
-        await p.locator('#tf-root').isVisible() && (await fieldVal('tf-brand')) === 'rgba(0, 163, 215, 1)' && (await fieldVal('tf-brand-picker')) === '#00a3d7'
+        await p.locator('#tf-root').isVisible() && (await fieldVal('tf-brand')) === 'rgba(0, 115, 165, 1)' && (await fieldVal('tf-brand-picker')) === '#0073a5'
         && await p.isChecked('#tf-titleBrand') && await p.isChecked('#tf-cards') && (await fieldVal('tf-fontSize')) === '16' && (await fieldVal('tf-radius')) === '4'
         && (await fieldVal('tf-font-choice')) === 'opensans');
-    check('fields: the default blue gets the contrast hint (WCAG AA)', await p.locator('#tf-brand-contrast').isVisible());
+    check('fields: the default blue meets WCAG AA, so no contrast hint', await p.locator('#tf-brand-contrast').isHidden());
+    await p.fill('#tf-brand', '#00a3d7');
+    await p.press('#tf-brand', 'Enter');
+    await p.waitForTimeout(400);
+    check('fields: a light blue gets the contrast hint (WCAG AA)', await p.locator('#tf-brand-contrast').isVisible());
 
     const before = await text(p);
     await p.fill('#tf-brand', '#0b5394');

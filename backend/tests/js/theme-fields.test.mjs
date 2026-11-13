@@ -197,6 +197,8 @@ test('colours: picker form and contrast against white', () => {
     assert.equal(parseColor('hsl(0 0% 0%)'), null);
     assert.ok(Math.abs(contrastWithWhite('#000000') - 21) < 0.01);
     assert.ok(Math.abs(contrastWithWhite('#ffffff') - 1) < 0.01);
-    assert.ok(contrastWithWhite('rgba(0, 163, 215, 1)') < 4.5, 'the default blue is below AA for normal text');
+    assert.ok(contrastWithWhite('rgba(0, 163, 215, 1)') < 4.5, 'the light blue of the default before 3.2.0 is below AA for normal text');
+    const brand = JSON.parse(themes['templates/theme/default.json']).cssVariables['--sjs2-color-project-brand-600'];
+    assert.ok(contrastWithWhite(brand) >= 4.5, `the default brand colour ${brand} meets AA`);
     assert.ok(contrastWithWhite('#0056b3') >= 4.5);
 });

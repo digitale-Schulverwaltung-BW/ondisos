@@ -242,7 +242,7 @@ Dazu Sonderfälle (alte Variablen, Titel-Verknüpfung, Halbierung der Schriftgr�
 
 ## Offene Fragen
 
-- **Kontrastprüfung:** *umgesetzt (AP4)* als Hinweis unter der Markenfarbe, wenn der Kontrast zu Weiß unter 4,5 : 1 liegt (WCAG AA). Das Blau der Vorgabe (`rgba(0, 163, 215, 1)`, etwa 2,9 : 1) bekommt den Hinweis; ob die Vorgabe eine dunklere Farbe bekommt, ist offen.
+- **Kontrastprüfung:** *umgesetzt (AP4)* als Hinweis unter der Markenfarbe, wenn der Kontrast zu Weiß unter 4,5 : 1 liegt (WCAG AA). Das Blau der Vorgabe (`rgba(0, 163, 215, 1)`, etwa 2,9 : 1) bekommt den Hinweis; *entschieden 2026-11-13:* die Vorgabe bekommt `rgba(0, 115, 165, 1)` (5,3 : 1), siehe [PLAN-3.2.0.md](PLAN-3.2.0.md#frontendsurveys-ablösen).
 - **Pseudo-Schlüssel `@theme` oder eigene Spalte:** Der Pseudo-Schlüssel spart eine Migration. Falls später auch Surveys unabhängig vom Formular versioniert werden sollen, wäre eine Spalte `resource_name` sauberer.
 - **Ungenutzte Themes:** Löschen erlauben, wenn kein Formular sie nutzt? Vorerst nein.
 - **`copy-forms.php`:** *geklärt (AP1).* Ohne `--overwrite` bleibt ein abweichendes Theme der Zielschule erhalten (`kept`), mit `--overwrite` wird es ersetzt; der alte Stand kommt seit AP1 in den Theme-Verlauf. Für die Betreiber-Doku in AP5 vormerken.

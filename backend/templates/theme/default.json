@@ -7,7 +7,7 @@
     "backgroundImageAttachment": "scroll",
     "backgroundOpacity": 1,
     "cssVariables": {
-        "--sjs2-color-project-brand-600": "rgba(0, 163, 215, 1)",
+        "--sjs2-color-project-brand-600": "rgba(0, 115, 165, 1)",
         "--sjs2-typography-font-family-text": "Open Sans",
         "--sjs2-base-unit-font-size": "8px",
         "--sjs2-color-utility-surface-survey": "#F3F3F3",

@@ -77,6 +77,9 @@ Ein 3.2-Frontend an einem 3.1.2-Backend zeigt die Formulare wie bisher; die Unte
 - **Aussehen der Formulare (SurveyJS 3):** Themes aus SurveyJS 2 (`--sjs-*`) funktionieren weiter: Markenfarbe, Schrift und Ecken bleiben. Titel, Karten und Hintergrund folgen aber den
   neuen Standardwerten (dunkler Titel, abgerundete Karten mit Rahmen, getönter Hintergrund). Das alte Aussehen stellen Schul-Admins unter *Formulare → Design* mit **Auf Vorgabe zurücksetzen**
   und der eigenen Markenfarbe wieder her ([SURVEYJS.md](../redaktion/SURVEYJS.md#ältere-themes-und-eigene-schriften-oder-bilder)). Weisen Sie die Schulen vor dem Update darauf hin.
+- **Formulare ohne eigenes Design** (kein Theme unter *Formulare → Design*) zeigen die Vorgabe von 3.2: Titel in der Markenfarbe, Karten mit Schatten, grauer Hintergrund
+  wie bisher, die Markenfarbe aber in einem **dunkleren Blau** (`rgba(0, 115, 165, 1)` statt `rgba(0, 163, 215, 1)`), das auf Weiß gut lesbar ist (Kontrast 5,3 : 1, WCAG AA).
+  Haben Sie `frontend/surveys/survey_theme.json` selbst angepasst, legen Sie Ihre Fassung vor dem Update beiseite und spielen sie danach mit `import-surveys.php` ins Backend ein.
 - **Deutsche Standardtexte:** Knöpfe und Meldungen von SurveyJS (z. B. „Weiter“, „Bitte beantworten Sie diese Frage.“) erscheinen jetzt deutsch.
 - **PDF-Bestätigung gegliedert:** Neue Anmeldungen bekommen im PDF die Seitentitel des Formulars als Überschriften und Fragetitel statt Feldnamen. Abschalten: Formular-Editor,
   Reiter *PDF-Bestätigung*, „Seitentitel der Survey als Überschriften“. Ältere Anmeldungen bleiben wie bisher.
