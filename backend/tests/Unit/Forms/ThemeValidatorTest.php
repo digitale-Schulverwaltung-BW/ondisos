@@ -44,4 +44,21 @@ class ThemeValidatorTest extends TestCase
         $this->assertTrue($out['result']->isValid());
         $this->assertCount(1, $out['result']->warnings());
     }
+
+    public function testExternalBackgroundImageIsAWarning(): void
+    {
+        foreach (['https://cdn.example/bg.png', '//cdn.example/bg.png'] as $url) {
+            $out = (new ThemeValidator())->validate(json_encode(['backgroundImage' => $url], JSON_THROW_ON_ERROR));
+            $this->assertTrue($out['result']->isValid());
+            $this->assertSame('backgroundImage', $out['result']->warnings()[0]['path'] ?? null, $url);
+        }
+    }
+
+    public function testLocalBackgroundImageIsNoWarning(): void
+    {
+        foreach (['', '/img/bg.png', 'img/bg.png'] as $url) {
+            $out = (new ThemeValidator())->validate(json_encode(['backgroundImage' => $url], JSON_THROW_ON_ERROR));
+            $this->assertSame([], $out['result']->warnings(), $url);
+        }
+    }
 }

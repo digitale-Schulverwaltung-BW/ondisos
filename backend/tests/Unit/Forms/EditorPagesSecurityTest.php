@@ -19,7 +19,8 @@ class EditorPagesSecurityTest extends TestCase
     public static function editorPages(): array
     {
         return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php'], 'form_preview' => ['form_preview.php'], 'form_preview_frame' => ['form_preview_frame.php'],
-                'form_preview_live' => ['form_preview_live.php'], 'form_preview_check' => ['form_preview_check.php']];
+                'form_preview_live' => ['form_preview_live.php'], 'form_preview_check' => ['form_preview_check.php'],
+                'themes' => ['themes.php'], 'theme_edit' => ['theme_edit.php']];
     }
 
     #[DataProvider('editorPages')]
@@ -35,7 +36,7 @@ class EditorPagesSecurityTest extends TestCase
     /** @return array<string,array{0:string}> */
     public static function postingPages(): array
     {
-        return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php']];
+        return ['forms' => ['forms.php'], 'form_edit' => ['form_edit.php'], 'form_survey' => ['form_survey.php'], 'theme_edit' => ['theme_edit.php']];
     }
 
     #[DataProvider('postingPages')]
@@ -49,7 +50,7 @@ class EditorPagesSecurityTest extends TestCase
         // The first csrf_validate() must come before the first state-changing call.
         $csrf = strpos($php, 'csrf_validate()');
         foreach (['$editor->save(', '$editor->create(', '$editor->delete(', '$editor->restore(', '$surveyEditor->saveDraft(', '$surveyEditor->publish(',
-                  '$surveyEditor->discard(', '$surveyEditor->restore(', 'form_copy_run('] as $call) {
+                  '$surveyEditor->discard(', '$surveyEditor->restore(', '$themeEditor->publish(', '$themeEditor->restore(', 'form_copy_run('] as $call) {
             $at = strpos($php, $call);
             if ($at !== false) {
                 $this->assertGreaterThan($csrf, $at, "{$call} is called before the CSRF token is checked in {$file}");
@@ -59,7 +60,7 @@ class EditorPagesSecurityTest extends TestCase
 
     public function testEveryFormFieldOfTheEditorPagesCarriesTheToken(): void
     {
-        foreach (['forms.php', 'form_edit.php', 'form_survey.php'] as $file) {
+        foreach (['forms.php', 'form_edit.php', 'form_survey.php', 'theme_edit.php'] as $file) {
             $php = (string)file_get_contents(self::PUBLIC . '/' . $file);
             $forms = preg_match_all('/<form\b[^>]*method="post"/i', $php);
             $tokens = substr_count($php, 'csrf_field()');
@@ -74,7 +75,7 @@ class EditorPagesSecurityTest extends TestCase
 
         foreach ($files as $file) {
             $php = (string)file_get_contents($file);
-            foreach (['FormDraftRepository', 'FormRevisionRepository', 'FormPublishService', 'FormCopyService', 'SurveyEditorController'] as $forbidden) {
+            foreach (['FormDraftRepository', 'FormRevisionRepository', 'FormPublishService', 'FormCopyService', 'SurveyEditorController', 'ThemeService', 'ThemeEditorController'] as $forbidden) {
                 $this->assertStringNotContainsString($forbidden, $php, basename($file) . " must not use {$forbidden}");
             }
         }

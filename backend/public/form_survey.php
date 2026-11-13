@@ -10,6 +10,7 @@ require_once __DIR__ . '/../inc/csrf.php';
 require_once __DIR__ . '/../inc/form_editor.php';
 require_once __DIR__ . '/../inc/form_fields.php';
 require_once __DIR__ . '/../inc/survey_builder.php';
+require_once __DIR__ . '/../inc/editor_diff.php';
 
 use App\Forms\SurveyValidator;
 use App\Services\MessageService as M;
@@ -272,27 +273,8 @@ require __DIR__ . '/../inc/header.php';
                     <?php endif; ?>
                 <?php endif; ?>
 
-                <?php if ($report['valid'] && $report['diff'] !== null): $diff = $report['diff']; ?>
-                    <details class="mt-3" <?= (!$diff['identical'] && !$diff['too_large']) ? 'open' : '' ?>>
-                        <summary><?= ff_e(M::get('survey_editor.diff.title', 'Unterschied zur veröffentlichten Fassung')) ?>
-                            <?php if (!$diff['identical'] && !$diff['too_large']): ?>
-                                <span class="text-success">+<?= (int)$diff['added'] ?></span> <span class="text-danger">−<?= (int)$diff['removed'] ?></span>
-                            <?php endif; ?></summary>
-                        <?php if ($diff['identical']): ?>
-                            <p class="text-muted mt-2"><?= ff_e(M::get('survey_editor.diff.identical', 'Keine Änderung gegenüber der veröffentlichten Fassung.')) ?></p>
-                        <?php elseif ($diff['too_large']): ?>
-                            <p class="text-muted mt-2"><?= ff_e(M::get('survey_editor.diff.too_large', 'Zu viele Änderungen für die Anzeige.')) ?></p>
-                        <?php else: ?>
-                            <div class="border rounded mt-2 small" style="max-height: 24rem; overflow: auto;">
-                            <?php foreach ($diff['hunks'] as $n => $hunk): ?>
-                                <?php if ($n > 0): ?><div class="text-muted px-2 bg-light">⋯</div><?php endif; ?>
-                                <?php foreach ($hunk as $line): ?>
-                                    <div class="font-monospace px-2 text-nowrap <?= $line['op'] === '+' ? 'bg-success-subtle' : ($line['op'] === '-' ? 'bg-danger-subtle' : '') ?>"><?= $line['op'] === ' ' ? '&nbsp;' : ff_e($line['op']) ?>&nbsp;<?= ff_e($line['text']) ?></div>
-                                <?php endforeach; ?>
-                            <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
-                    </details>
+                <?php if ($report['valid'] && $report['diff'] !== null): ?>
+                    <?= editor_diff_html($report['diff']) ?>
                 <?php endif; ?>
             </div>
         </div>

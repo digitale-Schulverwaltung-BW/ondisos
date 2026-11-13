@@ -69,6 +69,7 @@ projekt/
     │   ├── form_preview.php · form_preview_frame.php   # Vorschau (3.1): Entwurf/veröffentlichte Survey wie für Besucher, in einem per CSP sandboxed Frame (Markup: inc/preview_frame.php)
     │   ├── form_preview_live.php · form_preview_check.php   # Live-Vorschau (3.2, eigenes Fenster, folgt dem Editor ohne Speichern; Markup: inc/live_preview_window.php) und ihre Prüfung ungespeicherter Texte (POST, JSON)
     │   ├── form_survey.php             # Survey-Editor (3.1): JSON einfügen/laden, prüfen (mit Zeilen), Diff, Entwurf, veröffentlichen, wiederherstellen
+    │   ├── themes.php · theme_edit.php # Theme-Editor (3.2.0b): Themes des Tenants mit nutzenden Formularen; Theme als JSON prüfen, veröffentlichen (Sperre per SHA-256), Verlauf; beide Rollen
     │   ├── assets/                     # preview/ (SurveyJS-Laufzeit, Kopie des Frontends; tools/sync-preview-assets.sh), survey-editor.js; survey-builder/ (3.2, grafischer Editor: json-doc.js, model.js, registry.js, names.js, history.js, ui.js, ui-props.js, dom.js, text-bridge.js, app.js, builder.css; Live-Vorschau: live-targets.js, live-link.js, live-window.js/.css; Tests: `backend/tests/js`; Browserprüfung: `tools/survey-builder-harness/`); codemirror/survey-editor-cm.js (CodeMirror 6, MIT, vorgebaut; Quellen: tools/survey-editor-bundle/)
     │   ├── excel_export.php · bulk_actions.php · change_status.php
     │   ├── restore.php · hard_delete.php · download.php (Datei-Download)
@@ -94,7 +95,7 @@ projekt/
     │   │                  SignatureHandoffRepository  (3.2.0a, tenant-gefiltert)
     │   ├── Forms/         (3.1, reine Logik ohne DB) ValidationResult · Identifiers · SurveyValidator · HtmlPolicy · ThemeValidator
     │   │                  SurveyFieldExtractor · SurveyBuilderRules · SurveyBuilderFindings · SurveyLinter · FormConfigSchema · FormConfigValidator · FormConfigFormMapper · EditorAccess · JsonLocator · SurveyDiff · ServiceResult
-    │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController · FormEditorController · SurveyEditorController · SurveyPreviewController
+    │   ├── Controllers/   AnmeldungController · DetailController · BulkActionsController · DownloadController · FormEditorController · SurveyEditorController · SurveyPreviewController · ThemeEditorController
     │   ├── Services/      AnmeldungService · StatusService · ExportService · SpreadsheetBuilder
     │   │                  ExpungeService · RequestExpungeService
     │   │                  PdfGeneratorService · PdfTemplateRenderer · PdfTokenService

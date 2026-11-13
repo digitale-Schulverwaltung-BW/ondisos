@@ -52,7 +52,9 @@ final class ThemeValidator
         }
         if (str_contains($node, '<') || HtmlPolicy::isDangerousScheme($node)) {
             $result->addError($path, 'Nicht erlaubter Inhalt im Theme (HTML oder javascript:/data:-URL)');
-        } elseif (preg_match('#url\(\s*[\'"]?\s*(?:https?:)?//#i', $node) === 1) {
+        } elseif (preg_match('#url\(\s*[\'"]?\s*(?:https?:)?//#i', $node) === 1
+            || ($path === 'backgroundImage' && preg_match('#^\s*(?:https?:)?//#i', $node) === 1)) {
+            // CSS url(…) anywhere, and the background image, which SurveyJS takes as a bare URL
             $result->addWarning($path, 'Das Theme lädt eine Ressource von einem externen Server (Datenschutz)');
         }
     }

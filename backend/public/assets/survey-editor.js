@@ -68,8 +68,8 @@
         });
     });
 
-    // Warn before leaving with unsaved changes.
-    var initial = area.value;
+    // Warn before leaving with unsaved changes. data-unsaved: the page shows text that is not stored yet.
+    var initial = area.hasAttribute('data-unsaved') ? null : area.value;
     var submitting = false;
     form.addEventListener('submit', function () { submitting = true; });
     window.addEventListener('beforeunload', function (event) {

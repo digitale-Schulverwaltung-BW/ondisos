@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-12); [AP0](#ap0-ergebnis-2026-11-12) und [AP1](#ap1-ergebnis-2026-11-12) erledigt, als Nächstes AP2. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12), [AP1](#ap1-ergebnis-2026-11-12) und [AP2](#ap2-ergebnis-2026-11-13) erledigt, als Nächstes AP3. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -70,12 +70,12 @@ Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darste
 |---|---|---|---|
 | **AP0** Klärung | Welche `--sjs2-*`-Variablen entsprechen Markenfarbe, Schrift, Größe, Hintergrund, Titelfarbe, Kartenradius; wie mischt `applyTheme` alte und neue Variablen; Vorgabe-Theme im 3.2-Format, das dem bisherigen Aussehen nahekommt; welche Schriften die Frontend-CSP zulässt. Felderliste festschreiben. | 2–3 Tage | Felderliste mit Variablen; Vorgabe-Theme sieht in der Vorschau aus wie das heutige Formular (Screenshot-Vergleich). **Erfüllt**, siehe [AP0-Ergebnis](#ap0-ergebnis-2026-11-12) |
 | **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name. **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-11-12) |
-| **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule |
+| **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule. **Erfüllt**, siehe [AP2-Ergebnis](#ap2-ergebnis-2026-11-13) |
 | **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün |
 | **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel |
 | **AP5** Doku und Abschluss | [SURVEYJS.md](../../redaktion/SURVEYJS.md): neuer Abschnitt „Design (Theme) ändern“; MIGRATION-3.1 und Fallback-Abschnitt verweisen für Themes darauf (Import nur noch für die Übernahme); TODO-Eintrag „Theme im SurveyJS-3-Format“ aktualisieren; `HelpLinks`, Meldungstexte (`messages.php`, `messages.example.php`), Changelog, manuelle Tests | 2–3 Tage | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
-**Kern: AP0–AP2** (etwa 2 Wochen; AP0 und AP1 erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
+**Kern: AP0–AP2** (etwa 2 Wochen; erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
 
 ## AP0-Ergebnis (2026-11-12)
 
@@ -146,6 +146,27 @@ Titelgröße, Titelgewicht und Schatten haben bewusst kein eigenes Feld (bleiben
 Gegenprobe: Ohne Konfliktprüfung schlagen die beiden Konflikttests fehl. Unit-Suite (1371) und Integration-Suite (228) grün.
 
 **Lokal ausführen:** Die eingecheckte `backend/.env.test` meldet sich als `root` an; gegen die Docker-MySQL des Entwicklungsstacks klappt das nur mit dem Benutzer `test`. Seit AP1 lädt der Test-Bootstrap dafür eine optionale `backend/.env.test.local` ([tests.md](../tests.md)).
+
+## AP2-Ergebnis (2026-11-13)
+
+**Umgesetzt:**
+- `App\Controllers\ThemeEditorController` (dünn über `ThemeService`): `listThemes()`, `load()` (mit Verlauf), `check()` (Fehler mit Zeile/Spalte über `JsonLocator`, Hinweise, Diff zur veröffentlichten Fassung, betroffene Formulare), `publish()` (`published`, `unchanged`, `invalid`, `conflict`, `not_found`), `restore()`, `defaultTheme()`.
+  `inc/form_editor.php` legt ihn als `$themeEditor` an; damit gelten Zugriffsprüfung, Tenant-Prüfung und Rate-Limit der Editor-Seiten für beide Rollen.
+- `themes.php`: Liste mit Stand („Im Backend“ / „Noch nicht angelegt“), nutzenden Formularen und Link zum Bearbeiten. Erreichbar von *Formulare* (Karte „Design (Themes)“).
+- `theme_edit.php`: JSON-Feld (CodeMirror wie im Survey-Editor, `survey-editor.js` wiederverwendet), *Prüfen*, *Auf Vorgabe zurücksetzen* (füllt nur den Editor), *Veröffentlichen* mit Anmerkung und der Liste der betroffenen Formulare (auch im Bestätigungsdialog), Verlauf mit *Wiederherstellen* (der aktuelle Stand ist markiert).
+  Die Sperre (`based_on`, SHA-256 beim Öffnen) bleibt über *Prüfen* hinweg erhalten; erst nach einem Konflikt übernimmt die Seite den neuen Stand, gegen den der Diff dann zeigt.
+- Warnung beim Verlassen mit ungespeichertem Text: `survey-editor.js` beachtet jetzt `data-unsaved` (die Seite zeigt nach *Prüfen* oder *Vorgabe* einen nicht gespeicherten Text).
+- Diff-Anzeige als `inc/editor_diff.php` aus `form_survey.php` herausgelöst und in beiden Editoren genutzt.
+- **`ThemeValidator`:** warnt jetzt auch bei einer externen URL in `backgroundImage` (SurveyJS nimmt dort eine bloße URL, kein `url(…)`); bisher kam die Warnung nur bei `url(//…)`.
+- Texte unter `theme_editor.*` und `forms.design.*` in `messages.php`.
+
+**Tests:** `tests/Integration/Forms/ThemeEditorControllerTest.php` (13 Tests: Liste, unbekannte Namen, Syntaxfehler mit Zeile, Fehler und Hinweis mit Zeile, erste Veröffentlichung, Diff ohne Speichern, Veröffentlichen mit Verlauf, unverändert, Konflikt mit Diff gegen den neuen Stand, ungültiger Inhalt, Restore, fremde Revision, Tenant-Trennung);
+`EditorPagesSecurityTest` deckt die neuen Seiten ab (Login, Editor-Bootstrap, CSRF vor `publish`/`restore`, Token in jedem POST-Formular, keine Theme-Klassen in `api/`); zwei Tests im `ThemeValidatorTest`. Unit (1376) und Integration (241) grün.
+
+**Im Browser geprüft** (Dev-Stack, Platform-Admin, Tenant *Default*): Markenfarbe geändert ⇒ *Prüfen* zeigt den Diff ⇒ *Veröffentlichen* ⇒ ETag von `api/form-config.php` wechselt, das Frontend (:8081) zeigt sofort die neue Farbe; *Wiederherstellen* bringt den alten ETag zurück.
+Die Tenant-Trennung ist per Integrationstest belegt, nicht mit einem Schul-Admin im Browser.
+
+**Für AP5 vorgemerkt:** `HelpLinks` für `themes.php` und `theme_edit.php` (bis dahin führt „?“ zum Doku-Index), `messages.example.php`, Doku-Abschnitt.
 
 ## Tests
 

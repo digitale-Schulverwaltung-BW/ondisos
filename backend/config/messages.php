@@ -320,6 +320,10 @@ return [
             'failed' => 'Die PDF-Vorschau konnte nicht erstellt werden.',
         ],
         'back_to_form' => '← Zurück zum Formular',
+        'design' => [
+            'help' => 'Farben, Schrift und Kartenstil der Formulare dieser Schule. Ein Theme gilt für alle Formulare, die es nutzen.',
+            'open' => 'Design bearbeiten',
+        ],
         'logo' => [
             'title' => 'Logo der Schule',
             'help' => 'Das Logo erscheint oben in den PDF-Bestätigungen aller Formulare dieser Schule. PNG oder JPEG, höchstens 2 MB; ein transparenter Hintergrund bleibt bei PNG erhalten.',
@@ -801,5 +805,49 @@ return [
             'hidden' => 'Das gewählte Element ist gerade ausgeblendet (Bedingung nicht erfüllt oder Antwort nicht gewählt). „Ausgeblendete zeigen“ blendet es ein.',
             'missing' => 'Das gewählte Element steht noch nicht in der Vorschau.',
         ],
+    ],
+
+    // Theme-Editor (3.2.0b): Design der Formulare einer Schule
+    'theme_editor' => [
+        'affects' => 'Die Änderung betrifft: {{forms}}',
+        'back' => '← Zurück zur Theme-Liste',
+        'btn' => [
+            'default' => 'Auf Vorgabe zurücksetzen',
+        ],
+        'col' => [
+            'forms' => 'Genutzt von',
+            'name' => 'Theme',
+            'status' => 'Stand',
+        ],
+        'conflict' => 'Das Theme wurde inzwischen von jemand anderem veröffentlicht. Ihre Änderung wurde nicht gespeichert. Bitte den Unterschied unten prüfen und erneut veröffentlichen.',
+        'default_confirm' => 'Den Text im Editor durch die eingebaute Vorgabe ersetzen? Gespeichert wird dabei nichts.',
+        'default_loaded' => 'Die eingebaute Vorgabe steht jetzt im Editor. Gespeichert ist noch nichts: erst „Veröffentlichen“ übernimmt sie.',
+        'editor' => 'Theme (JSON)',
+        'editor_help' => 'Ein Theme aus dem SurveyJS Theme Editor (Website, Reiter „JSON“) hier einfügen oder den Text direkt ändern. Beim Prüfen wird nichts gespeichert.',
+        'first_publish' => 'Erste Veröffentlichung: Ab dann liefert das Backend dieses Theme aus.',
+        'history' => [
+            'confirm' => 'Diesen früheren Stand wiederherstellen? Das Design ändert sich sofort in diesen Formularen: {{forms}}. Der aktuelle Stand bleibt im Verlauf erhalten.',
+            'current' => 'aktuell',
+        ],
+        'list_help' => 'Ein Theme legt Farben, Schrift und Kartenstil der Formulare fest. Es gilt für alle Formulare, die es nutzen; welches Theme ein Formular nutzt, steht in dessen Konfiguration.',
+        'list_title' => 'Design (Themes)',
+        'missing_help' => '„Noch nicht angelegt“: Ein Formular nennt dieses Theme, im Backend liegt aber keines. Das Formular nutzt dann die Datei im Frontend, falls vorhanden. Beim Bearbeiten startet das Theme mit der eingebauten Vorgabe.',
+        'none' => 'Es gibt noch kein Theme. Ein Theme erscheint hier, sobald ein Formular es in seiner Konfiguration nennt.',
+        'not_found' => 'Dieses Theme gibt es nicht. Neue Themes entstehen, indem ein Formular sie in seiner Konfiguration nennt.',
+        'not_stored' => 'Dieses Theme liegt noch nicht im Backend; die Formulare nutzen die Datei im Frontend, falls vorhanden. Der Editor zeigt die eingebaute Vorgabe. Mit der ersten Veröffentlichung übernimmt das Backend.',
+        'publish' => [
+            'confirm' => 'Jetzt veröffentlichen? Das Design ändert sich sofort in diesen Formularen: {{forms}}',
+            'help' => 'Der Text aus dem Editor wird geprüft, gespeichert und sofort in allen Formularen sichtbar, die dieses Theme nutzen. Der bisherige Stand bleibt im Verlauf und lässt sich wiederherstellen.',
+        ],
+        'published' => 'Veröffentlicht: Die Formulare zeigen ab sofort dieses Design.',
+        'restore_unchanged' => 'Dieser Stand ist bereits veröffentlicht.',
+        'status' => [
+            'missing' => 'Noch nicht angelegt',
+            'stored' => 'Im Backend',
+        ],
+        'title' => 'Theme „{{name}}"',
+        'unchanged' => 'Keine Änderung gegenüber der veröffentlichten Fassung; es wurde nichts gespeichert.',
+        'unused' => 'kein Formular',
+        'used_by' => 'Genutzt von:',
     ],
 ];

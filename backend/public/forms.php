@@ -172,6 +172,14 @@ require __DIR__ . '/../inc/header.php';
     <?php endif; ?>
 
 
+    <div class="card mt-4" id="design">
+        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('theme_editor.list_title', 'Design (Themes)')) ?></h5></div>
+        <div class="card-body">
+            <p class="text-muted"><?= ff_e(M::get('forms.design.help', 'Farben, Schrift und Kartenstil der Formulare dieser Schule. Ein Theme gilt für alle Formulare, die es nutzen.')) ?></p>
+            <a class="btn btn-outline-primary" href="themes.php"><?= ff_e(M::get('forms.design.open', 'Design bearbeiten')) ?></a>
+        </div>
+    </div>
+
     <div class="card mt-4" id="logo">
         <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('forms.logo.title', 'Logo der Schule')) ?></h5></div>
         <div class="card-body">
