@@ -102,8 +102,8 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 - [ ] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
 - [x] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
 - [x] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
-- [x] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host); Rate-Limit je Besucher
-- [ ] Hinter dem **echten Reverse-Proxy**:  Rate-Limit je Besucher
+- [x] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host)
+- [ ] Frontend hinter dem **echten Reverse-Proxy**, Rate-Limit je Besucher (`TRUSTED_PROXIES` im Frontend bzw. *Vertrauenswürdige Proxys* im Plugin): Eine Test-Anmeldung zeigt im Backend die echte öffentliche IP, nicht die des Proxys; am Rechner wird der 11. QR-Code innerhalb von 10 Minuten abgelehnt („Zu viele Versuche“), ein zweites Gerät im **Mobilfunknetz** (nicht im selben WLAN) bekommt gleich danach trotzdem einen Code
 - [x] WordPress mit Wordfence (oder anderer WAF): Polling und Base64-Body werden nicht blockiert
 - [x] Detailansicht und PDF-Bestätigung einer per Smartphone unterschriebenen Anmeldung
 - [ ] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert
