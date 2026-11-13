@@ -186,6 +186,12 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         return out;
     }
 
+    /** The star after the type of a required question (isRequired: true; requiredIf is a condition, not marked). */
+    function requiredMark() {
+        return h('span', { class: 'sb-req', title: t('prop.isRequired') },
+            h('span', { 'aria-hidden': 'true' }, '*'), h('span', { class: 'visually-hidden' }, ` (${t('prop.isRequired')})`));
+    }
+
     function renderTree() {
         const hadFocus = tree.contains(document.activeElement);
         const list = rows();
@@ -209,7 +215,7 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
                 title: own.map((f) => f.message).join('\n') || null,
             },
             r.children ? h('span', { class: 'sb-toggle', 'aria-hidden': 'true', 'data-toggle': k }, r.open ? '▾' : '▸') : h('span', { class: 'sb-toggle', 'aria-hidden': 'true' }, ''),
-            h('span', { class: 'sb-type' }, typeLabel),
+            h('span', { class: 'sb-type' }, typeLabel, value?.isRequired === true ? requiredMark() : null),
             h('span', { class: 'sb-label' }, text),
             (r.kind === 'page' && !r.implicit) || r.kind === 'choice' ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
             own.length ? h('span', { class: 'sb-mark', 'aria-label': t('findings.here') }, own.some((f) => f.severity === 'error') ? '✖' : '⚠') : null);
