@@ -10,7 +10,7 @@ const require = createRequire(import.meta.url);
 // The runtime that shows the forms (the same file the frontend ships): the outline must agree with what it builds.
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
 
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const surveyFiles = readdirSync(SURVEYS).filter((f) => f.endsWith('.json') && f !== 'survey_theme.json').sort();
 const read = (f) => readFileSync(new URL(f, SURVEYS), 'utf8');
 

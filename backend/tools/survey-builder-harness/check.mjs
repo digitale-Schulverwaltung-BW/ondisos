@@ -4,7 +4,7 @@
 //
 // Needs: PHP with `composer install` in backend/, Node 22+, the `playwright` package and a Chromium
 // (PLAYWRIGHT_BROWSERS_PATH, or CHROMIUM_PATH for the executable). It renders the editor tabs of form_survey.php with
-// render.php for several surveys (the real ones from frontend/surveys plus small odd ones), serves them and drives the
+// render.php for several surveys (the real ones from backend/tests/fixtures/surveys plus small odd ones), serves them and drives the
 // builder like a person would: edit, rename, add, move, delete, keyboard, tab switch, broken JSON, findings, questions in
 // answers.
 import { createRequire } from 'node:module';
@@ -26,7 +26,7 @@ if (shots) { mkdirSync(shots, { recursive: true }); }
 const root = mkdtempSync(join(tmpdir(), 'sb-harness-'));
 const write = (name, content) => { const f = join(root, name); writeFileSync(f, content); return f; };
 const render = (name, survey, report, env = {}) => execFileSync('php', [join(here, 'render.php'), survey, join(root, name), ...(report ? [report] : [])], { stdio: 'pipe', env: { ...process.env, ...env } });
-const surveys = (n) => join(repo, 'frontend/surveys', `${n}.json`);
+const surveys = (n) => join(repo, 'backend/tests/fixtures/surveys', `${n}.json`);
 
 const odd = write('odd.json', JSON.stringify({
     title: 'Odd',

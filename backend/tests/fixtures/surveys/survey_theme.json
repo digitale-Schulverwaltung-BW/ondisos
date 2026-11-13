@@ -1,0 +1,30 @@
+{
+    "themeName": "default",
+    "colorPalette": "light",
+    "isPanelless": false,
+    "backgroundImage": "",
+    "backgroundImageFit": "cover",
+    "backgroundImageAttachment": "scroll",
+    "backgroundOpacity": 1,
+    "cssVariables": {
+        "--sjs-font-family": "Open Sans",
+        "--sjs-font-size": "16px",
+        "--sjs-primary-backcolor": "rgba(0, 163, 215, 1)"
+    },
+    "header": {
+        "height": 0,
+        "mobileHeight": 0,
+        "inheritWidthFrom": "survey",
+        "textAreaWidth": 0,
+        "backgroundImageFit": "cover",
+        "backgroundImageOpacity": 100,
+        "overlapEnabled": false,
+        "logoPositionX": "left",
+        "logoPositionY": "top",
+        "titlePositionX": "left",
+        "titlePositionY": "bottom",
+        "descriptionPositionX": "left",
+        "descriptionPositionY": "bottom"
+    },
+    "headerView": "basic"
+}

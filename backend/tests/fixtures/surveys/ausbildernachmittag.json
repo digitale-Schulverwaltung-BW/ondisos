@@ -1,0 +1,55 @@
+{
+  "title": "Anmeldung IT-Ausbildernachmittag",
+  "description": "am 12.3.2026 in der Heinrich-Hertz-Schule Karlsruhe",
+  "completedHtml": "Vielen Dank für die Anmeldung! Ihre Daten wurden gespeichert.",
+  "pages": [
+    {
+      "name": "page1",
+      "title": "Rückmeldung Ausbildernachmittag",
+      "elements": [
+        {
+          "type": "radiogroup",
+          "name": "Teilnahme",
+          "title": "Ich werde am IT-Ausbildernachmittag am 12.3. teilnehmen",
+          "isRequired": true,
+          "choices": [
+            "ja",
+            "nein"
+          ]
+        },
+        {
+          "type": "checkbox",
+          "name": "TeilnahmeInfo",
+          "title": "Ich möchte an der Info-Veranstaltung zu den neuen Fachinformatiker-Fachrichtungen (Beginn: 13:00 Uhr) teilnehmen",
+          "choices": [
+            {
+              "value": "TeilnahmeFA_FV",
+              "text": "ja"
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "name": "Firma",
+          "title": "Firma",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Name",
+          "title": "Name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Email",
+          "title": "E-Mail-Adresse für Rückfragen",
+          "isRequired": true,
+          "inputType": "email"
+        }
+      ]
+    }
+  ],
+  "completeText": "Absenden",
+  "headerView": "advanced"
+}

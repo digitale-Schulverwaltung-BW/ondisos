@@ -123,7 +123,7 @@ class SurveyLinterTest extends TestCase
 
     public function testContactDataOfARealSurveyIsFoundButNeverAnError(): void
     {
-        $survey = json_decode((string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json'), true);
+        $survey = json_decode((string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json'), true);
         $result = (new SurveyLinter())->contactData($survey);
         $this->assertSame([], $result->errors());
     }
@@ -196,7 +196,7 @@ class SurveyLinterTest extends TestCase
     public function testTheRealSurveysHaveTheirNameAndEmailFieldsOrWarnAccordingly(): void
     {
         foreach (['bs', 'vabo', 'zq'] as $file) {
-            $survey = json_decode((string)file_get_contents(__DIR__ . "/../../../../frontend/surveys/{$file}.json"), true);
+            $survey = json_decode((string)file_get_contents(__DIR__ . "/../../fixtures/surveys/{$file}.json"), true);
             $info = (new SurveyLinter())->requiredFields($survey);
             // Whatever the result is, it must be consistent with what lint() reports.
             $paths = array_column((new SurveyLinter())->lint(['db' => true], $survey)->warnings(), 'path');

@@ -11,7 +11,7 @@ import {
     BACKGROUND, RADII, RADIUS_LEGACY, SHADOWS, DEFAULT_SHADOW, FONT_SYSTEM,
 } from '../../public/assets/theme-editor/fields.js';
 
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const themes = {
     // every theme of the frontend (SurveyJS 2 format), the built-in default (SurveyJS 3) and a Theme Editor export (SurveyJS 2)
     ...Object.fromEntries(readdirSync(SURVEYS).filter((f) => /theme.*\.json$/.test(f)).map((f) => [`frontend/${f}`, readFileSync(new URL(f, SURVEYS), 'utf8')])),

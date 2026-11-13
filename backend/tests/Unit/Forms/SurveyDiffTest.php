@@ -188,7 +188,7 @@ class SurveyDiffTest extends TestCase
 
     public function testRealSurveyAgainstItselfWithOneRenamedField(): void
     {
-        $text   = (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json');
+        $text   = (string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json');
         $fields = \App\Forms\SurveyFieldExtractor::fieldNames((array)json_decode($text, true));
         $victim = $fields[1];
         $changed = preg_replace('/"name":\s*"' . preg_quote($victim, '/') . '"/', '"name": "UMBENANNT"', $text);

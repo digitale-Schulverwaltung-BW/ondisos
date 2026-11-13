@@ -187,8 +187,8 @@ class SurveyPreviewControllerTest extends FormEditorTestCase
     public function testRealSurveyAndThemePreview(): void
     {
         $this->configs->insert('bs', ['form' => 'bs.json', 'theme' => 'survey_theme.json']);
-        $this->resources->save(Res::KIND_SURVEY, 'bs.json', (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json'), 'u');
-        $this->resources->save(Res::KIND_THEME, 'survey_theme.json', (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/survey_theme.json'), 'u');
+        $this->resources->save(Res::KIND_SURVEY, 'bs.json', (string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json'), 'u');
+        $this->resources->save(Res::KIND_THEME, 'survey_theme.json', (string)file_get_contents(__DIR__ . '/../../fixtures/surveys/survey_theme.json'), 'u');
 
         $r = $this->preview()->load('bs', P::SOURCE_LIVE);
 

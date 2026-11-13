@@ -1,0 +1,31 @@
+{
+  "pages": [
+    {
+      "name": "page1",
+      "elements": [
+        {
+          "type": "html",
+          "name": "question1",
+          "html": "<h1>Demo-Anmeldung</h1>\n<h3>Prefill-Link</h3>"
+        },
+        {
+          "type": "text",
+          "name": "Name",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "email",
+          "title": "E-Mail",
+          "isRequired": true
+        },
+        {
+          "type": "text",
+          "name": "Telefon",
+          "title": "Telefonnummer"
+        }
+      ]
+    }
+  ],
+  "headerView": "advanced"
+}

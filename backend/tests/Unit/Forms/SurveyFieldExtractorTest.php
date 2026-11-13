@@ -49,7 +49,7 @@ class SurveyFieldExtractorTest extends TestCase
 
     public function testRealSurveyHasFields(): void
     {
-        $survey = json_decode((string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json'), true);
+        $survey = json_decode((string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json'), true);
         $names  = SurveyFieldExtractor::fieldNames($survey);
         $this->assertNotEmpty($names);
         $this->assertSame($names, array_values(array_unique($names)));

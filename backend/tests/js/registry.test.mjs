@@ -9,7 +9,7 @@ import { TYPES, PAGE, SURVEY, typeDef, propDef, defaultOf, isKnownType, palette,
 
 const require = createRequire(import.meta.url);
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const surveyFiles = readdirSync(SURVEYS).filter((f) => f.endsWith('.json') && f !== 'survey_theme.json').sort();
 
 /** Library "type" values that fit each registry kind. */

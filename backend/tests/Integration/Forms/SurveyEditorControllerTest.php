@@ -219,7 +219,7 @@ class SurveyEditorControllerTest extends FormEditorTestCase
 
     public function testRealSurveyRoundTripThroughTheEditor(): void
     {
-        $text = (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json');
+        $text = (string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json');
 
         $check = $this->editor()->check('bs', $text);
         $this->assertTrue($check['valid'], json_encode($check['errors']));

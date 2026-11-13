@@ -167,6 +167,11 @@ class MeinServiceTest extends TestCase
 
 - `tests/Unit/Forms/`: Survey-/Theme-/Config-Validierung, HTML-Allowlist, Linter, Namensregeln; prüfen u. a. alle echten Surveys
   in `frontend/surveys/` und `frontend/config/forms-config-dist.php` (die Regeln dürfen reale Formulare nicht ablehnen).
+- **Zwei Arten von Survey-Dateien in Tests (seit 3.2.0, AP6):** Tests, die Code an realistischen Surveys messen (Round-Trip,
+  Outline, Diff, Felder, Editor, Auslieferung, JS-Tests, `check.mjs`), lesen die Kopie in `tests/fixtures/surveys/`. Sie ändert
+  sich nur, wenn man sie bewusst aktualisiert (`cp frontend/surveys/*.json backend/tests/fixtures/surveys/`, danach gemessene
+  Zahlen in den Tests prüfen). Tests, die die **ausgelieferten** Dateien prüfen (gültig, keine Verweise ins Leere, passt zu
+  `forms-config-dist.php`, Theme, `SurveySource`, Import), lesen weiter `frontend/surveys/`.
   `FormEditorSchemaDriftTest` hält `schema.sql`, `migrations/add_form_editor_tables.sql` und `migrate.php` deckungsgleich.
 - `tests/Integration/Forms/`: Repositories (Tenant-Isolierung, IDOR-Protokoll, Konflikterkennung), `FormPublishService`
   (Entwurf → Veröffentlichen → Wiederherstellen, Atomarität) und `SurveyImportService` gegen eine echte Datenbank.

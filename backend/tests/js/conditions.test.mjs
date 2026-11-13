@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { parseDoc } from '../../public/assets/survey-builder/json-doc.js';
 import { tokenize, parseSimple, fieldsOf, checkExpression, suggest, literalText, CONDITION_PROPS } from '../../public/assets/survey-builder/conditions.js';
 
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const surveyFiles = readdirSync(SURVEYS).filter((f) => f.endsWith('.json') && f !== 'survey_theme.json').sort();
 const doc = (v) => parseDoc(typeof v === 'string' ? v : JSON.stringify(v));
 

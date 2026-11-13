@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { parseDoc, toValue, nodeAt, valueAt, setValue, insertMember, removeMember, insertItem, removeItem, JsonSyntaxError }
     from '../../public/assets/survey-builder/json-doc.js';
 
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const files = readdirSync(SURVEYS).filter((f) => f.endsWith('.json')).sort();
 const read = (f) => readFileSync(new URL(f, SURVEYS), 'utf8');
 

@@ -7,7 +7,7 @@ import { valueAt } from '../../public/assets/survey-builder/json-doc.js';
 import { loadModel, outline, flatten, moveElementTo, duplicateElement, setProp, removeElement } from '../../public/assets/survey-builder/model.js';
 
 const RULES = JSON.parse(readFileSync(new URL('./fixtures/survey-rules.json', import.meta.url), 'utf8'));
-const read = (f) => readFileSync(new URL(`../../../frontend/surveys/${f}`, import.meta.url), 'utf8');
+const read = (f) => readFileSync(new URL(`../fixtures/surveys/${f}`, import.meta.url), 'utf8');
 
 test('undo goes back step by step to the exact earlier texts, redo forward again', () => {
     const h = createHistory();

@@ -86,7 +86,7 @@ class JsonLocatorTest extends TestCase
 
     public function testLinesOfRealSurveyPointAtTheRightPlaces(): void
     {
-        $text = (string)file_get_contents(__DIR__ . '/../../../../frontend/surveys/bs.json');
+        $text = (string)file_get_contents(__DIR__ . '/../../fixtures/surveys/bs.json');
         $r    = JsonLocator::analyze($text);
         $this->assertNull($r['error']);
 

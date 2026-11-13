@@ -12,7 +12,7 @@ import { isKnownType } from '../../public/assets/survey-builder/registry.js';
 const require = createRequire(import.meta.url);
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
 const RULES = JSON.parse(readFileSync(new URL('./fixtures/survey-rules.json', import.meta.url), 'utf8'));
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const surveyFiles = readdirSync(SURVEYS).filter((f) => f.endsWith('.json') && f !== 'survey_theme.json').sort();
 const read = (f) => readFileSync(new URL(f, SURVEYS), 'utf8');
 const load = (t) => { const m = loadModel(typeof t === 'string' ? t : JSON.stringify(t, null, 2)); assert.ok(m.ok); return m.doc; };

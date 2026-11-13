@@ -9,7 +9,7 @@ import { targetOf, pathOf, message, isMessage, PROTOCOL, VERSION } from '../../p
 
 const require = createRequire(import.meta.url);
 const Survey = require('../../../frontend/public/assets/survey.core.min.js');
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const load = (v) => { const m = loadModel(typeof v === 'string' ? v : JSON.stringify(v, null, 2)); assert.ok(m.ok); return m.doc; };
 
 const SURVEY = { pages: [

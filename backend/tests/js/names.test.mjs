@@ -6,7 +6,7 @@ import { parseDoc } from '../../public/assets/survey-builder/json-doc.js';
 import { elementsOf, generateName, validateName, findReferences, replaceReferences } from '../../public/assets/survey-builder/names.js';
 
 const RULES = JSON.parse(readFileSync(new URL('./fixtures/survey-rules.json', import.meta.url), 'utf8'));
-const SURVEYS = new URL('../../../frontend/surveys/', import.meta.url);
+const SURVEYS = new URL('../fixtures/surveys/', import.meta.url);
 const surveyFiles = readdirSync(SURVEYS).filter((f) => f.endsWith('.json') && f !== 'survey_theme.json').sort();
 const doc = (v) => parseDoc(typeof v === 'string' ? v : JSON.stringify(v));
 
