@@ -215,7 +215,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 
 **Nebenbefunde:**
 - ~~Die Builder-Module werden ohne Versionsparameter geladen (`app.js` und seine `import`s). Nach einem Update kann ein Browser eine alte und eine neue Datei mischen, wie es 3.2.0a bei der Vorschau passierte (`?v=<filemtime>`). Vor dem Release lösen (AP7), z. B. per Import-Map mit Versionen.~~ Gelöst 2026-11-13: `App\Utils\AssetVersion`, Import-Map mit `?v=<filemtime>` je Modul (Survey-Editor, Theme-Editor, Live-Vorschau).
-- `meister.json` nutzt Eigenschaften, die die Registry nicht anbietet (`text.min/max/step`, `expression.displayStyle`, `maximumFractionDigits`, `visibleIf` am Ausdruck, `signaturepad.signatureWidth/placeholder`) und `paneldynamic`. Sie bleiben unverändert im Text; `registry.test.mjs` führt sie als Lücken. Kandidaten für die Registry.
+- `meister.json` nutzt Eigenschaften, die die Registry nicht anbietet (`text.min/max/step`, `expression.displayStyle`, `maximumFractionDigits`, `visibleIf` am Ausdruck, `signaturepad.signatureWidth/placeholder`) und `paneldynamic`. Sie bleiben unverändert im Text; `registry.test.mjs` führt sie als Lücken. Kandidaten für die Registry. Nachgetragen 2026-11-13: `defaultValueExpression` (neben `defaultValue`) und `clearIfInvisible` (alle Typen mit Wert); ohne `clearIfInvisible: "none"` verliert ein ausgeblendetes, berechnetes Feld seinen Wert beim Absenden.
 
 ## Fragen in Auswahloptionen (2026-11-11)
 

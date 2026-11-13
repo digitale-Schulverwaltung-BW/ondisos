@@ -46,11 +46,16 @@ const TITLE_LOCATION = prop('titleLocation', 'enum', 'layout', { values: ['defau
 const SHOW_NUMBER = prop('showNumber', 'boolean', 'layout', { default: true });
 const VISIBLE_IF = prop('visibleIf', 'expression', 'logic');
 const REQUIRED_IF = prop('requiredIf', 'expression', 'logic');
+// Per field; "default" follows the survey's clearInvisibleValues. Hidden fields filled by an expression need "none".
+const CLEAR_IF_INVISIBLE = prop('clearIfInvisible', 'enum', 'logic', { values: ['default', 'none', 'onComplete', 'onHidden', 'onHiddenContainer'], default: 'default' });
+// Evaluated when the form opens and again whenever a field in it changes, until someone edits the field by hand.
+const DEFAULT_VALUE_EXPRESSION = prop('defaultValueExpression', 'expression', 'logic');
 const PLACEHOLDER = prop('placeholder', 'localized', 'general');
 // Added to every question by survey-handler-base.js (Ondisos), so not part of the library itself.
 const PLACEHOLDER_EXPRESSION = prop('placeholderExpression', 'expression', 'logic', { custom: true });
 
-const QUESTION = [NAME, TITLE, DESCRIPTION, IS_REQUIRED, VISIBLE, START_NEW_LINE, TITLE_LOCATION, SHOW_NUMBER, VISIBLE_IF, REQUIRED_IF];
+const QUESTION = [NAME, TITLE, DESCRIPTION, IS_REQUIRED, VISIBLE, START_NEW_LINE, TITLE_LOCATION, SHOW_NUMBER, VISIBLE_IF, REQUIRED_IF,
+    CLEAR_IF_INVISIBLE];
 
 const type = (typeName, group, extra, props) => ({
     type: typeName,
@@ -71,6 +76,7 @@ export const TYPES = Object.freeze({
         PLACEHOLDER_EXPRESSION,
         prop('inputSize', 'number', 'layout', { integer: true, min: 1 }),
         prop('defaultValue', 'value', 'general', { valueKind: 'string' }),
+        DEFAULT_VALUE_EXPRESSION,
         prop('setValueExpression', 'expression', 'logic'),
     ]),
     comment: type('comment', 'input', {}, [
@@ -85,6 +91,7 @@ export const TYPES = Object.freeze({
         PLACEHOLDER,
         prop('allowClear', 'boolean', 'general', { default: true }),
         prop('defaultValue', 'value', 'general', { valueKind: 'string' }),
+        DEFAULT_VALUE_EXPRESSION,
     ]),
     tagbox: type('tagbox', 'choice', {}, [
         ...QUESTION,
@@ -97,6 +104,7 @@ export const TYPES = Object.freeze({
         prop('choices', 'choices', 'general'),
         prop('colCount', 'number', 'layout', { integer: true, min: 0, max: 5, default: 1 }),
         prop('defaultValue', 'value', 'general', { valueKind: 'string' }),
+        DEFAULT_VALUE_EXPRESSION,
     ]),
     checkbox: type('checkbox', 'choice', {}, [
         ...QUESTION,
@@ -108,6 +116,7 @@ export const TYPES = Object.freeze({
         prop('labelTrue', 'localized', 'general'),
         prop('labelFalse', 'localized', 'general'),
         prop('defaultValue', 'value', 'general', { valueKind: 'boolean' }),
+        DEFAULT_VALUE_EXPRESSION,
     ]),
     file: type('file', 'input', {}, [
         ...QUESTION,
@@ -124,6 +133,7 @@ export const TYPES = Object.freeze({
         TITLE,
         VISIBLE,
         prop('expression', 'expression', 'general'),
+        CLEAR_IF_INVISIBLE,
     ]),
     html: type('html', 'display', { hasValue: false }, [
         NAME,

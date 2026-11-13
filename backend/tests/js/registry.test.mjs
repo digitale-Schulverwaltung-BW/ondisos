@@ -149,7 +149,6 @@ test('the registry covers every property the existing surveys use, except the fe
         'checkbox.descriptionLocation',
         'checkbox.requiredErrorText',
         'dropdown.requiredErrorText',
-        'expression.clearIfInvisible',
         'expression.displayStyle',
         'expression.maximumFractionDigits',
         'expression.visibleIf',
@@ -161,8 +160,6 @@ test('the registry covers every property the existing surveys use, except the fe
         'signaturepad.requiredErrorText',
         'signaturepad.signatureWidth',
         'survey.calculatedValues',
-        'text.clearIfInvisible',
-        'text.defaultValueExpression',
         'text.max',
         'text.maxErrorText',
         'text.maxValueExpression',
@@ -200,4 +197,25 @@ test('palette and value types', () => {
 
 test('the registry cannot be modified from outside', () => {
     assert.throws(() => { 'use strict'; TYPES.text = {}; }, TypeError);
+});
+
+test('a hidden field filled by an expression needs clearIfInvisible "none" to be sent (why both are offered)', () => {
+    const submit = (extra) => {
+        const s = new Survey.Model({ elements: [
+            { type: 'radiogroup', name: 'form', choices: ['VZ', 'TZ'], defaultValue: 'VZ' },
+            { type: 'text', name: 'klasse', visible: false, ...extra },
+        ] });
+        s.doComplete();
+        return s.data.klasse;
+    };
+    const byDefault = { defaultValueExpression: "iif({form} = 'VZ', 'MV', 'MT')" };
+    assert.equal(submit(byDefault), undefined, 'the survey default (onComplete) clears it');
+    assert.equal(submit({ ...byDefault, clearIfInvisible: 'none' }), 'MV');
+    // setValueExpression also runs when the form opens (SurveyJS 3.2), so the hidden field is the only trap
+    assert.equal(submit({ setValueExpression: "'MV'" }), undefined);
+    assert.equal(submit({ setValueExpression: "'MV'", clearIfInvisible: 'none' }), 'MV');
+    for (const t of Object.values(TYPES)) {
+        assert.equal(Boolean(propDef(t.type, 'defaultValueExpression')), Boolean(propDef(t.type, 'defaultValue')), `${t.type}: next to defaultValue`);
+        assert.equal(Boolean(propDef(t.type, 'clearIfInvisible')), t.hasValue, `${t.type}: every type with a value`);
+    }
 });

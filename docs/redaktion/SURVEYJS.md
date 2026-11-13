@@ -8,6 +8,7 @@
 - [Unterschriftsfelder](#unterschriftsfelder)
   - [Auf dem Smartphone unterschreiben](#auf-dem-smartphone-unterschreiben)
   - [Bestätigung ohne Unterschrift](#bestätigung-ohne-unterschrift)
+- [Ausgeblendete Felder mit festem oder berechnetem Wert](#ausgeblendete-felder-mit-festem-oder-berechnetem-wert)
 - [Workflow im Backend](#workflow-im-backend)
   - [Bestehendes Formular ändern](#bestehendes-formular-ändern)
   - [Was „Prüfen“ meldet](#was-prüfen-meldet)
@@ -84,6 +85,30 @@ Genügt Ihrer Schule eine Bestätigung, ist eine Checkbox mit getipptem Namen ei
   "choices": [{ "value": "ja", "text": "Ich bestätige die Richtigkeit meiner Angaben." }] },
 { "type": "text", "name": "BestaetigtVon", "title": "Vor- und Nachname", "isRequired": true }
 ```
+
+## Ausgeblendete Felder mit festem oder berechnetem Wert
+
+Manche Angaben füllt das Formular selbst, etwa die Klasse aus der gewählten Unterrichtsform. Dafür dient ein ausgeblendetes Feld (*Sichtbar* aus) mit einem dieser Werte:
+
+- **Vorgabewert:** ein fester Wert, z. B. `VABO`.
+- **Vorgabewert durch Ausdruck** (`defaultValueExpression`): berechnet beim Öffnen und bei jeder Änderung der genannten Felder, z. B.
+  `iif({Unterrichtsform} = 'Vollzeitunterricht', 'MV', 'MT')`. Eine eigene Eingabe in das Feld hätte Vorrang; bei einem ausgeblendeten Feld gibt es keine.
+- **Wert setzen durch Ausdruck** (`setValueExpression`): berechnet ebenso, überschreibt aber auch eine eigene Eingabe.
+
+Ausgeblendete Felder schickt SurveyJS normalerweise **nicht** mit: Die Einstellung *Angaben ausgeblendeter Felder* des Formulars (`clearInvisibleValues`) löscht sie
+beim Absenden. Stellen Sie deshalb am Feld *Angabe, wenn ausgeblendet* auf **Behalten** (`"clearIfInvisible": "none"`):
+
+```json
+{
+  "type": "text",
+  "name": "Klasse",
+  "visible": false,
+  "defaultValueExpression": "iif({Unterrichtsform} = 'Vollzeitunterricht', 'MV', 'MT')",
+  "clearIfInvisible": "none"
+}
+```
+
+Stellen Sie stattdessen das ganze Formular auf *Behalten*, gehen auch Angaben mit, die Besucher eingegeben und danach durch eine andere Antwort wieder ausgeblendet haben.
 
 ## Workflow im Backend
 
