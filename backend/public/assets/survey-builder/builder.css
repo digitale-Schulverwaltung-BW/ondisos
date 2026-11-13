@@ -112,3 +112,9 @@
 .sb-tip[hidden] { display: none; }
 .sb-field .sb-tip { top: 2.6rem; }
 .sb-required .sb-tip { top: calc(100% + .25rem); left: 0; right: auto; max-width: 20rem; }
+
+/* The survey itself: the first row of the tree (its settings; without pages also the container of the elements). */
+.sb-item.sb-survey { font-weight: 600; background: var(--bs-secondary-bg); }
+.sb-item.sb-survey.sb-selected { background: var(--bs-primary-bg-subtle); }
+.sb-survey .sb-label { font-weight: 600; }
+

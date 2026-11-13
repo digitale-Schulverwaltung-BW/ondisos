@@ -214,7 +214,7 @@ backend/tools/survey-builder-harness/ Browserprüfung und Harness (render.php, v
 **Nicht geprüft:** Drag-and-drop auf Touch-Geräten (natives HTML-Drag-and-drop gibt es dort nicht; Tastatur und Knöpfe bleiben), automatisches Scrollen des Aufbaus beim Ziehen über den sichtbaren Bereich hinaus (übernimmt der Browser; im Harness wurde ohne Scrollen geprüft), Screenreader. Die echte Seite mit Login ist weiterhin nicht durchgeklickt (siehe AP2).
 
 **Nebenbefunde:**
-- Die Builder-Module werden ohne Versionsparameter geladen (`app.js` und seine `import`s). Nach einem Update kann ein Browser eine alte und eine neue Datei mischen, wie es 3.2.0a bei der Vorschau passierte (`?v=<filemtime>`). Vor dem Release lösen (AP7), z. B. per Import-Map mit Versionen.
+- ~~Die Builder-Module werden ohne Versionsparameter geladen (`app.js` und seine `import`s). Nach einem Update kann ein Browser eine alte und eine neue Datei mischen, wie es 3.2.0a bei der Vorschau passierte (`?v=<filemtime>`). Vor dem Release lösen (AP7), z. B. per Import-Map mit Versionen.~~ Gelöst 2026-11-13: `App\Utils\AssetVersion`, Import-Map mit `?v=<filemtime>` je Modul (Survey-Editor, Theme-Editor, Live-Vorschau).
 - `meister.json` nutzt Eigenschaften, die die Registry nicht anbietet (`text.min/max/step`, `expression.displayStyle`, `maximumFractionDigits`, `visibleIf` am Ausdruck, `signaturepad.signatureWidth/placeholder`) und `paneldynamic`. Sie bleiben unverändert im Text; `registry.test.mjs` führt sie als Lücken. Kandidaten für die Registry.
 
 ## Fragen in Auswahloptionen (2026-11-11)
@@ -298,7 +298,18 @@ Browserprüfung (Nachtrag): `check.mjs` hat einen Abschnitt `nested` (eigene kle
 
 **Nachtrag (2026-11-12): Fragen in nicht gewählten Antworten.** *Ausgeblendete zeigen* erreichte sie nicht: SurveyJS zeigt das Panel einer Antwort nur, solange sie gewählt ist (`ItemValue.setIsPanelShowing`, gesetzt von `updateItemIsPanelShowing`), `showInvisibleElements` wirkt dort nicht. Mit dem Schalter setzt der Rahmen jetzt jede Antwort mit Fragen auf sichtbar (`_showChoicePanels` in `survey-preview.js`), nach jedem Neuaufbau und jeder Antwort erneut; ohne Schalter gilt wieder die Regel von SurveyJS. Das Panel muss dafür seine Zeilen bauen (`panelFirstRendering()`, danach `renderedIsPanelShowing = true`), sonst bleibt es leer. Die Panels nicht gewählter Antworten sind blass wie andere ausgeblendete Elemente (`.sd-item:not(.sd-item--checked) + .sd-panel`, SurveyJS setzt das Panel direkt hinter die Antwort). Damit lassen sich solche Fragen auch aus dem Baum anzeigen und in der Vorschau auswählen. Gegen SurveyJS 3.2.0 geprüft (interne API): `check.mjs`, Abschnitt `live`, +3 Prüfungen (126/126: eingeblendet und blass, aus dem Baum anzeigen, gewählte Antwort nicht blass, ausgeschaltet wieder wie SurveyJS); zwei Ebenen und Neuaufbau mit dem Rahmen-Skript direkt im Browser geprüft. Nach einem SurveyJS-Update zeigt `check.mjs`, ob das noch gilt.
 
-**Offen (optional):** Vorschau als dritte Spalte auf breiten Bildschirmen (siehe Entwurf). Die Builder-Module ohne Versionsparameter (Nebenbefund AP4) betreffen auch `live-*.js`; Lösung in AP7.
+**Offen (optional):** Vorschau als dritte Spalte auf breiten Bildschirmen (siehe Entwurf). ~~Die Builder-Module ohne Versionsparameter (Nebenbefund AP4) betreffen auch `live-*.js`; Lösung in AP7.~~ Gelöst 2026-11-13, siehe Nebenbefunde AP4.
+
+## Einstellungen des Formulars (2026-11-13)
+
+Die oberste Ebene der Survey (`title`, `completedHtml`, Knopftexte, `firstPageIsStartPage` …) war im grafischen Editor nicht erreichbar; kein Arbeitspaket sah sie vor. Alle sechs Surveys nutzen sie.
+
+- **Aufbau:** Die erste Zeile heißt **Formular** (Pfad `[]`, Titel der Survey als Text). Bei einer Survey ohne Seiten ist sie zugleich der Container der Elemente (vorher die „implizite Seite“); mit Seiten nimmt sie keine Elemente auf (kein Drop, *Element hinzufügen* geht ans Ende der ersten Seite, *Seite hinzufügen* setzt die neue Seite an den Anfang). Verschieben, Duplizieren und Löschen gibt es für sie nicht. Prüfmeldungen zu Einstellungen der Survey (Pfad außerhalb von `pages`) hängen an dieser Zeile statt oben.
+- **Registry:** `SURVEY` mit *Allgemein* (Titel, Beschreibung, `completedHtml`, `completeText`, `pageNextText`, `pagePrevText`, `startSurveyText`), *Ablauf* (`firstPageIsStartPage`, `autoFocusFirstQuestion`, `clearInvisibleValues`) und *Darstellung* (`logoPosition`, `widthMode`, `headerView`, `loadingHtml`). Typen, Standardwerte und Auswahlwerte prüft `registry.test.mjs` gegen die Library. Nicht im Panel: `calculatedValues` (als Lücke geführt, bleibt im JSON) und Theme-Reste (*Formulare → Design*).
+- **Leere Knopftexte:** In SurveyJS zeigt `"completeText": ""` einen leeren Knopf, erst das Fehlen den (deutschen) Standardtext. Das neue Flag `emptyMeansDefault` lässt den Editor die Eigenschaft beim Leeren entfernen; `emptyIsAbsent` bleibt der durch die Library belegten Gleichheit vorbehalten.
+- **Stelle im Text:** Neue Einstellungen stehen vor `"pages"` (bzw. `"elements"`), wo die Exporte sie führen (`insertMember(…, { before })`); vorhandene ändern sich an ihrer Stelle, auch wenn ein Creator-Export sie hinter die Seiten geschrieben hat.
+- **Erläuterungen:** `help_survey.<name>` überschreibt `help.<name>`, wo eine Eigenschaft für das Formular anderes bedeutet (Titel). Das HTML-Feld nennt jetzt auch weitere Sprachen (`completedHtml` mit `de` und `default`).
+- **Geprüft:** JS-Tests (176), Unit-Tests; im Browser an `meister` (Dev-Stack): Einfügen vor `pages`, Titel im Baum folgt, geleerter Knopftext verschwindet, Rückgängig stellt her, Survey ohne Seiten. `check.mjs` angepasst (Zeile „Formular“ statt impliziter Seite, neue Prüfung an `bs`), aber hier nicht gelaufen (Playwright fehlt).
 
 ## Tests
 

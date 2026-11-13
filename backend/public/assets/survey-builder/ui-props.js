@@ -4,7 +4,7 @@
 // text. The page is a form, so Enter must never submit it: handled in ui.js for the whole builder.
 
 import { h } from './dom.js';
-import { PAGE, typeDef } from './registry.js';
+import { PAGE, SURVEY, typeDef } from './registry.js';
 import { displayText, otherProperties, supportsChoiceElements } from './model.js';
 
 let uid = 0;
@@ -113,10 +113,16 @@ export function infoTip(ctx, id, text) {
     return { button, el };
 }
 
-/** The explanation of a property (help.<name>), or null when there is none. */
+/**
+ * The explanation of a property, or null when there is none: help_<type>.<name> where a property means something else for
+ * that type (the survey's title), else help.<name>.
+ */
 function helpOf(ctx, def) {
-    const help = ctx.t(`help.${def.name}`);
-    return help.startsWith('[') ? null : help;
+    for (const key of [`help_${ctx.typeName}.${def.name}`, `help.${def.name}`]) {
+        const help = ctx.t(key);
+        if (!help.startsWith('[')) { return help; }
+    }
+    return null;
 }
 
 function describe(control, ...ids) {
@@ -190,11 +196,14 @@ function localizedControl(ctx, def) {
         : h('input', { type: 'text', class: 'form-control', id, value: current });
     if (def.name === 'title') { input.setAttribute('placeholder', ctx.value.name ?? ''); }
     commitOnChange(input, () => input.value, (v) => ctx.commit(def.name, v), box, ctx, def, () => displayText(ctx.value[def.name]));
-    // other languages are not edited: "default" is, or "de" when there is no "default" (same rule as the model)
+    return field(ctx, def, id, input, { notes: [box, otherLangsNote(ctx, raw)] });
+}
+
+/** Other languages are not edited: "default" is, or "de" when there is no "default" (same rule as the model). */
+function otherLangsNote(ctx, raw) {
     const edited = raw && typeof raw === 'object' ? ('default' in raw || !('de' in raw) ? 'default' : 'de') : null;
     const others = edited ? Object.keys(raw).filter((k) => k !== edited) : [];
-    const note = others.length ? h('div', { class: 'form-text' }, ctx.t('other_langs', { list: others.join(', ') })) : null;
-    return field(ctx, def, id, input, { notes: [box, note] });
+    return others.length ? h('div', { class: 'form-text' }, ctx.t('other_langs', { list: others.join(', ') })) : null;
 }
 
 const ALLOWED_TAG = /<\/?\s*([a-zA-Z][^\s/>]*)/g;
@@ -204,7 +213,7 @@ function htmlControl(ctx, def) {
     const box = errorBox(`${id}-err`);
     const input = h('textarea', { class: 'form-control font-monospace', id, rows: 6, value: displayText(ctx.value[def.name]), spellcheck: 'false' });
     const allowed = Object.keys(ctx.rules.htmlTags ?? {});
-    const hint = ctx.t('help.html', { tags: allowed.map((x) => `<${x}>`).join(' ') });
+    const hint = [def.name === 'html' ? null : helpOf(ctx, def), ctx.t('help.html', { tags: allowed.map((x) => `<${x}>`).join(' ') })].filter(Boolean).join(' ');
     const warn = h('div', { class: 'form-text text-danger', role: 'status', hidden: true });
     const check = () => {
         const bad = [...new Set([...input.value.matchAll(ALLOWED_TAG)].map((m) => m[1].toLowerCase()).filter((n) => !allowed.includes(n)))];
@@ -214,7 +223,7 @@ function htmlControl(ctx, def) {
     input.addEventListener('input', check);
     check();
     commitOnChange(input, () => input.value, (v) => ctx.commit(def.name, v), box, ctx, def, () => displayText(ctx.value[def.name]));
-    return field(ctx, def, id, input, { help: hint, notes: [warn, box] });
+    return field(ctx, def, id, input, { help: hint, notes: [warn, box, otherLangsNote(ctx, ctx.value[def.name])] });
 }
 
 function booleanControl(ctx, def) {
@@ -508,7 +517,7 @@ function hasAny(value, props) {
  * @returns {HTMLElement}
  */
 export function buildProperties(ctx) {
-    const def = ctx.typeName === 'page' ? PAGE : typeDef(ctx.typeName);
+    const def = ctx.typeName === 'page' ? PAGE : ctx.typeName === 'survey' ? SURVEY : typeDef(ctx.typeName);
     const root = h('div', { class: 'sb-props-body' });
     const typeLabel = ctx.t(`type.${ctx.typeName}`);
     const head = h('div', { class: 'sb-props-head' }, h('h2', { class: 'h5 mb-0' }, def ? typeLabel : String(ctx.typeName ?? '?')));
@@ -526,7 +535,7 @@ export function buildProperties(ctx) {
     if (!def) {
         root.append(h('p', { class: 'text-muted' }, ctx.t('unknown_type', { type: String(ctx.typeName ?? '?') })));
     } else {
-        const groups = ['general', 'layout', 'logic'];
+        const groups = ['general', 'flow', 'layout', 'logic'];
         for (const group of groups) {
             const props = def.props.filter((p) => p.group === group && p !== required);
             if (props.length === 0) { continue; }

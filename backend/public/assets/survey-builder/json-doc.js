@@ -215,12 +215,24 @@ export function setValue(doc, path, value) {
     return splice(doc, node.start, node.end, render(doc, value, indent));
 }
 
-/** Adds a property at the end of the object at objPath (or replaces it when the key exists). */
-export function insertMember(doc, objPath, key, value) {
+/**
+ * Adds a property at the end of the object at objPath (or replaces it when the key exists). With `before`, the new property
+ * goes in front of that member when it exists (e.g. survey settings before "pages").
+ */
+export function insertMember(doc, objPath, key, value, { before = null } = {}) {
     const obj = container(doc, objPath, 'object');
     if (obj.members.some((m) => m.key === key)) { return setValue(doc, [...objPath, key], value); }
     const { eol } = doc;
     const entry = (indent) => `${JSON.stringify(key)}: ${render(doc, value, indent)}`;
+    const next = before === null ? undefined : obj.members.find((m) => m.key === before);
+    if (next) {
+        // in front of an existing member: on its line (multi-line object) or before it (one line)
+        if (isMultiline(doc, obj, obj.members[0].keyStart)) {
+            const indent = lineIndentAt(doc.text, next.keyStart);
+            return splice(doc, next.keyStart, next.keyStart, `${entry(indent)},${eol}${indent}`);
+        }
+        return splice(doc, next.keyStart, next.keyStart, `${entry(lineIndentAt(doc.text, obj.start))}, `);
+    }
     if (obj.members.length === 0) {
         const indent = lineIndentAt(doc.text, obj.start);
         return splice(doc, obj.start, obj.end, `{${eol}${indent}${doc.indentUnit}${entry(indent + doc.indentUnit)}${eol}${indent}}`);

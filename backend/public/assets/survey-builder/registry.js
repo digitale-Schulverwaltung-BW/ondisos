@@ -24,9 +24,12 @@
  *
  * `emptyIsAbsent`: an empty string means the same as no property (checked against the library). Not so for every text:
  * an empty dropdown placeholder shows nothing, while a missing one shows SurveyJS' own "Select...".
+ * `emptyMeansDefault`: the editor removes the property when its field is emptied, so SurveyJS shows its own (German)
+ * text again; an empty string would show an empty button.
  *
  * @typedef {{name:string, kind:string, label:string, default?:*, values?:Array<string|number>, min?:number, max?:number,
- *            integer?:boolean, group:string, custom?:boolean, emptyIsAbsent?:boolean, valueKind?:string}} PropDef
+ *            integer?:boolean, group:string, custom?:boolean, emptyIsAbsent?:boolean, emptyMeansDefault?:boolean,
+ *            valueKind?:string}} PropDef
  * @typedef {{type:string, label:string, group:string, hasValue:boolean, container:boolean, props:PropDef[]}} TypeDef
  */
 
@@ -136,6 +139,34 @@ export const TYPES = Object.freeze({
     ]),
 });
 
+/**
+ * The survey itself (the top level of the document): texts, flow and look of the whole form. Its pages and top-level
+ * elements are edited in the tree; calculatedValues and theme settings stay in the JSON (theme: Formulare → Design).
+ */
+export const SURVEY = Object.freeze({
+    type: 'survey',
+    label: 'builder.type.survey',
+    group: 'layout',
+    hasValue: false,
+    container: true,
+    props: [
+        TITLE,
+        DESCRIPTION,
+        prop('completedHtml', 'html', 'general'),
+        prop('completeText', 'localized', 'general', { emptyMeansDefault: true }),
+        prop('pageNextText', 'localized', 'general', { emptyMeansDefault: true }),
+        prop('pagePrevText', 'localized', 'general', { emptyMeansDefault: true }),
+        prop('startSurveyText', 'localized', 'general', { emptyMeansDefault: true }),
+        prop('firstPageIsStartPage', 'boolean', 'flow', { default: false }),
+        prop('autoFocusFirstQuestion', 'boolean', 'flow', { default: false }),
+        prop('clearInvisibleValues', 'enum', 'flow', { values: ['none', 'onComplete', 'onHidden', 'onHiddenContainer'], default: 'onComplete' }),
+        prop('logoPosition', 'enum', 'layout', { values: ['none', 'left', 'right', 'top', 'bottom'], default: 'left' }),
+        prop('widthMode', 'enum', 'layout', { values: ['auto', 'static', 'responsive'], default: 'auto' }),
+        prop('headerView', 'enum', 'layout', { values: ['basic', 'advanced'], default: 'advanced' }),
+        prop('loadingHtml', 'html', 'layout'),
+    ],
+});
+
 /** A page is not an element type, but it is edited the same way and holds elements. */
 export const PAGE = Object.freeze({
     type: 'page',
@@ -157,7 +188,7 @@ export function typeDef(typeName) {
 
 /** @returns {PropDef|undefined} */
 export function propDef(typeName, propName) {
-    const def = typeName === 'page' ? PAGE : typeDef(typeName);
+    const def = typeName === 'page' ? PAGE : typeName === 'survey' ? SURVEY : typeDef(typeName);
     return def?.props.find((p) => p.name === propName);
 }
 

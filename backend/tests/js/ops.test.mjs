@@ -90,6 +90,39 @@ test('setProp: localized texts keep other languages; where empty means absent th
     assert.equal(valueAt(good(setProp(only, ['pages', 0, 'elements', 0], 'title', '')).doc, ['pages', 0, 'elements', 0, 'title']), undefined, 'an empty localized object goes with its last text');
 });
 
+test('setProp on the survey itself: new settings go in front of the pages, defaults remove them', () => {
+    const d = load({ title: 'T', pages: [{ name: 'p', elements: [] }] });
+    const r = good(setProp(d, [], 'firstPageIsStartPage', true)).doc;
+    assert.deepEqual(Object.keys(toValue(r.root)), ['title', 'firstPageIsStartPage', 'pages']);
+    assert.equal(valueAt(good(setProp(r, [], 'firstPageIsStartPage', false)).doc, ['firstPageIsStartPage']), undefined);
+    assert.equal(valueAt(good(setProp(d, [], 'clearInvisibleValues', 'onComplete')).doc, ['clearInvisibleValues']), undefined, 'the library default');
+    assert.equal(valueAt(good(setProp(d, [], 'clearInvisibleValues', 'none')).doc, ['clearInvisibleValues']), 'none');
+    assert.equal(setProp(d, [], 'logoPosition', 'middle').ok, false);
+    assert.equal(setProp(d, [], 'calculatedValues', []).code, 'unknownProperty', 'calculatedValues stay in the JSON');
+    // a survey without pages: settings go in front of its elements
+    const flat = load({ elements: [{ type: 'text', name: 'a' }] });
+    assert.deepEqual(Object.keys(toValue(good(setProp(flat, [], 'title', 'X')).doc.root)), ['title', 'elements']);
+});
+
+test('setProp on the survey: an emptied button text is removed (SurveyJS then shows its own text, "" would show none)', () => {
+    const d = load({ completeText: 'Absenden', pages: [{ name: 'p', elements: [] }] });
+    assert.equal(valueAt(good(setProp(d, [], 'completeText', '')).doc, ['completeText']), undefined);
+    const lib = (json) => new Survey.Model({ ...json, pages: [{ elements: [{ type: 'text', name: 'a' }] }] }).locCompleteText.renderedHtml;
+    assert.equal(lib({ completeText: '' }), '', 'the reason: an empty text is an empty button');
+    assert.notEqual(lib({}), '');
+});
+
+test('setProp on the survey: completedHtml keeps "de" and changes "default"', () => {
+    const d = load({ completedHtml: { de: '<h3>Danke</h3>', default: 'Danke.' }, pages: [{ name: 'p', elements: [] }] });
+    const r = good(setProp(d, [], 'completedHtml', '<p>Vielen Dank</p>')).doc;
+    assert.deepEqual(valueAt(r, ['completedHtml']), { de: '<h3>Danke</h3>', default: '<p>Vielen Dank</p>' });
+});
+
+test('otherProperties of the survey: neither pages nor elements, but what the panel does not edit', () => {
+    assert.deepEqual(otherProperties({ title: 'T', calculatedValues: [], pages: [] }, 'survey'), ['calculatedValues']);
+    assert.deepEqual(otherProperties({ title: 'T', elements: [] }, 'survey'), []);
+});
+
 test('setProp: unknown types and properties are refused, never guessed', () => {
     const d = load({ pages: [{ elements: [{ type: 'matrix', name: 'm', rows: [] }, { type: 'text', name: 't', weird: 1 }] }] });
     assert.equal(setProp(d, ['pages', 0, 'elements', 0], 'title', 'x').code, 'unknownType');

@@ -76,10 +76,12 @@
         "expression": "Berechnung",
         "html": "Hinweistext",
         "panel": "Gruppe",
-        "page": "Seite"
+        "page": "Seite",
+        "survey": "Formular"
     },
     "group": {
         "general": "Allgemein",
+        "flow": "Ablauf",
         "layout": "Darstellung",
         "logic": "Bedingungen und Berechnung"
     },
@@ -111,7 +113,19 @@
         "maxSize": "Höchstgröße (Bytes)",
         "dataFormat": "Format",
         "expression": "Ausdruck",
-        "html": "Text (HTML)"
+        "html": "Text (HTML)",
+        "completedHtml": "Text nach dem Absenden",
+        "completeText": "Knopf „Absenden\"",
+        "pageNextText": "Knopf „Weiter\"",
+        "pagePrevText": "Knopf „Zurück\"",
+        "startSurveyText": "Knopf auf der Startseite",
+        "firstPageIsStartPage": "Erste Seite ist Startseite",
+        "autoFocusFirstQuestion": "Cursor ins erste Feld",
+        "clearInvisibleValues": "Angaben ausgeblendeter Felder",
+        "logoPosition": "Position des Logos",
+        "widthMode": "Breite",
+        "headerView": "Kopfbereich",
+        "loadingHtml": "Text beim Laden"
     },
     "help": {
         "name": "Der Name ist der Schlüssel der Antwort in der Datenbank, im Excel-Export und im PDF. Er ändert sich nicht mit dem Titel. Eine Änderung bei einem Feld legt ein neues Feld an.",
@@ -128,7 +142,19 @@
         "choices_count": "{{count}} Antworten",
         "html": "Erlaubt sind nur diese Elemente: {{tags}}. Der Server prüft das beim Speichern.",
         "html_bad": "Nicht erlaubt: {{tags}}. Der Server würde das Speichern ablehnen.",
-        "dataFormat": "Nur PNG: JPEG gibt einen schwarzen Hintergrund, SVG nimmt der Server nicht an."
+        "dataFormat": "Nur PNG: JPEG gibt einen schwarzen Hintergrund, SVG nimmt der Server nicht an.",
+        "completedHtml": "Erscheint nach dem Absenden anstelle des Formulars.",
+        "completeText": "Leer: „Abschließen\".",
+        "pageNextText": "Leer: „Weiter\".",
+        "pagePrevText": "Leer: „Zurück\".",
+        "startSurveyText": "Nur wirksam, wenn die erste Seite Startseite ist. Leer: „Start\".",
+        "firstPageIsStartPage": "Die erste Seite steht vor dem eigentlichen Formular, etwa für Hinweise, und hat einen eigenen Knopf.",
+        "autoFocusFirstQuestion": "Beim Öffnen steht der Cursor im ersten Eingabefeld.",
+        "clearInvisibleValues": "Was mit Angaben in Feldern geschieht, die eine Bedingung später ausblendet. „Beim Absenden\" (Standard) überträgt sie nicht; „Behalten\" überträgt sie mit.",
+        "loadingHtml": "Erscheint, solange das Formular lädt."
+    },
+    "help_survey": {
+        "title": "Steht im Kopf des Formulars."
     },
     "enum": {
         "titleLocation": {
@@ -149,6 +175,28 @@
         },
         "dataFormat": {
             "png": "PNG"
+        },
+        "clearInvisibleValues": {
+            "none": "Behalten",
+            "onComplete": "Beim Absenden löschen",
+            "onHidden": "Sofort beim Ausblenden löschen",
+            "onHiddenContainer": "Beim Ausblenden löschen, auch mit der Gruppe oder Seite"
+        },
+        "logoPosition": {
+            "none": "Kein Logo",
+            "left": "Links",
+            "right": "Rechts",
+            "top": "Oben",
+            "bottom": "Unten"
+        },
+        "widthMode": {
+            "auto": "Automatisch",
+            "static": "Fest",
+            "responsive": "An die Fensterbreite angepasst"
+        },
+        "headerView": {
+            "basic": "Einfach",
+            "advanced": "Erweitert"
         }
     },
     "other_value": "(anderer Wert: {{value}})",

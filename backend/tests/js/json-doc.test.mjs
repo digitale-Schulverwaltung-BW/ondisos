@@ -119,6 +119,14 @@ test('insertMember follows the layout of the object (multi-line, compact, empty)
     assert.equal(insertMember(multi, [], 'a', 9).text, '{\n  "a": 9,\n  "b": {\n    "c": 2\n  }\n}', 'existing key is replaced');
 });
 
+test('insertMember with "before" puts the new key in front of that member, in the layout of the object', () => {
+    const multi = parseDoc('{\n  "title": "T",\n  "pages": []\n}');
+    assert.equal(insertMember(multi, [], 'completeText', 'Los', { before: 'pages' }).text, '{\n  "title": "T",\n  "completeText": "Los",\n  "pages": []\n}');
+    assert.equal(insertMember(parseDoc('{\n  "pages": []\n}'), [], 'a', 1, { before: 'pages' }).text, '{\n  "a": 1,\n  "pages": []\n}', 'as first member');
+    assert.equal(insertMember(parseDoc('{"pages": []}'), [], 'a', 1, { before: 'pages' }).text, '{"a": 1, "pages": []}', 'one line');
+    assert.equal(insertMember(parseDoc('{\n  "x": 1\n}'), [], 'a', 2, { before: 'pages' }).text, '{\n  "x": 1,\n  "a": 2\n}', 'no such member: at the end');
+});
+
 test('removeMember leaves valid JSON with the neighbours untouched', () => {
     const doc = parseDoc('{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}');
     assert.equal(removeMember(doc, [], 'a').text, '{\n  "b": 2,\n  "c": 3\n}');

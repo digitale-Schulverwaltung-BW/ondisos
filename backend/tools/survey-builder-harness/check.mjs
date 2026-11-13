@@ -279,6 +279,9 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     const original = readFileSync(surveys('bs'), 'utf8');
     const p = await open('bs');
     check('bs: all pages are there', (await p.locator('.sb-page').count()) === 5);
+    await p.locator('.sb-item.sb-survey').click();
+    check('bs: the first row edits the survey itself', (await p.textContent('.sb-props h2')) === 'Formular'
+        && await p.locator('[data-prop="completedHtml"] textarea').count() === 1 && await p.locator('[data-prop="name"]').count() === 0);
     await p.locator('.sb-item', { hasText: 'Hinweistext' }).first().click();
     check('bs: the html control names the allowed tags', /Erlaubt sind nur diese Elemente: <a>/.test(await p.textContent('[data-prop="html"]')));
     const dds = p.locator('.sb-item', { hasText: 'Dropdown' });
@@ -312,7 +315,7 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
 // ---- odd: no pages, unknown type, languages, advanced answers -------------------------------------------------------
 {
     const p = await open('odd');
-    check('odd: a survey without pages shows one implicit page that explains itself', (await p.locator('.sb-page').count()) === 1 && (await p.locator('.sb-item.sb-page').click(), /direkt im Dokument/.test(await p.textContent('.sb-props'))));
+    check('odd: a survey without pages shows one survey row that holds the elements and explains itself', (await p.locator('.sb-page').count()) === 0 && (await p.locator('.sb-survey').count()) === 1 && (await p.locator('.sb-item.sb-survey').click(), /direkt im Dokument/.test(await p.textContent('.sb-props'))));
     await p.locator('.sb-item', { hasText: 'Name' }).first().click();
     check('odd: other languages are named, not edited', /Weitere Sprachen bleiben unverändert: de, fr/.test(await p.textContent('[data-prop="title"]')));
     const tin = p.locator('[data-prop="title"] input');

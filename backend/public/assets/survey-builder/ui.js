@@ -123,13 +123,17 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         return text.startsWith('[') ? t('err.generic') : text;
     }
 
-    /** The element (or page) a finding belongs to: the deepest page or element on its path. */
+    /**
+     * The element (or page) a finding belongs to: the deepest page or element on its path; a setting of the survey itself
+     * (["completedHtml"], …) belongs to the survey row ([]). Findings about the whole document stay at the top.
+     */
     function ownerOf(path) {
         let owner = null;
         for (let i = 0; i < path.length; i++) {
             if (path[i] === 'elements' && Number.isInteger(path[i + 1])) { owner = path.slice(0, i + 2); }
             else if (i === 0 && path[0] === 'pages' && Number.isInteger(path[1])) { owner = path.slice(0, 2); }
         }
+        if (owner === null && path.length > 0 && path[0] !== 'pages') { return []; }
         return owner;
     }
 
@@ -147,8 +151,11 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
     }
 
     function typeNameOf(path, value) {
+        if (path.length === 0) { return 'survey'; }
         return isPagePath(path) ? 'page' : value?.type;
     }
+
+    const hasPages = () => Array.isArray(currentValue(['pages']));
 
     // ---- tree ----------------------------------------------------------------------------------------------------
 
@@ -178,9 +185,13 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
                 }
             }
         };
-        for (const pg of outline(state.doc)) {
+        // The survey itself comes first (its settings). Without pages it is also the container of the elements.
+        const pages = outline(state.doc);
+        if (!pages.some((pg) => pg.implicit)) { out.push({ path: [], kind: 'survey', level: 1, children: 0, open: false }); }
+        for (const pg of pages) {
             const open = !state.collapsed.has(key(pg.path));
-            out.push({ path: pg.path, kind: 'page', level: 1, implicit: pg.implicit, name: pg.name, title: pg.title, children: pg.elements.length, open });
+            const kind = pg.implicit ? 'survey' : 'page';
+            out.push({ path: pg.path, kind, level: 1, implicit: pg.implicit, name: pg.name, title: pg.title, children: pg.elements.length, open });
             if (pg.elements.length && open) { walk(pg.elements, 2); }
         }
         return out;
@@ -202,22 +213,22 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             const selected = hasSelected ? k === selectedKey : i === 0;
             const own = findingsByOwner.get(k) ?? [];
             const value = r.kind === 'element' ? valueAt(state.doc, r.path) : null;
-            const text = r.kind === 'page'
-                ? (r.implicit ? t('page') : (displayText(valueAt(state.doc, r.path)?.title) || r.name || t('unnamed')))
-                : r.kind === 'choice' ? (r.text || t('untitled')) : label(value);
-            const typeLabel = r.kind === 'page' ? t('page') : r.kind === 'choice' ? t('choice.row')
+            const text = r.kind === 'survey' ? (displayText(valueAt(state.doc, [])?.title) || t('untitled'))
+                : r.kind === 'page' ? (displayText(valueAt(state.doc, r.path)?.title) || r.name || t('unnamed'))
+                    : r.kind === 'choice' ? (r.text || t('untitled')) : label(value);
+            const typeLabel = r.kind === 'survey' ? t('type.survey') : r.kind === 'page' ? t('page') : r.kind === 'choice' ? t('choice.row')
                 : t(`type.${r.type}`).startsWith('[') ? String(r.type) : t(`type.${r.type}`);
             const el = h('div', {
                 class: `sb-item sb-${r.kind}${selected && hasSelected ? ' sb-selected' : ''}${own.length ? ' sb-flagged' : ''}`,
                 role: 'treeitem', 'aria-level': r.level, 'aria-selected': String(selected && hasSelected),
                 'aria-expanded': r.children ? String(r.open) : null, tabindex: selected ? 0 : -1, 'data-path': k,
-                draggable: r.kind === 'element' || (r.kind === 'page' && !r.implicit) ? 'true' : null,
+                draggable: r.kind === 'element' || r.kind === 'page' ? 'true' : null,
                 title: own.map((f) => f.message).join('\n') || null,
             },
             r.children ? h('span', { class: 'sb-toggle', 'aria-hidden': 'true', 'data-toggle': k }, r.open ? '▾' : '▸') : h('span', { class: 'sb-toggle', 'aria-hidden': 'true' }, ''),
             h('span', { class: 'sb-type' }, typeLabel, value?.isRequired === true ? requiredMark() : null),
             h('span', { class: 'sb-label' }, text),
-            (r.kind === 'page' && !r.implicit) || r.kind === 'choice' ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
+            r.kind === 'page' || r.kind === 'choice' ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
             own.length ? h('span', { class: 'sb-mark', 'aria-label': t('findings.here') }, own.some((f) => f.severity === 'error') ? '✖' : '⚠') : null);
             el.style.setProperty('--sb-level', String(r.level));
             return el;
@@ -294,7 +305,6 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         const path = state.selected;
         if (!path) { props.append(h('p', { class: 'text-muted' }, t('select_hint'))); return; }
         const value = currentValue(path);
-        if (path.length === 0) { props.append(h('p', { class: 'text-muted' }, t('implicit_page'))); return; }
         if (!value || typeof value !== 'object') { props.append(h('p', { class: 'text-muted' }, t('select_hint'))); return; }
         if (isChoicePath(path)) { props.append(choiceInfo(path, value)); return; }
         const typeName = typeNameOf(path, value);
@@ -314,7 +324,10 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             confirm(message) { return window.confirm(message); },
             openChoice(index) { return doOpenChoice(path, index); },
         };
-        props.append(buildProperties(ctx));
+        const body = buildProperties(ctx);
+        // a survey without pages: its elements are edited here too, but pages are not created in the builder
+        if (typeName === 'survey' && !hasPages()) { body.querySelector('h2')?.after(h('p', { class: 'text-muted small mt-2 mb-0' }, t('implicit_page'))); }
+        props.append(body);
     }
 
     /** An answer option with questions inside: what it is, and the way to its question (its value and text are edited there). */
@@ -478,7 +491,12 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         if (!sel) {
             return Array.isArray(list) && list.length ? { parent: ['pages', 0], index: list[0].elements?.length ?? 0 } : { parent: [], index: valueAt(state.doc, ['elements'])?.length ?? 0 };
         }
-        if (sel.length === 0) { return { parent: [], index: valueAt(state.doc, ['elements'])?.length ?? 0 }; }
+        if (sel.length === 0) {
+            // the survey row: without pages the survey holds the elements, with pages they go to the end of the first one
+            const pages = valueAt(state.doc, ['pages']);
+            if (Array.isArray(pages)) { return pages.length ? { parent: ['pages', 0], index: pages[0].elements?.length ?? 0 } : { parent: [], index: 0 }; }
+            return { parent: [], index: valueAt(state.doc, ['elements'])?.length ?? 0 };
+        }
         const value = valueAt(state.doc, sel);
         if (isPagePath(sel) || isChoicePath(sel) || value?.type === 'panel') { return { parent: sel, index: value?.elements?.length ?? 0 }; }
         return { parent: sel.slice(0, -2), index: sel[sel.length - 1] + 1 };
@@ -503,7 +521,8 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
     function doAddPage() {
         if (!state.doc) { return; }
         const sel = state.selected;
-        const index = sel && sel[0] === 'pages' ? sel[1] + 1 : (valueAt(state.doc, ['pages'])?.length ?? 0);
+        // after the selected page; on the survey row the new page comes first (right below the row)
+        const index = sel && sel[0] === 'pages' ? sel[1] + 1 : sel && sel.length === 0 && hasPages() ? 0 : (valueAt(state.doc, ['pages'])?.length ?? 0);
         const result = addPage(state.doc, index, { rules, taken: takenNames() });
         commitStructure(result, { select: result.path, announce: result.ok ? t('announce.page_added', { name: result.name }) : undefined });
     }
@@ -707,6 +726,7 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             return { zone: after ? 'after' : 'before', page: to > src[1] ? to - 1 : to };
         }
         if (path.length >= src.length && src.every((s, i) => path[i] === s)) { return null; } // onto itself or inside it
+        if (path.length === 0 && hasPages()) { return null; } // the survey row holds no elements when there are pages
         if (path.length === 0 || isPagePath(path) || isChoicePath(path)) { return { zone: 'into', parent: path, index: 0 }; }
         const value = valueAt(state.doc, path);
         const parent = path.slice(0, -2);

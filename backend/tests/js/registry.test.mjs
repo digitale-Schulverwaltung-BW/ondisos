@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { TYPES, PAGE, typeDef, propDef, defaultOf, isKnownType, palette, valueTypes, template }
+import { TYPES, PAGE, SURVEY, typeDef, propDef, defaultOf, isKnownType, palette, valueTypes, template }
     from '../../public/assets/survey-builder/registry.js';
 
 const require = createRequire(import.meta.url);
@@ -30,7 +30,7 @@ function libChoices(libProp) {
     return (ch ?? []).map((c) => c?.value ?? c);
 }
 
-const allTypes = [...Object.values(TYPES), PAGE];
+const allTypes = [...Object.values(TYPES), PAGE, SURVEY];
 
 test('every registry property exists in the SurveyJS library for its type, with the same kind', () => {
     for (const t of allTypes) {
@@ -77,9 +77,12 @@ test('"emptyIsAbsent" holds in the library: an empty title is the same as none',
         const e = type === 'panel' ? s.getPanelByName('n1') : s.getQuestionByName('n1');
         return e[`loc${prop[0].toUpperCase()}${prop.slice(1)}`].renderedHtml;
     };
-    for (const [type, prop] of flagged.filter(([t]) => t !== 'page')) {
+    for (const [type, prop] of flagged.filter(([t]) => t !== 'page' && t !== 'survey')) {
         assert.equal(render(type, { [prop]: '' }, prop), render(type, {}, prop), `${type}.${prop}`);
     }
+    // the survey's own title and description
+    const survey = (extra, prop) => new Survey.Model({ ...extra, pages: [{ elements: [{ type: 'text', name: 'a' }] }] })[`loc${prop[0].toUpperCase()}${prop.slice(1)}`].renderedHtml;
+    for (const prop of ['title', 'description']) { assert.equal(survey({ [prop]: '' }, prop), survey({}, prop), `survey.${prop}`); }
     // ...and it does not hold for a placeholder (the reason the flag is per property)
     const ph = (extra) => new Survey.Model({ elements: [{ type: 'dropdown', name: 'd', choices: ['a'], ...extra }] }).getQuestionByName('d').placeholder;
     assert.notEqual(ph({ placeholder: '' }), ph({}));
@@ -131,6 +134,7 @@ test('the registry covers every property the existing surveys use, except the fe
     };
     for (const f of surveyFiles) {
         const s = JSON.parse(readFileSync(new URL(f, SURVEYS), 'utf8'));
+        Object.keys(s).filter((k) => k !== 'pages' && !propDef('survey', k)).forEach((k) => unsupported.set(`survey.${k}`, 1));
         s.pages.forEach((p) => {
             Object.keys(p).filter((k) => k !== 'elements' && !propDef('page', k)).forEach((k) => unsupported.set(`page.${k}`, 1));
             (p.elements ?? []).forEach(walk);
@@ -156,6 +160,7 @@ test('the registry covers every property the existing surveys use, except the fe
         'signaturepad.placeholderReadOnly',
         'signaturepad.requiredErrorText',
         'signaturepad.signatureWidth',
+        'survey.calculatedValues',
         'text.clearIfInvisible',
         'text.defaultValueExpression',
         'text.max',

@@ -18,6 +18,17 @@ import { elementsOf, generateName, validateName, findReferences, replaceReferenc
 const CONTAINER_KEY = 'elements';
 
 /**
+ * A new property of the survey itself goes in front of its pages (or top-level elements), where the SurveyJS exports keep
+ * the settings; elsewhere at the end of the object.
+ */
+function insertProp(doc, path, name, value) {
+    if (path.length !== 0) { return insertMember(doc, path, name, value); }
+    const keys = (nodeAt(doc, [])?.members ?? []).map((m) => m.key);
+    const before = ['pages', CONTAINER_KEY].find((k) => keys.includes(k)) ?? null;
+    return insertMember(doc, path, name, value, { before });
+}
+
+/**
  * Is `path` an answer option ([…, 'choices', i])? An option that is an object with `elements` holds questions that
  * SurveyJS shows when the option is chosen (SurveyJS 2+); the builder treats it as a container, like a panel.
  */
@@ -135,10 +146,14 @@ export function flatten(pages) {
 const ok = (doc, extra = {}) => ({ ok: true, doc, ...extra });
 const fail = (code, extra = {}) => ({ ok: false, code, ...extra });
 
-/** 'page' for a page, 'choice' for an answer option, otherwise the element's type (undefined when there is nothing). */
+/**
+ * 'survey' for the document itself, 'page' for a page, 'choice' for an answer option, otherwise the element's type
+ * (undefined when there is nothing).
+ */
 function typeAt(doc, path) {
     const v = valueAt(doc, path);
     if (!v || typeof v !== 'object' || Array.isArray(v)) { return undefined; }
+    if (path.length === 0) { return 'survey'; }
     if (path[0] === 'pages' && path.length === 2) { return 'page'; }
     return isChoicePath(path) ? 'choice' : v.type;
 }
@@ -211,7 +226,7 @@ export function setLocalized(doc, path, prop, text, { emptyIsAbsent = false } = 
         return Object.keys(rest).length === 0 ? removeMember(left, path, prop) : left;
     }
     if (remove) { return node ? removeMember(doc, path, prop) : doc; }
-    return node ? setValue(doc, at, text) : insertMember(doc, path, prop, text);
+    return node ? setValue(doc, at, text) : insertProp(doc, path, prop, text);
 }
 
 /** Sets the visible title of an element or page (a localized title keeps its other languages). */
@@ -282,7 +297,7 @@ export function setChoices(doc, path, items) {
 
 /** Property names of an element that the builder does not edit (they stay in the text; the JSON tab shows them). */
 export function otherProperties(value, typeName = value && value.type) {
-    const keys = Object.keys(value ?? {}).filter((k) => k !== 'type' && k !== 'elements');
+    const keys = Object.keys(value ?? {}).filter((k) => k !== 'type' && k !== 'elements' && !(typeName === 'survey' && k === 'pages'));
     return keys.filter((k) => !propDef(typeName, k));
 }
 
@@ -296,7 +311,7 @@ export function setProp(doc, path, name, value, options = {}) {
     const node = nodeAt(doc, path);
     if (!node || node.type !== 'object') { return fail('path'); }
     const typeName = typeAt(doc, path);
-    if (typeName !== 'page' && !isKnownType(typeName)) { return fail('unknownType'); }
+    if (typeName !== 'page' && typeName !== 'survey' && !isKnownType(typeName)) { return fail('unknownType'); }
     const def = propDef(typeName, name);
     if (!def) { return fail('unknownProperty'); }
     if (name === 'name') { return renameElement(doc, path, value, options); }
@@ -306,14 +321,14 @@ export function setProp(doc, path, name, value, options = {}) {
     if (!checkValue(def, value)) { return fail('value', { property: name }); }
 
     if (def.kind === 'localized' || def.kind === 'html') {
-        return ok(setLocalized(doc, path, name, value, { emptyIsAbsent: def.emptyIsAbsent === true }));
+        return ok(setLocalized(doc, path, name, value, { emptyIsAbsent: def.emptyIsAbsent === true || def.emptyMeansDefault === true }));
     }
     if (def.kind === 'choices') { return ok(setChoices(doc, path, value)); }
     const isEmpty = (def.kind === 'expression' || def.kind === 'value') && value === '';
     if (isEmpty || (def.default !== undefined && value === def.default)) {
         return ok(present ? removeMember(doc, path, name) : doc);
     }
-    return ok(present ? setValue(doc, [...path, name], value) : insertMember(doc, path, name, value));
+    return ok(present ? setValue(doc, [...path, name], value) : insertProp(doc, path, name, value));
 }
 
 /**
