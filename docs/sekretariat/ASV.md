@@ -2,7 +2,7 @@
 ## Voraussetzungen
 Wenn das Survey-Element die erforderlichen Feld-Bezeichner hat, lässt sich ein Excel-Export aus dem Backend direkt in das Schüler-Modul von ASV-BW (und Bayern?) importieren.
 
-Die Feldnamen lassen sich der Vorlage entnehmen: [Link zur Excel-Vorlage](https://asv.kultus-bw.de/site/pbs-bw-km-root/get/documents_E-1173628749/KULTUS.Dachmandant/KULTUS/Projekte/asv-bw/Rollout/Import/ASV-BW_Import.xlsx), Stand Februar 2026. Die Vorlage ist auch über die Import-Funktion von ASV abrufbar:
+Die Feldnamen lassen sich der Vorlage entnehmen: [Link zur Excel-Vorlage](https://asv.kultus-bw.de/site/pbs-bw-km-root/get/documents_E-1173628749/KULTUS.Dachmandant/KULTUS/Projekte/asv-bw/Rollout/Import/ASV-BW_Import.xlsx), Stand Oktober 2026. Wichtig: Ein Feld kommt nur an, wenn es **genau** wie die Spalte heißt (auch `Telefon 1` mit Leerzeichen), und Auswahlfelder müssen den **Schlüssel** aus dem Blatt *Wertelisten* speichern (z. B. `AFG`), nicht den Text. Die Vorlage ist auch über die Import-Funktion von ASV abrufbar:
 
 ![ASV Import-Dialog](../img/asv-import-dialog.png)
 

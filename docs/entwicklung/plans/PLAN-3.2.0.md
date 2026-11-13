@@ -380,7 +380,7 @@ Nicht in 3.2.0: Stufe B hilft bei allen 81 Bedingungen, ein Baukasten nur bei de
 
 ### Entscheidungen (2026-11-13)
 
-1. **ASV-Namen sind verbindlich für alles, was Schulanmeldung ist:** die Vorlage *Schüleranmeldung* und die Bausteine Person, Herkunft, Anschrift, Erziehungsberechtigte, Ausbildungsbetrieb. Maßstab ist die Import-Vorlage von ASV-BW (`ASV-BW_Import.xlsx`, Stand Februar 2026, Link in [ASV.md](../../sekretariat/ASV.md)); ihre Spaltennamen werden als Fixture eingecheckt und von einem Test gegen die Bausteine geprüft.
+1. **ASV-Namen sind verbindlich für alles, was Schulanmeldung ist:** die Vorlage *Schüleranmeldung* und die Bausteine Person, Herkunft, Anschrift, Erziehungsberechtigte, Ausbildungsbetrieb. Maßstab ist die Import-Vorlage von ASV-BW (`ASV-BW_Import.xlsx`, Stand 10/2026, Link in [ASV.md](../../sekretariat/ASV.md)); ihre Spaltennamen werden als Fixture eingecheckt und von einem Test gegen die Bausteine geprüft.
 2. **Rückmeldungen und Veranstaltungen** (mit oder ohne E-Mail) halten sich nicht an ASV; für sie gelten nur die Regeln des Linters (`Name` bzw. eine Adresse aus `SurveyLinter::EMAIL_FIELDS`).
 3. **Die echten Anmeldungen kommen als Beispiele in die Vorlagen-Auswahl** (`bs`, `gs`, `vabo`, `zq`, `meister`), deutlich getrennt von den Vorlagen und mit dem Hinweis, dass sie schulspezifisch sind und angepasst werden müssen. Erscheint die Auswahl damit überladen, fliegen sie wieder heraus; das ist ein Eintrag im Manifest.
 4. **Vorlagen und Bausteine liegen als Dateien im Backend**, nicht in der Datenbank: `backend/resources/survey-templates/` mit `manifest.json` (Schlüssel, Art *Vorlage*/*Beispiel*/*Baustein*, Message-Schlüssel für Titel und Beschreibung, Datei) und reinen SurveyJS-Dateien (Vorlagen, Beispiele) bzw. Element-Listen (Bausteine). Versioniert mit dem Code, getestet, für alle Tenants gleich. Eigene Vorlagen einer Schule sind nicht Teil von AP6.
@@ -442,7 +442,7 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3
 
 ### Offen
 
-- **ASV-Spalten klären:** Welche Spalte ist die E-Mail und das Telefon der Schülerin bzw. des Schülers (`email1`? `Handy1` oder `Telefon_1`?), heißt die Staatsangehörigkeit `Land`? Aus `ASV-BW_Import.xlsx` ablesen, bevor die Bausteine entstehen; Abweichungen der Beispiele (`LAND` in `zq`, `email1` in `gs`) dann in den Frontend-Dateien korrigieren oder bewusst lassen (Release Notes: betrifft nur die Datei-Fassung, wie bei AP5).
+- ~~**ASV-Spalten klären**~~ erledigt 2026-11-13, siehe [ASV-Abgleich](#asv-abgleich-2026-11-13). Offen bleibt nur, was ein Probe-Import in ASV klären muss (Groß-/Kleinschreibung, Geschlecht `d`).
 - **Aufwand:** größer als die 1–2 Wochen der Tabelle (fünf Vorlagen, neun Bausteine mit ASV-Abgleich, Auswahl-Oberfläche, Umzug des Testkorpus): **2–3 Wochen**, Schritt 2 (Seed) nicht eingerechnet.
 - **Reihenfolge:** Die ASV-Spalten zuerst klären, die Bausteine hängen daran. Wird es knapp, AP6 teilen: Vorlagen, Beispiele und Testkorpus in 3.2.0, die ASV-Bausteine notfalls in 3.2.1.
 
@@ -468,6 +468,37 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1, Schritt 2 wenn die Zeit reicht; 3
 - [ ] `favicon.ico` im Backend (einzige Konsolenmeldung)
 
 **Bewusst nicht in 3.2.0:** `paneldynamic` in der Registry (mit `{panel.…}`-Vorschlägen), Stufe C der Bedingungen, Passkeys, SMTP, Datei-Fallback abschaffen (Schritte 3 und 4), optionaler eingebauter Creator.
+
+### ASV-Abgleich (2026-11-13)
+
+**Quelle:** `ASV-BW_Import.xlsx`, Stand 10/2026 (Blatt *Schülerdaten*: 79 Spalten; *Hinweise*; *Wertelisten*). Spalten und Wertelisten (Schlüssel mit Text) liegen jetzt als Fixture in `backend/tests/fixtures/asv/asv-bw-import.json`; nicht übernommen sind die 790 Ausbildungsberufe (`Ausbild_beruf_id`) und die Bildungsgänge (`Bildungsg_31_07`). Der Excel-Export schreibt die Feldnamen unverändert als Kopfzeile (`ExportService::extractColumns()`), ein Feld kommt also nur an, wenn es **genau** wie die Spalte heißt.
+
+**Antworten auf die offenen Fragen:**
+
+| Frage | ASV-Spalte | In den Surveys |
+|---|---|---|
+| E-Mail der Schülerin / des Schülers | `email1` | `bs`, `vabo`, `zq` ✓; `meister` `email` ✗; `gs` nutzt `email1` für den **ersten Erziehungsberechtigten** (landet in ASV beim Kind) und hat kein `Erz1Email` |
+| Telefon | `Telefon 1`, `Telefon 2` (mit **Leerzeichen**), `Handy1`, `Handy2` | `bs` `Handy1` ✓; `gs`, `vabo`, `zq` `Telefon_1` ✗ (Unterstrich); `meister` `Telefon` ✗ |
+| Staatsangehörigkeit | `Land`, `Land2`; `Staat` ist der **Staat der Anschrift** | `zq` `LAND` (Schreibweise) |
+| Geschlecht | `Geschlecht` | `gs` `GeschlechtKind` ✗ |
+
+**Feldnamen je Survey** (Treffer in der Spaltenliste / Felder mit Wert): `bs` 40/59, `vabo` 34/42, `zq` 34/41, `gs` 33/49, `meister` 14/82 (kein Schulformular im Sinne von ASV: keine Erziehungsberechtigten).
+
+**Werte:** ASV erwartet **Schlüssel** aus den Wertelisten, nicht den Text.
+- `bs` und `meister` nutzen die Schlüssel für Land, Geburtsland, Religion, Muttersprache, Vorbildung; je ein Wert fehlt in der Liste 10/2026 (`ATA-NZ` bei Geburtsland, `BOTC` bei Land).
+- `gs`, `vabo`, `zq` haben Land und Geburtsland als **Klartext** („Afghanistan“): nicht importierbar.
+- `zq`: Vorbildung mit angehängtem Leerzeichen (`"WRSA "`).
+- Staatsangehörigkeit (`Land`) und Geburtsland nutzen **verschiedene** Schlüssel (`AL` bzw. `ALB` für Albanien).
+- Geschlecht: die Werteliste kennt nur `m` und `w`; die Surveys schreiben `M`/`W`/`D` (`bs`, `vabo`, `zq`, `meister`) bzw. `weiblich`/`männlich`/`divers` (`gs`).
+
+**Was die Vorlage zusätzlich vorgibt** (Blatt *Hinweise*): Datum als TT.MM.JJJJ (der Export wandelt ISO-Daten um); `Klasse` muss in ASV existieren; `AbgebendeSchule` ist der Dienststellenschlüssel; `Ausbildungsbetrieb` und `Ausbilder` werden nur zugeordnet, wenn sie in ASV schon erfasst sind (Kürzel empfohlen); Alleinerziehende immer als `Erz1`; `Erz?Art` ∈ `Mu`, `Va`, `Pf`, `Vm`; `…Schriftverkehrverteiler`, `…auskunftsberechtigt`, `…Hauptansprechpartner` als 0/1 bzw. nein/ja mit Standardwerten.
+
+**Folgen für AP6:**
+- Bausteine verwenden die Spaltennamen **wörtlich**, auch `Telefon 1` mit Leerzeichen (SurveyJS und der Server erlauben es, `Anmeldung am` in `bs` ebenso), und als Antwortwerte die Schlüssel aus den Wertelisten mit deren Text als Anzeige. Der Test prüft beides gegen die Fixture.
+- Baustein *Erziehungsberechtigte/r* bekommt zusätzlich `Erz?Art` und `Erz?Email`; Teilort, zweites Telefon und Handy optional. Die drei 0/1-Felder bleiben weg (Standardwerte von ASV genügen).
+- Baustein *Person* um `Rufname` ergänzbar; *Herkunft* mit `Land2`; Fremdsprachen und Religionsunterricht (`RU`) nur als eigene kleine Bausteine, wenn eine Schule danach fragt.
+- Geschlecht: Werte `m`/`w` wie in der Liste; ob ASV `d` (oder Großschreibung) annimmt, klärt ein **Probe-Import** in ASV vor dem Release. Bis dahin bietet der Baustein `m`, `w` und `d` (Text „divers“) an und nennt die Unsicherheit in der Beschreibung.
+- Die Abweichungen der Beispiel-Surveys (`Telefon_1`, `LAND`, `GeschlechtKind`, `email1` in `gs`, Ländernamen als Text) sind Fehler der Datei-Fassung; korrigieren in einem eigenen Schritt mit Hinweis in den Release Notes (wie bei AP5), nicht stillschweigend: Schulen, die die Surveys schon nutzen, haben Anmeldungen mit den alten Namen.
 
 ## Tests
 
