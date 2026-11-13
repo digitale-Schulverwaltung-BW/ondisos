@@ -943,8 +943,68 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     await win.waitForTimeout(2000);
     check('theme: another form of the theme loads with the current theme',
         /form=zwei/.test(frame().url()) && (await brand()) === 'rgba(10, 120, 40, 1)' && (await notice()) === '', await brand());
+    // ---- AP4: the fields above the JSON, in step with the text and the preview
+    await setText(readFileSync(join(repo, 'backend/templates/theme/default.json'), 'utf8'));
+    await p.waitForTimeout(500);
+    const fieldVal = (id) => p.inputValue(`#${id}`);
+    check('fields: shown and read from the JSON (brand, title, cards, size, radius)',
+        await p.locator('#tf-root').isVisible() && (await fieldVal('tf-brand')) === 'rgba(0, 163, 215, 1)' && (await fieldVal('tf-brand-picker')) === '#00a3d7'
+        && await p.isChecked('#tf-titleBrand') && await p.isChecked('#tf-cards') && (await fieldVal('tf-fontSize')) === '16' && (await fieldVal('tf-radius')) === '4'
+        && (await fieldVal('tf-font-choice')) === 'opensans');
+    check('fields: the default blue gets the contrast hint (WCAG AA)', await p.locator('#tf-brand-contrast').isVisible());
+
+    const before = await text(p);
+    await p.fill('#tf-brand', '#0b5394');
+    await p.press('#tf-brand', 'Enter');
+    await p.waitForTimeout(1800);
+    const after = await text(p);
+    const changed = before.split('\n').filter((l, i) => l !== after.split('\n')[i]);
+    check('fields: a colour typed in changes only its line in the JSON, and the preview follows',
+        changed.length === 1 && after.includes('"--sjs2-color-project-brand-600": "#0b5394"') && (await brand()) === '#0b5394' && await p.locator('#tf-brand-contrast').isHidden(), `${changed.length} ${await brand()}`);
+
+    await p.selectOption('#tf-fontSize', '18');
+    await p.uncheck('#tf-cards');
+    await p.fill('#tf-radius', '10');
+    await p.press('#tf-radius', 'Tab');
+    await p.waitForTimeout(400);
+    const t1 = JSON.parse(await text(p));
+    check('fields: size, cards and corners write their variables',
+        t1.cssVariables['--sjs2-base-unit-font-size'] === '9px' && t1.isPanelless === true && !('--sjs2-border-effect-component-panel-default' in t1.cssVariables)
+        && t1.cssVariables['--sjs2-radius-component-panel'] === '10px' && t1.themeName === 'default' && t1.cssVariables['--sjs2-typography-font-weight-component-survey-header-title'] === '700');
+
+    // undo in the code editor takes a field change back, and the field follows
+    await p.evaluate(() => { window.OndisosSurveyEditor.last.view.focus(); });
+    await p.keyboard.press(process.platform === 'darwin' ? 'Meta+z' : 'Control+z');
+    await p.waitForTimeout(600);
+    check('fields: Ctrl+Z in the code editor undoes the last field change; the field follows', (await fieldVal('tf-radius')) === '4', await fieldVal('tf-radius'));
+
+    // the other way: a change in the JSON shows in the fields
+    // (CodeMirror groups changes closer than 0.5 s into one undo step, so the undo above may have taken more back)
+    await setText((await text(p)).replace(/"--sjs2-base-unit-font-size": "[^"]*"/, '"--sjs2-base-unit-font-size": "10px"').replace(/"--sjs2-base-unit-line-height": "[^"]*"/, '"--sjs2-base-unit-line-height": "10px"'));
+    await p.waitForTimeout(600);
+    check('fields: a change typed into the JSON shows in the field', (await fieldVal('tf-fontSize')) === '20', await fieldVal('tf-fontSize'));
+
+    await setText((await text(p)).replace('"#0b5394"', '"var(--meine-farbe)"'));
+    await p.waitForTimeout(600);
+    check('fields: a value the field cannot show makes it read-only with a note',
+        await p.isDisabled('#tf-brand') && (await p.textContent('[data-field="brand"] .tf-note')).includes('var(--meine-farbe)') && !(await p.isDisabled('#tf-radius')));
+
+    await setText('{"cssVariables": ');
+    await p.waitForTimeout(600);
+    check('fields: unreadable JSON locks the fields with a note', await p.isDisabled('#tf-fontSize') && await p.locator('#tf-unreadable').isVisible());
+
+    await setText(readFileSync(join(here, '../../tests/js/fixtures/themes/theme-editor-export.json'), 'utf8'));
+    await p.waitForTimeout(600);
+    const legacyNote = await p.textContent('[data-field="brand"] .tf-note');
+    await p.fill('#tf-brand', '#c81e3c');
+    await p.press('#tf-brand', 'Enter');
+    await p.waitForTimeout(400);
+    const t2 = JSON.parse(await text(p));
+    check('fields: a SurveyJS 2 theme (Theme Editor export) is read and converted only where a field changes',
+        legacyNote.includes('älteren') && t2.cssVariables['--sjs2-color-project-brand-600'] === '#c81e3c' && !('--sjs-primary-backcolor' in t2.cssVariables)
+        && t2.cssVariables['--sjs-font-family'] === 'Open Sans' && t2.cssVariables['--sjs-special-red'] === 'rgba(229, 10, 62, 1)' && await p.isChecked('#tf-titleBrand'));
     check('theme: no console errors and no CSP violation in editor, window and frame', problems.length === 0, problems.join(' | '));
-    if (shots) { await win.screenshot({ path: join(shots, 'theme-window.png') }); }
+    if (shots) { await win.screenshot({ path: join(shots, 'theme-window.png') }); await p.screenshot({ path: join(shots, 'theme-fields.png'), fullPage: true }); }
     await context.close();
 }
 

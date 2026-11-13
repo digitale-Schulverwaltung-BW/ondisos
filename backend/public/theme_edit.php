@@ -1,6 +1,6 @@
 <?php
 // public/theme_edit.php
-// Theme editor (3.2.0b): edit a theme as JSON, check it, publish it (with optimistic locking), restore from history.
+// Theme editor (3.2.0b): edit a theme with fields (AP4) or as JSON, check it, publish it (with optimistic locking), restore from history.
 // There is no stored draft: unsaved text lives in the page until it is published (decision 3 of PLAN-3.2.0b).
 
 declare(strict_types=1);
@@ -206,6 +206,7 @@ require __DIR__ . '/../inc/header.php';
     <form method="post" action="<?= ff_e($self) ?>" id="survey-form">
         <?php csrf_field(); ?>
         <input type="hidden" name="based_on" value="<?= ff_e($basedOn) ?>">
+        <?php require __DIR__ . '/../inc/theme_fields.php'; // the usual settings as fields, written into the JSON (AP4) ?>
 
         <div class="mb-2 d-flex justify-content-between align-items-end">
             <label class="form-label mb-0" for="survey-text"><?= ff_e(M::get('theme_editor.editor', 'Theme (JSON)')) ?></label>

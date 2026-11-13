@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12) bis [AP3](#ap3-ergebnis-2026-11-13) erledigt, als Nächstes AP4. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12) bis [AP4](#ap4-ergebnis-2026-11-13) erledigt, als Nächstes AP5 (Doku und Abschluss). Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -72,7 +72,7 @@ Felder, deren Wert im JSON in einer Form steht, die die Oberfläche nicht darste
 | **AP1** Service und Verlauf | `ThemeService` (check, publish mit Sperre, restore, usage), Namensfilter in `FormRevisionRepository`, Vorgabe-Theme, Audit-Ereignisse | 3–4 Tage | Unit-Tests: Veröffentlichen schreibt Ressource und Revision, Konflikt bei veraltetem SHA, ungültiger Inhalt schreibt nichts, Restore prüft erneut, fremder Tenant ⇒ nicht gefunden, Prune je Name. **Erfüllt**, siehe [AP1-Ergebnis](#ap1-ergebnis-2026-11-12) |
 | **AP2** Seiten (JSON) | `themes.php` (Liste mit Nutzung, Status „noch nicht angelegt“), `theme_edit.php` mit JSON-Feld, *Prüfen*, *Veröffentlichen*, Verlauf mit *Wiederherstellen*, Hinweis auf betroffene Formulare, Link von *Formulare*; Rechte für beide Rollen | 1 Woche | Theme im Backend geändert ⇒ Frontend zeigt die neue Farbe (ETag); Schul-Admin sieht nur Themes seiner Schule. **Erfüllt**, siehe [AP2-Ergebnis](#ap2-ergebnis-2026-11-13) |
 | **AP3** Vorschau | Prüf-Endpunkt für Theme-Text, Nachricht `theme` im Frame-Protokoll (`survey-preview.js`), Formularauswahl; `sync-preview-assets.sh` berücksichtigen | 3–4 Tage | Ungespeicherte Änderung erscheint in der Vorschau; ungültiger Text erreicht den Frame nicht; `check.mjs`-Abschnitt grün. **Erfüllt**, siehe [AP3-Ergebnis](#ap3-ergebnis-2026-11-13) |
-| **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel |
+| **AP4** Felder | Feld-Zuordnung in JavaScript (lesen, schreiben, unbekannte Schlüssel behalten), Felder über dem JSON, synchron in beide Richtungen | 1 Woche | `node --test`: Round-Trip aller Themes in `frontend/surveys/` und eines Themes aus dem SurveyJS Theme Editor unverändert; Feldänderung ändert nur die zugehörigen Schlüssel. **Erfüllt**, siehe [AP4-Ergebnis](#ap4-ergebnis-2026-11-13) |
 | **AP5** Doku und Abschluss | [SURVEYJS.md](../../redaktion/SURVEYJS.md): neuer Abschnitt „Design (Theme) ändern“; MIGRATION-3.1 und Fallback-Abschnitt verweisen für Themes darauf (Import nur noch für die Übernahme); TODO-Eintrag „Theme im SurveyJS-3-Format“ aktualisieren; `HelpLinks`, Meldungstexte (`messages.php`, `messages.example.php`), Changelog, manuelle Tests | 2–3 Tage | `DocsLinksTest` und `HelpLinksTest` grün; manuelle Testliste durchlaufen |
 
 **Kern: AP0–AP2** (etwa 2 Wochen; erledigt) beseitigt die Kommandozeile. **AP3–AP4** machen es für die Redaktion bequem (weitere 1,5–2 Wochen). Die Doku (AP5) wird erst am Ende geschrieben, damit sie nur einmal angefasst wird.
@@ -183,6 +183,28 @@ Die Tenant-Trennung ist per Integrationstest belegt, nicht mit einem Schul-Admin
 
 **Im Dev-Stack geprüft** (Playwright mit Chrome, Platform-Admin, Tenant *Default*): Fenster verbunden, Markenfarbe im Editor geändert ⇒ Vorschau zeigt sie, auch nach dem Wechsel auf `bs`; das veröffentlichte Theme bleibt unverändert. Das Browser-Pane der Desktop-App blockiert die Skripte des Sandbox-Frames (`ERR_BLOCKED_BY_CLIENT`, auch bei der bestehenden Survey-Vorschau) und öffnet keine Popups; dort lässt sich die Vorschau nicht prüfen.
 
+## AP4-Ergebnis (2026-11-13)
+
+**Umgesetzt:**
+- `assets/theme-editor/fields.js` (reine Logik): `readFields()` liest die zehn Werte der Felder (Markenfarbe, Titel in Markenfarbe, Schrift, Schriftgröße, Hintergrund, Hintergrundbild mit Deckkraft und Anpassung, Ecken, Karten) aus dem JSON, `applyField()` schreibt einen davon zurück.
+  Geschrieben wird mit dem verlustfreien JSON-Editor des Survey-Builders (`json-doc.js`): Nur die Schlüssel des Feldes ändern sich, alles andere bleibt zeichengenau (Reihenfolge, Einrückung, unbekannte Schlüssel). Derselbe Wert ändert nichts.
+- **Alte Variablen** (`--sjs-*`): Das Feld zeigt ihren Wert mit Hinweis und ersetzt sie erst beim Ändern. Welche alten Variablen zu einem Feld gehören, folgt aus der Zuordnungstabelle in `survey.core` (z. B. Markenfarbe: `--sjs-primary-backcolor` samt `-light` und `-dark`; die Schriftfarbe darauf, `--sjs-primary-forecolor`, bleibt).
+  Ein altes Theme schreibt die Titelfarbe als Farbwert aus, nicht als Verweis: Ist sie gleich der Markenfarbe, gilt „Titel in Markenfarbe“ als an, und eine neue Markenfarbe stellt den Titel auf den Verweis um, damit er ihr weiter folgt.
+- **Schreibgeschützt** mit Hinweis „im JSON bearbeiten“: `var(…)`, Farben mit Transparenz, unterschiedliche Radien, ungerade oder unbekannte Schriftgrößen, unbekannte Bildanpassung. Unlesbares JSON sperrt alle Felder.
+- **Karten:** aus ⇒ `isPanelless: true` und die beiden Kartenschatten entfernt; wieder an ⇒ die Schatten der Vorgabe, wo keiner gesetzt ist.
+- **Kontrast:** Hinweis unter der Markenfarbe unter 4,5 : 1 gegen Weiß (nur Hinweis, keine Sperre).
+- `assets/theme-editor/ui.js` und `inc/theme_fields.php`: Karte „Einstellungen“ über dem JSON (ohne JavaScript verborgen). Die Felder lesen das Textfeld mehrmals pro Sekunde und schreiben als kleine Änderung in den Code-Editor (`text-bridge.js`), also mit Rückgängig; ein Feld mit Fokus wird beim Tippen nicht überschrieben. Die Live-Vorschau (AP3) folgt den Feldern von selbst.
+  Bildanpassung bietet `cover`, `contain` und `auto` (die Werte von SurveyJS; `backgroundImageAttachment` bleibt im JSON).
+- Texte unter `theme_editor.fields.*`.
+
+**Tests:** `backend/tests/js/theme-fields.test.mjs` (49 Tests): Round-Trip und „nur eigene Schlüssel“ für jedes Feld an `frontend/surveys/survey_theme.json`, der Vorgabe und einem Theme im Format des SurveyJS Theme Editors (`tests/js/fixtures/themes/theme-editor-export.json`).
+**Hinweis:** Dieses Theme ist nach dem Exportformat des Theme Editors (SurveyJS 2, vollständiger `--sjs-*`-Satz) nachgebildet, kein heruntergeladener Export; ein echter Export kann die Datei jederzeit ersetzen.
+Dazu Sonderfälle (alte Variablen, Titel-Verknüpfung, Halbierung der Schriftgröße, Karten, Zurücksetzen, schreibgeschützte Werte, ungültige Werte, Kontrast). `check.mjs` hat im Abschnitt `theme` neun Prüfungen für die Felder (145/145 grün). Unit (1380), Integration (244) und `node --test` (171) grün.
+
+**Im Dev-Stack geprüft** (Playwright mit Chrome): Das gespeicherte Theme im alten Format erscheint in den Feldern mit Hinweis; Markenfarbe und Schriftgröße über die Felder geändert ⇒ JSON mit `--sjs2-*`, alte Schlüssel genau dieser Felder entfernt, Vorschau folgt; nichts veröffentlicht.
+
+**Beobachtung:** CodeMirror fasst Änderungen, die weniger als 0,5 s auseinanderliegen, zu einem Rückgängig-Schritt zusammen; schnelle Feldänderungen nimmt ein Ctrl+Z also gemeinsam zurück.
+
 ## Tests
 
 - **Unit (PHP):** `ThemeService` wie in AP1; `ThemeValidator` bleibt die einzige Instanz für Gültigkeit, die Seite hat keine eigene Prüflogik.
@@ -202,7 +224,7 @@ Die Tenant-Trennung ist per Integrationstest belegt, nicht mit einem Schul-Admin
 
 ## Offene Fragen
 
-- **Kontrastprüfung:** Warnung bei zu schwachem Kontrast der Markenfarbe? Vorschlag: ja, nur als Hinweis (in AP4).
+- **Kontrastprüfung:** *umgesetzt (AP4)* als Hinweis unter der Markenfarbe, wenn der Kontrast zu Weiß unter 4,5 : 1 liegt (WCAG AA). Das Blau der Vorgabe (`rgba(0, 163, 215, 1)`, etwa 2,9 : 1) bekommt den Hinweis; ob die Vorgabe eine dunklere Farbe bekommt, ist offen.
 - **Pseudo-Schlüssel `@theme` oder eigene Spalte:** Der Pseudo-Schlüssel spart eine Migration. Falls später auch Surveys unabhängig vom Formular versioniert werden sollen, wäre eine Spalte `resource_name` sauberer.
 - **Ungenutzte Themes:** Löschen erlauben, wenn kein Formular sie nutzt? Vorerst nein.
 - **`copy-forms.php`:** *geklärt (AP1).* Ohne `--overwrite` bleibt ein abweichendes Theme der Zielschule erhalten (`kept`), mit `--overwrite` wird es ersetzt; der alte Stand kommt seit AP1 in den Theme-Verlauf. Für die Betreiber-Doku in AP5 vormerken.

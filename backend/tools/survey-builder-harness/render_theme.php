@@ -61,9 +61,12 @@ file_put_contents($dir . '/live.html', <<<HTML
 </html>
 HTML);
 
-// A minimal theme editor: the text area and the button of theme_edit.php, with the page's scripts.
+// A minimal theme editor: the fields, the text area and the button of theme_edit.php, with the page's scripts.
 $cm = getenv('SB_NO_CODEMIRROR') === false && is_file(__DIR__ . '/../../public/assets/codemirror/survey-editor-cm.js') ? '<script src="assets/codemirror/survey-editor-cm.js"></script>' : '';
 $label = $e(M::get('live_preview.open', 'Live-Vorschau'));
+ob_start();
+require __DIR__ . '/../../inc/theme_fields.php';
+$fields = (string)ob_get_clean();
 $text = $e($themeText);
 file_put_contents($dir . '/index.html', <<<HTML
 <!DOCTYPE html>
@@ -79,6 +82,7 @@ file_put_contents($dir . '/index.html', <<<HTML
 <form method="post" action="#submitted" id="survey-form">
     <button type="button" class="btn btn-sm btn-outline-primary" id="te-live-preview" hidden
             data-url="live.html" data-window="sb-theme-harness" data-form="harness_theme.json">{$label} ↗</button>
+{$fields}
     <button type="button" class="btn btn-sm btn-outline-secondary" id="se-copy">JSON kopieren</button>
     <textarea id="survey-text" name="theme_text" class="form-control font-monospace" rows="20">{$text}</textarea>
 </form>
