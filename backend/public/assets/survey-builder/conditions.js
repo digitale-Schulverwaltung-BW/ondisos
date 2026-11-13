@@ -250,14 +250,25 @@ export function fieldsOf(doc) {
 }
 
 /**
+ * Variables SurveyJS provides itself ({item} in choicesVisibleIf, {panelIndex}, {row.…} …): no field of the survey.
+ * Same list as SurveyValidator::CONTEXT_VARIABLES on the server.
+ */
+export const CONTEXT_VARIABLES = new Set([
+    'item', 'choice', 'row', 'panel', 'parentpanel', 'rootpanel', 'composite',
+    'panelindex', 'visiblepanelindex', 'rowindex', 'visiblerowindex', 'rowname', 'itemindex',
+]);
+
+/**
  * The field a reference names: "{a}" → a, "{panel.a}" → panel.a, "{a.b}" / "{a[0].b}" → a (a part of a dynamic panel
- * or a matrix: only the question itself is checked). "{row.…}" (matrix rows) and the like are not looked up.
+ * or a matrix: only the question itself is checked). Context variables ("{item}", "{row.…}", "{panelIndex}") and
+ * "{$…}" are not looked up.
  * @returns {{key:string|null, exact:boolean}} key null: not checkable
  */
 function fieldKey(name) {
     if (name.startsWith('panel.')) { return { key: name, exact: true }; }
-    if (/^(row|item|choice|parentpanel|rootpanel)\./i.test(name)) { return { key: null, exact: false }; }
     const m = /^([^.[]+)[.[]/.exec(name);
+    const head = m ? m[1] : name;
+    if (head === '' || head.startsWith('$') || CONTEXT_VARIABLES.has(head.toLowerCase())) { return { key: null, exact: false }; }
     return m ? { key: m[1], exact: false } : { key: name, exact: true };
 }
 

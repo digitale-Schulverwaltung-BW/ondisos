@@ -122,6 +122,7 @@ test('checkExpression: unknown field, near miss in case, unknown answer value', 
     assert.deepEqual(checkExpression("{WieKind} = 'ja'", FIELDS).map((w) => w.code), ['unknownValue']);
     assert.deepEqual(checkExpression("{Alter} = 'irgendwas' and {Remote} = 'x'", FIELDS), [], 'free and unknown answers are not judged');
     assert.deepEqual(checkExpression('{row.x} = 1 and {panel.von} notempty', FIELDS), []);
+    assert.deepEqual(checkExpression("{item} != 'x' and {panelIndex} > 1 and {ROW.x} = 1 and {$a} = 1", FIELDS), [], 'variables SurveyJS provides itself');
 });
 
 test('checkExpression: open brace, open quote, unbalanced brackets', () => {

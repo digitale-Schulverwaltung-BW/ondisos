@@ -28,6 +28,18 @@ class SurveyValidatorTest extends TestCase
         return ['pages' => [['name' => 'page1', 'elements' => $elements]]];
     }
 
+    /**
+     * A survey with the given element and the fields the expression tests refer to ({b} … {e}, {x}, {von}, {bis}),
+     * so that only the check under test reports.
+     *
+     * @return array<string,mixed>
+     */
+    private function surveyWithFields(array $element): array
+    {
+        $fields = array_map(static fn(string $n): array => ['type' => 'text', 'name' => $n], ['b', 'c', 'd', 'e', 'x', 'von', 'bis']);
+        return $this->survey($element, ...$fields);
+    }
+
     public function testRealSurveysOfTheProjectAreValid(): void
     {
         $dir   = __DIR__ . '/../../../../frontend/surveys';
@@ -210,7 +222,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testUnknownExpressionFunctionIsAWarningNotAnError(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'text', 'name' => 'a', 'visibleIf' => 'evil({b}) = 1 and iif({c} = 1, 1, 2) = 1',
         ]));
         $this->assertTrue($result->isValid());
@@ -241,7 +253,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testDateDiffIsAKnownFunction(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'expression', 'name' => 'monate', 'expression' => "dateDiff({von}, {bis}, 'months')",
         ]));
         $this->assertSame([], $result->warnings());
@@ -249,7 +261,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testTruncIsAKnownFunction(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'expression', 'name' => 'a', 'expression' => 'trunc({b} / 12)',
         ]));
         $this->assertSame([], $result->warnings());
@@ -270,7 +282,7 @@ class SurveyValidatorTest extends TestCase
     #[DataProvider('functionsMissingInTheBundle')]
     public function testFunctionMissingInTheBundleIsAWarning(string $expression): void
     {
-        $result = $this->validate($this->survey(['type' => 'expression', 'name' => 'a', 'expression' => $expression]));
+        $result = $this->validate($this->surveyWithFields(['type' => 'expression', 'name' => 'a', 'expression' => $expression]));
         $this->assertTrue($result->isValid());
         $this->assertCount(1, $result->warnings());
         $this->assertStringContainsString('Unbekannte Funktion', $result->warnings()[0]['message']);
@@ -278,7 +290,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testOperatorsBeforeParenthesesAreNoFunctions(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'text', 'name' => 'a',
             'visibleIf' => "{b} = 1 AND ({c} = 2 or ({d} notempty)) and {e} contains ('x')",
         ]));
@@ -287,7 +299,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testWordOperatorsAreMatchedCaseInsensitively(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'text', 'name' => 'a', 'visibleIf' => '{b} = 1 OR NEGATE({c} = 2) And ({d} noneof([1, 2]))',
         ]));
         $this->assertSame([], $result->warnings());
@@ -295,7 +307,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testUnknownFunctionNextToWordOperatorStillWarns(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'text', 'name' => 'a', 'visibleIf' => '{b} = 1 or (evil({c}) = 2)',
         ]));
         $this->assertCount(1, $result->warnings());
@@ -304,7 +316,7 @@ class SurveyValidatorTest extends TestCase
 
     public function testFunctionNamesInQuotedLiteralsAreIgnored(): void
     {
-        $result = $this->validate($this->survey([
+        $result = $this->validate($this->surveyWithFields([
             'type' => 'text', 'name' => 'a', 'visibleIf' => "{x} = 'foo(bar)'",
         ]));
         $this->assertSame([], $result->warnings());
@@ -336,5 +348,112 @@ class SurveyValidatorTest extends TestCase
         ));
 
         $this->assertNotSame([], $result->errors());
+    }
+
+    /** @return list<array{path:string,message:string}> */
+    private function referenceWarnings(array $survey): array
+    {
+        return array_values(array_filter(
+            $this->validate($survey)->warnings(),
+            static fn(array $w): bool => str_contains($w['message'], 'verweist auf')
+        ));
+    }
+
+    public function testRealSurveysOfTheProjectReferOnlyToExistingFields(): void
+    {
+        foreach (glob(__DIR__ . '/../../../../frontend/surveys/*.json') ?: [] as $file) {
+            $result = $this->validator->validate((string)file_get_contents($file))['result'];
+            $found  = array_filter($result->warnings(), static fn(array $w): bool => str_contains($w['message'], 'verweist auf'));
+            $this->assertSame([], array_values($found), basename($file));
+        }
+    }
+
+    public function testReferenceToUnknownFieldIsAWarningAtTheExpression(): void
+    {
+        $result = $this->validate($this->survey(
+            ['type' => 'text', 'name' => 'age'],
+            ['type' => 'text', 'name' => 'Vormund', 'requiredIf' => '{Alter} < 18'],
+        ));
+
+        $this->assertTrue($result->isValid());
+        $this->assertCount(1, $result->warnings());
+        $this->assertSame('pages[0].elements[1].requiredIf', $result->warnings()[0]['path']);
+        $this->assertStringContainsString('{Alter}', $result->warnings()[0]['message']);
+    }
+
+    public function testReferenceDifferingOnlyInCaseNamesTheField(): void
+    {
+        $warnings = $this->referenceWarnings($this->survey(
+            ['type' => 'text', 'name' => 'Alter'],
+            ['type' => 'text', 'name' => 'Vormund', 'visibleIf' => '{alter} < 18'],
+        ));
+
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('heißt aber "Alter"', $warnings[0]['message']);
+    }
+
+    public function testExistingFieldsCalculatedValuesAndPartsAreNoWarning(): void
+    {
+        $survey = $this->survey(
+            ['type' => 'text', 'name' => 'Alter'],
+            ['type' => 'radiogroup', 'name' => 'Art', 'choices' => [
+                ['value' => 'a', 'elements' => [['type' => 'text', 'name' => 'ArtDetail']]],
+            ]],
+            ['type' => 'paneldynamic', 'name' => 'Jobs', 'templateElements' => [
+                ['type' => 'text', 'name' => 'von'],
+                ['type' => 'text', 'name' => 'bis', 'visibleIf' => '{panel.von} notempty'],
+            ]],
+            ['type' => 'expression', 'name' => 'Summe', 'expression' => "{Jobs[0].von} + {Jobs.bis} + {Gesamt}"],
+            ['type' => 'text', 'name' => 'X', 'visibleIf' => "{Alter} > 1 and {ArtDetail} notempty and {Art} = 'a'"],
+        );
+        $survey['calculatedValues'] = [['name' => 'Gesamt', 'expression' => '{Alter} * 2']];
+
+        $this->assertSame([], $this->referenceWarnings($survey));
+    }
+
+    public function testUnknownTemplateFieldBehindPanelIsAWarning(): void
+    {
+        $warnings = $this->referenceWarnings($this->survey(
+            ['type' => 'paneldynamic', 'name' => 'Jobs', 'templateElements' => [
+                ['type' => 'text', 'name' => 'von'],
+                ['type' => 'text', 'name' => 'bis', 'requiredIf' => '{panel.vom} notempty'],
+            ]],
+        ));
+
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('{panel.vom}', $warnings[0]['message']);
+    }
+
+    public function testContextVariablesOfSurveyJsAreNoFields(): void
+    {
+        $this->assertSame([], $this->referenceWarnings($this->survey(
+            ['type' => 'checkbox', 'name' => 'Wahl', 'choices' => ['a', 'b'], 'choicesVisibleIf' => "{item} != 'b'"],
+            ['type' => 'text', 'name' => 'X', 'visibleIf' => '{panelIndex} > 1 or {row.x} = 1 or {ROW.y} = 1 or {$v} = 1'],
+        )));
+    }
+
+    public function testBracesInsideQuotedLiteralsAreNoReferences(): void
+    {
+        $this->assertSame([], $this->referenceWarnings($this->survey(
+            ['type' => 'text', 'name' => 'A', 'visibleIf' => "{A} = '{B}' or {A} = \"{C}\""],
+        )));
+    }
+
+    public function testEachUnknownFieldIsReportedOncePerExpression(): void
+    {
+        $warnings = $this->referenceWarnings($this->survey(
+            ['type' => 'text', 'name' => 'A', 'visibleIf' => '{Fehlt} = 1 or {Fehlt} = 2'],
+        ));
+
+        $this->assertCount(1, $warnings);
+    }
+
+    public function testContextVariablesMatchTheGraphicalEditor(): void
+    {
+        $js = (string)file_get_contents(__DIR__ . '/../../../public/assets/survey-builder/conditions.js');
+        $this->assertSame(1, preg_match('/export const CONTEXT_VARIABLES = new Set\(\[(.*?)\]\);/s', $js, $m));
+        preg_match_all("/'([^']+)'/", $m[1], $names);
+
+        $this->assertSame(SurveyValidator::CONTEXT_VARIABLES, $names[1]);
     }
 }

@@ -8,8 +8,9 @@ namespace App\Forms;
  *
  * Errors (block): not JSON / too big / no questions, elements without type or name, duplicate field names,
  * reserved field names, HTML outside the allowlist, javascript: URLs.
- * Warnings (do not block): functions in expressions SurveyJS does not know, choices loaded from an
- * external URL (the visitor's browser would contact a third party).
+ * Warnings (do not block): functions in expressions SurveyJS does not know, references in expressions to fields
+ * the survey does not have (the condition then never holds), choices loaded from an external URL (the visitor's
+ * browser would contact a third party).
  */
 final class SurveyValidator
 {
@@ -50,6 +51,19 @@ final class SurveyValidator
     ];
 
     /**
+     * References in expressions that name no field: variables SurveyJS provides itself, e.g. {item} in
+     * choicesVisibleIf, {panelIndex} in dynamic panels, {row.…} in matrices. Same list as the grafischer Editor
+     * (survey-builder/conditions.js, fieldKey()).
+     */
+    public const CONTEXT_VARIABLES = [
+        'item', 'choice', 'row', 'panel', 'parentpanel', 'rootpanel', 'composite',
+        'panelindex', 'visiblepanelindex', 'rowindex', 'visiblerowindex', 'rowname', 'itemindex',
+    ];
+
+    /** @var array<string,true>|null names expressions may refer to (fields, calculated values, panel.<name>); set per validate() */
+    private ?array $referable = null;
+
+    /**
      * @return array{result: ValidationResult, survey: ?array<string,mixed>} survey is null when it could not be parsed
      */
     public function validate(string $json): array
@@ -86,7 +100,9 @@ final class SurveyValidator
             $result->addError('', 'Zu viele Elemente (maximal ' . self::MAX_ELEMENTS . ')');
         }
 
+        $this->referable = self::referableNames($survey);
         $this->scanStrings($survey, '', $result);
+        $this->referable = null;
 
         return ['result' => $result, 'survey' => $survey];
     }
@@ -220,6 +236,8 @@ final class SurveyValidator
 
     private function checkExpression(string $path, string $expr, ValidationResult $result): void
     {
+        $this->checkReferences($path, $expr, $result);
+
         // Strip quoted literals and {field} references so only operators/functions remain.
         $stripped = preg_replace(['/\'[^\']*\'/', '/"[^"]*"/', '/\{[^}]*\}/'], ' ', $expr) ?? $expr;
         if (preg_match_all('/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/', $stripped, $m) < 1) {
@@ -233,5 +251,91 @@ final class SurveyValidator
                 $result->addWarning($path, "Unbekannte Funktion {$fn}() im Ausdruck (SurveyJS kennt sie nicht)");
             }
         }
+    }
+
+    /**
+     * Warns about {name} references to fields the survey does not have. SurveyJS treats them as empty, so a
+     * visibleIf never holds and a requiredIf never applies, without any message. "{a.b}" and "{a[0].b}" (part of a
+     * dynamic panel, matrix or multiple text) check only "a"; "{panel.a}" checks the template fields of dynamic panels.
+     */
+    private function checkReferences(string $path, string $expr, ValidationResult $result): void
+    {
+        if ($this->referable === null) {
+            return;
+        }
+        $outsideQuotes = preg_replace(['/\'(?:[^\'\\\\]|\\\\.)*\'/', '/"(?:[^"\\\\]|\\\\.)*"/'], ' ', $expr) ?? $expr;
+        if (preg_match_all('/\{([^{}]*)\}/', $outsideQuotes, $m) < 1) {
+            return;
+        }
+        $lower = [];
+        foreach (array_keys($this->referable) as $name) {
+            $lower[mb_strtolower($name)] ??= $name;
+        }
+        foreach (array_unique(array_map('trim', $m[1])) as $reference) {
+            $key = self::referenceKey($reference);
+            if ($key === null || isset($this->referable[$key])) {
+                continue;
+            }
+            $near = $lower[mb_strtolower($key)] ?? null;
+            $result->addWarning($path, $near !== null
+                ? "Der Ausdruck verweist auf {{$reference}}, das Feld heißt aber \"{$near}\" (Groß- und Kleinschreibung zählt)"
+                : "Der Ausdruck verweist auf {{$reference}}, ein Feld dieses Namens gibt es in der Survey nicht: SurveyJS behandelt es als leer");
+        }
+    }
+
+    /**
+     * The name a reference must match, or null when it names no field of the survey (SurveyJS context variables).
+     */
+    private static function referenceKey(string $reference): ?string
+    {
+        if ($reference === '' || str_starts_with($reference, '$')) {
+            return null;
+        }
+        if (preg_match('/^panel\.([^.\[]+)/i', $reference, $m) === 1) {
+            return 'panel.' . $m[1];
+        }
+        $head = preg_split('/[.\[]/', $reference, 2)[0] ?? $reference;
+        if (in_array(mb_strtolower($head), self::CONTEXT_VARIABLES, true)) {
+            return null;
+        }
+        return $head;
+    }
+
+    /**
+     * Everything an expression can name: fields (including questions in choice options and the dynamic panels
+     * themselves), calculated values, and the template fields of dynamic panels as "panel.<name>".
+     *
+     * @param array<string,mixed> $survey
+     * @return array<string,true>
+     */
+    private static function referableNames(array $survey): array
+    {
+        $names = array_fill_keys(SurveyFieldExtractor::dataKeys($survey), true);
+        $template = static function (mixed $list) use (&$template, &$names): void {
+            foreach (is_array($list) ? $list : [] as $el) {
+                if (!is_array($el)) {
+                    continue;
+                }
+                if (is_string($el['name'] ?? null) && $el['name'] !== '' && ($el['type'] ?? null) !== 'panel') {
+                    $names['panel.' . $el['name']] = true;
+                }
+                $template($el['elements'] ?? null);
+                $template($el['templateElements'] ?? null);
+            }
+        };
+        $walk = static function (mixed $node) use (&$walk, $template): void {
+            if (!is_array($node)) {
+                return;
+            }
+            foreach ($node as $key => $value) {
+                if ($key === 'templateElements') {
+                    $template($value);
+                }
+                $walk($value);
+            }
+        };
+        $walk($survey['pages'] ?? null);
+        $walk($survey['elements'] ?? null);
+        return $names;
     }
 }
