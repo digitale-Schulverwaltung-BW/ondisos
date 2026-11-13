@@ -508,7 +508,7 @@ return [
             ],
             'datenschutz' => ['title' => 'Datenschutz-Zustimmung', 'description' => 'Hinweis mit Link zur Datenschutzerklärung und Pflicht-Zustimmung (consent_DatenschutzOk, wird nicht gespeichert). Den Link bitte auf die Datenschutzerklärung der Schule ändern.'],
             'name_email' => ['title' => 'Name und E-Mail', 'description' => 'Name und E-Mail-Adresse als Pflichtfelder, für Rückmeldungen und Veranstaltungen. Für Schulanmeldungen die Bausteine „Person" und „Anschrift" verwenden.'],
-            'person' => ['title' => 'Person', 'description' => 'Geschlecht, Vorname, Nachname, Geburtsdatum, Geburtsort, Geburtsland (ASV-Schlüssel).'],
+            'person' => ['title' => 'Person', 'description' => 'Geschlecht, Vorname, Nachname, Geburtsdatum, Geburtsort, Geburtsland (ASV-Schlüssel). „divers“ nimmt der ASV-Import nicht an: diese Anmeldungen trägt das Sekretariat von Hand ein.'],
             'herkunft' => ['title' => 'Staatsangehörigkeit, Sprache, Religion', 'description' => 'Staatsangehörigkeit (auch eine zweite), Muttersprache, Religionszugehörigkeit (ASV-Schlüssel).'],
             'anschrift' => ['title' => 'Anschrift und Kontakt', 'description' => 'Straße, Hausnummer, PLZ, Ort, Telefon, Mobiltelefon, E-Mail; der Teilort wird beim Export ermittelt.'],
             'erziehungsberechtigte' => ['title' => 'Erziehungsberechtigte(r) {{n}}', 'description' => 'Art (Mutter, Vater, Pflegeeltern, Vormund), Geschlecht, Name, Anschrift, Telefon, E-Mail. Alleinerziehende als Erziehungsberechtigte(r) 1 eintragen.'],

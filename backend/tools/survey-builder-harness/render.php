@@ -40,7 +40,7 @@ if (!is_string($surveyFile) || !is_string($outDir)) {
 
 $editorText = is_file($surveyFile) ? (string)file_get_contents($surveyFile) : '';
 $report = $reportFile !== null && is_file($reportFile) ? json_decode((string)file_get_contents($reportFile), true, 32, JSON_THROW_ON_ERROR) : null;
-$view = ['live' => ['fields' => ['question1', 'Name']]];
+$view = ['live' => ['fields' => ['question1', 'Name']], 'editor_text' => $editorText];
 $builderConfig = sb_config($view, $report);
 
 if (!is_dir($outDir) && !mkdir($outDir, 0775, true)) {

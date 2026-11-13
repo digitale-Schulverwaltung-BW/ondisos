@@ -6,7 +6,7 @@
 // (PLAYWRIGHT_BROWSERS_PATH, or CHROMIUM_PATH for the executable). It renders the editor tabs of form_survey.php with
 // render.php for several surveys (the real ones from backend/tests/fixtures/surveys plus small odd ones), serves them and drives the
 // builder like a person would: edit, rename, add, move, delete, keyboard, tab switch, broken JSON, findings, questions in
-// answers.
+// answers, conditions, templates and building blocks.
 import { createRequire } from 'node:module';
 import { execFileSync } from 'node:child_process';
 import { createServer } from 'node:http';
@@ -85,6 +85,8 @@ render('odd', odd);
 render('nested', nested);
 render('cond', condSurvey);
 render('empty', empty);
+render('tpl', empty);
+render('blk', empty);
 render('broken', broken, reportBroken);
 render('warn', surveys('ausbildernachmittag'), reportWarn);
 render('nocm', surveys('ausbildernachmittag'), null, { SB_NO_CODEMIRROR: '1' });
@@ -782,6 +784,119 @@ const selectedIndex = (p) => p.evaluate(() => [...document.querySelectorAll('.sb
     check('cond: the server accepts the result without warnings', verdict.valid && verdict.warnings.length === 0, JSON.stringify([verdict.errors, verdict.warnings]).slice(0, 200));
     check('cond: no console errors', errors.length === 0, errors.join(' | '));
     if (shots) { await p.screenshot({ path: join(shots, 'cond.png'), fullPage: true }); }
+    await p.close();
+}
+
+// ---- AP6: templates in the empty editor, building blocks ------------------------------------------------------------
+{
+    const p = await open('tpl', { width: 1400, height: 1400 });
+    const config = await p.evaluate(() => JSON.parse(document.getElementById('builder-config').textContent));
+    const offered = await p.locator('.sb-templates [data-template]').evaluateAll((els) => els.map((e) => e.getAttribute('data-template')));
+    check('templates: the empty editor offers the templates and examples of the manifest, in its order',
+        offered.length > 0 && JSON.stringify(offered) === JSON.stringify(config.templates.map((x) => x.key)) && offered.includes('schueleranmeldung') && offered.includes('bs'), offered.join(','));
+    const pickerText = await p.textContent('.sb-templates');
+    check('templates: every entry has its title and description (no message key shows)', !/templates\./.test(pickerText) && /Schüleranmeldung/.test(pickerText), pickerText.slice(0, 120));
+    if (shots) { await p.screenshot({ path: join(shots, 'builder-templates.png'), fullPage: true }); }
+
+    const chosen = config.templates.find((x) => x.key === 'schueleranmeldung');
+    await p.click('[data-template="schueleranmeldung"]');
+    await p.waitForTimeout(400);
+    check('templates: a choice puts the template text into the editor as it is', (await text(p)) === chosen.text);
+    check('templates: the builder shows its pages, the choice is gone, the announcement names it',
+        (await p.locator('.sb-page').count()) === JSON.parse(chosen.text).pages.length && (await p.locator('.sb-templates').count()) === 0
+        && /Vorlage übernommen: Schüleranmeldung/.test(await p.textContent('[aria-live]')));
+    const verdict = serverSays(await text(p));
+    check('templates: the server accepts it; the only warning is the placeholder link to the privacy statement',
+        verdict.valid && verdict.warnings.length > 0 && verdict.warnings.every((w) => /Platzhalter-Adresse/.test(w.message)), JSON.stringify(verdict.warnings).slice(0, 200));
+    check('templates: nothing is saved by a choice', !(await submitted(p)));
+
+    // back to the choice: empty the JSON tab
+    await p.click('#se-tab-json');
+    await p.waitForTimeout(400);
+    await p.evaluate(() => { const v = window.OndisosSurveyEditor.last.view; v.dispatch({ changes: { from: 0, to: v.state.doc.length, insert: '' } }); });
+    await p.click('#se-tab-graphic');
+    await p.waitForTimeout(500);
+    check('templates: an emptied text brings the choice back', (await p.locator('.sb-templates [data-template]').count()) === offered.length);
+    await p.click('[data-template="bs"]');
+    await p.waitForTimeout(400);
+    check('templates: an example arrives byte for byte as the file', (await text(p)) === readFileSync(join(repo, 'backend/resources/survey-templates/examples/bs.json'), 'utf8'));
+    check('templates: no console errors', errors.length === 0, errors.join(' | '));
+    await p.close();
+}
+{
+    const p = await open('bs');
+    const config = await p.evaluate(() => JSON.parse(document.getElementById('builder-config').textContent));
+    check('templates: an editor with a survey gets no templates (the page stays small)', config.templates.length === 0 && (await p.locator('.sb-templates').count()) === 0);
+    await p.close();
+}
+{
+    const p = await open('blk', { width: 1400, height: 1400 });
+    const config = await p.evaluate(() => JSON.parse(document.getElementById('builder-config').textContent));
+    const blockBtn = p.locator('.sb-toolbar .dropdown-toggle', { hasText: 'Baustein einfügen' });
+    const insert = async (k) => { await blockBtn.click(); await p.click(`.sb-blocks [data-block="${k}"]`); await p.waitForTimeout(250); };
+
+    await p.click('.sb-alerts >> text=Leere Survey anlegen');
+    await p.waitForTimeout(300);
+    await blockBtn.click();
+    const items = await p.locator('.sb-blocks [data-block]').evaluateAll((els) => els.map((e) => ({ key: e.getAttribute('data-block'), label: e.textContent, title: e.title })));
+    check('blocks: the menu lists every block in two groups, with title and description',
+        items.length === config.blocks.length && (await p.locator('.sb-blocks .dropdown-header').count()) === 2
+        && items.every((i) => i.label && i.title && !/blocks\./.test(i.label + i.title)) && items.some((i) => i.label.includes('Erziehungsberechtigte(r) 2')),
+        items.map((i) => i.label).join(' | '));
+    await p.keyboard.press('Escape');
+
+    // a school registration: every block except "name and e-mail", one after the other (each lands behind the one before)
+    const wanted = config.blocks.filter((b) => b.block !== 'name_email');
+    for (const b of wanted) { await insert(b.key); }
+    const built = await survey(p);
+    const names = allElements(built).map((e) => e.name);
+    check('blocks: inserted one after the other they sit side by side on the page, each as delivered',
+        JSON.stringify(built.pages[0].elements) === JSON.stringify(wanted.map((b) => b.element)), `${built.pages[0].elements.length} of ${wanted.length}`);
+    check('blocks: no name twice, the last block is selected, the announcement names it',
+        new Set(names).size === names.length && (await selectedIndex(p)) >= 0
+        && JSON.parse(await p.$eval('.sb-item.sb-selected', (e) => e.getAttribute('data-path'))).join() === ['pages', 0, 'elements', wanted.length - 1].join()
+        && /Baustein eingefügt/.test(await p.textContent('[aria-live]')));
+    const verdict = serverSays(await text(p));
+    check('blocks: the server accepts the result; the only warning is the placeholder link',
+        verdict.valid && verdict.warnings.every((w) => /Platzhalter-Adresse/.test(w.message)), JSON.stringify([verdict.errors, verdict.warnings]).slice(0, 200));
+
+    // a clash: refused with the names, the text unchanged
+    const before = await text(p);
+    await insert('erziehungsberechtigte_1');
+    const said = await p.textContent('.sb-alerts');
+    check('blocks: a block whose names exist is refused, names them and changes nothing',
+        (await text(p)) === before && /nicht eingefügt/.test(said) && said.includes('„Erz1Name"'), said.slice(0, 160));
+    await insert('name_email');
+    check('blocks: "Name und E-Mail" next to "Person" is refused because of "Name"', (await text(p)) === before && /„Name"/.test(await p.textContent('.sb-alerts')));
+
+    // one step back takes the whole block
+    await p.locator('.sb-toolbar button', { hasText: 'Rückgängig' }).click();
+    await p.waitForTimeout(250);
+    check('blocks: undo takes back the last block as a whole', (await survey(p)).pages[0].elements.length === wanted.length - 1);
+    check('blocks: no console errors', errors.length === 0, errors.join(' | '));
+    if (shots) { await p.screenshot({ path: join(shots, 'builder-blocks.png'), fullPage: true }); }
+    await p.close();
+}
+{
+    // the real Berufsschule survey: hand formatting around an inserted block stays, its person fields refuse "Person"
+    const p = await open('bs');
+    const original = await text(p);
+    const blockBtn = p.locator('.sb-toolbar .dropdown-toggle', { hasText: 'Baustein einfügen' });
+    await p.locator('.sb-page').first().click();
+    await blockBtn.click();
+    await p.click('.sb-blocks [data-block="person"]');
+    await p.waitForTimeout(250);
+    check('blocks: bs has the person fields already, "Person" is refused', (await text(p)) === original && /„Vorname"/.test(await p.textContent('.sb-alerts')));
+    await blockBtn.click();
+    await p.click('.sb-blocks [data-block="unterschrift"]');
+    await p.waitForTimeout(250);
+    const a = original.split('\n');
+    const b = (await text(p)).split('\n');
+    const added = b.length - a.length;
+    const at = b.findIndex((l, i) => l !== a[i]);
+    check('blocks: in bs the text around the inserted block stays byte for byte',
+        added > 10 && JSON.stringify(b.slice(0, at)) === JSON.stringify(a.slice(0, at)) && JSON.stringify(b.slice(at + added + 1)) === JSON.stringify(a.slice(at + 1)), `${added} lines at ${at}`);
+    check('blocks: bs: no console errors', errors.length === 0, errors.join(' | '));
     await p.close();
 }
 

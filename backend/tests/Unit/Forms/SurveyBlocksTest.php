@@ -19,7 +19,8 @@ class SurveyBlocksTest extends TestCase
 
     /**
      * Values a block offers although the ASV value list does not have them. Geschlecht "d": the list 10/2026 knows only
-     * m and w; whether ASV accepts "d" needs a test import (PLAN-3.2.0, ASV-Abgleich).
+     * m and w, and a test import (2026-11-13) rejects the row. Kept on purpose: the failed row tells the office to enter
+     * the person by hand ("divers" is a supplement in ASV's master data that the import does not carry; PLAN-3.2.0).
      */
     private const VALUES_NOT_IN_ASV = ['Geschlecht' => ['d']];
 

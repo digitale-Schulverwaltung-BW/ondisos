@@ -35,7 +35,7 @@
         },
         "person": {
             "title": "Person",
-            "description": "Geschlecht, Vorname, Nachname, Geburtsdatum, Geburtsort, Geburtsland (ASV-Schlüssel)."
+            "description": "Geschlecht, Vorname, Nachname, Geburtsdatum, Geburtsort, Geburtsland (ASV-Schlüssel). „divers“ nimmt der ASV-Import nicht an: diese Anmeldungen trägt das Sekretariat von Hand ein."
         },
         "herkunft": {
             "title": "Staatsangehörigkeit, Sprache, Religion",
