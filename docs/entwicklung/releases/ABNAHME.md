@@ -101,8 +101,9 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 - [x] Nach den Korrekturen erneut auf dem iPhone (Safari): passt (Querformat, ✓-Button)
 - [ ] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
 - [x] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
-- [ ] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
-- [ ] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host); Rate-Limit je Besucher
+- [x] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
+- [x] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host); Rate-Limit je Besucher
+- [ ] Hinter dem **echten Reverse-Proxy**:  Rate-Limit je Besucher
 - [x] WordPress mit Wordfence (oder anderer WAF): Polling und Base64-Body werden nicht blockiert
 - [x] Detailansicht und PDF-Bestätigung einer per Smartphone unterschriebenen Anmeldung
 - [ ] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert
