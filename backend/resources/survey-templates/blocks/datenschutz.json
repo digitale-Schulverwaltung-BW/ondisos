@@ -1,0 +1,25 @@
+{
+  "type": "panel",
+  "name": "panel_datenschutz",
+  "elements": [
+    {
+      "type": "html",
+      "name": "datenschutz_hinweis",
+      "html": "Ich habe die <a href=\"https://www.example.com/datenschutz/\" target=\"_blank\" rel=\"noopener\">Datenschutzerklärung</a> der Schule gelesen und stimme der elektronischen Erfassung und Verarbeitung meiner Daten zu."
+    },
+    {
+      "type": "checkbox",
+      "name": "consent_DatenschutzOk",
+      "title": "Zustimmung",
+      "titleLocation": "hidden",
+      "isRequired": true,
+      "requiredErrorText": "Ohne Ihre Zustimmung ist keine Online-Anmeldung möglich.",
+      "choices": [
+        {
+          "value": "ja",
+          "text": "Ich stimme zu"
+        }
+      ]
+    }
+  ]
+}

@@ -8,6 +8,7 @@ declare(strict_types=1);
  * names the published survey already used and the findings of the last check come from here.
  */
 
+use App\Forms\SurveyBlocks;
 use App\Forms\SurveyBuilderFindings;
 use App\Forms\SurveyBuilderRules;
 use App\Services\MessageService as M;
@@ -25,9 +26,26 @@ function sb_config(array $view, ?array $report): array
         // names of the published survey: a new field must not take the name of one that already has answers
         'taken'    => $view['live']['fields'] ?? [],
         'findings' => SurveyBuilderFindings::fromReport($report),
+        // building blocks (AP6): groups of standard fields; ASV names for school registrations
+        'blocks'   => sb_blocks(),
         // JSON errors point at lines, which only the JSON tab shows
         'startTab' => ($report !== null && !$report['valid']) ? 'json' : 'graphic',
     ];
+}
+
+/**
+ * The building blocks, or none if their files are broken: the builder works without them, the defect goes to the log.
+ *
+ * @return list<array<string,mixed>>
+ */
+function sb_blocks(): array
+{
+    try {
+        return SurveyBlocks::all();
+    } catch (\RuntimeException $e) {
+        error_log('Survey builder: building blocks unavailable: ' . $e->getMessage());
+        return [];
+    }
 }
 
 /** JSON for a <script type="application/json"> element: nothing in it can end the element or start another. */

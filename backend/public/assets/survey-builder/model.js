@@ -2,7 +2,7 @@
 // The JSON text stays the single source of truth; every change is a splice into that text (see json-doc.js).
 //
 // Reading: loadModel, outline, flatten. Changing (all return a new document, the text changes only where the edit is):
-// setProp (registry-driven), renameElement, addElement / removeElement / moveElement / moveElementTo / duplicateElement,
+// setProp (registry-driven), renameElement, addElement / insertBlock / removeElement / moveElement / moveElementTo / duplicateElement,
 // addPage / removePage / movePage, openChoice / closeChoice (answers that hold questions).
 // Every change reports {ok:true, doc, …} or {ok:false, code}: nothing throws for wrong user input, and nothing is
 // written that the registry does not know. Conditions come with AP5.
@@ -393,6 +393,54 @@ export function addElement(doc, parentPath, index, typeName, { rules, texts, tak
     const element = template(typeName, name, texts);
     const next = list ? insertItem(doc, [...parentPath, 'elements'], index, element) : insertMember(doc, parentPath, 'elements', [element]);
     return ok(next, { path: [...parentPath, 'elements', index], name });
+}
+
+/** Deepest nesting inside an element: 0 for a question, 1 for a panel with questions, … (as the server counts it). */
+function depthInside(value) {
+    const lists = childLists(value).filter(([, list]) => list.length > 0);
+    return lists.length ? 1 + Math.max(...lists.flatMap(([, list]) => list.map(depthInside))) : 0;
+}
+
+/**
+ * Inserts a building block (AP6: a panel or question with fixed names, e.g. the ASV fields of a person) at `index`
+ * into a page, panel or answer option. Unlike a copy, nothing is renamed: the names are what the export (ASV import)
+ * and the server look for. If one of them is in the survey already (questions, panels, pages, calculated values) or
+ * reserved, nothing changes and the names come back. A name of the published version is fine: it is the same field.
+ * @param {object} element the block as a value (SurveyBlocks on the server; placeholders already replaced)
+ * @returns {{ok:true, doc, path, names:string[]} | {ok:false, code:string, names?:string[]}}
+ */
+export function insertBlock(doc, parentPath, index, element, { rules } = {}) {
+    if (!element || typeof element !== 'object' || Array.isArray(element) || typeof element.type !== 'string') { return fail('path'); }
+    if (!typesInside(element).every(isKnownType)) { return fail('unknownType'); }
+    const parent = nodeAt(doc, parentPath);
+    if (!parent || parent.type !== 'object') { return fail('path'); }
+    const parentType = typeAt(doc, parentPath);
+    const isRoot = parentPath.length === 0 && nodeAt(doc, ['pages']) === undefined;
+    if (!isRoot && parentType !== 'page' && parentType !== 'panel' && !isChoiceContainer(doc, parentPath)) { return fail('notContainer'); }
+    const list = nodeAt(doc, [...parentPath, CONTAINER_KEY]);
+    if (list && list.type !== 'array') { return fail('path'); }
+    if (!Number.isInteger(index) || index < 0 || index > (list ? list.items.length : 0)) { return fail('index'); }
+    if (rules && countElements(doc) + typesInside(element).length > rules.maxElements) { return fail('tooManyElements'); }
+    if (rules && elementsKeyCount(parentPath) + depthInside(element) > rules.maxDepth) { return fail('tooDeep'); }
+
+    const used = new Set([...elementsOf(doc).map((e) => e.value.name), ...namesOfPages(doc), ...namesOfCalculated(doc),
+        ...(rules?.reservedNames ?? [])]);
+    const clash = [...new Set(namedInside(element).map((n) => n.name).filter((n) => used.has(n)))];
+    if (clash.length) { return fail('blockNamesTaken', { names: clash }); }
+
+    const next = list ? insertItem(doc, [...parentPath, CONTAINER_KEY], index, element)
+        : insertMember(doc, parentPath, CONTAINER_KEY, [element]);
+    return ok(next, { path: [...parentPath, CONTAINER_KEY, index], names: namedInside(element).map((n) => n.name) });
+}
+
+function namesOfPages(doc) {
+    const pages = valueAt(doc, ['pages']);
+    return Array.isArray(pages) ? pages.map((p) => p?.name).filter((n) => typeof n === 'string') : [];
+}
+
+function namesOfCalculated(doc) {
+    const list = valueAt(doc, ['calculatedValues']);
+    return Array.isArray(list) ? list.map((c) => c?.name).filter((n) => typeof n === 'string') : [];
 }
 
 function elementLocation(doc, path) {

@@ -24,6 +24,9 @@ final class SurveyValidator
      */
     public const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
 
+    /** Links to the documentation domains (RFC 2606) are placeholders in templates and building blocks (AP6). */
+    private const PLACEHOLDER_LINK = '#\\b(?:https?://)?(?:[a-z0-9-]+\\.)*example\\.(?:com|org|net)\\b#i';
+
     /** Keys whose values are expressions (not HTML), so "<" there is a comparison. */
     private const EXPRESSION_KEY = '/(If|Expression|expression)$/';
 
@@ -217,6 +220,10 @@ final class SurveyValidator
         if (preg_match(self::EXPRESSION_KEY, $this->lastKey($path)) === 1) {
             $this->checkExpression($path, $node, $result);
             return;
+        }
+
+        if (preg_match(self::PLACEHOLDER_LINK, $node) === 1) {
+            $result->addWarning($path, 'Platzhalter-Adresse (example.com/.org/.net): bitte durch die richtige Adresse ersetzen, z. B. die Datenschutzerklärung der Schule');
         }
 
         if (HtmlPolicy::looksLikeHtml($node)) {

@@ -1,0 +1,62 @@
+{
+  "type": "panel",
+  "name": "panel_anschrift",
+  "title": "Anschrift und Kontakt",
+  "elements": [
+    {
+      "type": "text",
+      "name": "Strasse",
+      "title": "Straße",
+      "isRequired": true
+    },
+    {
+      "type": "text",
+      "name": "HausNr",
+      "title": "Hausnummer",
+      "isRequired": true,
+      "startWithNewLine": false,
+      "inputSize": 6
+    },
+    {
+      "type": "text",
+      "name": "PLZ",
+      "title": "PLZ",
+      "isRequired": true,
+      "inputSize": 7
+    },
+    {
+      "type": "text",
+      "name": "Ort",
+      "title": "Ort",
+      "isRequired": true,
+      "startWithNewLine": false
+    },
+    {
+      "type": "text",
+      "name": "Teilort",
+      "visible": false,
+      "defaultValue": "_autofill",
+      "clearIfInvisible": "none"
+    },
+    {
+      "type": "text",
+      "name": "Telefon 1",
+      "title": "Telefon",
+      "inputType": "tel"
+    },
+    {
+      "type": "text",
+      "name": "Handy1",
+      "title": "Mobiltelefon",
+      "inputType": "tel",
+      "startWithNewLine": false
+    },
+    {
+      "type": "text",
+      "name": "email1",
+      "title": "E-Mail-Adresse",
+      "isRequired": true,
+      "inputType": "email"
+    }
+  ]
+}

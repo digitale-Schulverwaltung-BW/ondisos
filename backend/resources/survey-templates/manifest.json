@@ -1,0 +1,14 @@
+{
+  "blocks": [
+    { "key": "datenschutz", "file": "blocks/datenschutz.json", "group": "general" },
+    { "key": "name_email", "file": "blocks/name_email.json", "group": "general" },
+    { "key": "person", "file": "blocks/person.json", "group": "asv" },
+    { "key": "herkunft", "file": "blocks/herkunft.json", "group": "asv" },
+    { "key": "anschrift", "file": "blocks/anschrift.json", "group": "asv" },
+    { "key": "erziehungsberechtigte", "file": "blocks/erziehungsberechtigte.json", "group": "asv", "param": { "placeholder": "%N%", "values": [1, 2] } },
+    { "key": "vorbildung", "file": "blocks/vorbildung.json", "group": "asv" },
+    { "key": "ausbildungsbetrieb", "file": "blocks/ausbildungsbetrieb.json", "group": "asv" },
+    { "key": "unterschrift", "file": "blocks/unterschrift.json", "group": "general" },
+    { "key": "anmerkungen", "file": "blocks/anmerkungen.json", "group": "general" }
+  ]
+}

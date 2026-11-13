@@ -1,0 +1,20 @@
+{
+  "type": "panel",
+  "name": "panel_ausbildungsbetrieb",
+  "title": "Ausbildungsbetrieb",
+  "elements": [
+    {
+      "type": "text",
+      "name": "Ausbildungsbetrieb",
+      "title": "Ausbildungsbetrieb",
+      "isRequired": true,
+      "description": "Name und Ort des Betriebs"
+    },
+    {
+      "type": "text",
+      "name": "Ausbilder",
+      "title": "Ausbilderin / Ausbilder",
+      "startWithNewLine": false
+    }
+  ]
+}

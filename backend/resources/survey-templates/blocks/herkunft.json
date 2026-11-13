@@ -1,0 +1,1855 @@
+{
+  "type": "panel",
+  "name": "panel_herkunft",
+  "title": "Staatsangehörigkeit, Sprache, Religion",
+  "elements": [
+    {
+      "type": "dropdown",
+      "name": "Land",
+      "title": "Staatsangehörigkeit",
+      "isRequired": true,
+      "choices": [
+        {
+          "value": "D",
+          "text": "Deutschland"
+        },
+        {
+          "value": "AFG",
+          "text": "Afghanistan"
+        },
+        {
+          "value": "ET",
+          "text": "Ägypten"
+        },
+        {
+          "value": "AL",
+          "text": "Albanien"
+        },
+        {
+          "value": "DZ",
+          "text": "Algerien"
+        },
+        {
+          "value": "AND",
+          "text": "Andorra"
+        },
+        {
+          "value": "ANG",
+          "text": "Angola"
+        },
+        {
+          "value": "AG",
+          "text": "Antigua und Barbuda"
+        },
+        {
+          "value": "GQ",
+          "text": "Äquatorialguinea"
+        },
+        {
+          "value": "RA",
+          "text": "Argentinien"
+        },
+        {
+          "value": "AM",
+          "text": "Armenien"
+        },
+        {
+          "value": "AZ",
+          "text": "Aserbaidschan"
+        },
+        {
+          "value": "ETH",
+          "text": "Äthiopien"
+        },
+        {
+          "value": "AUS",
+          "text": "Australien"
+        },
+        {
+          "value": "BS",
+          "text": "Bahamas"
+        },
+        {
+          "value": "BRN",
+          "text": "Bahrain"
+        },
+        {
+          "value": "BD",
+          "text": "Bangladesch"
+        },
+        {
+          "value": "BDS",
+          "text": "Barbados"
+        },
+        {
+          "value": "B",
+          "text": "Belgien"
+        },
+        {
+          "value": "BH",
+          "text": "Belize"
+        },
+        {
+          "value": "DY",
+          "text": "Benin"
+        },
+        {
+          "value": "BHT",
+          "text": "Bhutan"
+        },
+        {
+          "value": "BOL",
+          "text": "Bolivien"
+        },
+        {
+          "value": "BIH",
+          "text": "Bosnien-Herzegowina"
+        },
+        {
+          "value": "BW",
+          "text": "Botsuana"
+        },
+        {
+          "value": "BR",
+          "text": "Brasilien"
+        },
+        {
+          "value": "BRU",
+          "text": "Brunei Darussalam"
+        },
+        {
+          "value": "BG",
+          "text": "Bulgarien"
+        },
+        {
+          "value": "BF",
+          "text": "Burkina Faso"
+        },
+        {
+          "value": "RU",
+          "text": "Burundi"
+        },
+        {
+          "value": "RCH",
+          "text": "Chile"
+        },
+        {
+          "value": "RC",
+          "text": "China VR"
+        },
+        {
+          "value": "CR",
+          "text": "Costa Rica"
+        },
+        {
+          "value": "CI",
+          "text": "Côte d'Ivoire"
+        },
+        {
+          "value": "DK",
+          "text": "Dänemark"
+        },
+        {
+          "value": "PRK",
+          "text": "Demokr. Volksrepublik Nordkorea"
+        },
+        {
+          "value": "WD",
+          "text": "Dominica"
+        },
+        {
+          "value": "DOM",
+          "text": "Dominikanische Rep."
+        },
+        {
+          "value": "DJI",
+          "text": "Dschibuti"
+        },
+        {
+          "value": "EC",
+          "text": "Ecuador"
+        },
+        {
+          "value": "ES",
+          "text": "El Salvador"
+        },
+        {
+          "value": "ER",
+          "text": "Eritrea"
+        },
+        {
+          "value": "EST",
+          "text": "Estland"
+        },
+        {
+          "value": "SD",
+          "text": "Eswatini"
+        },
+        {
+          "value": "FJI",
+          "text": "Fidschi"
+        },
+        {
+          "value": "FIN",
+          "text": "Finnland"
+        },
+        {
+          "value": "F",
+          "text": "Frankreich"
+        },
+        {
+          "value": "G",
+          "text": "Gabun"
+        },
+        {
+          "value": "WAG",
+          "text": "Gambia"
+        },
+        {
+          "value": "GE",
+          "text": "Georgien"
+        },
+        {
+          "value": "GH",
+          "text": "Ghana"
+        },
+        {
+          "value": "WG",
+          "text": "Grenada"
+        },
+        {
+          "value": "GR",
+          "text": "Griechenland"
+        },
+        {
+          "value": "GB",
+          "text": "Großbritannien und Nordirland"
+        },
+        {
+          "value": "GCA",
+          "text": "Guatemala"
+        },
+        {
+          "value": "RG",
+          "text": "Guinea"
+        },
+        {
+          "value": "GUB",
+          "text": "Guinea-Bissau"
+        },
+        {
+          "value": "GUY",
+          "text": "Guyana"
+        },
+        {
+          "value": "RH",
+          "text": "Haiti"
+        },
+        {
+          "value": "HN",
+          "text": "Honduras"
+        },
+        {
+          "value": "HOK",
+          "text": "Honkong (VR China)"
+        },
+        {
+          "value": "IND",
+          "text": "Indien"
+        },
+        {
+          "value": "RI",
+          "text": "Indonesien"
+        },
+        {
+          "value": "IRQ",
+          "text": "Irak"
+        },
+        {
+          "value": "IRL",
+          "text": "Irland"
+        },
+        {
+          "value": "IR",
+          "text": "Islamische Republik Iran"
+        },
+        {
+          "value": "IS",
+          "text": "Island"
+        },
+        {
+          "value": "IL",
+          "text": "Israel"
+        },
+        {
+          "value": "I",
+          "text": "Italien"
+        },
+        {
+          "value": "JA",
+          "text": "Jamaika"
+        },
+        {
+          "value": "J",
+          "text": "Japan"
+        },
+        {
+          "value": "YAR",
+          "text": "Jemen"
+        },
+        {
+          "value": "HKJ",
+          "text": "Jordanien"
+        },
+        {
+          "value": "K",
+          "text": "Kambodscha Königr."
+        },
+        {
+          "value": "CAM",
+          "text": "Kamerun"
+        },
+        {
+          "value": "CDN",
+          "text": "Kanada"
+        },
+        {
+          "value": "CV",
+          "text": "Kap Verde"
+        },
+        {
+          "value": "KAZ",
+          "text": "Kasachstan"
+        },
+        {
+          "value": "Q",
+          "text": "Katar"
+        },
+        {
+          "value": "EAK",
+          "text": "Kenia"
+        },
+        {
+          "value": "KS",
+          "text": "Kirgisistan"
+        },
+        {
+          "value": "KIR",
+          "text": "Kiribati"
+        },
+        {
+          "value": "CO",
+          "text": "Kolumbien"
+        },
+        {
+          "value": "COM",
+          "text": "Komoren"
+        },
+        {
+          "value": "COD",
+          "text": "Kongo Dem. Rep."
+        },
+        {
+          "value": "RCB",
+          "text": "Kongo Republik"
+        },
+        {
+          "value": "XK",
+          "text": "Kosovo"
+        },
+        {
+          "value": "HR",
+          "text": "Kroatien"
+        },
+        {
+          "value": "CU",
+          "text": "Kuba"
+        },
+        {
+          "value": "KWT",
+          "text": "Kuwait"
+        },
+        {
+          "value": "LAO",
+          "text": "Laos"
+        },
+        {
+          "value": "LS",
+          "text": "Lesotho"
+        },
+        {
+          "value": "LV",
+          "text": "Lettland"
+        },
+        {
+          "value": "RL",
+          "text": "Libanon"
+        },
+        {
+          "value": "LB",
+          "text": "Liberia"
+        },
+        {
+          "value": "LAR",
+          "text": "Libyen"
+        },
+        {
+          "value": "FL",
+          "text": "Liechtenstein"
+        },
+        {
+          "value": "LT",
+          "text": "Litauen"
+        },
+        {
+          "value": "L",
+          "text": "Luxemburg"
+        },
+        {
+          "value": "MAC",
+          "text": "Macau (VR China)"
+        },
+        {
+          "value": "RM",
+          "text": "Madagaskar"
+        },
+        {
+          "value": "MW",
+          "text": "Malawi"
+        },
+        {
+          "value": "MAL",
+          "text": "Malaysia"
+        },
+        {
+          "value": "MV",
+          "text": "Malediven"
+        },
+        {
+          "value": "RMM",
+          "text": "Mali"
+        },
+        {
+          "value": "M",
+          "text": "Malta"
+        },
+        {
+          "value": "MA",
+          "text": "Marokko"
+        },
+        {
+          "value": "MH",
+          "text": "Marshallinseln"
+        },
+        {
+          "value": "RIM",
+          "text": "Mauretanien"
+        },
+        {
+          "value": "MS",
+          "text": "Mauritius"
+        },
+        {
+          "value": "MEX",
+          "text": "Mexiko"
+        },
+        {
+          "value": "FSM",
+          "text": "Mikronesien Föd. St."
+        },
+        {
+          "value": "MD",
+          "text": "Moldau Republik"
+        },
+        {
+          "value": "MC",
+          "text": "Monaco"
+        },
+        {
+          "value": "MGL",
+          "text": "Mongolei"
+        },
+        {
+          "value": "MNE",
+          "text": "Montenegro"
+        },
+        {
+          "value": "MOC",
+          "text": "Mosambik"
+        },
+        {
+          "value": "BUR",
+          "text": "Myanmar"
+        },
+        {
+          "value": "NAM",
+          "text": "Namibia"
+        },
+        {
+          "value": "NAU",
+          "text": "Nauru"
+        },
+        {
+          "value": "NEP",
+          "text": "Nepal"
+        },
+        {
+          "value": "NZ",
+          "text": "Neuseeland"
+        },
+        {
+          "value": "NIC",
+          "text": "Nicaragua"
+        },
+        {
+          "value": "NL",
+          "text": "Niederlande"
+        },
+        {
+          "value": "RN",
+          "text": "Niger"
+        },
+        {
+          "value": "WAN",
+          "text": "Nigeria"
+        },
+        {
+          "value": "MK",
+          "text": "Nordmazedonien"
+        },
+        {
+          "value": "N",
+          "text": "Norwegen"
+        },
+        {
+          "value": "o_A",
+          "text": "ohne Angabe"
+        },
+        {
+          "value": "OM",
+          "text": "Oman"
+        },
+        {
+          "value": "A",
+          "text": "Österreich"
+        },
+        {
+          "value": "PK",
+          "text": "Pakistan"
+        },
+        {
+          "value": "PAL",
+          "text": "Palau"
+        },
+        {
+          "value": "PA",
+          "text": "Panama"
+        },
+        {
+          "value": "PNG",
+          "text": "Papua-Neuguinea"
+        },
+        {
+          "value": "PY",
+          "text": "Paraguay"
+        },
+        {
+          "value": "PE",
+          "text": "Peru"
+        },
+        {
+          "value": "RP",
+          "text": "Philippinen"
+        },
+        {
+          "value": "PL",
+          "text": "Polen"
+        },
+        {
+          "value": "P",
+          "text": "Portugal"
+        },
+        {
+          "value": "SDN",
+          "text": "Republik Sudan"
+        },
+        {
+          "value": "ROK",
+          "text": "Republik Südkorea"
+        },
+        {
+          "value": "RWA",
+          "text": "Ruanda"
+        },
+        {
+          "value": "R",
+          "text": "Rumänien"
+        },
+        {
+          "value": "RUS",
+          "text": "Russische Föderation"
+        },
+        {
+          "value": "SOL",
+          "text": "Salomonen"
+        },
+        {
+          "value": "RNR",
+          "text": "Sambia"
+        },
+        {
+          "value": "WS",
+          "text": "Samoa"
+        },
+        {
+          "value": "RSM",
+          "text": "San Marino"
+        },
+        {
+          "value": "STP",
+          "text": "São Tomé und Principe"
+        },
+        {
+          "value": "SA",
+          "text": "Saudi-Arabien"
+        },
+        {
+          "value": "S",
+          "text": "Schweden"
+        },
+        {
+          "value": "CH",
+          "text": "Schweiz"
+        },
+        {
+          "value": "SN",
+          "text": "Senegal"
+        },
+        {
+          "value": "SRB",
+          "text": "Serbien"
+        },
+        {
+          "value": "SY",
+          "text": "Seychellen"
+        },
+        {
+          "value": "WAL",
+          "text": "Sierra Leone"
+        },
+        {
+          "value": "ZW",
+          "text": "Simbabwe"
+        },
+        {
+          "value": "SGP",
+          "text": "Singapur"
+        },
+        {
+          "value": "SK",
+          "text": "Slowakei"
+        },
+        {
+          "value": "SLO",
+          "text": "Slowenien"
+        },
+        {
+          "value": "SO",
+          "text": "Somalia"
+        },
+        {
+          "value": "E",
+          "text": "Spanien"
+        },
+        {
+          "value": "CL",
+          "text": "Sri Lanka"
+        },
+        {
+          "value": "KAN",
+          "text": "St. Kitts und Nevis"
+        },
+        {
+          "value": "WL",
+          "text": "St. Lucia"
+        },
+        {
+          "value": "WV",
+          "text": "St. Vincent u. Grenad."
+        },
+        {
+          "value": "OHNE",
+          "text": "Staatenlos"
+        },
+        {
+          "value": "ZA",
+          "text": "Südafrika"
+        },
+        {
+          "value": "SSDN",
+          "text": "Südsudan"
+        },
+        {
+          "value": "SME",
+          "text": "Suriname"
+        },
+        {
+          "value": "SYR",
+          "text": "Syrien"
+        },
+        {
+          "value": "TJ",
+          "text": "Tadschikistan"
+        },
+        {
+          "value": "TW",
+          "text": "Taiwan"
+        },
+        {
+          "value": "EAT",
+          "text": "Tansania Ver. Rep."
+        },
+        {
+          "value": "T",
+          "text": "Thailand"
+        },
+        {
+          "value": "TL",
+          "text": "Timor-Leste"
+        },
+        {
+          "value": "TG",
+          "text": "Togo"
+        },
+        {
+          "value": "TON",
+          "text": "Tonga"
+        },
+        {
+          "value": "TT",
+          "text": "Trinidad und Tobago"
+        },
+        {
+          "value": "TD",
+          "text": "Tschad"
+        },
+        {
+          "value": "CZ",
+          "text": "Tschechische Republik"
+        },
+        {
+          "value": "TN",
+          "text": "Tunesien"
+        },
+        {
+          "value": "TR",
+          "text": "Türkei"
+        },
+        {
+          "value": "TM",
+          "text": "Turkmenistan"
+        },
+        {
+          "value": "TUV",
+          "text": "Tuvalu"
+        },
+        {
+          "value": "UEAS",
+          "text": "Übriges Asien"
+        },
+        {
+          "value": "UG",
+          "text": "Uganda"
+        },
+        {
+          "value": "UA",
+          "text": "Ukraine"
+        },
+        {
+          "value": "H",
+          "text": "Ungarn"
+        },
+        {
+          "value": "UNGEKLÄRT",
+          "text": "Ungeklärt"
+        },
+        {
+          "value": "ROU",
+          "text": "Uruguay"
+        },
+        {
+          "value": "USA",
+          "text": "USA"
+        },
+        {
+          "value": "UZ",
+          "text": "Usbekistan"
+        },
+        {
+          "value": "VAN",
+          "text": "Vánúatú"
+        },
+        {
+          "value": "V",
+          "text": "Vatikanstadt"
+        },
+        {
+          "value": "YV",
+          "text": "Venezuela"
+        },
+        {
+          "value": "UAE",
+          "text": "Ver. Arab. Emirate"
+        },
+        {
+          "value": "VN",
+          "text": "Vietnam"
+        },
+        {
+          "value": "BY",
+          "text": "Weißrussland"
+        },
+        {
+          "value": "RCA",
+          "text": "Zentralafrikan. Republik"
+        },
+        {
+          "value": "CY",
+          "text": "Zypern"
+        }
+      ],
+      "placeholder": "auswählen …"
+    },
+    {
+      "type": "dropdown",
+      "name": "Land2",
+      "title": "Zweite Staatsangehörigkeit",
+      "startWithNewLine": false,
+      "choices": [
+        {
+          "value": "D",
+          "text": "Deutschland"
+        },
+        {
+          "value": "AFG",
+          "text": "Afghanistan"
+        },
+        {
+          "value": "ET",
+          "text": "Ägypten"
+        },
+        {
+          "value": "AL",
+          "text": "Albanien"
+        },
+        {
+          "value": "DZ",
+          "text": "Algerien"
+        },
+        {
+          "value": "AND",
+          "text": "Andorra"
+        },
+        {
+          "value": "ANG",
+          "text": "Angola"
+        },
+        {
+          "value": "AG",
+          "text": "Antigua und Barbuda"
+        },
+        {
+          "value": "GQ",
+          "text": "Äquatorialguinea"
+        },
+        {
+          "value": "RA",
+          "text": "Argentinien"
+        },
+        {
+          "value": "AM",
+          "text": "Armenien"
+        },
+        {
+          "value": "AZ",
+          "text": "Aserbaidschan"
+        },
+        {
+          "value": "ETH",
+          "text": "Äthiopien"
+        },
+        {
+          "value": "AUS",
+          "text": "Australien"
+        },
+        {
+          "value": "BS",
+          "text": "Bahamas"
+        },
+        {
+          "value": "BRN",
+          "text": "Bahrain"
+        },
+        {
+          "value": "BD",
+          "text": "Bangladesch"
+        },
+        {
+          "value": "BDS",
+          "text": "Barbados"
+        },
+        {
+          "value": "B",
+          "text": "Belgien"
+        },
+        {
+          "value": "BH",
+          "text": "Belize"
+        },
+        {
+          "value": "DY",
+          "text": "Benin"
+        },
+        {
+          "value": "BHT",
+          "text": "Bhutan"
+        },
+        {
+          "value": "BOL",
+          "text": "Bolivien"
+        },
+        {
+          "value": "BIH",
+          "text": "Bosnien-Herzegowina"
+        },
+        {
+          "value": "BW",
+          "text": "Botsuana"
+        },
+        {
+          "value": "BR",
+          "text": "Brasilien"
+        },
+        {
+          "value": "BRU",
+          "text": "Brunei Darussalam"
+        },
+        {
+          "value": "BG",
+          "text": "Bulgarien"
+        },
+        {
+          "value": "BF",
+          "text": "Burkina Faso"
+        },
+        {
+          "value": "RU",
+          "text": "Burundi"
+        },
+        {
+          "value": "RCH",
+          "text": "Chile"
+        },
+        {
+          "value": "RC",
+          "text": "China VR"
+        },
+        {
+          "value": "CR",
+          "text": "Costa Rica"
+        },
+        {
+          "value": "CI",
+          "text": "Côte d'Ivoire"
+        },
+        {
+          "value": "DK",
+          "text": "Dänemark"
+        },
+        {
+          "value": "PRK",
+          "text": "Demokr. Volksrepublik Nordkorea"
+        },
+        {
+          "value": "WD",
+          "text": "Dominica"
+        },
+        {
+          "value": "DOM",
+          "text": "Dominikanische Rep."
+        },
+        {
+          "value": "DJI",
+          "text": "Dschibuti"
+        },
+        {
+          "value": "EC",
+          "text": "Ecuador"
+        },
+        {
+          "value": "ES",
+          "text": "El Salvador"
+        },
+        {
+          "value": "ER",
+          "text": "Eritrea"
+        },
+        {
+          "value": "EST",
+          "text": "Estland"
+        },
+        {
+          "value": "SD",
+          "text": "Eswatini"
+        },
+        {
+          "value": "FJI",
+          "text": "Fidschi"
+        },
+        {
+          "value": "FIN",
+          "text": "Finnland"
+        },
+        {
+          "value": "F",
+          "text": "Frankreich"
+        },
+        {
+          "value": "G",
+          "text": "Gabun"
+        },
+        {
+          "value": "WAG",
+          "text": "Gambia"
+        },
+        {
+          "value": "GE",
+          "text": "Georgien"
+        },
+        {
+          "value": "GH",
+          "text": "Ghana"
+        },
+        {
+          "value": "WG",
+          "text": "Grenada"
+        },
+        {
+          "value": "GR",
+          "text": "Griechenland"
+        },
+        {
+          "value": "GB",
+          "text": "Großbritannien und Nordirland"
+        },
+        {
+          "value": "GCA",
+          "text": "Guatemala"
+        },
+        {
+          "value": "RG",
+          "text": "Guinea"
+        },
+        {
+          "value": "GUB",
+          "text": "Guinea-Bissau"
+        },
+        {
+          "value": "GUY",
+          "text": "Guyana"
+        },
+        {
+          "value": "RH",
+          "text": "Haiti"
+        },
+        {
+          "value": "HN",
+          "text": "Honduras"
+        },
+        {
+          "value": "HOK",
+          "text": "Honkong (VR China)"
+        },
+        {
+          "value": "IND",
+          "text": "Indien"
+        },
+        {
+          "value": "RI",
+          "text": "Indonesien"
+        },
+        {
+          "value": "IRQ",
+          "text": "Irak"
+        },
+        {
+          "value": "IRL",
+          "text": "Irland"
+        },
+        {
+          "value": "IR",
+          "text": "Islamische Republik Iran"
+        },
+        {
+          "value": "IS",
+          "text": "Island"
+        },
+        {
+          "value": "IL",
+          "text": "Israel"
+        },
+        {
+          "value": "I",
+          "text": "Italien"
+        },
+        {
+          "value": "JA",
+          "text": "Jamaika"
+        },
+        {
+          "value": "J",
+          "text": "Japan"
+        },
+        {
+          "value": "YAR",
+          "text": "Jemen"
+        },
+        {
+          "value": "HKJ",
+          "text": "Jordanien"
+        },
+        {
+          "value": "K",
+          "text": "Kambodscha Königr."
+        },
+        {
+          "value": "CAM",
+          "text": "Kamerun"
+        },
+        {
+          "value": "CDN",
+          "text": "Kanada"
+        },
+        {
+          "value": "CV",
+          "text": "Kap Verde"
+        },
+        {
+          "value": "KAZ",
+          "text": "Kasachstan"
+        },
+        {
+          "value": "Q",
+          "text": "Katar"
+        },
+        {
+          "value": "EAK",
+          "text": "Kenia"
+        },
+        {
+          "value": "KS",
+          "text": "Kirgisistan"
+        },
+        {
+          "value": "KIR",
+          "text": "Kiribati"
+        },
+        {
+          "value": "CO",
+          "text": "Kolumbien"
+        },
+        {
+          "value": "COM",
+          "text": "Komoren"
+        },
+        {
+          "value": "COD",
+          "text": "Kongo Dem. Rep."
+        },
+        {
+          "value": "RCB",
+          "text": "Kongo Republik"
+        },
+        {
+          "value": "XK",
+          "text": "Kosovo"
+        },
+        {
+          "value": "HR",
+          "text": "Kroatien"
+        },
+        {
+          "value": "CU",
+          "text": "Kuba"
+        },
+        {
+          "value": "KWT",
+          "text": "Kuwait"
+        },
+        {
+          "value": "LAO",
+          "text": "Laos"
+        },
+        {
+          "value": "LS",
+          "text": "Lesotho"
+        },
+        {
+          "value": "LV",
+          "text": "Lettland"
+        },
+        {
+          "value": "RL",
+          "text": "Libanon"
+        },
+        {
+          "value": "LB",
+          "text": "Liberia"
+        },
+        {
+          "value": "LAR",
+          "text": "Libyen"
+        },
+        {
+          "value": "FL",
+          "text": "Liechtenstein"
+        },
+        {
+          "value": "LT",
+          "text": "Litauen"
+        },
+        {
+          "value": "L",
+          "text": "Luxemburg"
+        },
+        {
+          "value": "MAC",
+          "text": "Macau (VR China)"
+        },
+        {
+          "value": "RM",
+          "text": "Madagaskar"
+        },
+        {
+          "value": "MW",
+          "text": "Malawi"
+        },
+        {
+          "value": "MAL",
+          "text": "Malaysia"
+        },
+        {
+          "value": "MV",
+          "text": "Malediven"
+        },
+        {
+          "value": "RMM",
+          "text": "Mali"
+        },
+        {
+          "value": "M",
+          "text": "Malta"
+        },
+        {
+          "value": "MA",
+          "text": "Marokko"
+        },
+        {
+          "value": "MH",
+          "text": "Marshallinseln"
+        },
+        {
+          "value": "RIM",
+          "text": "Mauretanien"
+        },
+        {
+          "value": "MS",
+          "text": "Mauritius"
+        },
+        {
+          "value": "MEX",
+          "text": "Mexiko"
+        },
+        {
+          "value": "FSM",
+          "text": "Mikronesien Föd. St."
+        },
+        {
+          "value": "MD",
+          "text": "Moldau Republik"
+        },
+        {
+          "value": "MC",
+          "text": "Monaco"
+        },
+        {
+          "value": "MGL",
+          "text": "Mongolei"
+        },
+        {
+          "value": "MNE",
+          "text": "Montenegro"
+        },
+        {
+          "value": "MOC",
+          "text": "Mosambik"
+        },
+        {
+          "value": "BUR",
+          "text": "Myanmar"
+        },
+        {
+          "value": "NAM",
+          "text": "Namibia"
+        },
+        {
+          "value": "NAU",
+          "text": "Nauru"
+        },
+        {
+          "value": "NEP",
+          "text": "Nepal"
+        },
+        {
+          "value": "NZ",
+          "text": "Neuseeland"
+        },
+        {
+          "value": "NIC",
+          "text": "Nicaragua"
+        },
+        {
+          "value": "NL",
+          "text": "Niederlande"
+        },
+        {
+          "value": "RN",
+          "text": "Niger"
+        },
+        {
+          "value": "WAN",
+          "text": "Nigeria"
+        },
+        {
+          "value": "MK",
+          "text": "Nordmazedonien"
+        },
+        {
+          "value": "N",
+          "text": "Norwegen"
+        },
+        {
+          "value": "o_A",
+          "text": "ohne Angabe"
+        },
+        {
+          "value": "OM",
+          "text": "Oman"
+        },
+        {
+          "value": "A",
+          "text": "Österreich"
+        },
+        {
+          "value": "PK",
+          "text": "Pakistan"
+        },
+        {
+          "value": "PAL",
+          "text": "Palau"
+        },
+        {
+          "value": "PA",
+          "text": "Panama"
+        },
+        {
+          "value": "PNG",
+          "text": "Papua-Neuguinea"
+        },
+        {
+          "value": "PY",
+          "text": "Paraguay"
+        },
+        {
+          "value": "PE",
+          "text": "Peru"
+        },
+        {
+          "value": "RP",
+          "text": "Philippinen"
+        },
+        {
+          "value": "PL",
+          "text": "Polen"
+        },
+        {
+          "value": "P",
+          "text": "Portugal"
+        },
+        {
+          "value": "SDN",
+          "text": "Republik Sudan"
+        },
+        {
+          "value": "ROK",
+          "text": "Republik Südkorea"
+        },
+        {
+          "value": "RWA",
+          "text": "Ruanda"
+        },
+        {
+          "value": "R",
+          "text": "Rumänien"
+        },
+        {
+          "value": "RUS",
+          "text": "Russische Föderation"
+        },
+        {
+          "value": "SOL",
+          "text": "Salomonen"
+        },
+        {
+          "value": "RNR",
+          "text": "Sambia"
+        },
+        {
+          "value": "WS",
+          "text": "Samoa"
+        },
+        {
+          "value": "RSM",
+          "text": "San Marino"
+        },
+        {
+          "value": "STP",
+          "text": "São Tomé und Principe"
+        },
+        {
+          "value": "SA",
+          "text": "Saudi-Arabien"
+        },
+        {
+          "value": "S",
+          "text": "Schweden"
+        },
+        {
+          "value": "CH",
+          "text": "Schweiz"
+        },
+        {
+          "value": "SN",
+          "text": "Senegal"
+        },
+        {
+          "value": "SRB",
+          "text": "Serbien"
+        },
+        {
+          "value": "SY",
+          "text": "Seychellen"
+        },
+        {
+          "value": "WAL",
+          "text": "Sierra Leone"
+        },
+        {
+          "value": "ZW",
+          "text": "Simbabwe"
+        },
+        {
+          "value": "SGP",
+          "text": "Singapur"
+        },
+        {
+          "value": "SK",
+          "text": "Slowakei"
+        },
+        {
+          "value": "SLO",
+          "text": "Slowenien"
+        },
+        {
+          "value": "SO",
+          "text": "Somalia"
+        },
+        {
+          "value": "E",
+          "text": "Spanien"
+        },
+        {
+          "value": "CL",
+          "text": "Sri Lanka"
+        },
+        {
+          "value": "KAN",
+          "text": "St. Kitts und Nevis"
+        },
+        {
+          "value": "WL",
+          "text": "St. Lucia"
+        },
+        {
+          "value": "WV",
+          "text": "St. Vincent u. Grenad."
+        },
+        {
+          "value": "OHNE",
+          "text": "Staatenlos"
+        },
+        {
+          "value": "ZA",
+          "text": "Südafrika"
+        },
+        {
+          "value": "SSDN",
+          "text": "Südsudan"
+        },
+        {
+          "value": "SME",
+          "text": "Suriname"
+        },
+        {
+          "value": "SYR",
+          "text": "Syrien"
+        },
+        {
+          "value": "TJ",
+          "text": "Tadschikistan"
+        },
+        {
+          "value": "TW",
+          "text": "Taiwan"
+        },
+        {
+          "value": "EAT",
+          "text": "Tansania Ver. Rep."
+        },
+        {
+          "value": "T",
+          "text": "Thailand"
+        },
+        {
+          "value": "TL",
+          "text": "Timor-Leste"
+        },
+        {
+          "value": "TG",
+          "text": "Togo"
+        },
+        {
+          "value": "TON",
+          "text": "Tonga"
+        },
+        {
+          "value": "TT",
+          "text": "Trinidad und Tobago"
+        },
+        {
+          "value": "TD",
+          "text": "Tschad"
+        },
+        {
+          "value": "CZ",
+          "text": "Tschechische Republik"
+        },
+        {
+          "value": "TN",
+          "text": "Tunesien"
+        },
+        {
+          "value": "TR",
+          "text": "Türkei"
+        },
+        {
+          "value": "TM",
+          "text": "Turkmenistan"
+        },
+        {
+          "value": "TUV",
+          "text": "Tuvalu"
+        },
+        {
+          "value": "UEAS",
+          "text": "Übriges Asien"
+        },
+        {
+          "value": "UG",
+          "text": "Uganda"
+        },
+        {
+          "value": "UA",
+          "text": "Ukraine"
+        },
+        {
+          "value": "H",
+          "text": "Ungarn"
+        },
+        {
+          "value": "UNGEKLÄRT",
+          "text": "Ungeklärt"
+        },
+        {
+          "value": "ROU",
+          "text": "Uruguay"
+        },
+        {
+          "value": "USA",
+          "text": "USA"
+        },
+        {
+          "value": "UZ",
+          "text": "Usbekistan"
+        },
+        {
+          "value": "VAN",
+          "text": "Vánúatú"
+        },
+        {
+          "value": "V",
+          "text": "Vatikanstadt"
+        },
+        {
+          "value": "YV",
+          "text": "Venezuela"
+        },
+        {
+          "value": "UAE",
+          "text": "Ver. Arab. Emirate"
+        },
+        {
+          "value": "VN",
+          "text": "Vietnam"
+        },
+        {
+          "value": "BY",
+          "text": "Weißrussland"
+        },
+        {
+          "value": "RCA",
+          "text": "Zentralafrikan. Republik"
+        },
+        {
+          "value": "CY",
+          "text": "Zypern"
+        }
+      ],
+      "placeholder": "auswählen …"
+    },
+    {
+      "type": "dropdown",
+      "name": "Muttersprache",
+      "title": "Muttersprache",
+      "isRequired": true,
+      "choices": [
+        {
+          "value": "D",
+          "text": "deutsch"
+        },
+        {
+          "value": "ALB",
+          "text": "albanisch"
+        },
+        {
+          "value": "ARA",
+          "text": "arabisch"
+        },
+        {
+          "value": "BOS",
+          "text": "bosnisch"
+        },
+        {
+          "value": "BUL",
+          "text": "bulgarisch"
+        },
+        {
+          "value": "CHIN",
+          "text": "chinesisch"
+        },
+        {
+          "value": "DK",
+          "text": "dänisch"
+        },
+        {
+          "value": "E",
+          "text": "englisch"
+        },
+        {
+          "value": "EST",
+          "text": "estnisch"
+        },
+        {
+          "value": "FIN",
+          "text": "finnisch"
+        },
+        {
+          "value": "F",
+          "text": "französisch"
+        },
+        {
+          "value": "GR-N",
+          "text": "griechisch"
+        },
+        {
+          "value": "I",
+          "text": "italienisch"
+        },
+        {
+          "value": "JAP",
+          "text": "japanisch"
+        },
+        {
+          "value": "KAS",
+          "text": "kasachisch"
+        },
+        {
+          "value": "K_A",
+          "text": "keine Angabe"
+        },
+        {
+          "value": "KRO",
+          "text": "kroatisch"
+        },
+        {
+          "value": "KUR",
+          "text": "kurdisch"
+        },
+        {
+          "value": "LET",
+          "text": "lettisch"
+        },
+        {
+          "value": "LIT",
+          "text": "litauisch"
+        },
+        {
+          "value": "MAZ",
+          "text": "mazedonisch"
+        },
+        {
+          "value": "NL",
+          "text": "niederländisch"
+        },
+        {
+          "value": "PS",
+          "text": "persisch"
+        },
+        {
+          "value": "POL",
+          "text": "polnisch"
+        },
+        {
+          "value": "POR",
+          "text": "portugiesisch"
+        },
+        {
+          "value": "RUM",
+          "text": "rumänisch"
+        },
+        {
+          "value": "RU",
+          "text": "russisch"
+        },
+        {
+          "value": "S",
+          "text": "schwedisch"
+        },
+        {
+          "value": "SER",
+          "text": "serbisch"
+        },
+        {
+          "value": "SL",
+          "text": "slowakisch"
+        },
+        {
+          "value": "SLO",
+          "text": "slowenisch"
+        },
+        {
+          "value": "SOF",
+          "text": "sonstige Sprache"
+        },
+        {
+          "value": "SP",
+          "text": "spanisch"
+        },
+        {
+          "value": "T",
+          "text": "tschechisch"
+        },
+        {
+          "value": "TÜ",
+          "text": "türkisch"
+        },
+        {
+          "value": "UKR",
+          "text": "ukrainisch"
+        },
+        {
+          "value": "U",
+          "text": "ungarisch"
+        },
+        {
+          "value": "V",
+          "text": "vietnamesisch"
+        },
+        {
+          "value": "WR",
+          "text": "weißrussisch"
+        }
+      ],
+      "placeholder": "auswählen …"
+    },
+    {
+      "type": "dropdown",
+      "name": "Religion",
+      "title": "Religionszugehörigkeit",
+      "startWithNewLine": false,
+      "choices": [
+        {
+          "value": "SON-KEIN",
+          "text": "sonstige-keine Religionszugehörigkeit"
+        },
+        {
+          "value": "ALE",
+          "text": "alevitisch"
+        },
+        {
+          "value": "AK",
+          "text": "alt-katholisch"
+        },
+        {
+          "value": "EV",
+          "text": "evangelisch"
+        },
+        {
+          "value": "SYR",
+          "text": "syrisch-orthodox"
+        },
+        {
+          "value": "ISL",
+          "text": "islamisch-sunnitisch"
+        },
+        {
+          "value": "RK",
+          "text": "römisch-katholisch"
+        },
+        {
+          "value": "JÜD",
+          "text": "jüdisch"
+        },
+        {
+          "value": "K_A",
+          "text": "keine Angabe"
+        },
+        {
+          "value": "OTX",
+          "text": "orthodox (außer syrisch-orthodox)"
+        }
+      ],
+      "placeholder": "auswählen …"
+    }
+  ]
+}

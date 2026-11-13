@@ -1,0 +1,20 @@
+{
+  "type": "panel",
+  "name": "panel_kontakt",
+  "elements": [
+    {
+      "type": "text",
+      "name": "Name",
+      "title": "Name",
+      "isRequired": true
+    },
+    {
+      "type": "text",
+      "name": "email",
+      "title": "E-Mail-Adresse",
+      "isRequired": true,
+      "inputType": "email",
+      "startWithNewLine": false
+    }
+  ]
+}

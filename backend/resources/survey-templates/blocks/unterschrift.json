@@ -1,0 +1,35 @@
+{
+  "type": "panel",
+  "name": "panel_unterschrift",
+  "title": "Unterschrift",
+  "elements": [
+    {
+      "type": "checkbox",
+      "name": "confirm_truthful",
+      "title": "Bestätigung",
+      "titleLocation": "hidden",
+      "isRequired": true,
+      "requiredErrorText": "Bitte bestätigen.",
+      "choices": [
+        {
+          "value": "ja",
+          "text": "Ich bestätige, dass alle Angaben wahrheitsgemäß sind."
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Unterschrift_Ort",
+      "title": "Ort, Datum",
+      "isRequired": true
+    },
+    {
+      "type": "signaturepad",
+      "name": "Unterschrift",
+      "title": "Unterschrift",
+      "isRequired": true,
+      "requiredErrorText": "Bitte unterschreiben.",
+      "dataFormat": "png"
+    }
+  ]
+}

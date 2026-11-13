@@ -12,7 +12,7 @@
 
 import { h, createT } from './dom.js';
 import {
-    loadModel, outline, setProp, renameElement, addElement, removeElement, moveElement, moveElementTo, duplicateElement,
+    loadModel, outline, setProp, renameElement, addElement, insertBlock, removeElement, moveElement, moveElementTo, duplicateElement,
     addPage, removePage, movePage, countElements, formatPath, displayText, isChoicePath, openChoice, closeChoice,
 } from './model.js';
 import { palette, typeDef } from './registry.js';
@@ -77,8 +77,28 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         h('button', { type: 'button', class: 'btn btn-sm btn-primary dropdown-toggle', 'data-bs-toggle': 'dropdown', 'aria-expanded': 'false' }, t('toolbar.add_element')),
         menu);
 
+    // Building blocks (AP6): groups of standard fields with fixed names, from the server (config.blocks)
+    const blocks = Array.isArray(config.blocks) ? config.blocks : [];
+    const blockMenu = h('ul', { class: 'dropdown-menu sb-palette sb-blocks' });
+    for (const group of ['asv', 'general']) {
+        const inGroup = blocks.filter((b) => b.group === group);
+        if (!inGroup.length) { continue; }
+        blockMenu.append(h('li', {}, h('h6', { class: 'dropdown-header' }, t(`blocks.group.${group}`))));
+        for (const b of inGroup) {
+            blockMenu.append(h('li', {}, h('button', { type: 'button', class: 'dropdown-item sb-block-item', 'data-block': b.key, title: t(`blocks.${b.block}.description`) },
+                t(`blocks.${b.block}.title`, { n: b.param ?? '' }))));
+        }
+    }
+    blockMenu.addEventListener('click', (event) => {
+        const item = event.target.closest('[data-block]');
+        if (item) { doInsertBlock(item.getAttribute('data-block')); }
+    });
+    const addBlockBtn = h('div', { class: 'dropdown' },
+        h('button', { type: 'button', class: 'btn btn-sm btn-outline-primary dropdown-toggle', 'data-bs-toggle': 'dropdown', 'aria-expanded': 'false' }, t('toolbar.add_block')),
+        blockMenu);
+
     const toolbar = h('div', { class: 'sb-toolbar d-flex flex-wrap gap-2 align-items-center mb-3', role: 'toolbar', 'aria-label': t('toolbar.label') },
-        addElementBtn, addPageBtn, upBtn, downBtn, dupBtn, delBtn, h('span', { class: 'vr' }), undoBtn, redoBtn, size);
+        addElementBtn, ...(blocks.length ? [addBlockBtn] : []), addPageBtn, upBtn, downBtn, dupBtn, delBtn, h('span', { class: 'vr' }), undoBtn, redoBtn, size);
     const hints = h('div', { class: 'form-text mt-2' }, h('p', { class: 'mb-1' }, t('keys_hint')), h('p', { class: 'mb-1' }, t('drag_hint')),
         h('p', { class: 'mb-0' }, t('add_hint')));
     const main = h('div', { class: 'sb-main' },
@@ -121,7 +141,8 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
     }
 
     function errorMessage(result) {
-        const text = t(`err.${result.code}`, { max: result.code === 'tooDeep' ? rules.maxDepth : rules.maxElements });
+        const text = t(`err.${result.code}`, { max: result.code === 'tooDeep' ? rules.maxDepth : rules.maxElements,
+            names: (result.names ?? []).map((n) => `„${n}"`).join(', ') });
         return text.startsWith('[') ? t('err.generic') : text;
     }
 
@@ -447,6 +468,7 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         const deletable = Boolean(sel) && (Boolean(loc) || (isPagePath(sel) && pagesCount > 1));
         toolbar.querySelectorAll('button').forEach((b) => { b.disabled = !ok && !b.classList.contains('dropdown-toggle'); });
         addElementBtn.querySelector('button').disabled = !ok;
+        addBlockBtn.querySelector('button').disabled = !ok;
         upBtn.disabled = !canUp;
         downBtn.disabled = !canDown;
         delBtn.disabled = !deletable;
@@ -544,6 +566,20 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         // make sure the new element is visible: its parents are open
         if (result.ok) { state.collapsed.delete(key(parent)); }
         commitStructure(result, { select: result.path, announce: result.ok ? t('announce.added', { name: result.name }) : undefined });
+    }
+
+    function doInsertBlock(blockKey) {
+        const block = blocks.find((b) => b.key === blockKey);
+        if (!state.doc || !block) { return; }
+        // A block is a group of its own: behind a selected group, not into it (else blocks inserted one after the other
+        // would nest, each inside the one before); into a page or an answer with questions at its end.
+        const sel = state.selected;
+        const behindGroup = sel && sel.length > 2 && !isChoicePath(sel) && valueAt(state.doc, sel)?.type === 'panel';
+        const { parent, index } = behindGroup ? { parent: sel.slice(0, -2), index: sel[sel.length - 1] + 1 } : insertionPoint();
+        const result = insertBlock(state.doc, parent, index, block.element, { rules });
+        if (result.ok) { state.collapsed.delete(key(parent)); }
+        commitStructure(result, { select: result.path,
+            announce: result.ok ? t('announce.block_added', { block: t(`blocks.${block.block}.title`, { n: block.param ?? '' }), count: result.names.length }) : undefined });
     }
 
     function doAddPage() {

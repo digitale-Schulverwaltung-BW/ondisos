@@ -1,0 +1,100 @@
+{
+  "type": "panel",
+  "name": "panel_erz%N%",
+  "title": "%N%. Erziehungsberechtigte(r)",
+  "elements": [
+    {
+      "type": "dropdown",
+      "name": "Erz%N%Art",
+      "title": "Art",
+      "choices": [
+        {
+          "value": "Mu",
+          "text": "Mutter"
+        },
+        {
+          "value": "Va",
+          "text": "Vater"
+        },
+        {
+          "value": "Pf",
+          "text": "Pflegeeltern"
+        },
+        {
+          "value": "Vm",
+          "text": "Vormund"
+        }
+      ],
+      "placeholder": "auswählen …"
+    },
+    {
+      "type": "dropdown",
+      "name": "Erz%N%Geschlecht",
+      "title": "Geschlecht",
+      "startWithNewLine": false,
+      "choices": [
+        {
+          "value": "m",
+          "text": "männlich"
+        },
+        {
+          "value": "w",
+          "text": "weiblich"
+        },
+        {
+          "value": "d",
+          "text": "divers"
+        }
+      ],
+      "placeholder": "auswählen …"
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Vorname",
+      "title": "Vorname"
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Name",
+      "title": "Nachname",
+      "startWithNewLine": false
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Strasse",
+      "title": "Straße"
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%HausNr",
+      "title": "Hausnummer",
+      "startWithNewLine": false,
+      "inputSize": 6
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%PLZ",
+      "title": "PLZ",
+      "inputSize": 7
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Ort",
+      "title": "Ort",
+      "startWithNewLine": false
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Telefon",
+      "title": "Telefon",
+      "inputType": "tel"
+    },
+    {
+      "type": "text",
+      "name": "Erz%N%Email",
+      "title": "E-Mail-Adresse",
+      "inputType": "email",
+      "startWithNewLine": false
+    }
+  ]
+}

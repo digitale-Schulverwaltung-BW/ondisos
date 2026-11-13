@@ -10,6 +10,7 @@
         "label": "Werkzeuge",
         "add_page": "Seite hinzufügen",
         "add_element": "Element hinzufügen",
+        "add_block": "Baustein einfügen",
         "move_up": "Nach oben",
         "move_down": "Nach unten",
         "duplicate": "Duplizieren",
@@ -18,6 +19,52 @@
         "redo": "Wiederholen",
         "undo_keys": "Rückgängig (Strg + Z, auf dem Mac ⌘ + Z)",
         "redo_keys": "Wiederholen (Strg + Umschalt + Z oder Strg + Y, auf dem Mac ⌘ + Umschalt + Z)"
+    },
+    "blocks": {
+        "group": {
+            "asv": "Schulanmeldung (Feldnamen für ASV-BW)",
+            "general": "Allgemein"
+        },
+        "datenschutz": {
+            "title": "Datenschutz-Zustimmung",
+            "description": "Hinweis mit Link zur Datenschutzerklärung und Pflicht-Zustimmung (consent_DatenschutzOk, wird nicht gespeichert). Den Link bitte auf die Datenschutzerklärung der Schule ändern."
+        },
+        "name_email": {
+            "title": "Name und E-Mail",
+            "description": "Name und E-Mail-Adresse als Pflichtfelder, für Rückmeldungen und Veranstaltungen. Für Schulanmeldungen die Bausteine „Person\" und „Anschrift\" verwenden."
+        },
+        "person": {
+            "title": "Person",
+            "description": "Geschlecht, Vorname, Nachname, Geburtsdatum, Geburtsort, Geburtsland (ASV-Schlüssel)."
+        },
+        "herkunft": {
+            "title": "Staatsangehörigkeit, Sprache, Religion",
+            "description": "Staatsangehörigkeit (auch eine zweite), Muttersprache, Religionszugehörigkeit (ASV-Schlüssel)."
+        },
+        "anschrift": {
+            "title": "Anschrift und Kontakt",
+            "description": "Straße, Hausnummer, PLZ, Ort, Telefon, Mobiltelefon, E-Mail; der Teilort wird beim Export ermittelt."
+        },
+        "erziehungsberechtigte": {
+            "title": "Erziehungsberechtigte(r) {{n}}",
+            "description": "Art (Mutter, Vater, Pflegeeltern, Vormund), Geschlecht, Name, Anschrift, Telefon, E-Mail. Alleinerziehende als Erziehungsberechtigte(r) 1 eintragen."
+        },
+        "vorbildung": {
+            "title": "Schulische Vorbildung",
+            "description": "Höchster Schulabschluss (ASV-Schlüssel) und zuletzt besuchte Schule."
+        },
+        "ausbildungsbetrieb": {
+            "title": "Ausbildungsbetrieb",
+            "description": "Ausbildungsbetrieb und Ausbilder. ASV ordnet sie nur zu, wenn Betrieb und Ausbilder dort schon erfasst sind."
+        },
+        "unterschrift": {
+            "title": "Unterschrift",
+            "description": "Bestätigung der Angaben, Ort und Datum, Unterschriftsfeld."
+        },
+        "anmerkungen": {
+            "title": "Anmerkungen",
+            "description": "Freies Textfeld für Anmerkungen."
+        }
     },
     "palette_group": {
         "input": "Eingabe",
@@ -36,7 +83,7 @@
     "select_hint": "Wählen Sie links eine Seite oder ein Element, um es zu bearbeiten.",
     "keys_hint": "Pfeiltasten: Auswahl · Alt + ↑/↓: verschieben, am Rand in die nächste Gruppe oder Seite · Alt + →: in die Gruppe darüber · Alt + ←: aus der Gruppe oder Antwort · Strg + D: duplizieren · Strg + Z: rückgängig · Entf: löschen · Enter: Eigenschaften · Esc: zurück zur Liste (auf dem Mac ⌘ statt Strg)",
     "drag_hint": "Mit der Maus: Elemente und Seiten ziehen. Auf eine Seite gezogen landet ein Element an deren Anfang, auf die Mitte einer Gruppe gezogen in der Gruppe.",
-    "add_hint": "Neue Elemente erscheinen hinter dem gewählten Element, bei einer Seite oder Gruppe an deren Ende.",
+    "add_hint": "Neue Elemente erscheinen hinter dem gewählten Element, bei einer Seite oder Gruppe an deren Ende. Bausteine kommen auch hinter eine gewählte Gruppe, nicht hinein.",
     "size": "Größe: {{kb}} KB von {{max}} KB · {{count}} von {{max_elements}} Elementen",
     "size_warn": "Die Survey nähert sich der Obergrenze des Servers.",
     "invalid": "Das JSON ist nicht lesbar: {{message}} (Zeile {{line}}, Spalte {{column}}). Bitte im Tab „JSON\" korrigieren.",
@@ -280,7 +327,8 @@
         "undone": "Rückgängig gemacht",
         "redone": "Wiederhergestellt",
         "choice_opened": "Die Antwort kann jetzt Fragen enthalten",
-        "choice_closed": "Die Antwort ist wieder eine einfache Antwort"
+        "choice_closed": "Die Antwort ist wieder eine einfache Antwort",
+        "block_added": "Baustein eingefügt: {{block}} ({{count}} Elemente)"
     },
     "new": {
         "title": "Neue Frage",
@@ -311,6 +359,7 @@
         "notEmpty": "Die Antwort enthält noch Elemente.",
         "intoItself": "Eine Gruppe kann nicht in sich selbst verschoben werden.",
         "lastPage": "Die letzte Seite kann nicht gelöscht werden.",
+        "blockNamesTaken": "Der Baustein wurde nicht eingefügt: {{names}} gibt es in dieser Survey schon. Die Namen eines Bausteins sind fest (Export, ASV); bitte das vorhandene Feld verwenden oder zuerst entfernen.",
         "implicitPage": "Diese Survey hat keine Seiten (die Elemente stehen direkt im Dokument): bitte im Tab „JSON\" ändern."
     }
 }
