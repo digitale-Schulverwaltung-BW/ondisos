@@ -51,18 +51,97 @@ function errorText(ctx, result, def) {
     return text.startsWith('[') ? ctx.t('err.generic') : text;
 }
 
-/** Wraps a control with its label, help text and error area. */
+// ---- explanations behind an (i) ----------------------------------------------------------------------------------------
+//
+// A static explanation sits behind a small (i) button next to its control (a "toggletip"): hovering shows it, a click
+// keeps it open, Esc or a click elsewhere closes it. The text stays in the DOM (hidden), so the control still names it via
+// aria-describedby. What reports state (errors, counts, a disallowed tag, other languages) stays visible below the control.
+
+const openTips = new Set();
+let outsideListener = false;
+
+function closeTip(tip) {
+    tip.el.hidden = true;
+    tip.pinned = false;
+    tip.button.setAttribute('aria-expanded', 'false');
+    openTips.delete(tip);
+}
+
+function listenOutside() {
+    if (outsideListener) { return; }
+    outsideListener = true;
+    document.addEventListener('pointerdown', (e) => {
+        for (const tip of [...openTips]) {
+            if (!tip.button.contains(e.target) && !tip.el.contains(e.target)) { closeTip(tip); }
+        }
+    });
+}
+
+/** The (i) button and its hidden text; `id` is the text's id (for aria-describedby). */
+export function infoTip(ctx, id, text) {
+    const el = h('div', { class: 'sb-tip', id, role: 'note', hidden: true }, text);
+    const button = h('button', { type: 'button', class: 'sb-info', 'aria-label': ctx.t('info'), 'aria-expanded': 'false', 'aria-controls': id }, 'i');
+    const tip = { el, button, pinned: false };
+    let timer = 0;
+    const show = () => {
+        clearTimeout(timer);
+        el.hidden = false;
+        button.setAttribute('aria-expanded', 'true');
+        openTips.add(tip);
+        listenOutside();
+    };
+    const hideSoon = () => {
+        clearTimeout(timer);
+        if (!tip.pinned) { timer = setTimeout(() => { if (!tip.pinned) { closeTip(tip); } }, 150); }
+    };
+    button.addEventListener('mouseenter', show);
+    button.addEventListener('mouseleave', hideSoon);
+    el.addEventListener('mouseenter', () => clearTimeout(timer));
+    el.addEventListener('mouseleave', hideSoon);
+    button.addEventListener('click', () => {
+        if (tip.pinned) { closeTip(tip); return; }
+        show();
+        tip.pinned = true;
+    });
+    button.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !el.hidden) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeTip(tip);
+        }
+    });
+    return { button, el };
+}
+
+/** The explanation of a property (help.<name>), or null when there is none. */
+function helpOf(ctx, def) {
+    const help = ctx.t(`help.${def.name}`);
+    return help.startsWith('[') ? null : help;
+}
+
+function describe(control, ...ids) {
+    const list = [...(control.getAttribute('aria-describedby') ?? '').split(' '), ...ids].filter(Boolean);
+    if (list.length) { control.setAttribute('aria-describedby', [...new Set(list)].join(' ')); }
+}
+
+/**
+ * One row of the panel: label | control | (i), notes (errors, state) below the control.
+ * `help` replaces the property's own explanation (null: none); `label: null` leaves the label column empty.
+ */
 function field(ctx, def, id, control, extra = {}) {
-    const label = ctx.t(`prop.${def.name}`);
-    const helpKey = `help.${def.name}`;
-    const help = ctx.t(helpKey);
-    const helpId = `${id}-help`;
-    const hasHelp = !help.startsWith('[');
-    return h('div', { class: 'mb-3', 'data-prop': def.name },
-        h('label', { class: 'form-label', for: id }, label),
-        control,
-        hasHelp ? h('div', { class: 'form-text', id: helpId }, help) : null,
-        extra.notes ?? null);
+    const label = extra.label === undefined ? ctx.t(`prop.${def.name}`) : extra.label;
+    const help = extra.help === undefined ? helpOf(ctx, def) : extra.help;
+    const tip = help ? infoTip(ctx, `${id}-help`, help) : null;
+    const notes = [extra.notes ?? []].flat().filter(Boolean);
+    notes.forEach((n) => n.classList.add('sb-note'));
+    const target = control.matches?.('input, select, textarea') ? control : control.querySelector?.('input, select, textarea');
+    if (target) { describe(target, tip ? `${id}-help` : null, ...notes.map((n) => n.id).filter(Boolean)); }
+    return h('div', { class: 'sb-field', 'data-prop': extra.prop ?? def.name },
+        label === null ? h('span', { class: 'sb-field-label' }) : h('label', { class: 'sb-field-label', for: id }, label),
+        h('div', { class: 'sb-field-control' }, control),
+        tip ? tip.button : h('span', { class: 'sb-info-slot' }),
+        notes,
+        tip ? tip.el : null);
 }
 
 /**
@@ -95,7 +174,7 @@ function commitOnChange(input, getValue, commit, box, ctx, def, stored) {
 function nameControl(ctx, def) {
     const id = nextId(def.name);
     const box = errorBox(`${id}-err`);
-    const input = h('input', { type: 'text', class: 'form-control', id, value: ctx.value.name ?? '', autocomplete: 'off', spellcheck: 'false', 'aria-describedby': `${id}-help ${id}-err` });
+    const input = h('input', { type: 'text', class: 'form-control', id, value: ctx.value.name ?? '', autocomplete: 'off', spellcheck: 'false', 'aria-describedby': `${id}-err` });
     commitOnChange(input, () => input.value, (v) => ctx.rename(v), box, ctx, def, () => ctx.value.name ?? '');
     return field(ctx, def, id, input, { notes: box });
 }
@@ -125,7 +204,7 @@ function htmlControl(ctx, def) {
     const box = errorBox(`${id}-err`);
     const input = h('textarea', { class: 'form-control font-monospace', id, rows: 6, value: displayText(ctx.value[def.name]), spellcheck: 'false' });
     const allowed = Object.keys(ctx.rules.htmlTags ?? {});
-    const hint = h('div', { class: 'form-text' }, ctx.t('help.html', { tags: allowed.map((x) => `<${x}>`).join(' ') }));
+    const hint = ctx.t('help.html', { tags: allowed.map((x) => `<${x}>`).join(' ') });
     const warn = h('div', { class: 'form-text text-danger', role: 'status', hidden: true });
     const check = () => {
         const bad = [...new Set([...input.value.matchAll(ALLOWED_TAG)].map((m) => m[1].toLowerCase()).filter((n) => !allowed.includes(n)))];
@@ -135,8 +214,7 @@ function htmlControl(ctx, def) {
     input.addEventListener('input', check);
     check();
     commitOnChange(input, () => input.value, (v) => ctx.commit(def.name, v), box, ctx, def, () => displayText(ctx.value[def.name]));
-    const label = ctx.t(`prop.${def.name}`);
-    return h('div', { class: 'mb-3', 'data-prop': def.name }, h('label', { class: 'form-label', for: id }, label), input, hint, warn, box);
+    return field(ctx, def, id, input, { help: hint, notes: [warn, box] });
 }
 
 function booleanControl(ctx, def) {
@@ -153,11 +231,17 @@ function booleanControl(ctx, def) {
             setError(box, input, '');
         }
     });
-    const wrapper = h('div', { class: 'mb-2 form-check form-switch', 'data-prop': def.name },
-        input, h('label', { class: 'form-check-label', for: id }, ctx.t(`prop.${def.name}`)), box);
-    const help = ctx.t(`help.${def.name}`);
-    if (!help.startsWith('[')) { wrapper.append(h('div', { class: 'form-text' }, help)); }
-    return wrapper;
+    const sw = h('div', { class: 'form-check form-switch mb-0' }, input, h('label', { class: 'form-check-label', for: id }, ctx.t(`prop.${def.name}`)));
+    return field(ctx, def, id, sw, { label: null, notes: box });
+}
+
+/** The "required" switch next to the heading (same behaviour as booleanControl, compact). */
+function requiredSwitch(ctx, def) {
+    const row = booleanControl(ctx, def);
+    const sw = row.querySelector('.form-switch');
+    const box = row.querySelector('.sb-error');
+    const tip = row.querySelector('.sb-info');
+    return h('div', { class: 'sb-required', 'data-prop': def.name }, sw, tip, box, row.querySelector('.sb-tip'));
 }
 
 function numberControl(ctx, def) {
@@ -363,11 +447,10 @@ function choicesControl(ctx, def) {
         if (result.ok) { count.textContent = ctx.t('help.choices_count', { count: next.length }); }
         return result;
     }, box, ctx, def, () => current().map(choiceToLine).join('\n'));
-    const label = ctx.t('prop.choices');
-    return h('div', { class: 'mb-3', 'data-prop': 'choices' },
-        h('label', { class: 'form-label', for: id }, label), input, count,
-        h('div', { class: 'form-text' }, ctx.t(nested ? 'help.choices_nested' : advanced ? 'help.choices_advanced' : 'help.choices')), box,
-        ctx.openChoice && supportsChoiceElements(ctx.typeName) ? openChoiceControl(ctx, current) : null);
+    const help = ctx.t(nested ? 'help.choices_nested' : advanced ? 'help.choices_advanced' : 'help.choices');
+    const row = field(ctx, def, id, input, { help, notes: [count, box] });
+    if (!(ctx.openChoice && supportsChoiceElements(ctx.typeName))) { return row; }
+    return h('div', {}, row, openChoiceControl(ctx, current));
 }
 
 /** Answers without questions, as [index, line]: the ones that can get questions. */
@@ -385,7 +468,7 @@ function openChoiceControl(ctx, current) {
         if ([...select.options].some((o) => o.value === keep)) { select.value = keep; }
         button.disabled = select.options.length === 0;
     };
-    const select = h('select', { class: 'form-select form-select-sm', id, 'aria-describedby': `${id}-help ${id}-err` });
+    const select = h('select', { class: 'form-select form-select-sm', id });
     const button = h('button', { type: 'button', class: 'btn btn-sm btn-outline-secondary text-nowrap' }, ctx.t('choices_open.button'));
     select.addEventListener('focus', fill);
     button.addEventListener('click', () => {
@@ -394,10 +477,11 @@ function openChoiceControl(ctx, current) {
         if (!result.ok) { setError(box, select, errorText(ctx, result, null)); }
     });
     fill();
-    return h('div', { class: 'mt-2', 'data-sb-open-choice': '' },
-        h('label', { class: 'form-label small mb-1', for: id }, ctx.t('choices_open.label')),
-        h('div', { class: 'input-group input-group-sm' }, select, button),
-        h('div', { class: 'form-text', id: `${id}-help` }, ctx.t('choices_open.help')), box);
+    const row = field(ctx, { name: 'open-choice' }, id, h('div', { class: 'input-group input-group-sm' }, select, button),
+        { label: ctx.t('choices_open.label'), help: ctx.t('choices_open.help'), notes: box, prop: 'open-choice' });
+    row.removeAttribute('data-prop');
+    row.setAttribute('data-sb-open-choice', '');
+    return row;
 }
 
 const CONTROLS = {
@@ -427,7 +511,11 @@ export function buildProperties(ctx) {
     const def = ctx.typeName === 'page' ? PAGE : typeDef(ctx.typeName);
     const root = h('div', { class: 'sb-props-body' });
     const typeLabel = ctx.t(`type.${ctx.typeName}`);
-    root.append(h('h2', { class: 'h5 mb-1' }, def ? typeLabel : String(ctx.typeName ?? '?')));
+    const head = h('div', { class: 'sb-props-head' }, h('h2', { class: 'h5 mb-0' }, def ? typeLabel : String(ctx.typeName ?? '?')));
+    root.append(head);
+    // "required" is the one switch nearly every question needs: it sits next to the heading, not in the list
+    const required = def?.props.find((p) => p.name === 'isRequired');
+    if (required) { head.append(requiredSwitch(ctx, required)); }
 
     if (ctx.findings.length) {
         root.append(h('div', { class: `alert alert-${ctx.findings.some((f) => f.severity === 'error') ? 'danger' : 'warning'} py-2 small sb-findings`, role: 'status' },
@@ -440,14 +528,14 @@ export function buildProperties(ctx) {
     } else {
         const groups = ['general', 'layout', 'logic'];
         for (const group of groups) {
-            const props = def.props.filter((p) => p.group === group);
+            const props = def.props.filter((p) => p.group === group && p !== required);
             if (props.length === 0) { continue; }
             const controls = props.map((p) => CONTROLS[p.kind]?.(ctx, p)).filter(Boolean);
             if (group === 'general') {
-                root.append(h('section', { class: 'mt-3', 'aria-label': ctx.t('group.general') }, controls));
+                root.append(h('section', { class: 'mt-3 sb-fields', 'aria-label': ctx.t('group.general') }, controls));
             } else {
                 root.append(h('details', { class: 'mt-2 sb-group', open: hasAny(ctx.value, props) },
-                    h('summary', { class: 'fw-semibold mb-2' }, ctx.t(`group.${group}`)), controls));
+                    h('summary', { class: 'fw-semibold mb-2' }, ctx.t(`group.${group}`)), h('div', { class: 'sb-fields' }, controls)));
             }
         }
     }

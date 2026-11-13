@@ -613,6 +613,7 @@ return [
             'dataFormat' => ['png' => 'PNG'],
         ],
         'other_value' => '(anderer Wert: {{value}})',
+        'info' => 'Erläuterung anzeigen',
         'other_langs' => 'Weitere Sprachen bleiben unverändert: {{list}}.',
         'unknown_props' => 'Weitere Eigenschaften (nur im Tab „JSON" änderbar): {{list}}',
         'unknown_type' => 'Der Elementtyp „{{type}}" wird im grafischen Editor nicht bearbeitet. Verschieben und Löschen sind möglich, alles andere im Tab „JSON".',

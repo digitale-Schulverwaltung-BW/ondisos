@@ -59,3 +59,55 @@
 /* An answer option that holds questions (choices[].elements): a row under its question, its questions below it. */
 .sb-item.sb-choice .sb-label { font-style: italic; }
 .sb-item.sb-choice { cursor: pointer; }
+
+/* Properties panel: one row per property, label | control | (i); notes (errors, counts) under the control. */
+.sb-props { container-type: inline-size; }
+.sb-props-head { display: flex; flex-wrap: wrap; align-items: center; column-gap: 1.25rem; row-gap: .25rem; }
+.sb-required { display: flex; align-items: center; gap: .4rem; position: relative; }
+.sb-required .sb-error { flex-basis: 100%; }
+
+.sb-field {
+    display: grid;
+    grid-template-columns: 8.5rem minmax(0, 1fr) 1.25rem;
+    column-gap: .75rem;
+    align-items: start;
+    margin-bottom: .6rem;
+    position: relative;
+}
+.sb-field-label { padding-top: calc(.375rem + 1px); line-height: 1.5; overflow-wrap: anywhere; }
+.sb-field .form-switch { padding-top: .35rem; }
+.sb-field .sb-info, .sb-field .sb-info-slot { margin-top: .55rem; }
+.sb-field .sb-note { grid-column: 2 / 4; }
+.sb-field .form-text.sb-note { margin-top: .2rem; }
+.sb-fields > .sb-field:last-child { margin-bottom: 0; }
+.sb-group > .sb-fields { margin-bottom: .5rem; }
+
+@container (max-width: 24rem) {
+    .sb-field { grid-template-columns: minmax(0, 1fr) 1.25rem; }
+    .sb-field-label { grid-column: 1 / -1; padding-top: 0; margin-bottom: .2rem; }
+    .sb-field-label:empty { display: none; }
+    .sb-field .sb-note { grid-column: 1 / -1; }
+}
+
+/* The (i) button and the explanation it shows (hover: preview, click: stays open). */
+.sb-info {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 1.25rem; height: 1.25rem; padding: 0; flex: none;
+    border: 1px solid var(--bs-secondary-color); border-radius: 50%;
+    background: transparent; color: var(--bs-secondary-color);
+    font: italic 600 .75rem/1 Georgia, "Times New Roman", serif;
+    cursor: help;
+}
+.sb-info:hover, .sb-info[aria-expanded="true"] { color: var(--bs-primary); border-color: var(--bs-primary); }
+.sb-info:focus-visible { outline: 2px solid var(--bs-primary); outline-offset: 2px; }
+.sb-tip {
+    position: absolute; top: calc(100% + .25rem); right: 0; z-index: 20;
+    width: max-content; max-width: min(24rem, 100%);
+    padding: .5rem .75rem; font-size: .875rem; line-height: 1.4;
+    background: var(--bs-body-bg); color: var(--bs-body-color);
+    border: 1px solid var(--bs-border-color); border-radius: .375rem;
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .15);
+}
+.sb-tip[hidden] { display: none; }
+.sb-field .sb-tip { top: 2.6rem; }
+.sb-required .sb-tip { top: calc(100% + .25rem); left: 0; right: auto; max-width: 20rem; }
