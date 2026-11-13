@@ -46,8 +46,7 @@
         {
           "type": "text",
           "name": "Klasse",
-          "visible": false,
-          "setValueExpression": "iif({_Ausbildungsberuf} = 'y_E0BT_I', 'y_E0BT', {_Ausbildungsberuf})"
+          "visible": false
         },
         {
           "type": "panel",

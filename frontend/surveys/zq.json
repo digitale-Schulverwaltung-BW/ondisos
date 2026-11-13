@@ -784,7 +784,7 @@
               "type": "dropdown",
               "name": "Erz1Geschlecht",
               "title": "Anrede",
-              "requiredIf": "{Alter} < 18",
+              "requiredIf": "{age} < 18",
               "choices": [
                 {
                   "value": "M",
@@ -806,7 +806,7 @@
               "name": "Erz1Vorname",
               "title": "Vorname",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
@@ -817,14 +817,14 @@
                 "default": "Name"
               },
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
               "name": "Erz1Strasse",
               "title": "Straße",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
@@ -832,14 +832,14 @@
               "startWithNewLine": false,
               "title": "Hausnummer",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
               "name": "Erz1PLZ",
               "title": "PLZ",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
@@ -847,14 +847,14 @@
               "startWithNewLine": false,
               "title": "Ort",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18"
+              "requiredIf": "{age} < 18"
             },
             {
               "type": "text",
               "name": "Erz1Telefon",
               "title": "Telefonnummer/mobil",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18",
+              "requiredIf": "{age} < 18",
               "inputType": "tel"
             },
             {
@@ -863,7 +863,7 @@
               "startWithNewLine": false,
               "title": "E-Mail",
               "titleLocation": "left",
-              "requiredIf": "{Alter} < 18",
+              "requiredIf": "{age} < 18",
               "inputType": "email"
             }
           ]
