@@ -300,9 +300,11 @@ if ($report !== null) {
 }
 ?>
 <script type="application/json" id="survey-diagnostics"><?= json_encode($diagnostics, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
+<?php $assets = \App\Utils\AssetVersion::forPublic(); ?>
 <?php if (is_file(__DIR__ . '/assets/codemirror/survey-editor-cm.js')): ?>
-<script src="assets/codemirror/survey-editor-cm.js"></script>
+<script src="<?= $assets->url('assets/codemirror/survey-editor-cm.js') ?>"></script>
 <?php endif; ?>
-<script src="assets/survey-editor.js"></script>
-<script type="module" src="assets/theme-editor.js"></script>
+<script src="<?= $assets->url('assets/survey-editor.js') ?>"></script>
+<?= $assets->importMapTag(['assets', 'assets/survey-builder', 'assets/theme-editor'], \App\Utils\ContentSecurityPolicy::nonce()) ?>
+<script type="module" src="<?= $assets->url('assets/theme-editor.js') ?>"></script>
 <?php require __DIR__ . '/../inc/footer.php'; ?>

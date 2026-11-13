@@ -152,7 +152,8 @@ function se_line(?int $line): string
 require __DIR__ . '/../inc/header.php';
 ?>
 
-<link href="assets/survey-builder/builder.css" rel="stylesheet">
+<?php $assets = \App\Utils\AssetVersion::forPublic(); ?>
+<link href="<?= $assets->url('assets/survey-builder/builder.css') ?>" rel="stylesheet">
 <div class="container mt-4 mb-5" id="se-page">
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -400,9 +401,10 @@ if ($report !== null) {
 ?>
 <script type="application/json" id="survey-diagnostics"><?= json_encode($diagnostics, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?></script>
 <?php if (is_file(__DIR__ . '/assets/codemirror/survey-editor-cm.js')): ?>
-<script src="assets/codemirror/survey-editor-cm.js"></script>
+<script src="<?= $assets->url('assets/codemirror/survey-editor-cm.js') ?>"></script>
 <?php endif; ?>
-<script src="assets/survey-editor.js"></script>
+<script src="<?= $assets->url('assets/survey-editor.js') ?>"></script>
 <script type="application/json" id="builder-config"><?= sb_json($builderConfig) ?></script>
-<script type="module" src="assets/survey-builder/app.js"></script>
+<?= $assets->importMapTag(['assets/survey-builder'], \App\Utils\ContentSecurityPolicy::nonce()) ?>
+<script type="module" src="<?= $assets->url('assets/survey-builder/app.js') ?>"></script>
 <?php require __DIR__ . '/../inc/footer.php'; ?>

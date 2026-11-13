@@ -66,7 +66,11 @@ class SurveyBuilderPageTest extends TestCase
         $this->assertStringContainsString("inc/survey_builder_tabs.php", $php);
         $this->assertStringContainsString('id="builder-config"', $php);
         $this->assertStringContainsString('sb_json($builderConfig)', $php);
-        $this->assertStringContainsString('<script type="module" src="assets/survey-builder/app.js"></script>', $php);
+        $this->assertStringContainsString('<script type="module" src="<?= $assets->url(\'assets/survey-builder/app.js\') ?>"></script>', $php);
+        // the modules it imports are versioned by an import map, which must come before the first module script
+        $map = strpos($php, "importMapTag(['assets/survey-builder']");
+        $this->assertNotFalse($map);
+        $this->assertLessThan(strpos($php, '<script type="module"'), $map);
         $this->assertStringContainsString('assets/survey-builder/builder.css', $php);
         // the tabs sit inside the one form that posts the text
         $this->assertGreaterThan(strpos($php, 'id="survey-form"'), strpos($php, 'inc/survey_builder_tabs.php'));

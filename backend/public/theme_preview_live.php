@@ -49,7 +49,8 @@ if ($theme !== null) {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= ff_e(M::get('live_preview.theme_title', 'Live-Vorschau Theme')) ?> · <?= ff_e($name) ?></title>
     <link href="assets/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="assets/survey-builder/live-window.css" rel="stylesheet">
+    <?php $assets = \App\Utils\AssetVersion::forPublic(); ?>
+    <link href="<?= $assets->url('assets/survey-builder/live-window.css') ?>" rel="stylesheet">
 </head>
 <body class="lp-body">
 <?php if ($theme === null): ?>
@@ -69,7 +70,8 @@ if ($theme !== null) {
     $liveThemeMissing = false;
     require __DIR__ . '/../inc/live_preview_window.php';
     ?>
-    <script type="module" src="assets/survey-builder/live-window.js"></script>
+    <?= $assets->importMapTag(['assets/survey-builder'], \App\Utils\ContentSecurityPolicy::nonce()) ?>
+    <script type="module" src="<?= $assets->url('assets/survey-builder/live-window.js') ?>"></script>
 <?php endif; ?>
 </body>
 </html>
