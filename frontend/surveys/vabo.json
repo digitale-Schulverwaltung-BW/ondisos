@@ -46,7 +46,8 @@
         {
           "type": "text",
           "name": "Klasse",
-          "visible": false
+          "visible": false,
+          "defaultValue": "VABO"
         },
         {
           "type": "panel",
