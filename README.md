@@ -82,7 +82,7 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 
 Danach fehlen noch der **Admin-Zugang** (Passwort-Hash in der `.env`), das erste **Formular** (im Backend, aus einer Vorlage) und das **Frontend** mit `API_SECRET_KEY` als `TENANT_API_SECRET`.
 Diese Schritte, Prüfungen und Stolperfallen (Hash in einfachen Anführungszeichen!) stehen vollständig in der
-**[Installationsanleitung](docs/betreiber/installation.md)**. Ein Upgrade von 2.x oder 3.0 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md) und [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md).
+**[Installationsanleitung](docs/betreiber/installation.md)**. Ein Upgrade von 2.x, 3.0 oder 3.1 beschreiben [MIGRATION-3.0](docs/betreiber/MIGRATION-3.0.md), [MIGRATION-3.1](docs/betreiber/MIGRATION-3.1.md) und [MIGRATION-3.2](docs/betreiber/MIGRATION-3.2.md).
 
 **Voraussetzungen im Überblick:** Backend: Docker – oder PHP 8.2+, MySQL 8.0+/MariaDB 10.5+, Composer, Erweiterungen `pdo_mysql`, `mbstring`, `gd`.
 Frontend: PHP 8.0+ und Apache/Nginx – oder ein WordPress.

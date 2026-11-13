@@ -4,7 +4,7 @@ Diese Anleitung richtet das **Backend** in Produktion ein: Verwaltungsoberfläch
 Das Frontend (Formulare für Besucher) läuft getrennt; wie beide zusammenspielen, beschreibt das [Betriebsmodell](betriebsmodell.md).
 Ohne Docker: [installation-ohne-docker.md](installation-ohne-docker.md).
 
-> **Von 2.x oder 3.0?** Nicht diese Anleitung, sondern [MIGRATION-3.0.md](MIGRATION-3.0.md) bzw. [MIGRATION-3.1.md](MIGRATION-3.1.md).
+> **Von 2.x, 3.0 oder 3.1?** Nicht diese Anleitung, sondern [MIGRATION-3.0.md](MIGRATION-3.0.md) bzw. [MIGRATION-3.1.md](MIGRATION-3.1.md); von 3.1: [MIGRATION-3.2.md](MIGRATION-3.2.md).
 
 ## Voraussetzungen
 

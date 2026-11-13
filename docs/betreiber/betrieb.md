@@ -23,7 +23,7 @@ Ab 3.2.0a installiert der Container deshalb beim Start die Pakete neu, sobald si
 Dafür braucht er beim ersten Start nach einem solchen Update Zugang zum Internet (Packagist, GitHub). Ohne Internet steht im Log `⚠️ composer install FAILED`, und das Backend läuft mit den alten Paketen weiter:
 Funktionen mit neuen Paketen scheitern dann mit `Class "…" not found` (siehe [Weitere Fehlerbilder](#weitere-fehlerbilder)). Vor 3.2.0a wurden neue Pakete nach einem `git pull` gar nicht installiert.
 
-Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.1.md](MIGRATION-3.1.md), [Upgrade auf 3.1.2](../entwicklung/releases/RELEASE-NOTES-3.1.2.md#upgrade-von-311).
+Das Backend zuerst, danach die Frontends ([Betriebsmodell](betriebsmodell.md#betrieb-im-alltag)). Hinweise zu einzelnen Versionen: [MIGRATION-3.2.md](MIGRATION-3.2.md), [MIGRATION-3.1.md](MIGRATION-3.1.md), [Upgrade auf 3.1.2](../entwicklung/releases/RELEASE-NOTES-3.1.2.md#upgrade-von-311).
 Ändert sich das Compose-File, genügt `docker compose up -d` (nicht `restart`).
 
 **PHP-Sicherheitsupdates:** Das Image baut auf `php:8.2-apache` auf. Ohne `--pull` verwendet `docker compose up -d --build` die lokal zwischengespeicherte Fassung dieses Images weiter,

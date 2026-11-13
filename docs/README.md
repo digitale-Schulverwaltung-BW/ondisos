@@ -57,6 +57,7 @@ Das Backend installieren, Schulen einrichten, sichern und aktualisieren.
 | [zwei-faktor.md](betreiber/zwei-faktor.md) | Zwei-Faktor-Anmeldung (Authenticator-App): wer, Einführung mit Schonfrist, Einrichten, Wiederherstellung |
 | [notfall.md](betreiber/notfall.md) | Notfall-Handbuch: Ausfall, Datenbank, Datenverlust, Sicherheitsvorfall, Speicher, Update-Rückfall |
 | [MULTI-TENANT.md](betreiber/MULTI-TENANT.md) | Mehrere Schulen betreiben, neuen Tenant einrichten |
+| [MIGRATION-3.2.md](betreiber/MIGRATION-3.2.md) | Upgrade 3.1 → 3.2: grafischer Editor, Unterschrift per Smartphone, Theme-Editor, SurveyJS 3, Signaturmodus `strict` |
 | [MIGRATION-3.1.md](betreiber/MIGRATION-3.1.md) | Upgrade 3.0 → 3.1: Formular-Editor, Cache, CLI |
 | [MIGRATION-3.0.md](betreiber/MIGRATION-3.0.md) | Upgrade 2.x → 3.0: Mehrmandantenfähigkeit |
 | [../backend/PDF_SETUP.md](../backend/PDF_SETUP.md) | PDF-System einrichten und testen |
