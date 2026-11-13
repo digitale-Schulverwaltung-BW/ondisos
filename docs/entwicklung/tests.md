@@ -190,6 +190,21 @@ http://intranet.example.com/backend/dashboard.php
 # Sollte zeigen: Letzter Lauf, Nächster Lauf, Anzahl bereit
 ```
 
+**Theme-Editor (3.2.0b):**
+```bash
+# Formulare → Design (Themes) → Design bearbeiten
+http://intranet.example.com/backend/themes.php
+
+# 1. Markenfarbe im Feld ändern: JSON ändert nur diese Zeile(n), Strg/⌘+Z im JSON nimmt es zurück
+# 2. Live-Vorschau ↗: folgt der ungespeicherten Änderung; Formular oben wechseln; kaputtes JSON → Hinweis, letzter Stand bleibt
+# 3. Konflikt: dasselbe Theme in zwei Browsern (zwei Admins) öffnen, in A veröffentlichen, dann in B
+#    → B speichert nicht, zeigt den Unterschied zum neuen Stand; erneut veröffentlichen klappt
+# 4. Schul-Admin (Tenant A): sieht nur Themes von A; theme_edit.php?name=… eines Themes nur von Tenant B → „gibt es nicht“
+# 5. Hintergrundbild https://example.org/bild.jpg bzw. url(//…) im JSON → „Prüfen“ zeigt den Datenschutz-Hinweis, Veröffentlichen geht
+# 6. Veröffentlichen → Standalone-Frontend und WordPress-Seite [ondisos form="…"] zeigen die neue Farbe (Cache: ETag wechselt)
+# 7. Verlauf → Wiederherstellen → alte Farbe im Frontend
+```
+
 ## Testlücken und Ziele
 
 Welche Bereiche noch keine Tests haben und was als Nächstes ansteht, führt [TODO.md](TODO.md#testlücken).

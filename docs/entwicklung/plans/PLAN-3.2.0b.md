@@ -1,6 +1,6 @@
 # PLAN 3.2.0b – Theme-Editor im Backend
 
-**Status:** in Arbeit (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12) bis [AP4](#ap4-ergebnis-2026-11-13) erledigt, als Nächstes AP5 (Doku und Abschluss). Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
+**Status:** umgesetzt (Stand 2026-11-13); [AP0](#ap0-ergebnis-2026-11-12) bis [AP5](#ap5-ergebnis-2026-11-13) erledigt. Die manuelle Testliste ist vollständig durchlaufen. Gehört zum Formular-Release 3.2.0 ([PLAN-3.2.0.md](PLAN-3.2.0.md)), ist davon aber unabhängig umsetzbar; es nutzt nur die Live-Vorschau aus AP4a.
 Die Aufwände sind Schätzungen für eine Person; **AP0** soll sie belegen oder korrigieren.
 
 ## Ausgangslage
@@ -204,6 +204,24 @@ Dazu Sonderfälle (alte Variablen, Titel-Verknüpfung, Halbierung der Schriftgr�
 **Im Dev-Stack geprüft** (Playwright mit Chrome): Das gespeicherte Theme im alten Format erscheint in den Feldern mit Hinweis; Markenfarbe und Schriftgröße über die Felder geändert ⇒ JSON mit `--sjs2-*`, alte Schlüssel genau dieser Felder entfernt, Vorschau folgt; nichts veröffentlicht.
 
 **Beobachtung:** CodeMirror fasst Änderungen, die weniger als 0,5 s auseinanderliegen, zu einem Rückgängig-Schritt zusammen; schnelle Feldänderungen nimmt ein Ctrl+Z also gemeinsam zurück.
+
+## AP5-Ergebnis (2026-11-13)
+
+**Umgesetzt:**
+- [SURVEYJS.md](../../redaktion/SURVEYJS.md#design-theme-ändern): Abschnitt „Design (Theme) ändern“ mit Liste und Rollen, Einstellungen und JSON (Feldtabelle, Kontrast, gesperrte Felder), Prüfen/Live-Vorschau/Veröffentlichen mit Konflikt und Verlauf, ältere Themes, Schriften (`font-src 'self'`) und Bilder; Verweise aus Live-Vorschau, „Zusammenhang“ und Fallback-Abschnitt.
+- [MIGRATION-3.1.md](../../betreiber/MIGRATION-3.1.md): Import für Themes nur noch zur Übernahme; `--overwrite` von `import-surveys.php` und `copy-forms.php` legt den alten Stand in den Theme-Verlauf, `copy-forms.php` ohne `--overwrite` lässt ein abweichendes Theme stehen.
+- [TODO.md](../TODO.md): „Theme im SurveyJS-3-Format“ nennt den Weg im Editor; offen bleiben die Fallback-Datei `frontend/surveys/survey_theme.json` und die Kontrastfrage der Vorgabe. Der Eintrag „Theme-Editor im Backend“ ist entfallen.
+- `HelpLinks`: `themes.php` (ein Thema) und `theme_edit.php` (drei Themen); `messages.example.php`: auskommentiertes Beispiel für `theme_editor`; [changelog.md](../changelog.md): Abschnitt „Theme-Editor (3.2.0b)“; [tests.md](../tests.md#manual-tests): manuelle Tests für den Theme-Editor.
+
+**Tests:** Unit 1380 grün, darunter `DocsLinksTest` und `HelpLinksTest` (prüft die neuen Anker).
+
+**Manuelle Testliste** ([tests.md](../tests.md#manual-tests)), vollständig durchlaufen:
+- Punkte 1, 2, 5, 6 (Standalone-Frontend) und 7 im Dev-Stack bei AP2 bis AP4.
+- Punkte 3, 4 und 6 (WordPress) am 2026-11-13 mit Playwright und Chrome. Beteiligt waren der Platform-Admin und ein neu angelegter Schul-Admin von Tenant 2. WordPress lief im lokalen Test-Stack mit dem Plugin-ZIP aus `make plugin-zip`.
+  - **Konflikt:** Beide Admins öffnen dasselbe Theme. Der Schul-Admin veröffentlicht, danach scheitert die Veröffentlichung des Platform-Admins mit der Konfliktmeldung und dem Unterschied; sein Text bleibt im Editor, die Datenbank behält den Stand des Schul-Admins. Ein zweites *Veröffentlichen* gelingt.
+  - **Trennung:** Der Schul-Admin sieht in der Liste nur die Formulare seiner Schule (`bk`, `bs`) und hat keinen Tenant-Umschalter. Ein nachgebauter `switch_tenant`-POST mit gültigem CSRF-Token bleibt ohne Wirkung, `tenants.php` lehnt ab. Seine Veröffentlichung ändert nur Tenant 2, die Themes von Tenant 1 und 3 bleiben unverändert (SHA geprüft).
+  - **WordPress:** Nach dem Veröffentlichen einer neuen Markenfarbe (Tenant 1) zeigen die WordPress-Seite `[ondisos form="unterschrift_demo"]` und das Standalone-Frontend sofort die neue Farbe (Variable und Button).
+  - Danach wurden Themes und Verlauf aus einer Sicherung auf den vorherigen Stand zurückgesetzt.
 
 ## Tests
 

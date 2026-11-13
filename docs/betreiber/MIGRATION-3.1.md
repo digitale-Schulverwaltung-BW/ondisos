@@ -38,6 +38,11 @@ es beschreibt, was beim Update zu tun ist. **Kein Schritt ist zwingend**: ohne �
 
    Sobald eine Survey in der Datenbank liegt, hat sie Vorrang vor der Datei; die Dateien bleiben als Fallback (Abschaffung ohne Termin).
 
+   **Themes ab 3.2.0:** Der Import dient nur noch der Übernahme. Danach ändern Schul-Admins das Design im Backend
+   (*Formulare → Design (Themes)*, [SURVEYJS.md](../redaktion/SURVEYJS.md#design-theme-ändern)); ein Theme, das noch nicht im Backend liegt, entsteht dort mit der ersten Veröffentlichung.
+   `import-surveys.php --overwrite` und `copy-forms.php --overwrite` ersetzen eine im Backend gepflegte Fassung; der alte Stand liegt dann im Verlauf des Themes
+   („Stand vor dem Import“ bzw. „Stand vor dem Kopieren“) und lässt sich dort wiederherstellen. `copy-forms.php` ohne `--overwrite` lässt ein abweichendes Theme der Zielschule unverändert.
+
 4. `seed-forms.php` kennt jetzt `--tenant=<slug>` (bisher nur Tenant 1) und prüft jeden Eintrag: ungültige Einträge
    (fehlendes `form`/`theme`, kaputte E-Mail-Adresse, unzulässiger Formular-Schlüssel, …) werden gemeldet und nicht gespeichert,
    der Exit-Code ist dann 1. Vorhandene Formulare werden weiterhin nie überschrieben.

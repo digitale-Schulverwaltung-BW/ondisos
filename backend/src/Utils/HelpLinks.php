@@ -69,6 +69,14 @@ final class HelpLinks
             'form_preview.php' => [
                 ['label' => 'Vorschau', 'path' => self::SURVEYJS . '#vorschau'],
             ],
+            'themes.php' => [
+                ['label' => 'Design (Theme) ändern', 'path' => self::SURVEYJS . '#design-theme-ändern'],
+            ],
+            'theme_edit.php' => [
+                ['label' => 'Einstellungen und JSON', 'path' => self::SURVEYJS . '#einstellungen-und-json'],
+                ['label' => 'Prüfen, Vorschau, Veröffentlichen', 'path' => self::SURVEYJS . '#prüfen-vorschau-veröffentlichen'],
+                ['label' => 'Ältere Themes, Schriften und Bilder', 'path' => self::SURVEYJS . '#ältere-themes-und-eigene-schriften-oder-bilder'],
+            ],
             'form_pdf_preview.php' => [
                 ['label' => 'PDF-Bestätigung gestalten', 'path' => self::PDF],
             ],

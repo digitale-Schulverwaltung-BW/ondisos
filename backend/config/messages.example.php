@@ -82,4 +82,17 @@ return [
     // 'excel' => [
     //     'system_name' => 'Meine Schule Anmeldungssystem',
     // ],
+
+    /**
+     * Theme Editor (Formulare → Design)
+     * =================================
+     * Override texts of the theme editor if needed, e.g. to name your
+     * school's colour rules next to the fields.
+     */
+    // 'theme_editor' => [
+    //     'fields' => [
+    //         'brand_help' => 'Unsere Hausfarbe: #00507d (Corporate Design).',
+    //     ],
+    //     'list_help' => 'Farben und Schrift unserer Anmeldeformulare.',
+    // ],
 ];

@@ -15,6 +15,10 @@
   - [Vorschau](#vorschau)
   - [Live-Vorschau](#live-vorschau)
   - [Verlauf und Wiederherstellen](#verlauf-und-wiederherstellen)
+- [Design (Theme) ändern](#design-theme-ändern)
+  - [Einstellungen und JSON](#einstellungen-und-json)
+  - [Prüfen, Vorschau, Veröffentlichen](#prüfen-vorschau-veröffentlichen)
+  - [Ältere Themes und eigene Schriften oder Bilder](#ältere-themes-und-eigene-schriften-oder-bilder)
 - [Zusammenhang: Formular-Konfiguration ↔ Survey](#zusammenhang-formular-konfiguration--survey)
 - [Surveys als Dateien (Fallback)](#surveys-als-dateien-fallback)
 
@@ -160,7 +164,7 @@ Mit großem Bildschirm legen Sie das Fenster neben den Editor; ein zweiter Klick
 - **Ausgeblendete zeigen:** Elemente, deren Bedingung gerade nicht erfüllt ist, erscheinen dann trotzdem (blass). Ebenso die Fragen in Antworten, die nicht gewählt sind: Jede Antwort mit Fragen ist dann aufgeklappt. Ohne den Schalter prüfen Sie Bedingungen durch Ausfüllen.
 - Die Vorschau zeigt nur, was die Prüfung des Servers erlaubt. Ist der Text gerade kein gültiges JSON oder lehnt die Prüfung ihn ab, bleibt der letzte gute Stand stehen und ein gelber Hinweis nennt den Grund.
 
-Gespeichert wird dabei nichts: Speichern und Veröffentlichen bleiben im Editor. Das Theme (Farben, Schrift) kommt wie in der Vorschau aus dem Backend.
+Gespeichert wird dabei nichts: Speichern und Veröffentlichen bleiben im Editor. Das Theme (Farben, Schrift) kommt wie in der Vorschau aus dem Backend; ein geändertes Theme sehen Sie in der Live-Vorschau des [Theme-Editors](#prüfen-vorschau-veröffentlichen).
 
 So sieht das Formular für Besucher aus:
 
@@ -172,10 +176,74 @@ Jede Veröffentlichung landet im **Verlauf** unterhalb des Editors (Tabelle mit 
 legt das System zuerst den bisherigen Stand als „Stand vor der Änderung“ ab. Mit **Wiederherstellen** (nach Rückfrage) wird ein früherer Stand zum aktuellen Formular; der Vorgang erscheint im Verlauf
 als „Wiederhergestellt aus Revision #…“, nichts geht verloren. Die Konfiguration (Reiter **Info** im Formular-Editor) hat einen eigenen Verlauf.
 
+## Design (Theme) ändern
+
+Farben, Schrift, Ecken und Kartenstil der Formulare legt das **Theme** fest (ab Version 3.2). Ein Theme gilt für **alle Formulare der Schule, die es nutzen**; meist teilen sich alle Formulare das Theme `survey_theme.json`.
+Schul-Admins und Plattform-Admins ändern es im Backend: **Formulare → Design (Themes) → Design bearbeiten**.
+
+Die Liste zeigt jedes Theme, das ein Formular in seiner Konfiguration nennt, mit **Stand** und **Genutzt von**:
+
+- **Im Backend:** Das Backend liefert dieses Theme an Frontend und WordPress-Plugin aus.
+- **Noch nicht angelegt:** Ein Formular nennt das Theme, im Backend liegt aber keines. Das Formular nutzt dann die Datei im Frontend, falls vorhanden.
+  Beim Bearbeiten steht die eingebaute Vorgabe im Editor; mit der ersten Veröffentlichung übernimmt das Backend.
+
+Welches Theme ein Formular nutzt (*Theme-Datei* in der Konfiguration), ändern nur Plattform-Admins. Ein neues Theme entsteht, indem ein Plattform-Admin einen neuen Namen bei einem Formular einträgt;
+es erscheint dann in der Liste als „Noch nicht angelegt“. Löschen lässt sich ein Theme nicht.
+
+### Einstellungen und JSON
+
+Oben stehen die üblichen **Einstellungen** als Felder, darunter das vollständige **Theme (JSON)**. Das JSON ist maßgeblich: Die Felder lesen daraus und schreiben hinein, alles andere im JSON bleibt unverändert.
+Rückgängig (Strg+Z bzw. ⌘+Z im JSON) nimmt auch eine Änderung an einem Feld zurück. Ein leeres Feld bedeutet: Standard von SurveyJS.
+
+| Feld | Wirkung |
+|---|---|
+| **Markenfarbe** | Buttons, Auswahl, Fokus und Links; helle und dunkle Töne leitet SurveyJS daraus ab. Hex (`#00a3d7`) oder `rgb(…)` |
+| **Hintergrund** | die Fläche hinter den Fragen |
+| **Formulartitel in der Markenfarbe** | der Titel folgt der Markenfarbe, auch wenn diese sich später ändert |
+| **Fragen als Karten (mit Schatten)** | aus: Fragen ohne Kartenrahmen und Schatten |
+| **Schrift** | Open Sans (mitgeliefert), Systemschrift oder eine eigene Angabe (siehe unten) |
+| **Schriftgröße** | 14 bis 20 px |
+| **Ecken (Radius in px)** | ein Wert für Karten, Buttons und Eingabefelder; 0 für eckig |
+| **Hintergrundbild**, **Deckkraft**, **Bild anpassen** | Adresse eines Bildes, Deckkraft in Prozent, „Fläche füllen“, „Ganz zeigen“ oder „Originalgröße“ |
+
+Liegt der Kontrast der Markenfarbe zu Weiß unter 4,5 : 1, erscheint ein Hinweis: Schrift auf Buttons und Links ist dann schwer lesbar (WCAG AA verlangt mindestens 4,5 : 1).
+Das Blau der eingebauten Vorgabe liegt bei etwa 2,9 : 1; eine dunklere Markenfarbe ist barrierefreier.
+
+Ist ein Wert im JSON so geschrieben, dass das Feld ihn nicht darstellen kann (etwa eine Farbe mit Transparenz oder vier unterschiedliche Radien), ist das Feld gesperrt und nennt den Wert; ändern Sie ihn dann im JSON.
+Ist das JSON gerade nicht lesbar, sind alle Felder gesperrt, bis es wieder stimmt.
+
+Alles, wofür es kein Feld gibt, ändern Sie im JSON. Ein Theme aus dem **SurveyJS Theme Editor** (Website, Reiter „JSON“) lässt sich dort einfügen und danach mit den Feldern nachjustieren.
+**Auf Vorgabe zurücksetzen** ersetzt den Text im Editor durch die eingebaute Vorgabe; gespeichert wird dabei nichts.
+
+### Prüfen, Vorschau, Veröffentlichen
+
+1. **Prüfen** meldet Fehler mit Zeile und Spalte (kein gültiges JSON, kein Objekt, zu groß, HTML, `javascript:`- oder `data:`-Adressen) und Hinweise (Ressourcen von fremden Servern), zeigt den Unterschied zur veröffentlichten Fassung und nennt die betroffenen Formulare. Gespeichert wird nichts.
+2. **Live-Vorschau ↗** öffnet ein Formular, das dieses Theme nutzt, in einem eigenen Fenster mit dem Theme aus dem Editor, auch ungespeichert, und folgt jeder Änderung. Oben wählen Sie das Formular;
+   Formulare ohne veröffentlichte Survey im Backend lassen sich nicht wählen. Ist der Text gerade ungültig, bleibt der letzte gute Stand stehen und ein Hinweis nennt den Grund.
+3. **Veröffentlichen** (mit optionaler **Anmerkung für den Verlauf**) prüft den Text, speichert ihn und macht ihn sofort in allen genannten Formularen sichtbar, im Frontend wie im WordPress-Plugin. Die Rückfrage nennt die betroffenen Formulare.
+
+Einen gespeicherten Entwurf gibt es beim Theme nicht: Was nicht veröffentlicht ist, steht nur im Editor (beim Verlassen der Seite fragt der Browser nach).
+Hat jemand anderes das Theme inzwischen veröffentlicht, wird Ihre Änderung nicht gespeichert; die Seite zeigt den Unterschied zum neuen Stand, danach lässt sich erneut veröffentlichen.
+
+Der **Verlauf** unter dem Editor führt jede Veröffentlichung (der aktuelle Stand ist markiert) und wie beim Survey-Editor den Stand vor der ersten Änderung im Backend. **Wiederherstellen** macht nach Rückfrage einen früheren Stand wieder aktuell;
+der bisherige Stand bleibt im Verlauf. Auch ein Import mit `--overwrite` (`import-surveys.php`, `copy-forms.php`) legt den alten Stand dort ab.
+
+### Ältere Themes und eigene Schriften oder Bilder
+
+**Ältere Themes:** Themes aus SurveyJS 2 (Variablen `--sjs-*`) funktionieren weiter; SurveyJS übersetzt Markenfarbe, Schrift, Schriftgröße und Radius. Titel, Kartenstil und Hintergrund folgen aber
+den neuen Standardwerten von SurveyJS 3 (dunkler Titel, abgerundete Karten mit Rahmen, getönter Hintergrund). Ein Feld, dessen Wert aus dem älteren Format stammt, sagt das; beim Ändern stellt es die Angabe auf das neue Format (`--sjs2-*`) um.
+Das alte Aussehen bekommen Sie am einfachsten mit **Auf Vorgabe zurücksetzen** und danach Ihrer Markenfarbe.
+
+**Schriften:** Ein Theme kann keine Schrift laden. Mitgeliefert ist Open Sans; eine eigene Angabe (z. B. `Arial, sans-serif`) wirkt nur, wenn die Schrift auf dem Gerät der Besucher installiert ist.
+Das Standalone-Frontend lädt Schriften ohnehin nur vom eigenen Server (Content-Security-Policy `font-src 'self'`).
+
+**Bilder:** Legen Sie ein Hintergrundbild am besten auf den eigenen Server (z. B. `/bilder/hintergrund.jpg`). Ein Bild oder eine andere Ressource von einem fremden Server meldet **Prüfen** als Datenschutz-Hinweis:
+Der Browser jeder Besucherin und jedes Besuchers fragt dann bei diesem Server an. Blockiert wird es nicht.
+
 ## Zusammenhang: Formular-Konfiguration ↔ Survey
 
 Der Schlüssel der Formular-Konfiguration (`form_key`) bestimmt den URL-Parameter (`?form=<key>`) und den WordPress-Shortcode (`[ondisos form="<key>"]`). Die Konfiguration
-verweist mit *Survey-Datei* und *Theme-Datei* auf die Survey und das Design-Theme (Name, z. B. `bs.json` und `survey_theme.json`); beides liegt als Ressource im Backend.
+verweist mit *Survey-Datei* und *Theme-Datei* auf die Survey und das Design-Theme (Name, z. B. `bs.json` und `survey_theme.json`); beides liegt als Ressource im Backend. Den Inhalt des Themes ändern Sie unter [Design (Theme) ändern](#design-theme-ändern).
 
 Die Konfiguration wird im Formular-Editor (**Formulare → Bearbeiten**) in Reitern gepflegt: *Allgemein*, *Benachrichtigungs-E-Mail*, *PDF-Bestätigung*, *Kalender-Download (iCal)* und *Info*.
 
@@ -213,5 +281,7 @@ php backend/import-surveys.php [--tenant=<slug>] [--overwrite] [--dry-run] front
 docker compose cp frontend/surveys backend:/tmp/surveys
 docker compose exec backend php import-surveys.php /tmp/surveys
 ```
+
+Für Themes ist der Import nur noch für die Übernahme gedacht; danach ändern Sie das Design im Backend ([Design (Theme) ändern](#design-theme-ändern)). Ein späterer Import mit `--overwrite` ersetzt die Fassung aus dem Backend; der alte Stand liegt dann im Verlauf des Themes.
 
 Details und Upgrade-Hinweise: [MIGRATION-3.1.md](../betreiber/MIGRATION-3.1.md). Der Datei-Fallback soll später entfallen (kein Termin); die Dateien bleiben dann nur Importquelle.

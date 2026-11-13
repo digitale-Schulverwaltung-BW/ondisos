@@ -13,13 +13,14 @@ die Projektübersicht in der [README](README.md).
 - **Signierte API:** Das Frontend authentifiziert sich pro Tenant mit HMAC-SHA256 (`X-Signature`) und nennt den Tenant per `?tenant=<slug>`. Der Slug adressiert, die Signatur autorisiert. Das Secret (`tenants.api_secret`) bleibt serverseitig.
 - **Formular-Konfiguration in der Datenbank** (`form_configs`); das Frontend holt sie per `GET /api/form-config.php` (mit `?with=survey` samt veröffentlichter Survey und Theme, ETag, Cache, Stale-if-error).
 - **Formulare im Backend pflegen (3.1):** Konfiguration als HTML-Formular, Survey-Editor (einfügen → prüfen → Entwurf → Vorschau → veröffentlichen, mit Verlauf). Surveys und Themes liegen in `form_resources`; `frontend/surveys/` ist Fallback und Importquelle.
+  Das Theme (Farben, Schrift) ändern beide Admin-Rollen unter *Formulare → Design* (`themes.php`, `theme_edit.php`; Felder plus JSON, kein Entwurf; 3.2.0b).
   Der SurveyJS-Creator ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md).
 
 ## Orientierung im Repository
 
 ```
 backend/                       Admin-Oberfläche und API (Namespace App\*)
-  public/                      Web-Root: index, detail, trash, dashboard, forms*, form_*, tenants, excel_export, login, pdf/, api/ (submit, upload, form-config, forms, health)
+  public/                      Web-Root: index, detail, trash, dashboard, forms*, form_*, themes, theme_*, tenants, excel_export, login, pdf/, api/ (submit, upload, form-config, forms, health)
   src/Config · Models · Repositories · Controllers · Services · Forms (reine Logik) · Cli · Validators · Utils
   inc/                         bootstrap, auth, csrf, header/footer, Editor-Helfer
   templates/pdf/               PDF-Vorlagen (mPDF)
@@ -97,7 +98,7 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 - Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale eingebunden).
 - Mehrere Docker-Stacks aus demselben Verzeichnis teilen sich `backend/.env`, die der Entrypoint bei jedem Start neu schreibt ([docker-entwicklung.md](docs/entwicklung/docker-entwicklung.md)).
 
-**Geplant:** grafischer Survey-Editor im Backend (3.2.0, [PLAN-3.2.0.md](docs/entwicklung/plans/PLAN-3.2.0.md)), Theme-Editor im Backend (3.2.0b, [PLAN-3.2.0b.md](docs/entwicklung/plans/PLAN-3.2.0b.md)), Abnahme der Unterschrift per Smartphone (3.2.0a umgesetzt, Geräte-Tests offen; [PLAN-3.2.0a.md](docs/entwicklung/plans/PLAN-3.2.0a.md)), Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
+**Geplant:** grafischer Survey-Editor im Backend (3.2.0, [PLAN-3.2.0.md](docs/entwicklung/plans/PLAN-3.2.0.md)), Abnahme der Unterschrift per Smartphone (3.2.0a umgesetzt, Geräte-Tests offen; [PLAN-3.2.0a.md](docs/entwicklung/plans/PLAN-3.2.0a.md)), Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
 Monitoring, OpenAPI-Beschreibung. *Option, nicht geplant:* Managed Multi-Frontend (ein Frontend für mehrere Tenants; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen).
 
 ## Dokumentationskarte
