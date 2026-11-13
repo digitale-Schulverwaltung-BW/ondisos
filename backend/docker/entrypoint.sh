@@ -125,6 +125,16 @@ if { [ "${AUTH_ENABLED:-true}" = "true" ] || [ "${MULTI_TENANT_ENABLED:-false}" 
     echo "    and set ADMIN_PASSWORD_HASH='...' (single quotes) in the root .env."
 fi
 
+# Signature format of the frontend API: strict (format 2 only) is the default since 3.2.0. Not managed above,
+# so a value the operator put into .env survives the regeneration; report what is in effect.
+signature_mode=$(grep -E '^API_SIGNATURE_MODE=' .env 2>/dev/null | tail -n 1 | cut -d= -f2 | tr -d "\"' ")
+signature_mode=${signature_mode:-${API_SIGNATURE_MODE:-strict}}
+if [ "$signature_mode" = "compat" ]; then
+    echo "⚠️  API_SIGNATURE_MODE=compat: signature format 1 (replayable) is still accepted. Switch to strict once the audit log shows no more api_legacy_signature."
+else
+    echo "ℹ️  API_SIGNATURE_MODE=strict: only signature format 2 is accepted (set API_SIGNATURE_MODE=compat in .env only as a stopgap for frontends not yet updated)."
+fi
+
 # Install/update Composer dependencies.
 # docker-compose.yml mounts ./backend over /var/www/html, so vendor/ comes from the host and hides the
 # image's vendor/. After a git pull that changes composer.lock, the new packages must be installed here

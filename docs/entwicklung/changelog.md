@@ -5,6 +5,9 @@ Versionsübersicht. Details zu 3.1.2: [Release Notes](releases/RELEASE-NOTES-3.1
 
 ## 3.2.0a (auf `main` seit 2026-11-11; Versionsnummer und Tag folgen)
 
+**Sicherheit (3.2.0)**
+- ✅ `API_SIGNATURE_MODE=strict` ist Standard (`SignatureVerifier::DEFAULT_MODE`, `.env.example`): Signaturformat 1 wird nur noch mit ausdrücklich gesetztem `compat` angenommen; fehlt der Wert oder ist er ungültig, gilt `strict`. Vor dem Update im Audit-Log nach `api_legacy_signature` suchen; der Docker-Start meldet den wirksamen Modus. Frontends und Plugins ab 3.1.2 senden Format 2. Details: [sicherheit.md](sicherheit.md#signierte-api-signaturformat-2-312)
+
 **Funktionen**
 - ✅ Unterschrift per Smartphone: Unterschriftsfelder (`signaturepad`, PNG) zeigen am Rechner einen QR-Code; unterschrieben wird auf Smartphone oder Tablet, die Unterschrift erscheint als Vorschau und wird erst nach *Übernehmen* zum Feldwert. Schalter `signature_handoff` in der Formular-Konfiguration (Editor: *Allgemein*), Standard aus. Größe und Farben wie das Feld am Rechner; Standalone (`sign.php`, `api/signature.php`) und WordPress-Plugin (`admin-ajax.php?action=ondisos_sign` / `ondisos_sig`). Redaktion: [SURVEYJS.md](../redaktion/SURVEYJS.md#auf-dem-smartphone-unterschreiben), Plan: [PLAN-3.2.0a.md](plans/PLAN-3.2.0a.md)
 - ✅ Backend: Tabelle `signature_handoffs` (`php migrate.php`), Endpunkt `api/signature-handoff.php` (nur Signaturformat 2, Rate-Limit je Aktion), `SignatureHandoffService`/`-Repository`; Frontend: `SignatureRelay` (auch im Plugin); Audit-Ereignis `signature_handoff_rejected`. Details: [sicherheit.md](sicherheit.md#unterschrift-per-smartphone-320a)
