@@ -174,6 +174,11 @@ test('the registry covers every property the existing surveys use, except the fe
     ]);
 });
 
+test('every element type has an icon for the palette, and there are no icons for types that do not exist', async () => {
+    const { ICONS } = await import('../../public/assets/survey-builder/icons.js');
+    assert.deepEqual(Object.keys(ICONS).sort(), Object.keys(TYPES).sort());
+});
+
 test('lookups', () => {
     assert.equal(isKnownType('text'), true);
     assert.equal(isKnownType('matrix'), false);

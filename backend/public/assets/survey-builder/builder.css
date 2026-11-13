@@ -118,3 +118,7 @@
 .sb-item.sb-survey.sb-selected { background: var(--bs-primary-bg-subtle); }
 .sb-survey .sb-label { font-weight: 600; }
 
+/* Palette "Element hinzufügen": a small icon of each element type in front of its name. */
+.sb-palette-item { display: flex; align-items: center; gap: .6rem; }
+.sb-icon { flex: none; width: 1rem; height: 1rem; color: var(--bs-secondary-color); }
+.sb-palette-item:hover .sb-icon, .sb-palette-item:focus .sb-icon, .sb-palette-item:active .sb-icon { color: currentColor; }

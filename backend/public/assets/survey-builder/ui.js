@@ -19,6 +19,7 @@ import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
 import { findReferences, validateName } from './names.js';
 import { buildProperties } from './ui-props.js';
+import { typeIcon } from './icons.js';
 import { createHistory } from './history.js';
 
 const EMPTY_SURVEY = '{\n  "pages": [\n    {\n      "name": "page1",\n      "elements": []\n    }\n  ]\n}';
@@ -64,7 +65,7 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
     for (const group of palette()) {
         menu.append(h('li', {}, h('h6', { class: 'dropdown-header' }, t(`palette_group.${group.group}`))));
         for (const type of group.types) {
-            menu.append(h('li', {}, h('button', { type: 'button', class: 'dropdown-item', 'data-type': type.type }, t(`type.${type.type}`))));
+            menu.append(h('li', {}, h('button', { type: 'button', class: 'dropdown-item sb-palette-item', 'data-type': type.type }, typeIcon(type.type), t(`type.${type.type}`))));
         }
     }
     menu.addEventListener('click', (event) => {
