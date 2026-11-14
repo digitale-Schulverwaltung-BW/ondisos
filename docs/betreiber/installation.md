@@ -12,7 +12,7 @@ Ohne Docker: [installation-ohne-docker.md](installation-ohne-docker.md).
 |---|---|
 | **Server** | Linux (Ubuntu 22.04 LTS oder Debian 11+ empfohlen), mindestens 2 GB RAM (empfohlen 4 GB), 20 GB freier Speicher |
 | **Docker** | Docker Engine 20.10+ mit **Compose-Plugin ≥ 2.24** (`docker compose version`) |
-| **Netz** | Port 9080 (Backend) für das Frontend bzw. den vorgeschalteten Reverse-Proxy (Einstellung `BACKEND_PORT`, Bindung `BACKEND_BIND`); MySQL wird **nicht** nach außen veröffentlicht |
+| **Netz** | Port 9080 (Backend) für das Frontend bzw. den vorgeschalteten Reverse-Proxy (Einstellung `BACKEND_PORT`, Bindung `BACKEND_BIND`: im Produktions-Overlay standardmäßig nur `127.0.0.1`, für Frontends auf anderen Servern `0.0.0.0` plus Firewall); MySQL wird **nicht** nach außen veröffentlicht |
 | **Trennung** | Backend und Frontend nicht auf derselben Maschine betreiben: Die Docker-Volumes sind auf dem Host lesbar, bei einem Einbruch wären die Daten offen |
 
 Docker installieren (Ubuntu/Debian, Skript vorher ansehen; Alternativen: [Docker-Dokumentation](https://docs.docker.com/engine/install/)):
@@ -56,7 +56,8 @@ nano .env       # DB_PASS und MYSQL_ROOT_PASSWORD setzen
 `DB_USER` und `DB_NAME` müssen Sie nicht ändern; Docker Compose übernimmt sie automatisch für die Datenbank (`MYSQL_USER` usw.).
 **Die `.env` gehört nicht ins Repository** (sie steht in der `.gitignore`).
 
-**Wichtig:** Bekannte Platzhalter (`CHANGE_ME_IN_PRODUCTION`, `dev-api-key-replace-in-production`) werden im Produktionsbetrieb nicht akzeptiert.
+**Wichtig:** Bekannte Platzhalter (`CHANGE_ME_IN_PRODUCTION`, `dev-api-key-replace-in-production`, für `PDF_TOKEN_SECRET` die Vorgabe aus `.env.example`) werden im Produktionsbetrieb nicht akzeptiert.
+Mit einem solchen `PDF_TOKEN_SECRET` bietet das Backend keine PDF-Bestätigung an; der Start meldet `❌ PDF_TOKEN_SECRET is empty or a default from the repository`.
 Mit einem solchen `API_SECRET_KEY` bricht die Migration ab, und der Container startet in einer Schleife neu; im Log steht
 `Error: API_SECRET_KEY is a known default/placeholder`.
 
@@ -72,6 +73,11 @@ docker compose logs -f backend          # Strg+C beendet die Anzeige
 Das Produktions-Overlay (`docker-compose.prod.yml`) setzt `APP_ENV=production`, `AUTH_ENABLED=true`, Ressourcen-Limits, einen Healthcheck und startet
 bei jedem Neustart des Servers automatisch (`restart: unless-stopped`). Beim Start läuft die Datenbank-Migration; im Log erscheint **`Migration complete`**.
 Ein Frontend-Container wird in Produktion nicht gestartet.
+
+**Erreichbarkeit:** Port 9080 ist im Produktions-Overlay nur auf dem Server selbst (`127.0.0.1`) veröffentlicht. Das passt, wenn ein Reverse-Proxy mit TLS auf demselben Server davor steht.
+Sollen Rechner im Verwaltungsnetz, ein Frontend auf einem anderen Server oder ein Proxy auf einem anderen Server den Port direkt erreichen, setzen Sie in der Root-`.env`
+`BACKEND_BIND=0.0.0.0` (oder die Adresse einer Netzwerkkarte), danach `docker compose up -d backend`, und begrenzen den Port per Firewall auf diese Netze
+([Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)).
 
 Alle weiteren `docker compose`-Befehle dieser Anleitung beziehen sich auf diesen Stack. Praktisch: einmal `export COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml`
 setzen, dann genügt `docker compose …` ohne die `-f`-Optionen.
@@ -122,7 +128,7 @@ docker compose ps          # backend: healthy
 
 Formulare entstehen im Backend, eine Konfigurationsdatei brauchen Sie dafür nicht:
 
-1. `http://<server>:9080/login.php` öffnen und mit dem Zugang aus Schritt 4 anmelden (im Mehrschul-Betrieb zuerst die Schule wählen).
+1. Die Anmeldeseite öffnen: über den Reverse-Proxy (`https://<backend>/login.php`) bzw. mit `BACKEND_BIND=0.0.0.0` direkt `http://<server>:9080/login.php`, und mit dem Zugang aus Schritt 4 anmelden (im Mehrschul-Betrieb zuerst die Schule wählen).
 2. **Formulare** → *Neues Formular anlegen*: Schlüssel eingeben (z. B. `anmeldung`), *Anlegen*. Es öffnen sich die Einstellungen: mindestens *Benachrichtigung an* setzen, *Speichern*.
 3. In der Liste *Survey bearbeiten*: Der leere Editor bietet **Vorlagen** (einfaches Formular, Rückmeldung, Veranstaltung, Schüleranmeldung mit den Feldnamen für ASV-BW) und Beispiele echter Anmeldungen. Eine wählen, anpassen (mindestens den Link zur Datenschutzerklärung), *Prüfen*, *Veröffentlichen*.
 
@@ -156,7 +162,7 @@ Ab hier geht es mit dem [Betriebsmodell](betriebsmodell.md) weiter: HTTPS einric
 
 > **Nicht ohne Reverse-Proxy veröffentlichen.** Port 9080 spricht unverschlüsseltes HTTP und liefert auch die Verwaltungsoberfläche aus. Ist das Backend nur im **Verwaltungsnetz** (Sekretariat und Schulleitung, vom Schüler- und Lehrernetz getrennt) erreichbar,
 > genügt das für den ersten Test; ohne Login (`AUTH_ENABLED=false`) ist nur dieses Netz zulässig, siehe [Verwaltungsoberfläche: Verwaltungsnetz oder Login](betriebsmodell.md#verwaltungsoberfläche-verwaltungsnetz-oder-login). Muss es dagegen von außen erreichbar sein (zum Beispiel für die Frontends externer Schulen), gehört ein Reverse-Proxy davor, der TLS beendet, nur die API-Pfade durchlässt
-> und das Backend mit `BACKEND_BIND=127.0.0.1` sonst unerreichbar macht. Anleitung: [Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist) und [HTTPS in betrieb.md](betrieb.md#https).
+> und das Backend sonst unerreichbar macht (Vorgabe `BACKEND_BIND=127.0.0.1` beibehalten). Anleitung: [Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist) und [HTTPS in betrieb.md](betrieb.md#https).
 
 ## Virenscan (optional)
 

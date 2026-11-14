@@ -40,6 +40,19 @@ class SecretPolicyTest extends TestCase
         $this->assertFalse(SecretPolicy::isAcceptable('dev-api-key-replace-in-production', true));
     }
 
+    public function testShippedPdfTokenDefaultsOnlyAcceptableOutsideProduction(): void
+    {
+        foreach (['dev-secret-key-replace-in-production-min-32-chars', 'change-me-min-32-characters'] as $secret) {
+            $this->assertTrue(SecretPolicy::isAcceptable($secret, false));
+            $this->assertFalse(SecretPolicy::isAcceptable($secret, true));
+        }
+    }
+
+    public function testDevDefaultWithTrailingCommentFromOldEnvExampleIsRecognised(): void
+    {
+        $this->assertFalse(SecretPolicy::isAcceptable('dev-secret-key-replace-in-production-min-32-chars  # Min 32 chars!', true));
+    }
+
     public function testRealSecretIsAcceptableEverywhere(): void
     {
         $secret = bin2hex(random_bytes(32));

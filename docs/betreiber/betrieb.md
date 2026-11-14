@@ -107,7 +107,7 @@ Gelöschte und abgelaufene Anmeldungen sind in alten Dumps noch enthalten.
 
 Zwischen Frontend und Backend ist **HTTPS Pflicht**: Die API-Signaturen (Format 2, ab 3.1.2) tragen Zeitstempel und Einmal-Kennung, der Inhalt selbst läuft aber im Klartext, solange kein TLS davor steht; das alte Format 1 (Modus `compat`) schützt nicht vor Wiederholung. Die Admin-Oberfläche überträgt Passwörter und Einmal-Codes.
 
-**Docker-Stack: TLS am Reverse-Proxy.** Der Container spricht HTTP (Port 9080); davor steht Nginx, Caddy oder Traefik. Das ist **Pflicht**, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Begründung und Checkliste](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)). Läuft der Proxy auf demselben Server, setzen Sie in der Root-`.env` `BACKEND_BIND=127.0.0.1`, damit der Backend-Port nur noch über den Proxy erreichbar ist. Beispiel Nginx:
+**Docker-Stack: TLS am Reverse-Proxy.** Der Container spricht HTTP (Port 9080); davor steht Nginx, Caddy oder Traefik. Das ist **Pflicht**, sobald das Backend nicht nur im vertrauenswürdigen Intranet erreichbar ist ([Begründung und Checkliste](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)). Läuft der Proxy auf demselben Server, genügt die Vorgabe des Produktions-Overlays: Der Backend-Port ist nur auf `127.0.0.1` veröffentlicht (`BACKEND_BIND`, ab 3.2.0). Beispiel Nginx:
 
 ```nginx
 server {
@@ -278,7 +278,7 @@ docker compose down           # Container stoppen und entfernen; Volumes (Daten!
 - [ ] **Netz-Allowlist** (wo sinnvoll): `PLATFORM_ADMIN_ALLOWED_NETWORKS` und Netze je Schule gesetzt, bei Reverse-Proxy `TRUSTED_PROXIES` geprüft, von außerhalb getestet
 - [ ] **Migration** gelaufen (`Migration complete` im Log), Formulare eingespielt, Testanmeldung durchgespielt (Eintrag, PDF-Download, Upload)
 - [ ] **HTTPS** für Backend und Frontend; `SESSION_SECURE=true`; HSTS erst nach erfolgreichem Test
-- [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade über einen **Reverse-Proxy**; bei Proxy auf demselben Server `BACKEND_BIND=127.0.0.1`
+- [ ] **Netz:** MySQL und ClamAV nicht veröffentlicht (`docker compose ps`: nur 9080 des Backends); Backend-Oberfläche nur im Intranet, nach außen nur die API-Pfade über einen **Reverse-Proxy**; `BACKEND_BIND` auf der Vorgabe `127.0.0.1`, außer der Proxy oder ein Frontend läuft auf einem anderen Server (dann `0.0.0.0` plus Firewall)
 - [ ] **Sicherung:** täglicher Dump, Uploads, `.env`-Dateien separat verschlüsselt; Probe-Restore durchgeführt
 - [ ] **Updates:** Verfahren und Zuständigkeit festgelegt; Docker-Logs begrenzt
 - [ ] **Upload-Limits** auf allen vier Ebenen abgestimmt

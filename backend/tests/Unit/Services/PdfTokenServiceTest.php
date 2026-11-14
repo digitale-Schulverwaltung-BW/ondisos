@@ -39,6 +39,8 @@ class PdfTokenServiceTest extends TestCase
     {
         parent::tearDown();
 
+        putenv('APP_ENV=testing');
+
         // Restore original secret
         if (!empty($this->originalSecret)) {
             putenv('PDF_TOKEN_SECRET=' . $this->originalSecret);
@@ -65,6 +67,65 @@ class PdfTokenServiceTest extends TestCase
         $this->expectExceptionMessage('must be at least 32 characters');
 
         new PdfTokenService();
+    }
+
+    public function testConstructorRejectsShippedDefaultSecretInProduction(): void
+    {
+        putenv('PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars');
+        putenv('APP_ENV=production');
+
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('publicly known default');
+
+        new PdfTokenService();
+    }
+
+    public function testConstructorAcceptsShippedDefaultSecretOutsideProduction(): void
+    {
+        putenv('PDF_TOKEN_SECRET=dev-secret-key-replace-in-production-min-32-chars');
+        putenv('APP_ENV=development');
+
+        $service = new PdfTokenService();
+
+        $this->assertSame(42, $service->validateToken($service->generateToken(42)));
+    }
+
+    public function testGenerateTokenCapsLifetimeAtMaximum(): void
+    {
+        $token = $this->tokenService->generateToken(123, PdfTokenService::MAX_LIFETIME * 30);
+        $parts = explode(':', (string)base64_decode($token, true));
+
+        $this->assertSame(PdfTokenService::MAX_LIFETIME, (int)$parts[2]);
+    }
+
+    public function testValidateTokenRejectsCorrectlySignedLifetimeAboveMaximum(): void
+    {
+        $token = $this->signedToken(123, time(), PdfTokenService::MAX_LIFETIME + 1);
+
+        $this->assertNull($this->tokenService->validateToken($token));
+    }
+
+    public function testValidateTokenRejectsCorrectlySignedTimestampFromTheFuture(): void
+    {
+        $token = $this->signedToken(123, time() + 3600, 1800);
+
+        $this->assertNull($this->tokenService->validateToken($token));
+    }
+
+    public function testValidateTokenToleratesSmallClockSkew(): void
+    {
+        $token = $this->signedToken(123, time() + 60, 1800);
+
+        $this->assertSame(123, $this->tokenService->validateToken($token));
+    }
+
+    /** Builds a token with a valid HMAC for arbitrary values, as someone holding the secret could. */
+    private function signedToken(int $id, int $timestamp, int $lifetime): string
+    {
+        $data = sprintf('%d:%d:%d', $id, $timestamp, $lifetime);
+        $hmac = hash_hmac('sha256', $data, 'test-secret-key-for-unit-tests-min-32-chars-long');
+
+        return base64_encode($data . ':' . $hmac);
     }
 
     public function testGenerateTokenReturnsBase64String(): void

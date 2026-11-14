@@ -100,14 +100,14 @@ dem Sie nicht vollständig vertrauen (Internet, Hosting-Netz, WLAN, „halb-öff
 2. **Pfade begrenzen:** nur die API-Pfade aus der Tabelle oben nach außen; alles andere (Oberfläche, `login.php`, `assets/`) nur aus dem Intranet.
 3. **Header setzen:** `Host` und `X-Forwarded-Proto` (sonst erkennt `FORCE_HTTPS` die Verschlüsselung nicht), `X-Forwarded-For`.
 4. **Upload-Grenze** passend zu `UPLOAD_MAX_SIZE` (Nginx: `client_max_body_size 10M`).
-5. **Das Backend nur dem Proxy zeigen:** läuft der Proxy auf demselben Server, binden Sie den Backend-Port an localhost. In der Root-`.env`:
+5. **Das Backend nur dem Proxy zeigen:** Das Produktions-Overlay (`docker-compose.prod.yml`) veröffentlicht Port 9080 ab 3.2.0 nur auf `127.0.0.1`; ein Proxy auf demselben Server
+   erreicht es so, alle anderen nicht. Läuft der Proxy (oder ein Frontend, das das Backend direkt anspricht) auf einem **anderen** Server, geben Sie den Port in der Root-`.env` frei:
 
    ```bash
-   BACKEND_BIND=127.0.0.1
+   BACKEND_BIND=0.0.0.0
    ```
 
-   Danach `docker compose up -d backend`. Ohne diese Einstellung bleibt Port 9080 auf **allen** Schnittstellen offen und lässt sich am Proxy vorbei ansprechen. Läuft der Proxy auf einem anderen Server,
-   sperren Sie den Port per Firewall für alle außer dem Proxy.
+   Danach `docker compose up -d backend` und den Port per Firewall für alle außer diesen Servern sperren; sonst lässt sich das Backend am Proxy vorbei ansprechen.
 
 Ein vollständiges Nginx-Beispiel mit TLS steht in [betrieb.md](betrieb.md#https); das Beispiel für die Pfadbegrenzung oben ist mit einem echten Proxy vor dem Backend geprüft
 (API und PDF-Pfad werden durchgereicht, `login.php`, `index.php`, `tenants.php` und `assets/` abgewiesen).

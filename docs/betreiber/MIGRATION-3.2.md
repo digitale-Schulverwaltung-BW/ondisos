@@ -39,6 +39,29 @@ Die Reihenfolge bleibt: **Backend zuerst**, danach Frontends und WordPress-Plugi
    Dafür braucht er Zugang zu Packagist und GitHub. Ohne Internet steht im Log `⚠️ composer install FAILED`; das Backend läuft dann mit dem vorhandenen `vendor/` weiter.
    3.2.0 braucht keine neuen Pakete, der Fehler ist hier also harmlos.
 
+5. **Docker: Backend-Port nur noch auf localhost.** `docker-compose.prod.yml` veröffentlicht Port 9080 ab 3.2.0 standardmäßig nur auf `127.0.0.1` (bisher auf allen Schnittstellen),
+   damit das unverschlüsselte Backend samt Verwaltungsoberfläche nur über einen Reverse-Proxy auf demselben Server erreichbar ist. Erreichen Frontends, WordPress oder ein Proxy
+   **auf einem anderen Server** das Backend direkt über Port 9080, setzen Sie **vor** dem Update in der Root-`.env`:
+
+   ```bash
+   BACKEND_BIND=0.0.0.0
+   ```
+
+   und begrenzen den Port per Firewall auf diese Server ([Betriebsmodell](betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)). Ohne diese Einstellung
+   melden die Frontends nach dem Update, dass das Backend nicht erreichbar ist. Prüfen nach dem Update: `docker compose ps` zeigt `127.0.0.1:9080->80/tcp` bzw. `0.0.0.0:9080->80/tcp`.
+
+6. **PDF-Secret prüfen.** Bei `APP_ENV=production` lehnt das Backend ab 3.2.0 die öffentlich bekannten Vorgaben für `PDF_TOKEN_SECRET` ab (`dev-secret-key-replace-in-production-min-32-chars`
+   aus `.env.example` und `docker-compose.yml`, `change-me-min-32-characters` aus dem Docker-Start): Mit ihnen könnte jeder, der das Repository kennt, Download-Links für fremde Anmeldungen erzeugen.
+   Prüfen, ohne den Wert anzuzeigen:
+
+   ```bash
+   cat .env backend/.env 2>/dev/null | grep -qE '^PDF_TOKEN_SECRET=(dev-secret-key-replace-in-production|change-me-min-32-characters)' && echo "Vorgabe – ändern" || echo "ok"
+   ```
+
+   Ist es eine Vorgabe, setzen Sie in der Root-`.env` (Docker) bzw. der `backend/.env` einen eigenen Wert (`openssl rand -hex 32`). Bisher ausgegebene PDF-Links werden damit ungültig
+   (sie gelten ohnehin höchstens so lange wie `pdf.token_lifetime`, Standard 30 Minuten). Ohne eigenen Wert bietet das Backend in Produktion keine PDF-Bestätigung mehr an; der Docker-Start
+   meldet dann `❌ PDF_TOKEN_SECRET is empty or a default from the repository`.
+
 ## Backend
 
 1. Update wie gewohnt ([betrieb.md](betrieb.md#updates)):

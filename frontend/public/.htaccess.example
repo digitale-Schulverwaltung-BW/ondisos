@@ -172,7 +172,7 @@ DirectoryIndex index.php index.html
 # Production Checklist:
 # 1. Enable HTTPS redirect (uncomment lines 10-19)
 # 2. Enable HSTS header AFTER confirming HTTPS works (uncomment line 33)
-# 3. Customize Content-Security-Policy for SurveyJS (line 49)
+# 3. Do not add a Content-Security-Policy here (index.php sends it, see above)
 # 4. Adjust CORS headers if backend is on different domain (lines 149-153)
 # 5. Test uploads work correctly with file size limits
 # 6. Test with: https://securityheaders.com/

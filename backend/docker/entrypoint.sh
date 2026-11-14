@@ -135,6 +135,21 @@ else
     echo "ℹ️  API_SIGNATURE_MODE=strict: only signature format 2 is accepted (set API_SIGNATURE_MODE=compat in .env only as a stopgap for frontends not yet updated)."
 fi
 
+# Production checks on the values in effect (generated or hand-written .env). Values are never printed.
+env_value() { grep -E "^$1=" .env 2>/dev/null | tail -n 1 | cut -d= -f2- | sed -e 's/[[:space:]]*#.*$//' | tr -d "\"' "; }
+if [ "$(env_value APP_ENV)" = "production" ]; then
+    case "$(env_value PDF_TOKEN_SECRET)" in
+        ""|dev-secret-key-replace-in-production-min-32-chars|change-me-min-32-characters)
+            echo "❌ PDF_TOKEN_SECRET is empty or a default from the repository: PDF downloads are refused in production."
+            echo "    Set a unique value in the root .env: PDF_TOKEN_SECRET=\$(openssl rand -hex 32), then: docker compose up -d backend"
+            ;;
+    esac
+    if [ "$(env_value SESSION_SECURE)" != "true" ]; then
+        echo "⚠️  SESSION_SECURE is not true: login cookies are also sent over plain HTTP."
+        echo "    Once a TLS reverse proxy is in front of the backend, set SESSION_SECURE=true in the root .env."
+    fi
+fi
+
 # Install/update Composer dependencies.
 # docker-compose.yml mounts ./backend over /var/www/html, so vendor/ comes from the host and hides the
 # image's vendor/. After a git pull that changes composer.lock, the new packages must be installed here

@@ -16,6 +16,10 @@ namespace App\Services;
 class PdfTokenService
 {
     private const DEFAULT_LIFETIME = 1800; // 30 minutes
+    /** Upper bound of pdf.token_lifetime (FormConfigSchema); longer tokens are never issued or accepted. */
+    public const MAX_LIFETIME = 86400; // 24 hours
+    /** Tolerated clock difference for timestamps from the future (several backend servers). */
+    private const MAX_FUTURE_SKEW = 300;
     private const HASH_ALGO = 'sha256';
 
     private string $secretKey;
@@ -35,6 +39,13 @@ class PdfTokenService
                 'PDF_TOKEN_SECRET must be at least 32 characters long'
             );
         }
+
+        // A default from the repository would let anyone mint download links for any entry.
+        if (!SecretPolicy::isAcceptable($this->secretKey)) {
+            throw new \RuntimeException(
+                'PDF_TOKEN_SECRET is a publicly known default and is rejected in production. Generate with: openssl rand -hex 32'
+            );
+        }
     }
 
     /**
@@ -46,6 +57,7 @@ class PdfTokenService
      */
     public function generateToken(int $anmeldungId, int $lifetime = self::DEFAULT_LIFETIME): string
     {
+        $lifetime = min($lifetime, self::MAX_LIFETIME);
         $timestamp = time();
         $hmac = $this->generateHmac($anmeldungId, $timestamp, $lifetime);
 
@@ -114,7 +126,8 @@ class PdfTokenService
     }
 
     /**
-     * Check if a token is expired based on timestamp and lifetime
+     * Check if a token is expired based on timestamp and lifetime.
+     * Lifetimes above MAX_LIFETIME and timestamps from the future count as expired.
      *
      * @param int $timestamp Token creation timestamp
      * @param int $lifetime Token lifetime in seconds
@@ -122,6 +135,10 @@ class PdfTokenService
      */
     private function isExpired(int $timestamp, int $lifetime): bool
     {
+        if ($lifetime > self::MAX_LIFETIME || $timestamp > time() + self::MAX_FUTURE_SKEW) {
+            return true;
+        }
+
         return (time() - $timestamp) >= $lifetime;
     }
 

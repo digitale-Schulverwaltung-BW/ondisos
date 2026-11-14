@@ -14,9 +14,9 @@ Implementierte Schutzmaßnahmen und bekannte Einschränkungen.
 - ✅ Error Handling (keine sensitive Daten in Errors)
 - ✅ **Tenant-Isolierung** (`TenantContext`, `tenant_id` in jeder Abfrage, IDOR-Erkennung → `idor_attempt` im Audit-Log)
 - ✅ **Signierte API** (`HmacValidator`): `submit.php` über den Raw-Body, `upload.php` über `id:feldname:dateiname`; der Slug (`?tenant=`) adressiert nur, die Signatur autorisiert
-- ✅ **Secret-Policy** (`SecretPolicy`): Platzhalter (`CHANGE_ME_IN_PRODUCTION`, leer) authentifizieren nie; der Dev-Default `dev-api-key-replace-in-production` wird bei `APP_ENV=production` abgelehnt; `migrate.php` bricht dort ab, wenn `API_SECRET_KEY` so ein Wert ist
+- ✅ **Secret-Policy** (`SecretPolicy`): Platzhalter (`CHANGE_ME_IN_PRODUCTION`, leer) authentifizieren nie; die Dev-Defaults (`dev-api-key-replace-in-production`, für PDF-Tokens `dev-secret-key-replace-in-production-min-32-chars` und `change-me-min-32-characters`) werden bei `APP_ENV=production` abgelehnt; `migrate.php` bricht dort ab, wenn `API_SECRET_KEY` so ein Wert ist, `PdfTokenService` erzeugt und prüft dann keine Tokens (3.2.0)
 - ✅ **Upload-Zuordnung:** Ein Upload wird nur angenommen, wenn die Anmeldung zum authentifizierten Tenant gehört (sonst 404 + `idor_attempt`)
-- ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt; der Token autorisiert genau eine Anmeldung, deren Tenant wird für den Zugriff ermittelt)
+- ✅ PDF Token Security (HMAC-SHA256, selbstvalidierend, zeitlich begrenzt; der Token autorisiert genau eine Anmeldung, deren Tenant wird für den Zugriff ermittelt). Gültigkeit höchstens 24 Stunden (`PdfTokenService::MAX_LIFETIME`, wie `pdf.token_lifetime`); Zeitstempel mehr als 5 Minuten in der Zukunft gelten als ungültig
 - ✅ Secret Key Management (`PDF_TOKEN_SECRET`, `API_SECRET_KEY` in `.env`; `TENANT_API_SECRET` nur serverseitig, nie im Browser; WP-Einstellung ist write-only)
 - ✅ Admin Authentication (Optional, session-basiert; bei `MULTI_TENANT_ENABLED=true` erzwungen)
 - ✅ Session Security (Regeneration, Timeout, CSRF-Protection)
@@ -30,8 +30,8 @@ Implementierte Schutzmaßnahmen und bekannte Einschränkungen.
 
 **Bekannte Einschränkungen:**
 - `GET /api/form-config.php` ist per Tenant-Slug ohne Signatur abrufbar und liefert z. B. `notify_email` — keine Geheimnisse in `config_json` ablegen.
-- Signaturen enthalten keinen Zeitstempel (kein Replay-Schutz über die Transportschicht hinaus): HTTPS zwischen Frontend und Backend verwenden.
-- Rate-Limit und Audit-Log verwenden die Absender-Adresse `REMOTE_ADDR`; hinter einem Reverse-Proxy ist das die Proxy-Adresse, das Limit gilt dann für alle Schulen gemeinsam ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist)).
+- Signaturformat 2 (Standard, `API_SIGNATURE_MODE=strict`) enthält Zeitstempel und Nonce und verhindert Replay ([unten](#signierte-api-signaturformat-2-312)); nur mit ausdrücklich gesetztem `compat` wird Format 1 ohne Zeitstempel noch angenommen. Gegen Mitlesen hilft die Signatur nicht: HTTPS zwischen Frontend und Backend ist Pflicht.
+- Das Rate-Limit der Anmeldungen gilt je Besucher (das Frontend sendet eine pseudonyme Kennung, HMAC der Besucher-IP). Rate-Limits der Downloads und Editoren sowie das Audit-Log verwenden die Absender-Adresse; hinter einem Reverse-Proxy ohne `TRUSTED_PROXIES` ist das die Proxy-Adresse, das Limit gilt dann für alle gemeinsam ([Betriebsmodell](../betreiber/betriebsmodell.md#reverse-proxy-pflicht-sobald-das-backend-nicht-nur-intern-erreichbar-ist), [Client-IP hinter dem Proxy](../betreiber/betrieb.md#reverse-proxy-client-ip-und-rate-limit)).
 
 ## Behobene Befunde (Februar 2026)
 
@@ -128,9 +128,9 @@ Ergebnis des Audits vom Oktober 2026 (Punkte ohne Codeänderung):
 | `GET /api/form-config.php` ohne Signatur | liefert u. a. `notify_email`; die Antworten 401/404 verraten, ob ein Tenant-Slug existiert. Keine Geheimnisse in `config_json`. |
 | WordPress-Plugin: Tenant-Secret in `wp_options` | Das Secret liegt im Klartext in der WordPress-Datenbank (die Oberfläche zeigt es nie wieder an). Wer Code in WordPress ausführen oder die Datenbank lesen kann, kann Anmeldungen signieren: bei Verdacht das Secret im Backend erneuern. |
 | Vorbefüllung per `?prefill=<base64>` | Personenbezogene Daten stehen in der URL (Browser-Verlauf, Proxy- und Access-Logs, Referer). Nur verwenden, wenn die Schule das so will; keine sensiblen Felder vorbefüllen. |
-| PDF-Links (Token) | Der Link ist ein Bearer-Link: 30 Minuten gültig, nicht einmalig, nicht widerrufbar. Wer ihn in einer E-Mail oder einem Log findet, kann das PDF laden. |
+| PDF-Links (Token) | Der Link ist ein Bearer-Link: standardmäßig 30 Minuten gültig (`pdf.token_lifetime`, höchstens 24 Stunden), nicht einmalig, nicht widerrufbar. Wer ihn in einer E-Mail oder einem Log findet, kann das PDF laden. |
 | Unterschrift per Smartphone: Link im QR-Code | Bis zum Ablauf (10 Minuten) oder zur ersten Unterschrift kann jeder, der den Link kennt, **eine** Unterschrift abliefern; übernommen wird sie nur nach Sichtprüfung am Rechner. Die Unterschrift bleibt eine einfache elektronische Signatur, egal auf welchem Gerät gezeichnet. |
 | E-Mail über PHP `mail()` | keine SMTP-Authentifizierung und keine TLS-Kontrolle (SMTP ist geplant). |
-| Keine Content-Security-Policy für Admin-Oberfläche und Formularseite | Nur der Vorschau-Frame hat eine CSP. Eine Standard-CSP ist als Härtung offen. |
+| Keine Content-Security-Policy im WordPress-Plugin | Die Formularseite gehört WordPress; das Plugin setzt keine CSP (Verwaltungsoberfläche und Standalone-Formular haben seit 3.1.2 eine, siehe [oben](#content-security-policy-312)). |
 
 Spätere Maßnahmen (Tenant-Isolierung, signierte API, Secret-Policy, Härtung des Formular-Editors) stehen im [Changelog](changelog.md).
