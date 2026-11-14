@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // CSRF check
     if (!hash_equals($_SESSION['csrf_token'] ?? '', $csrfToken)) {
         $error = 'Ungültiger Sicherheitstoken. Bitte versuchen Sie es erneut.';
-    } elseif ($throttle->isBlocked($clientIp, $username)) {
+    } elseif (!$throttle->tryAttempt($clientIp, $username)) {
         $retryMinutes = max(1, (int)ceil($throttle->retryAfter($clientIp, $username) / 60));
         $error = sprintf('Zu viele fehlgeschlagene Anmeldeversuche. Bitte versuchen Sie es in etwa %d Minute(n) erneut.', $retryMinutes);
         AuditLogger::loginBlocked($username, $throttle->retryAfter($clientIp, $username));
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         if (!$loggedIn) {
             $error = 'Benutzername oder Passwort falsch.';
-            $throttle->recordFailure($clientIp, $username);
+            // The attempt was already counted by tryAttempt()
             if ($networkDenied) {
                 AuditLogger::loginNetworkDenied($username);
             } else {

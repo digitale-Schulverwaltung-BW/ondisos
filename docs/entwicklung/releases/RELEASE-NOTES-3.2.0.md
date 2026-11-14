@@ -39,6 +39,7 @@ Alle Änderungen im Einzelnen: [Changelog](../changelog.md#320).
 - **`PDF_TOKEN_SECRET`:** Die öffentlich bekannten Vorgaben aus dem Repository werden in Produktion abgelehnt; PDF-Links gelten höchstens 24 Stunden.
 - **Docker:** `docker-compose.prod.yml` veröffentlicht den Backend-Port nur noch auf `127.0.0.1` (`BACKEND_BIND`).
 - **PDF-Bestätigungen:** Rate-Limit vor dem Erzeugen je Anmeldung, Besucher und Schule (`PDF_RATE_LIMIT_*`); PDFs werden nicht mehr zwischengespeichert (`Cache-Control: no-store`).
+- **Rate-Limits atomar:** Parallele Anfragen kamen bisher alle am Limit vorbei, auch an der Sperre nach falschen Anmeldungen. Zähler laufen jetzt unter einer Dateisperre, Anmeldeversuche werden vor der Prüfung gezählt.
 - Live-Vorschau: gerendert wird nur, was der Server geprüft hat, in einem abgeschotteten Rahmen ohne eigene Herkunft; eigenes Rate-Limit (`EDITOR_PREVIEW_RATE_LIMIT_MAX`).
 - Unterschrift per Smartphone: eigener Endpunkt nur mit Signaturformat 2, Einmal-Codes mit 10 Minuten Gültigkeit, Rate-Limit je Besucher ([sicherheit.md](../sicherheit.md#unterschrift-per-smartphone-320a)).
 

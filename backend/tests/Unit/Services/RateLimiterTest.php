@@ -598,4 +598,49 @@ class RateLimiterTest extends TestCase
         // Should still be able to make requests normally
         $this->assertTrue($this->rateLimiter->isAllowed($identifier));
     }
+
+    public function testUnwritableStorageLetsRequestsThroughAndLogsOnce(): void
+    {
+        if (function_exists('posix_getuid') && posix_getuid() === 0) {
+            $this->markTestSkipped('root ignores file permissions');
+        }
+        $dir = $this->testStorageDir . '/readonly';
+        mkdir($dir, 0555);
+        $log = tempnam(sys_get_temp_dir(), 'rl_log_');
+        $oldLog = ini_set('error_log', $log);
+
+        try {
+            $limiter = new RateLimiter($dir, 1, 60, 0);
+            $this->assertTrue($limiter->isAllowed('x'));
+            $this->assertTrue($limiter->isAllowed('x'), 'not counted, still allowed');
+
+            $logged = (string)file_get_contents($log);
+            $this->assertStringContainsString('Requests are NOT limited', $logged);
+            $this->assertSame(1, substr_count($logged, 'RateLimiter:'));
+        } finally {
+            ini_set('error_log', (string)$oldLog);
+            unlink($log);
+            chmod($dir, 0755);
+            rmdir($dir);
+        }
+    }
+
+    public function testReleaseGivesBackTheLastRequest(): void
+    {
+        $this->rateLimiter->isAllowed('r');
+        $this->rateLimiter->isAllowed('r');
+        $this->rateLimiter->isAllowed('r');
+        $this->assertFalse($this->rateLimiter->isAllowed('r'));
+
+        $this->rateLimiter->release('r');
+
+        $this->assertTrue($this->rateLimiter->isAllowed('r'));
+    }
+
+    public function testReleaseOnUnknownIdentifierDoesNothing(): void
+    {
+        $this->rateLimiter->release('nobody');
+
+        $this->assertSame(3, $this->rateLimiter->getRemainingRequests('nobody'));
+    }
 }

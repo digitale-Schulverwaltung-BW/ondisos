@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$csrfOk) {
         $error = 'Ungültiger Sicherheitstoken. Bitte versuchen Sie es erneut.';
-    } elseif ($throttle->isBlocked($clientIp, $adminKey)) {
+    } elseif (!$throttle->tryAttempt($clientIp, $adminKey)) {
         $error = 'Zu viele falsche Codes. Bitte versuchen Sie es später erneut.';
         AuditLogger::loginBlocked($username, $throttle->retryAfter($clientIp, $adminKey));
         usleep(500000);
@@ -71,6 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($unavailable) {
+            $throttle->cancelAttempt($clientIp, $adminKey);
             $error = 'Die Zwei-Faktor-Prüfung ist derzeit nicht verfügbar. Bitte wenden Sie sich an den Betreiber (TWO_FACTOR_KEY, Datenbank).';
         } elseif ($accepted) {
             $throttle->recordSuccess($clientIp, $adminKey);
@@ -87,7 +88,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: index.php');
             exit;
         } else {
-            $throttle->recordFailure($clientIp, $adminKey);
             AuditLogger::twoFactorEvent('two_factor_failed', $username);
             usleep(500000);
             if (!TwoFactorSession::recordFailedAttempt()) {

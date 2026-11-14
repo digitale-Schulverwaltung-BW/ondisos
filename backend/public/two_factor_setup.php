@@ -88,12 +88,11 @@ if (!$keyMissing && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'verify' && isset($state['secret']) && !isset($state['codes'])) {
         $throttle = new LoginThrottle(__DIR__ . '/../cache/ratelimit-2fa');
         $clientIp = ClientIp::get($_SERVER);
-        if ($throttle->isBlocked($clientIp, $adminKey)) {
+        if (!$throttle->tryAttempt($clientIp, $adminKey)) {
             $error = 'Zu viele falsche Codes. Bitte versuchen Sie es später erneut.';
         } else {
             $step = $totp->verify((string)$state['secret'], (string)($_POST['code'] ?? ''), null);
             if ($step === null) {
-                $throttle->recordFailure($clientIp, $adminKey);
                 usleep(500000);
                 $error = 'Der Code stimmt nicht. Prüfen Sie die Uhrzeit Ihres Geräts und versuchen Sie es mit dem aktuellen Code erneut.';
                 if ($pendingContext && !TwoFactorSession::recordFailedAttempt()) {

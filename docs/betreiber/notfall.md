@@ -142,6 +142,8 @@ Danach prüfen: `docker compose ps`, ein Test-Upload und eine Testanmeldung. Ein
 dauerhaft helfen mehr RAM oder höhere Limits in `docker-compose.prod.yml`. Das Backend begrenzt Schreibaktionen im Formular-Editor und API-Anfragen per Rate-Limit
 (`RATE_LIMIT_*`, `EDITOR_RATE_LIMIT_*`, für die Live-Vorschau `EDITOR_PREVIEW_RATE_LIMIT_MAX` in der `backend/.env`), ebenso die PDF-Bestätigungen (`PDF_RATE_LIMIT_*`, ab 3.2.0).
 Ruft jemand einen PDF-Link in schneller Folge auf, steht im Log des Frontends `Backend PDF download failed with HTTP 429`.
+Steht im Fehlerlog des Backends (`docker compose logs backend`) `RateLimiter: … Requests are NOT limited`, kann das Backend seine Zähler nicht speichern (Rechte auf `backend/cache/`,
+volle Platte): Die Limits greifen dann nicht, auch nicht die Sperre nach falschen Anmeldungen. Rechte prüfen mit `docker compose exec backend ls -ld cache cache/*`; `www-data` muss schreiben dürfen.
 
 ## 7. Update ging schief
 

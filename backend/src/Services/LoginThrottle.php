@@ -14,8 +14,10 @@ namespace App\Services;
  * Der Zähler pro Konto hängt bewusst an der IP, damit Dritte ein Konto nicht
  * von außen sperren können.
  *
- * Gezählt werden nur Fehlversuche; ein erfolgreicher Login setzt den Zähler
- * des Kontos zurück.
+ * Ablauf: tryAttempt() zählt den Versuch, BEVOR das Passwort (oder der Code) geprüft wird; nur so
+ * kommen parallele Anfragen nicht alle an der Sperre vorbei. Ein erfolgreicher Versuch setzt den
+ * Zähler des Kontos zurück und gibt seinen Platz im IP-Zähler wieder frei, sodass im Ergebnis nur
+ * Fehlversuche zählen (wichtig für viele Kollegen hinter einer Schul-IP).
  */
 class LoginThrottle
 {
@@ -48,15 +50,36 @@ class LoginThrottle
         );
     }
 
-    public function recordFailure(string $ip, string $username): void
+    /**
+     * Zählt einen Versuch atomar. false = gesperrt; dann wurde nichts gezählt, der Versuch darf
+     * nicht geprüft werden. Auf true folgt bei Erfolg recordSuccess(), sonst nichts.
+     */
+    public function tryAttempt(string $ip, string $username): bool
     {
-        $this->perAccount->isAllowed($this->accountKey($ip, $username));
-        $this->perIp->isAllowed($ip);
+        $accountKey = $this->accountKey($ip, $username);
+        if (!$this->perAccount->isAllowed($accountKey)) {
+            return false;
+        }
+        if (!$this->perIp->isAllowed($ip)) {
+            $this->perAccount->release($accountKey);
+            return false;
+        }
+
+        return true;
     }
 
+    /** Der Versuch wurde nicht geprüft (technischer Fehler): nicht als Fehlversuch zählen. */
+    public function cancelAttempt(string $ip, string $username): void
+    {
+        $this->perAccount->release($this->accountKey($ip, $username));
+        $this->perIp->release($ip);
+    }
+
+    /** Nach erfolgreicher Prüfung: Konto-Zähler zurücksetzen, den Versuch im IP-Zähler zurückgeben. */
     public function recordSuccess(string $ip, string $username): void
     {
         $this->perAccount->reset($this->accountKey($ip, $username));
+        $this->perIp->release($ip);
     }
 
     private function accountKey(string $ip, string $username): string

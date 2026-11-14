@@ -57,9 +57,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Die Zwei-Faktor-Anmeldung ist für Ihr Konto vorgeschrieben und kann nicht entfernt werden.';
     } elseif (in_array($action, ['remove', 'regenerate'], true)) {
         // Sensitive change: ask for the password again (a stolen session alone must not be enough)
-        $passwordOk = (new LoginService())->verifyPasswordForKey($adminKey, (string)($_POST['password'] ?? ''), Database::getConnection());
-        if (!$passwordOk) {
-            $throttle->recordFailure($clientIp, $username);
+        if (!$throttle->tryAttempt($clientIp, $username)) {
+            $error = 'Zu viele fehlgeschlagene Versuche. Bitte versuchen Sie es später erneut.';
+            $passwordOk = null;
+        } else {
+            $passwordOk = (new LoginService())->verifyPasswordForKey($adminKey, (string)($_POST['password'] ?? ''), Database::getConnection());
+            if ($passwordOk) {
+                $throttle->recordSuccess($clientIp, $username);
+            }
+        }
+        if ($passwordOk === null) {
+            // blocked, $error is set
+        } elseif (!$passwordOk) {
             AuditLogger::loginFailed($username);
             usleep(500000);
             $error = 'Das Passwort ist nicht korrekt.';

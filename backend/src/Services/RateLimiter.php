@@ -10,6 +10,13 @@ use App\Utils\ClientIp;
  *
  * Tracks requests per identifier (usually IP address) and enforces limits.
  * Uses filesystem for storage - suitable for single-server deployments.
+ *
+ * Read, check and write happen under one exclusive lock on the identifier's file, so parallel
+ * requests cannot all pass a limit that only a few of them may pass.
+ *
+ * Storage failures (directory not writable, lock not available) let the request through: a full or
+ * read-only disk must not block every registration and login. They are logged to the PHP error log
+ * (once per directory and process), so the operator can see that limits are not in effect.
  */
 class RateLimiter
 {
@@ -36,8 +43,8 @@ class RateLimiter
         $this->cleanupProbability = $cleanupProbability;
 
         // Ensure storage directory exists
-        if (!is_dir($this->storageDir)) {
-            mkdir($this->storageDir, 0755, true);
+        if (!is_dir($this->storageDir) && !@mkdir($this->storageDir, 0755, true) && !is_dir($this->storageDir)) {
+            $this->storageFailure('cannot create the directory');
         }
     }
 
@@ -49,31 +56,36 @@ class RateLimiter
      */
     public function isAllowed(string $identifier): bool
     {
-        $file = $this->getFilePath($identifier);
-        $now = time();
-        $cutoff = $now - $this->windowSeconds;
+        $result = $this->update($identifier, function (array $timestamps): array {
+            if (count($timestamps) >= $this->maxRequests) {
+                return [false, null];
+            }
+            $timestamps[] = time();
 
-        // Load existing data
-        $timestamps = $this->loadTimestamps($file);
-
-        // Remove expired timestamps (outside the window)
-        $timestamps = array_filter($timestamps, fn($ts) => $ts > $cutoff);
-
-        // Check if limit exceeded
-        if (count($timestamps) >= $this->maxRequests) {
-            return false;
-        }
-
-        // Add current timestamp
-        $timestamps[] = $now;
-
-        // Save updated data
-        $this->saveTimestamps($file, $timestamps);
+            return [true, $timestamps];
+        });
 
         // Probabilistic cleanup of old files
         $this->maybeCleanup();
 
-        return true;
+        return $result ?? true; // storage failure: let through (logged)
+    }
+
+    /**
+     * Gives back the most recent request of the identifier, e.g. a login attempt that turned out to
+     * be successful and should not count towards the limit.
+     */
+    public function release(string $identifier): void
+    {
+        $this->update($identifier, function (array $timestamps): array {
+            if ($timestamps === []) {
+                return [null, null];
+            }
+            sort($timestamps);
+            array_pop($timestamps);
+
+            return [null, $timestamps];
+        });
     }
 
     /**
@@ -84,12 +96,7 @@ class RateLimiter
      */
     public function getRemainingRequests(string $identifier): int
     {
-        $file = $this->getFilePath($identifier);
-        $now = time();
-        $cutoff = $now - $this->windowSeconds;
-
-        $timestamps = $this->loadTimestamps($file);
-        $timestamps = array_filter($timestamps, fn($ts) => $ts > $cutoff);
+        $timestamps = $this->read($identifier);
 
         return max(0, $this->maxRequests - count($timestamps));
     }
@@ -102,12 +109,8 @@ class RateLimiter
      */
     public function getRetryAfter(string $identifier): int
     {
-        $file = $this->getFilePath($identifier);
         $now = time();
-        $cutoff = $now - $this->windowSeconds;
-
-        $timestamps = $this->loadTimestamps($file);
-        $timestamps = array_filter($timestamps, fn($ts) => $ts > $cutoff);
+        $timestamps = $this->read($identifier);
 
         if (count($timestamps) < $this->maxRequests) {
             return 0;
@@ -177,40 +180,102 @@ class RateLimiter
     }
 
     /**
-     * Load timestamps from file
+     * Runs $change on the identifier's timestamps (expired ones removed) under an exclusive lock.
+     * $change returns [result, new timestamps or null to leave the file as it is].
      *
-     * @param string $file
-     * @return array<int>
+     * @param callable(list<int>): array{0: mixed, 1: list<int>|null} $change
+     * @return mixed the result of $change, or null if the storage failed
      */
-    private function loadTimestamps(string $file): array
+    private function update(string $identifier, callable $change): mixed
     {
-        if (!file_exists($file)) {
-            return [];
+        $file = $this->getFilePath($identifier);
+
+        // Cleanup may delete the file between our fopen() and flock(); we would then count in a file
+        // nobody else sees. Compare inodes after locking and start over in that case.
+        for ($try = 0; $try < 3; $try++) {
+            $fp = @fopen($file, 'c+');
+            if ($fp === false) {
+                $this->storageFailure('cannot open a counter file');
+                return null;
+            }
+            if (!flock($fp, LOCK_EX)) {
+                fclose($fp);
+                $this->storageFailure('cannot lock a counter file');
+                return null;
+            }
+
+            clearstatcache(true, $file);
+            $onDisk = @stat($file);
+            $open = fstat($fp);
+            if ($onDisk === false || $open === false || $onDisk['ino'] !== $open['ino']) {
+                flock($fp, LOCK_UN);
+                fclose($fp);
+                continue;
+            }
+
+            [$result, $timestamps] = $change($this->inWindow((string)stream_get_contents($fp)));
+
+            if ($timestamps !== null) {
+                $json = (string)json_encode(array_values($timestamps));
+                if (!rewind($fp) || !ftruncate($fp, 0) || fwrite($fp, $json) !== strlen($json) || !fflush($fp)) {
+                    $this->storageFailure('cannot write a counter file');
+                }
+            }
+
+            flock($fp, LOCK_UN);
+            fclose($fp);
+
+            return $result;
         }
 
-        $content = @file_get_contents($file);
-        if ($content === false) {
-            return [];
-        }
-
-        $data = json_decode($content, true);
-        if (!is_array($data)) {
-            return [];
-        }
-
-        return array_filter($data, 'is_int');
+        $this->storageFailure('counter file replaced repeatedly while locking');
+        return null;
     }
 
     /**
-     * Save timestamps to file
+     * Timestamps within the window, read under a shared lock (never a half-written file).
      *
-     * @param string $file
-     * @param array<int> $timestamps
+     * @return list<int>
      */
-    private function saveTimestamps(string $file, array $timestamps): void
+    private function read(string $identifier): array
     {
-        $json = json_encode(array_values($timestamps));
-        @file_put_contents($file, $json, LOCK_EX);
+        $fp = @fopen($this->getFilePath($identifier), 'r');
+        if ($fp === false) {
+            return []; // no requests yet
+        }
+        flock($fp, LOCK_SH);
+        $content = (string)stream_get_contents($fp);
+        flock($fp, LOCK_UN);
+        fclose($fp);
+
+        return $this->inWindow($content);
+    }
+
+    /** @return list<int> */
+    private function inWindow(string $content): array
+    {
+        $data = json_decode($content, true);
+        if (!is_array($data)) {
+            return []; // new or damaged file: start counting again
+        }
+        $cutoff = time() - $this->windowSeconds;
+
+        return array_values(array_filter($data, fn($ts) => is_int($ts) && $ts > $cutoff));
+    }
+
+    /** Logs once per directory and process that the limit is not in effect. */
+    private function storageFailure(string $what): void
+    {
+        static $reported = [];
+        if (isset($reported[$this->storageDir])) {
+            return;
+        }
+        $reported[$this->storageDir] = true;
+        error_log(sprintf(
+            'RateLimiter: %s in %s (check permissions and free space). Requests are NOT limited until this is fixed.',
+            $what,
+            $this->storageDir
+        ));
     }
 
     /**
