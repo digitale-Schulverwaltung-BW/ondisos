@@ -60,3 +60,6 @@ maintenance-mode.md
 
 # Release ZIPs (wordpress-plugin/build-zip.sh)
 /dist/
+
+# Security audit
+AUDIT.md
