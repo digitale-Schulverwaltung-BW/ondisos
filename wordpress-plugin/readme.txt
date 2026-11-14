@@ -4,7 +4,7 @@ Tags: forms, survey, surveyjs, registration, anmeldung, Schule
 Requires at least: 5.8
 Tested up to: 6.7
 Requires PHP: 8.1
-Stable tag: 3.1.2
+Stable tag: 3.2.0
 License: MIT
 License URI: https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/blob/main/LICENSE
 
@@ -97,6 +97,12 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 
 == Changelog ==
 
+= 3.2.0 =
+* SurveyJS Form Library 3.2.0 statt 2.3.15: neue Standardoptik, Knöpfe und Meldungen des Formulars auf Deutsch (z. B. „Weiter“, „Bitte beantworten Sie diese Frage.“); das Plugin lädt survey-core.min.css statt defaultV2.fontless.min.css
+* Unterschrift per Smartphone (nur wenn die Schule es im Backend einschaltet): Unterschriftsfelder zeigen einen QR-Code, unterschrieben wird auf dem Smartphone; Handy-Seite und Abgleich über admin-ajax.php (ondisos_sign, ondisos_sig), nur mit Nonce
+* PDF-Bestätigung gegliedert: Das Plugin übermittelt zu jeder Frage Titel und Seite, das Backend setzt daraus Überschriften
+* Fragen innerhalb von Auswahloptionen werden wie andere Fragen behandelt (PDF, E-Mail, Vorausfüllen, Uploads)
+
 = 3.1.2 =
 * Anfragen an das Backend werden im neuen Signaturformat 2 signiert (Zeitstempel, Nonce, Inhaltshash; bei Uploads Hash der Datei). Das Backend nimmt das alte Format in der Umstellungsphase weiter an
 * Missbrauchsschutz: Honeypot-Feld im Formular, Rate-Limit je Besucher statt je Webserver, Nonce wird vor dem Formularschlüssel geprüft
@@ -126,6 +132,9 @@ Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B.
 * Prefill über einfache URL-Parameter, dynamische Platzhalter (`placeholderExpression`)
 
 == Upgrade Notice ==
+
+= 3.2.0 =
+Zuerst das Backend auf 3.2.0 aktualisieren, danach das Plugin. Das Backend nimmt ab 3.2.0 nur noch Signaturformat 2 an; die Umgebungsvariable API_SIGNATURE_VERSION=1 (Notausstieg aus 3.1.2) entfernen. Steht ein Reverse-Proxy vor WordPress, unter „Vertrauenswürdige Proxys“ eintragen, sonst teilen sich alle Besucher das Limit für QR-Codes der Unterschrift per Smartphone. Siehe docs/betreiber/MIGRATION-3.2.md im Ondisos-Repository.
 
 = 3.1.2 =
 Zuerst das Backend auf 3.1.2 aktualisieren, danach das Plugin. Die Uhren von WordPress-Server und Backend dürfen höchstens 5 Minuten voneinander abweichen (Signaturformat 2). Notausstieg gegen ein älteres Backend: Umgebungsvariable API_SIGNATURE_VERSION=1 (siehe docs/entwicklung/sicherheit.md im Ondisos-Repository).

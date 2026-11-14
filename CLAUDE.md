@@ -12,9 +12,11 @@ die Projektübersicht in der [README](README.md).
 - **Tenant** = eine Schule. Jede Anmeldung, Formular-Konfiguration und jedes Upload-Verzeichnis gehört zu genau einem Tenant. Tenant 1 (`slug = default`) gibt es immer; Einzelbetrieb ist `MULTI_TENANT_ENABLED=false`.
 - **Signierte API:** Das Frontend authentifiziert sich pro Tenant mit HMAC-SHA256 (`X-Signature`) und nennt den Tenant per `?tenant=<slug>`. Der Slug adressiert, die Signatur autorisiert. Das Secret (`tenants.api_secret`) bleibt serverseitig.
 - **Formular-Konfiguration in der Datenbank** (`form_configs`); das Frontend holt sie per `GET /api/form-config.php` (mit `?with=survey` samt veröffentlichter Survey und Theme, ETag, Cache, Stale-if-error).
-- **Formulare im Backend pflegen (3.1):** Konfiguration als HTML-Formular, Survey-Editor (einfügen → prüfen → Entwurf → Vorschau → veröffentlichen, mit Verlauf). Surveys und Themes liegen in `form_resources`; `frontend/surveys/` ist Fallback und Importquelle.
+- **Formulare im Backend pflegen (3.1):** Konfiguration als HTML-Formular, Survey-Editor (bearbeiten → prüfen → Entwurf → Vorschau → veröffentlichen, mit Verlauf). Surveys und Themes liegen in `form_resources`; `frontend/surveys/` ist Fallback und Importquelle.
+- **Grafischer Survey-Editor (3.2):** Reiter *Grafisch* und *JSON* bearbeiten denselben Text; der Text bleibt die einzige Wahrheit, Änderungen treffen nur die bearbeitete Stelle (`backend/public/assets/survey-builder/`).
+  Dazu Live-Vorschau im eigenen Fenster, Hilfe bei Bedingungen, Vorlagen und Bausteine mit ASV-Feldnamen (`backend/resources/survey-templates/`).
+  Markenregel: Der Editor trägt keinen SurveyJS-Namen; die SurveyJS Form Library (MIT) zeigt die Formulare an, der SurveyJS Creator (proprietär) ist **nicht** Teil von Ondisos ([SURVEYJS.md](docs/redaktion/SURVEYJS.md#json-und-surveyjs-creator)).
   Das Theme (Farben, Schrift) ändern beide Admin-Rollen unter *Formulare → Design* (`themes.php`, `theme_edit.php`; Felder plus JSON, kein Entwurf; 3.2.0b).
-  Der SurveyJS-Creator ist **nicht** Teil von Ondisos (proprietäre Lizenz), siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md).
 
 ## Orientierung im Repository
 
@@ -96,10 +98,9 @@ Mehr: [Tests](docs/entwicklung/tests.md) · [Docker für die Entwicklung](docs/e
 - Die Vorschau im Backend trägt eigene Kopien der SurveyJS-Dateien (`backend/public/assets/preview/`); nach SurveyJS-Updates `backend/tools/sync-preview-assets.sh` ausführen.
 - Der Docker-Apache sendet `X-Frame-Options: SAMEORIGIN` (statt `DENY`), damit der Vorschau-Frame einbettbar ist.
 - `database/schema.sql` legt Tenant 1 mit einem Platzhalter-Secret an; erst `migrate.php` (oder ein gesetztes Secret) macht ihn nutzbar.
-- Validierungsmeldungen von SurveyJS erscheinen englisch (keine Locale eingebunden).
 - Mehrere Docker-Stacks aus demselben Verzeichnis teilen sich `backend/.env`, die der Entrypoint bei jedem Start neu schreibt ([docker-entwicklung.md](docs/entwicklung/docker-entwicklung.md)).
 
-**Geplant:** grafischer Survey-Editor im Backend (3.2.0, [PLAN-3.2.0.md](docs/entwicklung/plans/PLAN-3.2.0.md)), Abnahme der Unterschrift per Smartphone (3.2.0a umgesetzt, Geräte-Tests offen; [PLAN-3.2.0a.md](docs/entwicklung/plans/PLAN-3.2.0a.md)), Passkeys als zweiter Faktor (3.1.3, AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, deutsche SurveyJS-Locale, weitere Tests (Endpoint-Skripte, Integration),
+**Geplant:** Passkeys als zweiter Faktor (AP4 in [PLAN-3.1.2.md](docs/entwicklung/plans/PLAN-3.1.2.md)), WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung; [PLAN-3.1.1.md](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand, Datei-Fallback abschaffen, weitere Tests (Endpoint-Skripte, Integration),
 Monitoring, OpenAPI-Beschreibung. *Option, nicht geplant:* Managed Multi-Frontend (ein Frontend für mehrere Tenants; gestrichen, weil Standalone-Frontend und Plugin-ZIP reichen).
 
 ## Dokumentationskarte

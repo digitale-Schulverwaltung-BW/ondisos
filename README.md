@@ -8,7 +8,7 @@
 <p align="center">
   <a href="https://php.net"><img alt="PHP 8.2+" src="https://img.shields.io/badge/PHP-8.2%2B-777bb4"></a>
   <a href="LICENSE"><img alt="Lizenz MIT" src="https://img.shields.io/badge/Lizenz-MIT-green"></a>
-  <img alt="Version 3.1.2" src="https://img.shields.io/badge/Version-3.1.2-blue">
+  <img alt="Version 3.2.0" src="https://img.shields.io/badge/Version-3.2.0-blue">
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Pipeline" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/pipeline.svg"></a>
   <a href="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/-/commits/main"><img alt="Coverage" src="https://gitlab.hhs.karlsruhe.de/digitale-schulverwaltung/ondisos/badges/main/coverage.svg"></a>
 </p>
@@ -28,7 +28,7 @@ im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter 
 
 ## Was Ondisos kann
 
-- **Formulare ohne Programmierung.** Entwurf im SurveyJS-Creator (in Planung: interner Editor), Pflege direkt im Backend – mit Prüfung, Vorschau, Verlauf und Wiederherstellen.
+- **Formulare ohne Programmierung.** Grafischer Editor im Backend mit Vorlagen, Bausteinen für Schulanmeldungen (Feldnamen für ASV-BW), Hilfe bei Bedingungen und Live-Vorschau – mit Prüfung, Entwurf, Verlauf und Wiederherstellen. Farben und Schrift der Formulare lassen sich ebenfalls im Backend anpassen.
 - **Eine Installation, mehrere Schulen.** Ein Backend bedient viele Schulen (*Mandanten*), strikt voneinander getrennt – etwa für einen Schulträger oder ein Medienzentrum.
 - **Öffentliches Frontend, geschütztes Backend.** Das Formular läuft auf der Schulwebsite (WordPress-Plugin oder eigenständig), die Daten liegen im Intranet. Beide sind per signierter API verbunden.
 - **Bestätigung für die Anmeldenden.** PDF mit Schul-Logo und Farbe, optional mit angehängtem Merkblatt.
@@ -113,16 +113,16 @@ Einstellungen für den Produktivbetrieb (HTTPS, Secrets, Firewall) und bekannte 
 
 ## Status und Ausblick
 
-**Version 3.1.1** – produktiv einsetzbar. Neu: Formulare im Backend pflegen, Schul-Branding für PDFs, WordPress-Plugin als fertige ZIP
-([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.1.0.md)).
+**Version 3.2.0** – produktiv einsetzbar. Neu: grafischer Survey-Editor mit Vorlagen und Live-Vorschau, Unterschrift per Smartphone, Design der Formulare im Backend
+([Release Notes](docs/entwicklung/releases/RELEASE-NOTES-3.2.0.md), Upgrade: [MIGRATION-3.2](docs/betreiber/MIGRATION-3.2.md)).
 
-Als Nächstes: WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
+Als Nächstes: Passkeys als zweiter Faktor, WordPress-Plugin ohne Shell (Verbindungscode, Update-Prüfung – [Entwurf](docs/entwicklung/plans/PLAN-3.1.1.md)), SMTP-Versand statt PHP `mail()`, Abschaffung des Datei-Fallbacks für Surveys.
 Weitere Ideen: Freigabe-Workflow, Import aus Schulverwaltungssoftware, REST-API.
 
 ## Danksagung und Lizenz
 
-Ondisos baut auf [SurveyJS](https://surveyjs.io/), [Bootstrap 5](https://getbootstrap.com/), [DataTables](https://datatables.net/),
+Ondisos baut auf der [SurveyJS Form Library](https://surveyjs.io/form-library) (Anzeige der Formulare), [Bootstrap 5](https://getbootstrap.com/),
 [PhpSpreadsheet](https://github.com/PHPOffice/PhpSpreadsheet), [mPDF](https://mpdf.github.io/) und [CodeMirror](https://codemirror.net/).
-Der SurveyJS-Creator ist nicht Teil von Ondisos (eigene Lizenz, siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md)).
+Der grafische Editor ist eine eigene Entwicklung; der SurveyJS Creator ist nicht Teil von Ondisos (eigene Lizenz, siehe [SURVEYJS.md](docs/redaktion/SURVEYJS.md#lizenzhinweis)).
 
 Open Source unter der [MIT-Lizenz](LICENSE).
