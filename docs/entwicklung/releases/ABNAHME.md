@@ -1,4 +1,4 @@
-# Abnahmeprotokolle 3.0.0, 3.1.0, 3.1.2 und 3.2.0a
+# Abnahmeprotokolle 3.0.0, 3.1.0, 3.1.2, 3.2.0a und 3.2.0
 
 Was vor den Releases in einer Demo-Umgebung (WordPress, Standalone-Frontend und Backend im Multi-Tenant-Modus) und im Browser geprüft wurde.
 Die zum jeweiligen Zeitpunkt noch offenen manuellen Prüfungen stehen unverändert dabei; was davon heute noch aussteht, führt [TODO.md](../TODO.md).
@@ -108,3 +108,30 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 - [x] Detailansicht und PDF-Bestätigung einer per Smartphone unterschriebenen Anmeldung
 - [ ] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert
 
+## v3.2.0 (grafischer Survey-Editor, Theme-Editor)
+
+Automatisiert: 1432 Unit-Tests, 204 JavaScript-Tests (`node --test`), Browserprüfung `check.mjs` 184/184 (Chrome; Editor, Bedingungen, Live-Vorschau, Vorlagen und Bausteine,
+Theme-Editor; gegen gerendertes Markup ohne Datenbank). Plan: [PLAN-3.2.0.md](../plans/PLAN-3.2.0.md), Upgrade: [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md).
+
+**Im Docker-Stack geprüft** (frisch gebautes Backend-Image, Chrome über Playwright; 2026-11-14):
+
+- [x] Image baut, Start meldet `Migration complete` und `API_SIGNATURE_MODE=strict`, Health `ok`
+- [x] Image vollständig: alle versionierten Dateien unter `public/`, `src/`, `inc/`, `config/` und `templates/` sowie die 21 Vorlagen und Bausteine (`resources/survey-templates/`) liegen im Image;
+  ohne Bind-Mount gestartet, liefert es die 37 Dateien unter `public/assets/` (Editor, Vorschau, CodeMirror, Theme-Editor) byte-gleich mit Git aus
+- [x] **Echte Seite mit Login** (`realpage.mjs`, Schul-Admin, Tenant „Testschule Nord“, 23 Prüfungen): neues Formular anlegen; der leere Editor bietet Vorlagen und Beispiele, *Schüleranmeldung* übernommen;
+  das Live-Vorschau-Fenster verbindet sich, eine Titeländerung erscheint ohne Speichern, die Auswahl im Aufbau markiert das Feld in der Vorschau; Baustein *Ausbildungsbetrieb* eingefügt,
+  zweites Einfügen abgelehnt; nach `{` Vorschläge mit Feldtiteln, Bedingung geschrieben; Rückgängig und Wiederholen; *Prüfen* ohne Fehler, Platzhalter-Link als Hinweis; Entwurf, Vorschau,
+  Veröffentlichen; `form-config.php` liefert die veröffentlichte Fassung mit Titel, Bedingung und Baustein; der Editor öffnet danach im Reiter *Grafisch*; Formular wieder gelöscht;
+  keine Konsolenfehler und keine CSP-Verletzung in Editor, Fenster und Vorschau. Mit Platform-Admin und zweitem Faktor schon bei AP4a (`ausbildernachmittag`, `meister`)
+- [x] **Funde:** (1) Ein neues Formular ohne Survey zeigte „Datei im Frontend … das Formular nutzt die Datei im Frontend“, auch wenn es keine Datei gibt; jetzt „Noch keine Survey im Backend …“.
+  (2) Die Vorlage *Veranstaltung* verwies auf eine Einstellung „Kalender (iCal)“; der Reiter heißt „Kalender-Download (iCal)“. Beides behoben
+
+**Noch zu prüfen** (abhaken):
+
+- [ ] Screenreader (VoiceOver mit Safari): Aufbau als Baum (Seite, Gruppe, Element und Auswahl mit ↑/↓ werden angesagt), Vorschlagsliste bei Bedingungen (Vorschläge und gewählter Eintrag),
+  Ansagen nach Baustein einfügen, Verschieben und Löschen
+- [ ] Firefox und Safari: Editor, Ziehen mit der Maus, Live-Vorschau-Fenster (auch mit Popup-Blocker)
+- [ ] Zoom 200 % und Tablet: Editor bedienbar, Verschieben über die Knöpfe
+- [ ] Standalone-Frontend und WordPress zeigen ein im grafischen Editor erstelltes Formular; Anmeldung absenden, PDF-Bestätigung mit Seitentiteln als Überschriften
+- [ ] Theme unter *Formulare → Design* ändern und veröffentlichen: Frontend zeigt es
+- [ ] Upgrade einer bestehenden 3.1.2-Instanz nach [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md): Backend zuerst, Audit-Log auf `api_legacy_signature`, ältere Themes, deutsche Standardtexte

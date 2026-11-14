@@ -61,6 +61,7 @@ composer test -- --testsuite=Unit             # ohne Datenbank
 composer test:filter MyServiceTest            # eine Klasse
 node --test "backend/tests/js/*.test.mjs"     # JavaScript-Tests (Survey-Editor), Node 22+, keine Pakete
 node backend/tools/survey-builder-harness/check.mjs   # Browserprüfung des grafischen Editors (Playwright, Chromium; nicht in der Pipeline)
+node backend/tools/survey-builder-harness/realpage.mjs  # echte Seite im Docker-Stack vor dem Release (SLUG, USER_NAME, USER_PASS eines Schul-Admins)
 
 # Entwicklungsstack (Backend :9080, Frontend :8081, phpMyAdmin :8082)
 docker compose --profile dev up -d

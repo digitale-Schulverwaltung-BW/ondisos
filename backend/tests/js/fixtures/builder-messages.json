@@ -87,7 +87,7 @@
         },
         "veranstaltung": {
             "title": "Veranstaltung",
-            "description": "Teilnahme, Anzahl Personen, Name, E-Mail-Adresse, Anmerkungen. Für eine Kalenderdatei in der Bestätigung die Einstellung „Kalender (iCal)\" des Formulars setzen."
+            "description": "Teilnahme, Anzahl Personen, Name, E-Mail-Adresse, Anmerkungen. Für eine Kalenderdatei in der Bestätigung im Formular-Editor den Reiter „Kalender-Download (iCal)\" ausfüllen."
         },
         "schueleranmeldung": {
             "title": "Schüleranmeldung",

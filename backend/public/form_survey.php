@@ -188,6 +188,8 @@ require __DIR__ . '/../inc/header.php';
                         · <?= ff_e($view['live']['updated_at']) ?><?= $view['live']['updated_by'] ? ' · ' . ff_e($view['live']['updated_by']) : '' ?>
                     <?php endif; ?>
                 </p>
+            <?php elseif ($view['draft'] === null && trim($view['editor_text']) === ''): ?>
+                <p class="mb-1"><?= ff_e(M::get('survey_editor.no_survey_yet', 'Noch keine Survey im Backend: Vorlage wählen oder leere Survey anlegen. Liegt für das Formular eine Datei im Frontend, gilt sie bis zur ersten Veröffentlichung.')) ?></p>
             <?php else: ?>
                 <p class="mb-1"><span class="badge text-bg-secondary"><?= ff_e(M::get('forms.source.file', 'Datei im Frontend')) ?></span>
                     <?= ff_e(M::get('survey_editor.not_in_backend', 'Diese Survey ist noch nicht im Backend gespeichert: das Formular nutzt die Datei im Frontend. Mit der ersten Veröffentlichung übernimmt das Backend.')) ?></p>
