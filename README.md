@@ -37,7 +37,7 @@ im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter 
 <table>
   <tr>
     <td width="50%"><img src="docs/img/backend-uebersicht.png" alt="Übersicht der Anmeldungen"><br><sub>Anmeldungen im Backend: filtern, Status setzen, exportieren</sub></td>
-    <td width="50%"><img src="docs/img/backend-survey-editor.png" alt="Survey-Editor"><br><sub>Formular-Editor: einfügen, prüfen, Vorschau, veröffentlichen</sub></td>
+    <td width="50%"><img src="docs/img/backend-survey-editor.png" alt="Survey-Editor"><br><sub>Survey-Editor: grafisch oder als JSON bearbeiten, prüfen, veröffentlichen</sub></td>
   </tr>
   <tr>
     <td><img src="docs/img/pdf-bestaetigung.png" alt="PDF-Bestätigung"><br><sub>PDF-Bestätigung mit Schul-Logo</sub></td>

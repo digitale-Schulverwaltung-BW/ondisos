@@ -6,6 +6,7 @@
 //   BASE=http://localhost:9090 USER_NAME=<admin> USER_PASS=<passwort> OUT=docs/img \
 //   PDF_DIR=file:///pfad/zum/ordner/ node backend/tools/screenshots/shots.mjs backend/tools/screenshots/shots.json
 //
+// Mit Zwei-Faktor-Anmeldung zusätzlich USER_2FA=<TOTP- oder Recovery-Code>; ein Platform-Admin wählt den Tenant TENANT_ID (Standard 1).
 // Zugangsdaten nur über Umgebungsvariablen übergeben, nie in Dateien schreiben.
 // shots.json: [{name, url, full?, height?, width?, scale?, wait?, base?, maxHeight?, js?}]; "${PDF_DIR}" wird durch die Umgebungsvariable ersetzt.
 import { spawn } from 'node:child_process';
@@ -52,6 +53,16 @@ if (process.env.USER_NAME) {
   await go(`${BASE}/login.php`);
   await evalJs(`(()=>{const f=document.querySelector('form');f.querySelector('[name=username]').value=${JSON.stringify(process.env.USER_NAME)};f.querySelector('[name=password]').value=${JSON.stringify(process.env.USER_PASS)};f.submit();})()`);
   await sleep(1500);
+  // Login with 2FA: USER_2FA is a TOTP or recovery code (consumed on use).
+  if (process.env.USER_2FA && (await evalJs('location.pathname')).endsWith('two_factor.php')) {
+    await evalJs(`(()=>{const f=document.querySelector('form [name=code]').form;f.code.value=${JSON.stringify(process.env.USER_2FA)};f.submit();})()`);
+    await sleep(1500);
+  }
+  // Platform admin: choose the tenant (TENANT_ID, default 1) via the switcher in the header.
+  if ((await evalJs('location.pathname')).endsWith('tenants.php')) {
+    await evalJs(`(()=>{const b=document.querySelector('button[name=switch_tenant][value="${Number(process.env.TENANT_ID || 1)}"]');b&&b.form.requestSubmit(b);})()`);
+    await sleep(1500);
+  }
 }
 
 const shots = JSON.parse(readFileSync(process.argv[2], 'utf8').replaceAll('${PDF_DIR}', process.env.PDF_DIR || ''));

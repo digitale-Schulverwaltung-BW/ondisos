@@ -52,18 +52,7 @@ Eine Änderung im einen Reiter steht sofort im anderen. Gespeichert und veröffe
 
 ## Workflow im Backend
 
-```
-Formulare → Neues Formular anlegen        Formulare → Survey bearbeiten
-        │  Vorlage wählen                          │
-        ▼                                          ▼
-Survey-Editor: Grafisch ⇄ JSON  ──  Live-Vorschau (ohne Speichern)
-        │
-        ▼
-Prüfen → Entwurf speichern → Vorschau → Veröffentlichen
-        │
-        ▼
-Frontend / WordPress zeigt die veröffentlichte Fassung
-```
+![Ablauf: neues Formular mit Vorlage oder bestehendes Formular öffnen, im Survey-Editor grafisch oder als JSON bearbeiten (Live-Vorschau ohne Speichern), dann Prüfen, Entwurf speichern, Vorschau, Veröffentlichen; Frontend und WordPress zeigen die veröffentlichte Fassung](../img/ablauf-formular-backend.svg)
 
 ### Neues Formular erstellen
 
@@ -105,7 +94,7 @@ Empfänger-Adressen und Logo werden dabei nie kopiert.
    **Neue Formular-Version** (optional; leer lassen = unverändert) und eine **Anmerkung für den Verlauf** (optional) eintragen. Die Formular-Version wird mit jeder Anmeldung gespeichert,
    so lässt sich später nachvollziehen, nach welchem Stand ausgefüllt wurde.
 
-![Survey-Editor mit JSON, Prüfen, Entwurf und Veröffentlichen](../img/backend-survey-editor.png)
+![Survey-Editor im Reiter „Grafisch“: links der Aufbau mit Seiten und Feldern, rechts die Eigenschaften des gewählten Feldes](../img/backend-survey-editor.png)
 
 Wurde die Survey zwischenzeitlich von jemand anderem veröffentlicht, bleibt Ihr Entwurf gespeichert, wird aber nicht veröffentlicht. Der Editor weist darauf hin und zeigt den Unterschied; nach der Prüfung lässt sich erneut veröffentlichen.
 
