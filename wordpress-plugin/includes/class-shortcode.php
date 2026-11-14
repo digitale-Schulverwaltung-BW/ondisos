@@ -95,48 +95,11 @@ class Shortcode
         // Signature on a smartphone (3.2.0a): only if the form allows it
         $signature_handoff = (FormConfig::get($form_key)['signature_handoff'] ?? false) === true;
 
-        // Get prefill data if present
-        $prefill_data = $this->get_prefill_data();
-
         // Enqueue assets for this form
         do_action('ondisos_enqueue_assets', $form_key);
 
         // Render container
-        return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $prefill_data, $signature_handoff);
-    }
-
-    /**
-     * Get prefill data from URL parameter
-     *
-     * Supports: ?prefill=base64_encoded_json
-     *
-     * @return string Base64 encoded JSON or empty string
-     */
-    private function get_prefill_data(): string
-    {
-        if (!isset($_GET['prefill'])) {
-            return '';
-        }
-
-        $prefill = sanitize_text_field($_GET['prefill']);
-
-        // Validate base64 format
-        if (!preg_match('/^[A-Za-z0-9+\/=]+$/', $prefill)) {
-            return '';
-        }
-
-        // Try to decode and validate JSON
-        $decoded = base64_decode($prefill, true);
-        if ($decoded === false) {
-            return '';
-        }
-
-        json_decode($decoded);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return '';
-        }
-
-        return $prefill;
+        return $this->render_container($form_key, $survey_json, $theme_json, $version, $nonce, $ajax_url, $signature_handoff);
     }
 
     /**
@@ -148,7 +111,6 @@ class Shortcode
      * @param string $version Form version
      * @param string $nonce WP nonce
      * @param string $ajax_url AJAX URL
-     * @param string $prefill_data Prefill data (base64)
      * @param bool $signature_handoff Offer signing on a smartphone (nonce, relay URL and texts as data attributes)
      * @return string HTML
      */
@@ -159,7 +121,6 @@ class Shortcode
         string $version,
         string $nonce,
         string $ajax_url,
-        string $prefill_data,
         bool $signature_handoff = false
     ): string {
         $container_id = 'ondisos-container-' . esc_attr($form_key);
@@ -174,7 +135,6 @@ class Shortcode
              data-version="<?php echo esc_attr($version); ?>"
              data-survey-json-id="<?php echo esc_attr($survey_script_id); ?>"
              data-theme-json-id="<?php echo esc_attr($theme_script_id); ?>"
-             data-prefill="<?php echo esc_attr($prefill_data); ?>"
              data-nonce="<?php echo esc_attr($nonce); ?>"
              data-ajax-url="<?php echo esc_url($ajax_url); ?>"<?php if ($signature_handoff) : ?>
              data-signature-handoff="1"

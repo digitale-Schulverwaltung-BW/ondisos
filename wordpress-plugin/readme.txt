@@ -91,7 +91,7 @@ Ja, Sie können mehrere `[ondisos]` Shortcodes mit unterschiedlichen `form` Para
 
 = Wie funktioniert die Prefill-Funktionalität? =
 
-Nach erfolgreicher Submission wird ein Link generiert, der vorausgefüllte Formulardaten enthält. Dies ermöglicht schnelle Mehrfach-Anmeldungen mit ähnlichen Daten.
+Nach erfolgreicher Submission wird ein Link generiert, der vorausgefüllte Formulardaten enthält. Die Daten stehen hinter `#prefill=` und gelangen nicht in die Logs des Webservers; Links älterer Versionen (`?prefill=`) funktionieren weiter. Dies ermöglicht schnelle Mehrfach-Anmeldungen mit ähnlichen Daten.
 Welche Felder im Link enthalten sind, steht in der Formular-Konfiguration im Backend (`prefill_fields`; Vorlage: frontend/config/forms-config-dist.php).
 Zusätzlich lässt sich jedes Feld per einfachem URL-Parameter vorbelegen, z. B. `?Klasse=5a`.
 

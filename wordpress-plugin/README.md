@@ -23,7 +23,7 @@ und signiert an das Ondisos-Backend übertragen — WordPress speichert keine An
 - ✅ Formular-Konfiguration kommt aus dem Backend (pro Tenant, `form-config.php`) — kein Kopieren von Config-Dateien
 - ✅ Signierte Backend-Anfragen (HMAC-SHA256 mit dem Tenant-Secret), CSRF-Schutz über WordPress-Nonces
 - ✅ Datei-Upload (Virenscan im Backend), PDF-Bestätigung (Download über einen Proxy im Plugin), iCal-Download
-- ✅ Prefill per `?prefill=<base64>` (Link aus der Bestätigung) und per einfachen Query-Parametern (`?Klasse=5a`)
+- ✅ Prefill per `#prefill=<base64url>` (Link aus der Bestätigung; ältere `?prefill=`-Links weiter lesbar) und per einfachen Query-Parametern (`?Klasse=5a`)
 - ✅ DSGVO-konform: lokale Fonts/Bibliotheken, keine externen CDNs
 - ✅ Installation und Update ohne Shell per ZIP; alternativ per `git pull` (siehe [INSTALL-AUS-GIT.md](INSTALL-AUS-GIT.md))
 
@@ -39,7 +39,7 @@ Ein Attribut für den Tenant gibt es nicht: Der Tenant gehört zur **Installatio
 Prefill:
 
 ```
-https://example.org/anmeldung/?prefill=<base64-JSON>      # Link, den das System nach einer Anmeldung erzeugt
+https://example.org/anmeldung/?form=bs#prefill=<base64url-JSON>   # Link, den das System nach einer Anmeldung erzeugt
 https://example.org/anmeldung/?Vorname=Erika&Klasse=5a    # einfache Parameter; nur bekannte Feldnamen werden übernommen
 ```
 

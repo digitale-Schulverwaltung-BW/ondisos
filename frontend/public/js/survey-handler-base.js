@@ -254,15 +254,32 @@ class SurveyHandlerBase {
     }
 
     /**
-     * Extract prefill data from plain (non-base64) query params, restricted to a set of
-     * known field names. This lets links be hand-crafted as ?Klasse=5a without encoding,
-     * while ignoring unrelated params (tracking params like utm_source or fbclid on WP pages,
-     * `form`/`prefill` on the standalone frontend, etc.) that happen to be on the URL.
+     * Prefill data for this survey from the page address, in priority order:
+     * 1. #prefill=<base64url JSON> in the fragment (links generated since 3.2.0; never sent to a server)
+     * 2. ?prefill=<base64 JSON> in the query (links generated before 3.2.0, e.g. bookmarks)
+     * 3. plain ?Feld=Wert query params (hand-crafted links)
+     * Only names of questions of this survey are taken, anything else in the data is dropped.
      *
-     * @param {URLSearchParams} urlParams
-     * @param {Set<string>} validNames - Question names from the survey definition
+     * @param {{search: string, hash: string}} location - usually window.location
+     * @param {Set<string>} validNames - question names of the survey
+     * @returns {object|null}
      */
-    _extractPlainPrefillParams(urlParams, validNames) {
+    static readPrefill(location, validNames) {
+        const hashParams = new URLSearchParams(String(location.hash || '').replace(/^#/, ''));
+        const urlParams = new URLSearchParams(String(location.search || ''));
+
+        for (const encoded of [hashParams.get('prefill'), urlParams.get('prefill')]) {
+            if (encoded) {
+                const data = SurveyHandlerBase.decodePrefill(encoded);
+                if (data) {
+                    const known = SurveyHandlerBase._onlyNames(data, validNames);
+                    if (known) {
+                        return known;
+                    }
+                }
+            }
+        }
+
         const plainData = {};
         for (const [key, value] of urlParams.entries()) {
             if (validNames.has(key)) {
@@ -270,6 +287,69 @@ class SurveyHandlerBase {
             }
         }
         return Object.keys(plainData).length > 0 ? plainData : null;
+    }
+
+    /**
+     * Decodes base64url or base64 (padding optional) to a JSON object; null if it is not one.
+     * URLSearchParams turns "+" of plain base64 into a space, which is undone here.
+     *
+     * @param {string} encoded
+     * @returns {object|null}
+     */
+    static decodePrefill(encoded) {
+        try {
+            let b64 = String(encoded).trim().replace(/ /g, '+').replace(/-/g, '+').replace(/_/g, '/');
+            b64 += '='.repeat((4 - b64.length % 4) % 4);
+            const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+            const data = JSON.parse(new TextDecoder().decode(bytes));
+            return data && typeof data === 'object' && !Array.isArray(data) ? data : null;
+        } catch (e) {
+            console.error('Invalid prefill data:', e);
+            return null;
+        }
+    }
+
+    /** @returns {object|null} the entries of data whose key is in validNames */
+    static _onlyNames(data, validNames) {
+        const out = {};
+        for (const key of Object.keys(data)) {
+            if (validNames.has(key)) {
+                out[key] = data[key];
+            }
+        }
+        return Object.keys(out).length > 0 ? out : null;
+    }
+
+    /**
+     * Applies prefill data from the address to the survey and removes #prefill from the address bar,
+     * so it does not end up in a link copied from there or on a screenshot.
+     */
+    applyPrefillFromLocation() {
+        const validNames = new Set(this.questionsOf(this.survey).map(q => q.name));
+        const data = SurveyHandlerBase.readPrefill(window.location, validNames);
+        if (data) {
+            this.survey.data = data;
+            this.survey.mode = 'edit';
+        }
+        if (SurveyHandlerBase.hasPrefillHash(window.location.hash) && window.history && window.history.replaceState) {
+            window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+
+        // A link that differs only in the fragment does not reload the page (e.g. the prefill link clicked on the
+        // completed page of the same form): load it properly so the data is applied to a fresh form
+        if (!SurveyHandlerBase._watchingPrefillHash) {
+            SurveyHandlerBase._watchingPrefillHash = true;
+            window.addEventListener('hashchange', () => {
+                if (SurveyHandlerBase.hasPrefillHash(window.location.hash)) {
+                    window.location.reload();
+                }
+            });
+        }
+    }
+
+    /** @param {string} hash */
+    static hasPrefillHash(hash) {
+        return new URLSearchParams(String(hash || '').replace(/^#/, '')).has('prefill');
     }
 
     // -------------------------------------------------------------------------

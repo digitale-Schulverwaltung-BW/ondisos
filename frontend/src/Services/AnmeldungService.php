@@ -209,9 +209,10 @@ class AnmeldungService
             return null;
         }
 
-        // Als Base64 encoden (verschlüsseln bringt keine zusätzliche Sicherheit, da beim Abruf der URL
-        // die Daten wieder sichtbar werden)
-        $encoded = base64_encode(json_encode($prefillData));
+        // In the fragment (#prefill=…), not in the query: browsers never send the fragment to a server, so the
+        // data stays out of access logs, proxies and analytics. Whoever has the link can still read it (the link is
+        // meant to be bookmarked); encrypting would not change that. base64url: no "+" "/" "=" to escape.
+        $fragment = '#prefill=' . self::base64UrlEncode((string)json_encode($prefillData));
 
         if ($pageUrl !== null) {
             // Use provided page URL as base (e.g. from wp_get_referer() in WordPress context)
@@ -221,13 +222,19 @@ class AnmeldungService
                 $base .= ':' . $parts['port'];
             }
             $path = $parts['path'] ?? '/';
-            return $base . $path . "?form={$formKey}&prefill={$encoded}";
+            return $base . $path . '?form=' . rawurlencode($formKey) . $fragment;
         }
 
         // Fallback: build from SCRIPT_NAME (standard frontend context)
         $baseUrl = $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'];
-        $scriptPath = dirname($_SERVER['SCRIPT_NAME']);
-        return $baseUrl . $scriptPath . "/index.php?form={$formKey}&prefill={$encoded}";
+        $scriptPath = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
+        return $baseUrl . $scriptPath . '/index.php?form=' . rawurlencode($formKey) . $fragment;
+    }
+
+    /** base64url without padding (RFC 4648 §5); survey-handler-base.js also reads plain base64 of older links. */
+    public static function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
     }
 
     /**

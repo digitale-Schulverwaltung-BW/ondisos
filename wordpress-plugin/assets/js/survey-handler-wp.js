@@ -19,7 +19,6 @@ class SurveyHandlerWP extends SurveyHandlerBase {
         this.version = container.dataset.version || '1.0.0';
         this.surveyJson = null;
         this.themeJson = null;
-        this.prefillData = '';
         this.nonce = container.dataset.nonce;
         this.ajaxUrl = container.dataset.ajaxUrl;
         this.survey = null;
@@ -85,20 +84,13 @@ class SurveyHandlerWP extends SurveyHandlerBase {
 
             this.surveyJson = JSON.parse(surveyScript.textContent);
             this.themeJson = JSON.parse(themeScript.textContent);
-            this.prefillData = this.container.dataset.prefill || '';
 
             // Create survey model
             this.survey = new Survey.Model(this.surveyJson);
             this._setupDynamicPlaceholders(this.survey);
 
-            // Get prefill data if present (needs this.survey for field-name filtering)
-            const prefillData = this.getPrefillData();
-
-            // Apply prefill data
-            if (prefillData) {
-                this.survey.data = prefillData;
-                this.survey.mode = 'edit'; // Allow editing
-            }
+            // Prefill data from the page address (#prefill=…, older ?prefill=… links, plain field=value params)
+            this.applyPrefillFromLocation();
 
             // Apply theme
             if (this.themeJson && Object.keys(this.themeJson).length > 0) {
@@ -132,44 +124,6 @@ class SurveyHandlerWP extends SurveyHandlerBase {
     }
 
     /**
-     * Get prefill data from data attribute or URL parameter.
-     * Supports three sources, in priority order:
-     * 1. data-prefill attribute (base64, set server-side by the shortcode from ?prefill=...)
-     * 2. ?prefill=<base64> URL parameter (in case the attribute wasn't set)
-     * 3. Plain field=value query params, e.g. ?Klasse=5a (for hand-crafted links).
-     *    Restricted to actual question names so unrelated params on the WP page
-     *    (tracking params like utm_source or fbclid, other shortcodes, etc.) are ignored.
-     */
-    getPrefillData() {
-        // Try data attribute first (from shortcode)
-        if (this.prefillData) {
-            try {
-                const decoded = atob(this.prefillData);
-                return JSON.parse(decoded);
-            } catch (e) {
-                console.error('Invalid prefill data from shortcode:', e);
-            }
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-
-        // Try URL parameter
-        const prefillParam = urlParams.get('prefill');
-        if (prefillParam) {
-            try {
-                const decoded = atob(prefillParam);
-                return JSON.parse(decoded);
-            } catch (e) {
-                console.error('Invalid prefill data from URL:', e);
-            }
-        }
-
-        // Try plain query params, restricted to this survey's question names
-        const validNames = new Set(this.questionsOf(this.survey).map(q => q.name));
-        return this._extractPlainPrefillParams(urlParams, validNames);
-    }
-
-    /**
      * Handle survey completion
      */
     async handleComplete(sender) {
@@ -198,10 +152,8 @@ class SurveyHandlerWP extends SurveyHandlerBase {
             }
         });
 
-        // Remove consent fields
-        Object.keys(data)
-            .filter(k => k.startsWith('consent_'))
-            .forEach(k => delete data[k]);
+        // consent_* fields stay in the data: the server checks the required consents against the survey,
+        // records which were given (_consents) and drops the answers itself (AnmeldungService)
 
         // Extract field types from survey definition
         data._fieldTypes = this.extractFieldTypes(sender);

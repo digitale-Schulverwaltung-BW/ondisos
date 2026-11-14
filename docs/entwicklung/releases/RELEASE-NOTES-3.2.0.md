@@ -41,6 +41,7 @@ Alle Änderungen im Einzelnen: [Changelog](../changelog.md#320).
 - **PDF-Bestätigungen:** Rate-Limit vor dem Erzeugen je Anmeldung, Besucher und Schule (`PDF_RATE_LIMIT_*`); PDFs werden nicht mehr zwischengespeichert (`Cache-Control: no-store`).
 - **Rate-Limits atomar:** Parallele Anfragen kamen bisher alle am Limit vorbei, auch an der Sperre nach falschen Anmeldungen. Zähler laufen jetzt unter einer Dateisperre, Anmeldeversuche werden vor der Prüfung gezählt.
 - **Einwilligungen:** Pflicht-Einwilligungen (`consent_*` ohne Bedingung) prüft der Server beim Absenden; wer das Formular umgeht, kann sie nicht mehr auslassen. Gespeichert wird, welche erteilt wurden (`_consents`).
+- **Vorausfüll-Links:** Die Daten stehen hinter `#prefill=` statt `?prefill=` und gelangen nicht mehr in die Logs von Webserver und Proxy. Ältere Links funktionieren weiter.
 - Live-Vorschau: gerendert wird nur, was der Server geprüft hat, in einem abgeschotteten Rahmen ohne eigene Herkunft; eigenes Rate-Limit (`EDITOR_PREVIEW_RATE_LIMIT_MAX`).
 - Unterschrift per Smartphone: eigener Endpunkt nur mit Signaturformat 2, Einmal-Codes mit 10 Minuten Gültigkeit, Rate-Limit je Besucher ([sicherheit.md](../sicherheit.md#unterschrift-per-smartphone-320a)).
 
@@ -75,7 +76,8 @@ Zurückrollen auf 3.1.2 geht ohne Datenbank-Rücksicherung (Migration rein addit
 - Andere Elementtypen (Matrizen, dynamische Panels) bleiben im grafischen Editor unverändert erhalten und sind im Reiter **JSON** änderbar.
 
 **Vor dem Release nicht geprüft** (Abnahme: [ABNAHME.md](ABNAHME.md#v320-grafischer-survey-editor-theme-editor)):
-Screenreader, Firefox und Safari mit dem grafischen Editor, Android im Mobilfunknetz bei der Unterschrift per Smartphone. Das Upgrade von 3.1.2 und das Zurückrollen sind an einer Testinstanz geprüft.
+Screenreader, Firefox und Safari mit dem grafischen Editor, Zoom 200 % und Tablet, Android im Mobilfunknetz bei der Unterschrift per Smartphone. Das Upgrade von 3.1.2 und das Zurückrollen
+sind an einer Testinstanz geprüft, ein im grafischen Editor erstelltes Formular im Standalone-Frontend und in WordPress samt PDF-Bestätigung in der Entwicklungsumgebung.
 
 ## Nicht enthalten / vorgemerkt
 

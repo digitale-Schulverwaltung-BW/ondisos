@@ -214,8 +214,9 @@ $csrfToken = CsrfProtection::getToken();
     <div id="surveyContainer"></div>
 
     <!-- Survey Handler (base class must load first) -->
-    <script src="js/survey-handler-base.js"></script>
-    <script src="js/survey-handler.js"></script>
+    <?php // ?v=: after an update the browser loads the new handlers instead of a cached copy ?>
+    <script src="js/survey-handler-base.js?v=<?= (int)@filemtime(__DIR__ . '/js/survey-handler-base.js') ?>"></script>
+    <script src="js/survey-handler.js?v=<?= (int)@filemtime(__DIR__ . '/js/survey-handler.js') ?>"></script>
     
     <script nonce="<?= \Frontend\Utils\ContentSecurityPolicy::nonce() ?>">
         // Configure survey

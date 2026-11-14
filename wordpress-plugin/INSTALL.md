@@ -85,7 +85,7 @@ Neue Seite (oder Beitrag) anlegen und den **Shortcode** einfügen, mit dem Schl�
 `form` ist Pflicht und muss ein Formular sein, das im Backend für Ihre Schule existiert. Ein Attribut für die Schule gibt es nicht: Sie gehört zur Installation (Einstellungen), nicht zur Seite.
 Mehrere Shortcodes auf einer Seite sind möglich.
 
-**Vorausfüllen:** Felder lassen sich per Link vorbelegen, entweder mit `?prefill=<base64-JSON>` (den Link erzeugt das System nach einer Anmeldung) oder einfach per Parameter, z. B. `…/anmeldung/?Vorname=Erika&Klasse=5a`.
+**Vorausfüllen:** Felder lassen sich per Link vorbelegen, entweder mit dem Link, den das System nach einer Anmeldung erzeugt (`…/anmeldung/?form=bs#prefill=…`; die Daten stehen hinter `#` und gelangen so nicht in die Logs des Webservers) oder einfach per Parameter, z. B. `…/anmeldung/?Vorname=Erika&Klasse=5a`.
 Übernommen werden nur Parameter, die als Feldname im Formular existieren (Tracking-Parameter wie `utm_source` werden ignoriert).
 
 ## Testen

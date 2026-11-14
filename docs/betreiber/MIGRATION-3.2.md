@@ -116,6 +116,8 @@ Ein 3.2-Frontend an einem 3.1.2-Backend zeigt die Formulare wie bisher; die Unte
 - **Einwilligungen werden auf dem Server geprüft:** Pflicht-Einwilligungen ohne Bedingung (Feldname beginnt mit `consent_`, z. B. die Datenschutz-Zustimmung) müssen angekreuzt sein,
   sonst lehnt das Frontend die Anmeldung ab, auch wenn jemand das Formular umgeht. Bei Besuchern ändert sich nichts, SurveyJS verlangt das Häkchen schon bisher. Einwilligungen mit Bedingung prüft der Server nicht
   ([SURVEYJS.md](../redaktion/SURVEYJS.md#feldnamen)). Neue Anmeldungen vermerken, welche Einwilligungen erteilt wurden (internes Feld `_consents`).
+- **Vorausfüll-Links:** Der Link nach einer Anmeldung trägt die Daten jetzt hinter `#prefill=` (statt `?prefill=`); so landen sie nicht mehr in den Logs von Webserver und Proxy.
+  Gespeicherte Lesezeichen mit dem alten Format funktionieren weiter. Wer Access-Logs aufbewahrt, findet darin ältere Links mit Daten: Aufbewahrungsfrist der Logs prüfen.
 
 ## Korrekturen an den Beispiel-Surveys
 

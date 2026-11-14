@@ -318,7 +318,7 @@ CREATE TABLE anmeldungen (
 **Frontend:**
 - SurveyJS-Integration mit lokalen Fonts (DSGVO-konform)
 - Standalone-PHP-Frontend **oder** WordPress-Plugin (Shortcode `[ondisos form="…"]`)
-- Gemeinsame JS-Basis (`survey-handler-base.js`), Prefill per `?prefill=<base64>` oder einfachen Query-Parametern (`?Klasse=5a`)
+- Gemeinsame JS-Basis (`survey-handler-base.js`), Prefill per `#prefill=<base64url>` im Fragment (seit 3.2.0; ältere Links mit `?prefill=<base64>` werden weiter gelesen) oder einfachen Query-Parametern (`?Klasse=5a`), `SurveyHandlerBase::readPrefill()`
 - Dynamische Platzhalter (`placeholderExpression`)
 - CSRF-Protection
 - File-Upload Support
