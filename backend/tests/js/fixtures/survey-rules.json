@@ -1,6 +1,7 @@
 {
     "reservedNames": [
         "_fieldTypes",
+        "_consents",
         "website_url"
     ],
     "displayTypes": [

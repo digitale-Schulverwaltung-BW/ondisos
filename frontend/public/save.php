@@ -13,6 +13,7 @@ use Frontend\Utils\CsrfProtection;
 use Frontend\Utils\Honeypot;
 use Frontend\Config\FormConfig;
 use Frontend\Config\FormConfigLoader;
+use Frontend\Config\SurveySource;
 use Frontend\Services\MessageService as M;
 
 header('Content-Type: application/json; charset=utf-8');
@@ -40,7 +41,8 @@ try {
     // 3. Get form key
     $formKey = $_REQUEST['form'] ?? '';
 
-    if (empty($formKey) || !FormConfigLoader::ensure($formKey)) {
+    // With the survey: the consent check needs it (ETag cache, usually no transfer)
+    if (empty($formKey) || !FormConfigLoader::ensureWithSurvey($formKey)) {
         // Unknown form = client error; backend unreachable / tenant rejected = service problem (details are in the log)
         $reason = FormConfigLoader::failure((string) $formKey)['reason'] ?? 'not_found';
         if ($reason !== 'not_found') {
@@ -74,7 +76,8 @@ try {
         formKey: $formKey,
         surveyData: $surveyData,
         metadata: $metadata,
-        files: $_FILES
+        files: $_FILES,
+        survey: SurveySource::decoded($formKey)
     );
 
     // 8. Regenerate CSRF token for next submission

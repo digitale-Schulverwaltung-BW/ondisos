@@ -231,7 +231,12 @@ Der **Name** eines Feldes ist der Schlüssel der Antworten: Er steht als Spalte 
 Benennen Sie ein Feld um, fragt der Editor nach: Für Excel-Export, PDF und Vorausfüll-Links ist es danach ein **neues** Feld; bereits gespeicherte Anmeldungen behalten ihre Daten unter dem alten Namen.
 Verweise in Bedingungen und Texten (`{Name}`) passt der Editor dabei an. Die Formular-Konfiguration (PDF-Felder, Vorausfüll-Links, Mailtext) ändert er nicht; *Prüfen* meldet dort Namen, die es nicht mehr gibt.
 
-Ein Name muss in der Survey eindeutig sein; `_fieldTypes` und `website_url` sind für das System reserviert. Für Schulanmeldungen nehmen Sie am besten die [Bausteine](#bausteine), deren Namen ASV-BW kennt.
+Ein Name muss in der Survey eindeutig sein; `_fieldTypes`, `_consents` und `website_url` sind für das System reserviert.
+
+**Einwilligungen** (Name beginnt mit `consent_`, z. B. `consent_DatenschutzOk` im Baustein *Datenschutz-Zustimmung*): Ist das Feld ein Pflichtfeld ohne Bedingung, prüft der Server beim Absenden,
+dass es angekreuzt ist; eine Anmeldung ohne diese Einwilligung wird abgelehnt, auch wenn jemand das Formular umgeht. Gespeichert wird nur, **welche** Einwilligungen erteilt wurden
+(Feld `_consents`), nicht das Häkchen selbst; in Liste, Export und Mail erscheinen Einwilligungen nicht. Einwilligungen mit Bedingung (*Sichtbar wenn*, *Aktiv wenn*, *Pflicht wenn*, auch an der Seite
+oder Gruppe darüber) und in dynamischen Gruppen prüft der Server **nicht**, er vermerkt sie nur, wenn sie erteilt wurden. Eine Einwilligung, auf die Sie sich verlassen müssen, gehört deshalb ohne Bedingung ins Formular. Für Schulanmeldungen nehmen Sie am besten die [Bausteine](#bausteine), deren Namen ASV-BW kennt.
 
 ### Einstellungen des Formulars
 

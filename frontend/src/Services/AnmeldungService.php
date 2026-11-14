@@ -7,6 +7,7 @@ namespace Frontend\Services;
 
 use Frontend\Config\FormConfig;
 use Frontend\Utils\ClientIp;
+use Frontend\Utils\ConsentCheck;
 
 class AnmeldungService
 {
@@ -18,13 +19,16 @@ class AnmeldungService
     /**
      * Process anmeldung submission
      *
+     * @param array<string,mixed>|null $survey published survey; when given, required consents are checked
+     *                                        against it (ConsentCheck). Null skips the check (survey not loadable).
      * @return array{success: bool, id?: int, error?: string, warnings?: array, pdf_download?: array}
      */
     public function processSubmission(
         string $formKey,
         array $surveyData,
         array $metadata = [],
-        array $files = []
+        array $files = [],
+        ?array $survey = null
     ): array {
         // Validate form exists
         if (!FormConfig::exists($formKey)) {
@@ -45,8 +49,27 @@ class AnmeldungService
             ];
         }
 
-        // Clean consent fields (don't save them)
+        // Consent: SurveyJS checks "required" only in the browser; a direct POST could leave it out
+        if ($survey !== null) {
+            $missing = ConsentCheck::missing($survey, $surveyData);
+            if ($missing !== []) {
+                error_log("Submission refused for form '{$formKey}': required consent missing (" . implode(', ', $missing) . ')');
+
+                return [
+                    'success' => false,
+                    'error'   => MessageService::get('validation.consent_required', 'Bitte akzeptieren Sie die Bedingungen'),
+                ];
+            }
+        }
+
+        // Keep which consents were given as proof (internal field, hidden in list, export and mail);
+        // the consent answers themselves are not stored
+        $given = ConsentCheck::given($surveyData);
         $surveyData = $this->cleanConsentFields($surveyData);
+        unset($surveyData[ConsentCheck::RECORD_FIELD]); // only the server sets it
+        if ($given !== []) {
+            $surveyData[ConsentCheck::RECORD_FIELD] = $given;
+        }
 
         // Inject submission date if not already set (server-side, tamper-safe)
         if (empty($surveyData['Anmeldung am'])) {

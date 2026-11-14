@@ -20,10 +20,11 @@ final class SurveyValidator
     public const MAX_DEPTH    = 32;
 
     /**
-     * Field names the system uses itself: '_fieldTypes' is metadata in anmeldungen.data, 'website_url' is the
-     * honeypot field of the forms (a question with that name would be taken for a bot and silently dropped).
+     * Field names the system uses itself: '_fieldTypes' and '_consents' (consents given) are metadata in
+     * anmeldungen.data, 'website_url' is the honeypot field of the forms (a question with that name would be
+     * taken for a bot and silently dropped).
      */
-    public const RESERVED_NAMES = ['_fieldTypes', 'website_url'];
+    public const RESERVED_NAMES = ['_fieldTypes', '_consents', 'website_url'];
 
     /** Links to the documentation domains (RFC 2606) are placeholders in templates and building blocks (AP6). */
     private const PLACEHOLDER_LINK = '#\\b(?:https?://)?(?:[a-z0-9-]+\\.)*example\\.(?:com|org|net)\\b#i';

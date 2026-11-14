@@ -113,6 +113,9 @@ Ein 3.2-Frontend an einem 3.1.2-Backend zeigt die Formulare wie bisher; die Unte
 - **Survey-Editor:** Neben dem JSON gibt es den Reiter *Grafisch*, die *Live-Vorschau* (eigenes Fenster; der Browser darf es für die Verwaltungsoberfläche nicht blockieren) und für neue Formulare
   eine Auswahl an Vorlagen. Den SurveyJS Creator braucht niemand mehr; eingefügtes JSON aus dem Creator funktioniert weiter ([SURVEYJS.md](../redaktion/SURVEYJS.md)).
 - **Anmeldeliste:** Felder der Survey lassen sich als zusätzliche Spalten einblenden ([Sekretariat](../sekretariat/README.md#2-sehen-was-neu-ist)).
+- **Einwilligungen werden auf dem Server geprüft:** Pflicht-Einwilligungen ohne Bedingung (Feldname beginnt mit `consent_`, z. B. die Datenschutz-Zustimmung) müssen angekreuzt sein,
+  sonst lehnt das Frontend die Anmeldung ab, auch wenn jemand das Formular umgeht. Bei Besuchern ändert sich nichts, SurveyJS verlangt das Häkchen schon bisher. Einwilligungen mit Bedingung prüft der Server nicht
+  ([SURVEYJS.md](../redaktion/SURVEYJS.md#feldnamen)). Neue Anmeldungen vermerken, welche Einwilligungen erteilt wurden (internes Feld `_consents`).
 
 ## Korrekturen an den Beispiel-Surveys
 

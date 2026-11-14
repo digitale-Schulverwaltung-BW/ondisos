@@ -111,7 +111,8 @@ class Ajax_Handler
                 formKey: $form_key,
                 surveyData: $survey_data,
                 metadata: $metadata,
-                files: $_FILES
+                files: $_FILES,
+                survey: \Frontend\Config\SurveySource::decoded($form_key)
             );
 
             // 8. Generate prefill link on success

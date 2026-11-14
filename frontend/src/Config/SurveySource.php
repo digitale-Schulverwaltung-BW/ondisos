@@ -34,6 +34,24 @@ final class SurveySource
     }
 
     /**
+     * The survey as array, for server-side checks of a submission (ConsentCheck).
+     * Null if it cannot be loaded; the caller decides what that means (logged here).
+     *
+     * @return array<string,mixed>|null
+     */
+    public static function decoded(string $formKey, ?string $surveysDir = null): ?array
+    {
+        try {
+            $survey = json_decode(self::survey($formKey, $surveysDir), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable $e) {
+            error_log("SurveySource: survey of form '{$formKey}' not available for checks: " . $e->getMessage());
+            return null;
+        }
+
+        return is_array($survey) ? $survey : null;
+    }
+
+    /**
      * An absent theme is not an error: the form is shown with SurveyJS defaults ("{}").
      *
      * @throws \RuntimeException theme present but not valid JSON
