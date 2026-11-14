@@ -31,7 +31,7 @@ Formulare einer Schule anlegen, ändern und veröffentlichen; Logo und PDF-Best�
 | Dokument | Inhalt |
 |---|---|
 | [PDF-Bestätigung gestalten](redaktion/pdf-bestaetigung.md) | Schul-Logo, Farbe, Texte, Felder und angehängtes PDF; Hinweise zum Fallback-Logo für Betreiber |
-| [SURVEYJS.md](redaktion/SURVEYJS.md) | Formulare mit SurveyJS entwerfen, im Backend einfügen, prüfen, veröffentlichen; Zusammenhang Konfiguration ↔ Survey; Lizenzhinweis zum Creator |
+| [SURVEYJS.md](redaktion/SURVEYJS.md) | Formulare erstellen und ändern: Vorlagen, grafischer Editor, Bausteine, Bedingungen, Live-Vorschau, prüfen, veröffentlichen; JSON aus anderen Werkzeugen; Design (Theme); Zusammenhang Konfiguration ↔ Survey |
 
 ## Schul-IT
 

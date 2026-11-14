@@ -62,7 +62,9 @@ final class HelpLinks
                 ['label' => 'Konfiguration und Survey', 'path' => self::SURVEYJS . '#zusammenhang-formular-konfiguration--survey'],
             ],
             'form_survey.php' => [
-                ['label' => 'Survey einfügen, prüfen, veröffentlichen', 'path' => self::SURVEYJS . '#bestehendes-formular-ändern'],
+                ['label' => 'Der grafische Editor', 'path' => self::SURVEYJS . '#der-grafische-editor'],
+                ['label' => 'Bedingungen und Berechnungen', 'path' => self::SURVEYJS . '#bedingungen-und-berechnungen'],
+                ['label' => 'Prüfen, Entwurf, Veröffentlichen', 'path' => self::SURVEYJS . '#bestehendes-formular-ändern'],
                 ['label' => 'Was „Prüfen“ meldet', 'path' => self::SURVEYJS . '#was-prüfen-meldet'],
                 ['label' => 'Verlauf und Wiederherstellen', 'path' => self::SURVEYJS . '#verlauf-und-wiederherstellen'],
             ],

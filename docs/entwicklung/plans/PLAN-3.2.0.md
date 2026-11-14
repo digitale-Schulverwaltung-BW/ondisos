@@ -458,7 +458,8 @@ Ja, in vier Schritten. AP6 erledigt Schritt 1; Schritt 2 ist gestrichen, 3 und 4
 - [x] **Upgrade-Hinweise für Betreiber** (2026-11-13): [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md) mit Signaturformat vor dem Update, Firewall-Pfad, Composer beim ersten Start, Migration, Frontend/Plugin, sichtbaren Änderungen (SurveyJS 3, PDF-Gliederung), Korrekturen in `zq`/`vabo`, Neuinstallation ohne Seed und Rückfall
 - [ ] **Abnahme 3.2.0** als Abschnitt in [ABNAHME.md](../releases/ABNAHME.md) (manuelle Testliste: echte Seite mit Login im Docker-Stack, Screenreader-Test der Vorschlagsliste, Vorschau gegen ein frisch gebautes Image)
 - [ ] **Dokumente nachziehen:** `CLAUDE.md` (Editor nicht mehr unter „Geplant“, Kernkonzepte ohne „Creator ist nicht Teil“ als einzigen Weg), README (Funktionsliste), `readme.txt` des Plugins (Changelog) und neue Plugin-ZIP, Release Notes 3.2.0, Changelog-Überschrift „3.2.0a“ zusammenführen
-- [ ] **Markenregel in der Redaktions-Doku:** [SURVEYJS.md](../../redaktion/SURVEYJS.md) neu ordnen; der Editor trägt keinen SurveyJS-Namen ([Antwort von SurveyJS](#antwort-von-surveyjs-2026-11-13), Bedingung 2), der Creator bleibt als externer Weg beschrieben
+- [x] **Markenregel in der Redaktions-Doku:** [SURVEYJS.md](../../redaktion/SURVEYJS.md) neu ordnen; der Editor trägt keinen SurveyJS-Namen ([Antwort von SurveyJS](#antwort-von-surveyjs-2026-11-13), Bedingung 2), der Creator bleibt als externer Weg beschrieben.
+  Erledigt: Hauptweg grafischer Editor (Vorlagen, Bausteine, Bedingungen), Creator unter „JSON und SurveyJS Creator“; die Hilfe im Editor heißt „JSON aus einem anderen Werkzeug“; HelpLinks zeigen auf die neuen Abschnitte
 
 **Sollte noch rein (klein):**
 

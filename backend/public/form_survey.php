@@ -1,6 +1,6 @@
 <?php
 // public/form_survey.php
-// Survey editor: build the survey graphically or as JSON (paste from the SurveyJS Creator), check it, keep a draft, publish, restore.
+// Survey editor: build the survey graphically or as JSON (also pasted from other tools), check it, keep a draft, publish, restore.
 
 declare(strict_types=1);
 
@@ -334,14 +334,14 @@ require __DIR__ . '/../inc/header.php';
 
     <!-- Help -------------------------------------------------------------------------------------------------->
     <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('survey_editor.howto.title', 'So kommt eine Survey hierher')) ?></h5></div>
+        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('survey_editor.howto.title', 'JSON aus einem anderen Werkzeug')) ?></h5></div>
         <div class="card-body">
             <ol class="mb-2">
-                <li><?= ff_e(M::get('survey_editor.howto.1', 'Im SurveyJS-Creator (kostenlose Online-Version) das Formular bearbeiten.')) ?>
+                <li><?= ff_e(M::get('survey_editor.howto.1', 'Die Survey im anderen Werkzeug entwerfen, z. B. im SurveyJS Creator (Online-Version):')) ?>
                     <a href="https://surveyjs.io/create-free-survey" target="_blank" rel="noopener noreferrer">surveyjs.io/create-free-survey</a></li>
-                <li><?= ff_e(M::get('survey_editor.howto.2', 'Dort den Reiter „JSON Editor" öffnen, den gesamten Text kopieren.')) ?></li>
-                <li><?= ff_e(M::get('survey_editor.howto.3', 'Hier im Editor alles ersetzen, auf „Prüfen" klicken, Hinweise lesen, dann „Entwurf speichern" und „Veröffentlichen".')) ?></li>
-                <li><?= ff_e(M::get('survey_editor.howto.4', 'Für eine Änderung am bestehenden Formular: den Text aus dem Editor hier („JSON kopieren") im Creator unter „JSON Editor" einfügen.')) ?></li>
+                <li><?= ff_e(M::get('survey_editor.howto.2', 'Dort das JSON kopieren (im Creator: Reiter „JSON Editor").')) ?></li>
+                <li><?= ff_e(M::get('survey_editor.howto.3', 'Hier im Reiter „JSON" alles ersetzen, „Prüfen", Hinweise lesen, dann „Entwurf speichern" und „Veröffentlichen". Danach lässt sich die Survey auch grafisch weiterbearbeiten.')) ?></li>
+                <li><?= ff_e(M::get('survey_editor.howto.4', 'Um eine bestehende Survey dort weiterzubearbeiten: „JSON kopieren" und im anderen Werkzeug einfügen.')) ?></li>
             </ol>
             <p class="small text-muted mb-0"><?= ff_e(M::get('survey_editor.howto.license', 'Der Creator gehört nicht zu Ondisos; die Online-Version von surveyjs.io wird von SurveyJS betrieben.')) ?></p>
         </div>

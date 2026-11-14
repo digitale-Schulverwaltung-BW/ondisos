@@ -41,6 +41,6 @@ use App\Services\MessageService as M;
         </div>
         <textarea id="survey-text" name="survey_text" class="form-control font-monospace" rows="26" spellcheck="false" wrap="off"
                   style="font-size: .8rem; white-space: pre;"><?= ff_e($editorText) ?></textarea>
-        <div class="form-text mb-3"><?= ff_e(M::get('survey_editor.editor_help', 'Hier das JSON aus dem SurveyJS-Creator einfügen (siehe Anleitung unten). Beim Prüfen und Speichern wird nichts veröffentlicht.')) ?></div>
+        <div class="form-text mb-3"><?= ff_e(M::get('survey_editor.editor_help', 'Der vollständige Text der Survey; hier lässt sich auch JSON aus einem anderen Werkzeug einfügen (siehe unten). Beim Prüfen und Speichern wird nichts veröffentlicht.')) ?></div>
     </div>
 </div>
