@@ -35,21 +35,18 @@ class PdfGeneratorService
      */
     public function generateAndDownload(Anmeldung $anmeldung, array $pdfConfig): void
     {
-        // Generate filename
-        $filename = $this->generateFilename($anmeldung);
+        $pdf = $this->generate($anmeldung, $pdfConfig);
 
-        // Create mPDF instance
-        $mpdf = $this->createMpdf();
+        // Own headers instead of mPDF's DOWNLOAD output, which sends "Cache-Control: public":
+        // the confirmation holds personal data and must not stay in shared or browser caches.
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="' . $this->generateFilename($anmeldung) . '"');
+        header('Content-Length: ' . strlen($pdf));
+        header('Cache-Control: no-store, max-age=0');
+        header('Pragma: no-cache');
+        header('X-Content-Type-Options: nosniff');
 
-        // Render HTML
-        $html = $this->renderer->render($anmeldung, $pdfConfig);
-
-        // Write HTML to PDF
-        $mpdf->WriteHTML($html);
-        FormPdfAttachmentService::appendTo($mpdf, $this->attachmentPath($pdfConfig));
-
-        // Output as download
-        $mpdf->Output($filename, \Mpdf\Output\Destination::DOWNLOAD);
+        echo $pdf;
     }
 
     /**

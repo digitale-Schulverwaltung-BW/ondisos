@@ -13,12 +13,14 @@ define('SKIP_AUTH_CHECK', true);
 
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
+use App\Services\PdfDownloadThrottle;
 use App\Services\PdfGeneratorService;
 use App\Services\PdfLogoResolver;
 use App\Services\PdfTokenService;
 use App\Services\PdfTemplateRenderer;
 use App\Config\TenantContext;
 use App\Repositories\AnmeldungRepository;
+use App\Utils\ClientIdentity;
 use App\Services\MessageService as M;
 
 // Set content type header (will be overridden by mPDF if successful)
@@ -63,6 +65,14 @@ try {
 
     if (empty($pdfConfig) || !($pdfConfig['enabled'] ?? false)) {
         throw new RuntimeException(M::get('pdf.errors.not_enabled', 'PDF nicht aktiviert für dieses Formular'), 403);
+    }
+
+    // Every request renders a new PDF and the link is reusable: limit before mPDF does any work
+    $throttle = PdfDownloadThrottle::fromEnv(__DIR__ . '/../../cache/ratelimit_pdf');
+    $retryAfter = $throttle?->check($anmeldungId, $tenantId, ClientIdentity::clientId($_SERVER));
+    if ($retryAfter !== null) {
+        header('Retry-After: ' . $retryAfter);
+        throw new RuntimeException(M::get('pdf.errors.rate_limited', 'Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.'), 429);
     }
 
     // Logo: the files live on the backend, so the path never comes from the frontend.

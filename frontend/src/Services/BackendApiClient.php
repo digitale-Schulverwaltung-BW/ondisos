@@ -101,8 +101,12 @@ class BackendApiClient
             : null;
     }
 
-    /** @return list<string> */
-    private function clientHeader(): array
+    /**
+     * Header with the visitor id, also for requests outside this client (PDF proxies).
+     *
+     * @return list<string>
+     */
+    public function clientHeader(): array
     {
         $id = $this->clientId();
 

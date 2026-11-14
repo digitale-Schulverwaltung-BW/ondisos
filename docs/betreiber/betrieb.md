@@ -203,6 +203,10 @@ Das **Frontend** hat eigene PHP- und Webserver-Limits: Besucher laden zuerst dor
 
 **Weitere Grenzen je Anmeldung und Besucher (ab 3.1.2):** `UPLOAD_MAX_FILES_PER_ANMELDUNG` (Standard 20) und `UPLOAD_MAX_BYTES_PER_ANMELDUNG` (Standard 50 MB) begrenzen alle Dateien einer Anmeldung; `UPLOAD_RATE_LIMIT_MAX` je `UPLOAD_RATE_LIMIT_WINDOW` (60 je 60 Sekunden) begrenzen die Upload-Anfragen je Besucher. Gezählt wird je Besucher (`X-Ondisos-Client`) statt je Frontend-Server, damit eine Schule nicht alle anderen ausbremst.
 
+**PDF-Bestätigungen (ab 3.2.0):** Jeder Aufruf eines Download-Links erzeugt das PDF neu. Das Backend begrenzt das vor dem Erzeugen: `PDF_RATE_LIMIT_ENTRY_MAX` (10 je 10 Minuten und Anmeldung),
+`PDF_RATE_LIMIT_CLIENT_MAX` (30 je 10 Minuten und Besucher) und `PDF_RATE_LIMIT_TENANT_MAX` (60 je Minute und Schule), alle in der `backend/.env`. Darüber hinaus sehen Besucher
+„Zu viele Downloads in kurzer Zeit“ (HTTP 429). Die Werte nur erhöhen, wenn eine Schule zu Stoßzeiten mehr Bestätigungen je Minute braucht.
+
 **Symptome:** `HTTP 413 Request Entity Too Large` → Webserver-Limit; Fehler im Formular ohne 413 oder „exceeds the upload_max_filesize" → PHP-Limit; „Dateityp nicht erlaubt" → Typ bzw. echter Inhalt passt nicht zu `UPLOAD_ALLOWED_TYPES`.
 
 ## Zugang zur Verwaltungsoberfläche absichern

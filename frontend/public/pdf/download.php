@@ -14,6 +14,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../inc/bootstrap.php';
 
 use Frontend\Config\FormConfig;
+use Frontend\Services\BackendApiClient;
 use Frontend\Services\MessageService as M;
 
 // Set initial content type (will be overridden if PDF is successful)
@@ -44,6 +45,8 @@ try {
         CURLOPT_FOLLOWLOCATION => false,
         CURLOPT_TIMEOUT => 60,
         CURLOPT_HEADER => true,  // Include headers in output
+        // Pseudonymous visitor id: the backend limits downloads per visitor, not per frontend server
+        CURLOPT_HTTPHEADER => (new BackendApiClient())->clientHeader(),
     ]);
 
     $response = curl_exec($ch);
@@ -74,6 +77,8 @@ try {
                 header($header);
             }
         }
+        header('Cache-Control: no-store, max-age=0');
+        header('Pragma: no-cache');
 
         // Output PDF
         echo $body;
@@ -84,11 +89,16 @@ try {
         // The backend returns HTML error pages, but we'll show our own
         error_log("Backend PDF download failed with HTTP {$httpCode}");
 
+        if ($httpCode === 429 && preg_match('/^Retry-After:\s*(\d+)/mi', $headers, $m) === 1) {
+            header('Retry-After: ' . $m[1]);
+        }
+
         // Map common HTTP codes to user-friendly messages
         $errorMessage = match($httpCode) {
             400 => M::get('errors.pdf.invalid_request', 'Ungültige Anfrage'),
             403 => M::get('errors.pdf.invalid_token', 'Ungültiger oder abgelaufener Download-Link'),
             404 => M::get('errors.pdf.not_found', 'Anmeldung nicht gefunden'),
+            429 => M::get('errors.pdf.rate_limited', 'Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.'),
             default => M::get('errors.pdf.download_failed', 'PDF-Download fehlgeschlagen')
         };
 

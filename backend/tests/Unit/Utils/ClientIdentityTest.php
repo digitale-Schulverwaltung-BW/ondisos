@@ -44,4 +44,11 @@ class ClientIdentityTest extends TestCase
         $this->assertSame($legacy, ClientIdentity::fingerprint($this->server('not-a-hash'), 1));
         $this->assertSame($legacy, ClientIdentity::fingerprint($this->server(str_repeat('A', 64)), 1));
     }
+
+    public function testClientIdReturnsWellFormedHeaderOnly(): void
+    {
+        $this->assertSame(str_repeat('a', 64), ClientIdentity::clientId($this->server(str_repeat('a', 64))));
+        $this->assertNull(ClientIdentity::clientId($this->server(null)));
+        $this->assertNull(ClientIdentity::clientId($this->server('not-a-hash')));
+    }
 }

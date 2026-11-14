@@ -84,6 +84,9 @@ Die Reihenfolge bleibt: **Backend zuerst**, danach Frontends und WordPress-Plugi
 4. **Neue, optionale Einstellung:** `EDITOR_PREVIEW_RATE_LIMIT_MAX` (Standard 300 je Minute) begrenzt die Prüfungen der Live-Vorschau im Survey-Editor getrennt vom Limit für Speichern und Veröffentlichen.
    Nur ändern, wenn Redakteure bei der Live-Vorschau `429` sehen.
 
+5. **PDF-Bestätigungen begrenzt:** `PDF_RATE_LIMIT_ENTRY_MAX` (10 je 10 Minuten und Anmeldung), `PDF_RATE_LIMIT_CLIENT_MAX` (30 je 10 Minuten und Besucher) und `PDF_RATE_LIMIT_TENANT_MAX`
+   (60 je Minute und Schule), optional in der `backend/.env` ([betrieb.md](betrieb.md#upload-limits)). Gezählt wird je Besucher erst mit Frontend bzw. Plugin 3.2.0; ältere zählen nur je Anmeldung und Schule.
+
 ## Frontend und WordPress-Plugin
 
 1. **Standalone-Frontend:** `git checkout v3.2.0` (bzw. `git pull`), sonst nichts. Das Frontend bringt die SurveyJS-Library 3.2.0 mit; wer die Seitenvorlage angepasst hat, ersetzt

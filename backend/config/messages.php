@@ -299,6 +299,7 @@ return [
             'missing_token' => 'Fehlender Download-Token',
             'invalid_token' => 'Ungültiger oder abgelaufener Token',
             'not_enabled' => 'PDF-Download ist für dieses Formular nicht aktiviert',
+            'rate_limited' => 'Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.',
             'download_failed_title' => 'PDF-Download nicht möglich',
             'download_failed_hint' => 'Der Link ist möglicherweise abgelaufen (gültig 30 Min.) oder ungültig.',
             'unexpected_error' => 'Ein unerwarteter Fehler ist beim PDF-Download aufgetreten. {{contact}}',

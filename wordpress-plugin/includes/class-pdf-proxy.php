@@ -15,6 +15,8 @@ declare(strict_types=1);
 namespace Ondisos;
 
 use Frontend\Config\FormConfig;
+use Frontend\Services\BackendApiClient;
+use Frontend\Services\MessageService;
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
@@ -62,6 +64,8 @@ class Pdf_Proxy
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_FOLLOWLOCATION => true,
+            // Pseudonymous visitor id: the backend limits downloads per visitor, not per WordPress server
+            CURLOPT_HTTPHEADER     => (new BackendApiClient())->clientHeader(),
             CURLOPT_HEADERFUNCTION => static function ($ch, $header) use (&$responseHeaders): int {
                 $trimmed = trim($header);
                 if ($trimmed !== '') {
@@ -75,6 +79,18 @@ class Pdf_Proxy
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $curlError = curl_error($ch);
         curl_close($ch);
+
+        if ($httpCode === 429) {
+            status_header(429);
+            foreach ($responseHeaders as $header) {
+                if (stripos($header, 'Retry-After:') === 0) {
+                    header($header);
+                }
+            }
+            header('Content-Type: text/plain; charset=utf-8');
+            echo MessageService::get('errors.pdf.rate_limited', 'Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.');
+            exit;
+        }
 
         if ($curlError || $httpCode !== 200) {
             status_header($httpCode ?: 502);
@@ -91,6 +107,8 @@ class Pdf_Proxy
                 header($header);
             }
         }
+        header('Cache-Control: no-store, max-age=0');
+        header('Pragma: no-cache');
 
         echo $body;
         exit;

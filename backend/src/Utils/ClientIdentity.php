@@ -22,11 +22,23 @@ final class ClientIdentity
     /** @param array<string,mixed> $server */
     public static function fingerprint(array $server, int $tenantId): string
     {
-        $header = $server['HTTP_X_ONDISOS_CLIENT'] ?? '';
-        if (is_string($header) && preg_match('/^[a-f0-9]{64}$/', $header) === 1) {
-            return 'client:' . $tenantId . ':' . $header;
+        $clientId = self::clientId($server);
+        if ($clientId !== null) {
+            return 'client:' . $tenantId . ':' . $clientId;
         }
 
         return RateLimiter::generateFingerprint($server);
+    }
+
+    /**
+     * The pseudonymous id from X-Ondisos-Client, or null if the frontend sent none (or a malformed one).
+     *
+     * @param array<string,mixed> $server
+     */
+    public static function clientId(array $server): ?string
+    {
+        $header = $server['HTTP_X_ONDISOS_CLIENT'] ?? '';
+
+        return is_string($header) && preg_match('/^[a-f0-9]{64}$/', $header) === 1 ? $header : null;
     }
 }

@@ -47,6 +47,7 @@ return [
             'invalid_token' => 'Ungültiger oder abgelaufener Download-Link',
             'invalid_request' => 'Ungültige Anfrage',
             'not_found' => 'Anmeldung nicht gefunden',
+            'rate_limited' => 'Zu viele Downloads in kurzer Zeit. Bitte versuchen Sie es in einigen Minuten erneut.',
             'download_failed' => 'PDF-Download fehlgeschlagen',
             'download_failed_title' => 'PDF-Download nicht möglich',
             'download_failed_hint' => 'Der Download-Link ist möglicherweise abgelaufen oder ungültig. Links sind in der Regel 30 Minuten gültig.',
