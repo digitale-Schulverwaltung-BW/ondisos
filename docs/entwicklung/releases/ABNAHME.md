@@ -132,8 +132,15 @@ Theme-Editor; gegen gerendertes Markup ohne Datenbank). Plan: [PLAN-3.2.0.md](..
   Ansagen nach Baustein einfügen, Verschieben und Löschen
 - [ ] Firefox und Safari: Editor, Ziehen mit der Maus, Live-Vorschau-Fenster (auch mit Popup-Blocker)
 - [ ] Zoom 200 % und Tablet: Editor bedienbar, Verschieben über die Knöpfe
-- [ ] Standalone-Frontend und WordPress zeigen ein im grafischen Editor erstelltes Formular; Anmeldung absenden, PDF-Bestätigung mit Seitentiteln als Überschriften
-- [ ] Theme unter *Formulare → Design* ändern und veröffentlichen: Frontend zeigt es
+- [x] Standalone-Frontend und WordPress zeigen ein im grafischen Editor erstelltes Formular; Anmeldung absenden, PDF-Bestätigung mit Seitentiteln als Überschriften
+  - 2026-11-14, Docker-Stack (Tenant `default`) und WordPress mit Plugin 3.2.0: Formular `abnahme-fe` grafisch aus *Einfaches Formular* gebaut (Seitentitel „Persönliche Angaben“,
+    zweite Seite „Ihre Nachricht“ mit den Bausteinen Anmerkungen und Datenschutz), veröffentlicht. Beide Frontends zeigen Titel, Seitentitel und deutsche Knöpfe,
+    Anmeldung und PDF-Download (Proxy bzw. `admin-ajax.php`) gehen, die PDF-Bestätigung gliedert nach den Seitentiteln, keine Konsolenfehler
+  - **Fund (behoben):** Mit Pflicht-Einwilligung (`consent_DatenschutzOk` aus dem Baustein Datenschutz) lehnte `save.php` jede Anmeldung ab (`400`, „required consent missing“):
+    `survey-handler.js` und `survey-handler-wp.js` entfernten `consent_*` vor dem Senden, die Serverprüfung aus „Pflicht-Einwilligungen serverseitig prüfen“ verlangt sie.
+    Nach der Korrektur (die Skripte senden die Einwilligungen, Regressionstest `consent-submit.test.mjs`) wiederholt, mit Pflicht-Einwilligung und frisch gebautem Plugin-ZIP:
+    beide Frontends speichern die Anmeldung mit `_consents = ["consent_DatenschutzOk"]`, PDF wie oben
+- [x] Theme unter *Formulare → Design* ändern und veröffentlichen: Frontend zeigt es (2026-11-14 auf dem Produktivsystem: Markenfarbe auf das SurveyJS-Grün geändert)
 - [x] **Upgrade einer bestehenden 3.1.2-Instanz** nach [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md) (2026-11-14): frischer Klon, `v3.1.2` nach der damaligen
   Installationsanleitung (Produktions-Overlay, Einzelbetrieb, Port 9180, Seed und `import-surveys.php`), dazu 4 Anmeldungen über das 3.1.2-Frontend, eine davon im alten
   Signaturformat (Notausstieg `API_SIGNATURE_VERSION=1`). Danach Schritt für Schritt:
