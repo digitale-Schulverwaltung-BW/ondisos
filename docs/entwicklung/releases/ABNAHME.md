@@ -106,7 +106,7 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 - [x] Frontend hinter dem **echten Reverse-Proxy**, Rate-Limit je Besucher (`TRUSTED_PROXIES` im Frontend bzw. *Vertrauenswürdige Proxys* im Plugin): Eine Test-Anmeldung zeigt im Backend die echte öffentliche IP, nicht die des Proxys; am Rechner wird der 11. QR-Code innerhalb von 10 Minuten abgelehnt („Zu viele Versuche“), ein zweites Gerät im **Mobilfunknetz** (nicht im selben WLAN) bekommt gleich danach trotzdem einen Code
 - [x] WordPress mit Wordfence (oder anderer WAF): Polling und Base64-Body werden nicht blockiert
 - [x] Detailansicht und PDF-Bestätigung einer per Smartphone unterschriebenen Anmeldung
-- [ ] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert
+- [x] Upgrade einer bestehenden Instanz: Backend zuerst, dann Frontend/Plugin; Formulare ohne Option unverändert (`signatureHandoff: false`; Upgrade-Test 2026-11-14, siehe v3.2.0)
 
 ## v3.2.0 (grafischer Survey-Editor, Theme-Editor)
 
@@ -134,4 +134,13 @@ Theme-Editor; gegen gerendertes Markup ohne Datenbank). Plan: [PLAN-3.2.0.md](..
 - [ ] Zoom 200 % und Tablet: Editor bedienbar, Verschieben über die Knöpfe
 - [ ] Standalone-Frontend und WordPress zeigen ein im grafischen Editor erstelltes Formular; Anmeldung absenden, PDF-Bestätigung mit Seitentiteln als Überschriften
 - [ ] Theme unter *Formulare → Design* ändern und veröffentlichen: Frontend zeigt es
-- [ ] Upgrade einer bestehenden 3.1.2-Instanz nach [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md): Backend zuerst, Audit-Log auf `api_legacy_signature`, ältere Themes, deutsche Standardtexte
+- [x] **Upgrade einer bestehenden 3.1.2-Instanz** nach [MIGRATION-3.2.md](../../betreiber/MIGRATION-3.2.md) (2026-11-14): frischer Klon, `v3.1.2` nach der damaligen
+  Installationsanleitung (Produktions-Overlay, Einzelbetrieb, Port 9180, Seed und `import-surveys.php`), dazu 4 Anmeldungen über das 3.1.2-Frontend, eine davon im alten
+  Signaturformat (Notausstieg `API_SIGNATURE_VERSION=1`). Danach Schritt für Schritt:
+  - Vor dem Update: der Audit-Log-Befehl zeigt den `api_legacy_signature`-Eintrag; die Prüfung auf ein Vorgabe-`PDF_TOKEN_SECRET` meldet „ok“ und erkennt in der Gegenprobe die Vorgabe (auch mit Kommentar dahinter)
+  - Update auf `main` (`build --pull`, `up -d`): Composer-Schritt einmal (keine neuen Pakete), `Migration complete`, `API_SIGNATURE_MODE=strict`, Warnung zu `SESSION_SECURE`; Port danach `127.0.0.1:9180`
+  - Daten unverändert: Anzahl und Prüfsumme von `anmeldungen`, `form_configs`, `form_resources`, `tenants` gleich, neu nur die Tabelle `signature_handoffs`
+  - 3.1.2-Frontend am neuen Backend: Format 2 funktioniert, Format 1 bekommt `401`; aktualisiertes Frontend: `survey-core.min.css`, deutsche Texte, Anmeldung, PDF über den Proxy
+  - Oberfläche mit dem Admin aus 3.1.2: `realpage.mjs` 23/23; Theme aus SurveyJS 2 im Theme-Editor mit Hinweis auf das ältere Format; übernommene `zq`-Survey: *Prüfen* meldet `{Alter}`, der Aufbau markiert die neun Elemente
+  - Zurückrollen nach Anleitung (`v3.1.2`, neu bauen): Start ohne Fehler auf der migrierten Datenbank, Anmeldung, Liste und Editor funktionieren
+  - **Fund:** Die Befehle unter *Backend* setzen das Produktions-Overlay voraus (`COMPOSE_FILE`); MIGRATION-3.2.md sagt das jetzt ausdrücklich

@@ -64,7 +64,8 @@ Die Reihenfolge bleibt: **Backend zuerst**, danach Frontends und WordPress-Plugi
 
 ## Backend
 
-1. Update wie gewohnt ([betrieb.md](betrieb.md#updates)):
+1. Update wie gewohnt ([betrieb.md](betrieb.md#updates)), mit dem Produktions-Overlay: Die Befehle setzen `COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml` voraus
+   (per `export` oder als Zeile in der Root-`.env`), sonst die `-f`-Optionen angeben:
 
    ```bash
    git fetch --tags && git checkout v3.2.0

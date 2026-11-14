@@ -74,7 +74,7 @@ Zurückrollen auf 3.1.2 geht ohne Datenbank-Rücksicherung (Migration rein addit
 - Andere Elementtypen (Matrizen, dynamische Panels) bleiben im grafischen Editor unverändert erhalten und sind im Reiter **JSON** änderbar.
 
 **Vor dem Release nicht geprüft** (Abnahme: [ABNAHME.md](ABNAHME.md#v320-grafischer-survey-editor-theme-editor)):
-Screenreader, Firefox und Safari mit dem grafischen Editor, Android im Mobilfunknetz bei der Unterschrift per Smartphone, Upgrade einer bestehenden Instanz.
+Screenreader, Firefox und Safari mit dem grafischen Editor, Android im Mobilfunknetz bei der Unterschrift per Smartphone. Das Upgrade von 3.1.2 und das Zurückrollen sind an einer Testinstanz geprüft.
 
 ## Nicht enthalten / vorgemerkt
 
