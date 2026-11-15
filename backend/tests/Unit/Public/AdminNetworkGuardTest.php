@@ -61,6 +61,14 @@ class AdminNetworkGuardTest extends TestCase
         return ['AUTH_ENABLED' => 'false', 'MULTI_TENANT_ENABLED' => 'false', 'PLATFORM_ADMIN_ALLOWED_NETWORKS' => $networks];
     }
 
+    public function testMissingAuthEnabledRequiresLogin(): void
+    {
+        // Fail closed: an .env without AUTH_ENABLED must not open the admin interface
+        $r = $this->runAuth(['MULTI_TENANT_ENABLED' => 'false'], ['REMOTE_ADDR' => '203.0.113.9']);
+        $this->assertStringNotContainsString('PASSED', $r['out']);
+        $this->assertSame(302, $r['code']);
+    }
+
     public function testWithoutLoginAndEmptyListEveryoneGetsIn(): void
     {
         $r = $this->runAuth($this->noLoginEnv(''), ['REMOTE_ADDR' => '203.0.113.9']);

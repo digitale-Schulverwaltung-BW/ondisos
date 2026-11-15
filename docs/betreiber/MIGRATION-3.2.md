@@ -82,6 +82,15 @@ Die Reihenfolge bleibt: **Backend zuerst**, danach Frontends und WordPress-Plugi
 3. **Signaturmodus:** Der Docker-Start meldet den wirksamen Modus (`ℹ️ API_SIGNATURE_MODE=strict …` bzw. eine Warnung bei `compat`). `compat` ist nur noch eine Übergangslösung,
    siehe [sicherheit.md](../entwicklung/sicherheit.md#signierte-api-signaturformat-2-312).
 
+   **Geänderte Standardwerte (Sicherheit).** Drei Einstellungen sind jetzt ohne Angabe streng. Prüfen Sie vor dem Update, ob Ihre Installation betroffen ist:
+
+   - **Login:** Fehlt `AUTH_ENABLED` in der `backend/.env`, verlangt das Backend jetzt den Login (bisher: kein Login). Der Betrieb ohne Login im Verwaltungsnetz braucht ausdrücklich `AUTH_ENABLED=false`.
+     Docker-Installationen sind nicht betroffen (der Entrypoint schreibt den Wert immer).
+   - **Sitzungs-Cookie:** Das Produktions-Overlay setzt `SESSION_SECURE=true`, wenn die Root-`.env` nichts anderes sagt (bisher `false`). Die Anmeldung an der Oberfläche funktioniert dann nur über HTTPS
+     (Reverse-Proxy) oder `http://localhost`. Wer die Oberfläche im Verwaltungsnetz bewusst über HTTP betreibt, trägt `SESSION_SECURE=false` in die Root-`.env` ein, sonst landet jede Anmeldung wieder auf der Login-Seite.
+   - **Virenscan:** Ist der Scan eingeschaltet und ClamAV antwortet nicht, werden Uploads bei `APP_ENV=production` abgelehnt (bisher: ungeprüft gespeichert). Das alte Verhalten: `VIRUS_SCAN_STRICT=false` in der `backend/.env`.
+     Ist der Scan ausgeschaltet, meldet der Docker-Start das jetzt als Warnung.
+
 4. **Neue, optionale Einstellung:** `EDITOR_PREVIEW_RATE_LIMIT_MAX` (Standard 300 je Minute) begrenzt die Prüfungen der Live-Vorschau im Survey-Editor getrennt vom Limit für Speichern und Veröffentlichen.
    Nur ändern, wenn Redakteure bei der Live-Vorschau `429` sehen.
 

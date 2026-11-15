@@ -105,6 +105,10 @@ docker compose up -d backend
 docker compose exec backend printenv ADMIN_PASSWORD_HASH | tr -d '\n' | wc -c     # erwartet: 60
 ```
 
+**Anmeldung nur über HTTPS:** Das Produktions-Overlay setzt `SESSION_SECURE=true`; der Browser schickt das Sitzungs-Cookie dann nur über HTTPS (oder an `http://localhost`).
+Rufen Sie die Oberfläche vor dem Einrichten des Reverse-Proxys über `http://<server>:9080` auf, landet jede Anmeldung wieder auf der Login-Seite. Für diesen ersten Test im Verwaltungsnetz
+tragen Sie `SESSION_SECURE=false` in die Root-`.env` ein (danach `docker compose up -d backend`) und entfernen die Zeile wieder, sobald HTTPS steht ([betrieb.md](betrieb.md#https)).
+
 Weitere Zugänge für einzelne Schulen legen Sie später im Backend an ([MULTI-TENANT.md](MULTI-TENANT.md)).
 
 **Zwei-Faktor-Anmeldung:** Im Mehrschul-Betrieb (`MULTI_TENANT_ENABLED=true`) richtet der Platform-Admin sie nach der Anmeldung ein (die ersten 10 Anmeldungen sind noch ohne möglich, danach führt ein Assistent durch die Einrichtung). Dafür muss `TWO_FACTOR_KEY` in Schritt 2 gesetzt sein. Ablauf und Wiederherstellung: [zwei-faktor.md](zwei-faktor.md).
@@ -177,7 +181,8 @@ Der Dienst ist standardmäßig aus.
    docker compose logs -f clamav       # beim ersten Start lädt ClamAV ca. 300 MB Signaturen (60–90 s)
    ```
 
-3. Optional in `backend/.env`: `VIRUS_SCAN_STRICT=true` lehnt Uploads ab, solange ClamAV nicht antwortet (Standard `false`: Upload erlaubt, Warnung im Log).
+3. Antwortet ClamAV nicht, lehnt das Backend in Produktion (`APP_ENV=production`) Uploads ab, bis der Dienst wieder läuft. Wer stattdessen ungeprüfte Uploads zulassen will
+   (Warnung im Log), setzt in `backend/.env` ausdrücklich `VIRUS_SCAN_STRICT=false`. Außerhalb der Produktion ist `false` der Standard.
    `CLAMAV_HOST` (Standard `clamav`) und `CLAMAV_PORT` (3310) gelten für den mitgelieferten Dienst.
 
 **Funktionsprobe** (EICAR ist eine harmlose Standard-Testdatei, die jedes Antivirenprogramm als „Virus" meldet):

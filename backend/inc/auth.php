@@ -16,7 +16,9 @@ if (defined('SKIP_AUTH_CHECK') && SKIP_AUTH_CHECK === true) {
 // MULTI_TENANT_ENABLED=true forces auth on, regardless of AUTH_ENABLED setting.
 // When multi-tenant is active, every browser request must have a valid session.
 $multiTenantEnabled = filter_var(\App\Config\EnvLoader::get('MULTI_TENANT_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
-$authEnabled = filter_var(\App\Config\EnvLoader::get('AUTH_ENABLED', 'false'), FILTER_VALIDATE_BOOLEAN);
+// Fail closed: a missing AUTH_ENABLED means login. Running without login (administration network only)
+// needs an explicit AUTH_ENABLED=false.
+$authEnabled = filter_var(\App\Config\EnvLoader::get('AUTH_ENABLED', 'true'), FILTER_VALIDATE_BOOLEAN);
 
 $networkPolicy = \App\Services\AdminNetworkPolicy::fromEnvironment();
 $clientIp = \App\Utils\ClientIp::get();

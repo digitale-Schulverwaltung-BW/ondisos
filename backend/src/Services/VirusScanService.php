@@ -41,6 +41,25 @@ class VirusScanService
     }
 
     /**
+     * Whether an upload is refused while ClamAV does not answer (VIRUS_SCAN_STRICT).
+     *
+     * Without an explicit value: strict in production (an unscanned file must not reach the
+     * secretariat unnoticed), lenient elsewhere so a development stack works without ClamAV.
+     *
+     * @param array<string,mixed>|null $env      defaults to $_ENV
+     * @param bool|null                $production overrides the environment detection (tests)
+     */
+    public static function isStrict(?array $env = null, ?bool $production = null): bool
+    {
+        $value = ($env ?? $_ENV)['VIRUS_SCAN_STRICT'] ?? null;
+        if ($value === null || trim((string)$value) === '') {
+            return $production ?? SecretPolicy::isProduction();
+        }
+
+        return filter_var($value, FILTER_VALIDATE_BOOLEAN);
+    }
+
+    /**
      * Scan a file using clamd's INSTREAM command.
      *
      * @return array{clean: bool|null, virus: string|null, error: string|null}

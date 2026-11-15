@@ -148,6 +148,12 @@ if [ "$(env_value APP_ENV)" = "production" ]; then
         echo "⚠️  SESSION_SECURE is not true: login cookies are also sent over plain HTTP."
         echo "    Once a TLS reverse proxy is in front of the backend, set SESSION_SECURE=true in the root .env."
     fi
+    # VIRUS_SCAN_ENABLED is not written to .env by this script: it comes from the container environment or a hand-written line.
+    virus_scan=${VIRUS_SCAN_ENABLED:-$(env_value VIRUS_SCAN_ENABLED)}
+    if [ "$virus_scan" != "true" ]; then
+        echo "⚠️  VIRUS_SCAN_ENABLED is not true: uploaded files are stored without a virus scan."
+        echo "    Set VIRUS_SCAN_ENABLED=true in the root .env and start the stack with: docker compose --profile clamav up -d"
+    fi
 fi
 
 # Install/update Composer dependencies.

@@ -212,7 +212,7 @@ try {
 
         if ($scanResult['clean'] === null) {
             // ClamAV unavailable — check strict mode
-            $strict = filter_var($_ENV['VIRUS_SCAN_STRICT'] ?? 'false', FILTER_VALIDATE_BOOLEAN);
+            $strict = VirusScanService::isStrict();
             error_log('VirusScan error: ' . ($scanResult['error'] ?? 'unknown'));
             if ($strict) {
                 throw new RuntimeException('Virus-Scan nicht verfügbar. Upload abgelehnt.', 503);

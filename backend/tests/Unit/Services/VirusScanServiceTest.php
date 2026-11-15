@@ -169,4 +169,31 @@ class VirusScanServiceTest extends TestCase
         $this->assertNull($result['clean']);
         $this->assertNotNull($result['error']);
     }
+
+    // VIRUS_SCAN_STRICT: without a value, production refuses unscanned uploads
+
+    public function testStrictDefaultsToTrueInProduction(): void
+    {
+        $this->assertTrue(VirusScanService::isStrict([], true));
+    }
+
+    public function testStrictDefaultsToFalseOutsideProduction(): void
+    {
+        $this->assertFalse(VirusScanService::isStrict([], false));
+    }
+
+    public function testEmptyStrictValueCountsAsNotSet(): void
+    {
+        $this->assertTrue(VirusScanService::isStrict(['VIRUS_SCAN_STRICT' => ''], true));
+    }
+
+    public function testExplicitStrictFalseWinsInProduction(): void
+    {
+        $this->assertFalse(VirusScanService::isStrict(['VIRUS_SCAN_STRICT' => 'false'], true));
+    }
+
+    public function testExplicitStrictTrueWinsOutsideProduction(): void
+    {
+        $this->assertTrue(VirusScanService::isStrict(['VIRUS_SCAN_STRICT' => 'true'], false));
+    }
 }

@@ -35,9 +35,11 @@ services:
       # Override with production values
       - APP_ENV=production
       - APP_DEBUG=false
-      # Both default to false until a reverse proxy with SSL is in place. Then set SESSION_SECURE=true
-      # (cookies only over HTTPS) and, if the proxy sends X-Forwarded-Proto, FORCE_HTTPS=true in the root .env.
-      - SESSION_SECURE=${SESSION_SECURE:-false}
+      # SESSION_SECURE defaults to true: the login cookie is only sent over HTTPS, so the admin interface needs
+      # the TLS reverse proxy in front (or http://localhost, which browsers treat as secure). For a first test over
+      # plain HTTP inside the administration network set SESSION_SECURE=false in the root .env, and remove it again.
+      # FORCE_HTTPS stays off by default: it redirects API calls too and needs a proxy that sends X-Forwarded-Proto.
+      - SESSION_SECURE=${SESSION_SECURE:-true}
       - FORCE_HTTPS=${FORCE_HTTPS:-false}
       - AUTH_ENABLED=true
     deploy:
