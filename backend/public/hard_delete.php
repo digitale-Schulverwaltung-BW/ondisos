@@ -30,6 +30,7 @@ try {
     $success = $repository->hardDelete($id);
     
     if ($success) {
+        \App\Services\AuditLogger::recordHardDeleted($id);
         (new UploadCleanupService())->deleteForAnmeldung($id);
         error_log("Hard delete: Entry #$id permanently deleted");
         header('Location: trash.php?hard_deleted=1&id=' . $id);

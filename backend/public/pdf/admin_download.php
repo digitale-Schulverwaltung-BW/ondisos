@@ -42,6 +42,7 @@ try {
 
     $renderer = new PdfTemplateRenderer();
     $generator = new PdfGeneratorService($renderer);
+    \App\Services\AuditLogger::pdfDownloaded($id);
     $generator->generateAndDownload($anmeldung, $pdfConfig);
 
 } catch (RuntimeException $e) {

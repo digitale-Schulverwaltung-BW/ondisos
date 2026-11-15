@@ -21,6 +21,7 @@ $controller = new DetailController($repository);
 try {
     $id = (int)($_GET['id'] ?? 0);
     $viewData = $controller->show($id);
+    \App\Services\AuditLogger::recordViewed($id);
     extract($viewData);
 } catch (InvalidArgumentException $e) {
     http_response_code(404);

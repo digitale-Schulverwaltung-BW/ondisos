@@ -80,6 +80,14 @@ try {
         $exportData['metadata']
     );
 
+    // Audit: who exported how many records; a selection also names the IDs
+    $isSelection = ($selectedIds !== null && count($selectedIds) > 0) || $id !== null;
+    \App\Services\AuditLogger::exportRun(
+        (string)$formularFilter,
+        count($exportData['rows']),
+        $isSelection ? array_map(static fn($row): int => (int)$row->id, $exportData['rows']) : []
+    );
+
     // Set headers for download
     header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     header('Content-Disposition: attachment; filename="' . $filename . '"');

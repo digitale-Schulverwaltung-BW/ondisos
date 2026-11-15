@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'api_secret' => $apiSecret,
                 ]);
                 $_SESSION['flash'] = ['new_api_secret' => $apiSecret];
+                AuditLogger::platformEvent('tenant_created', $newId, ['slug' => $slug, 'name' => $name]);
                 // Optional: start with the forms of an existing tenant (recipients are not copied).
                 $copyFrom = (int)($_POST['copy_from'] ?? 0);
                 if ($copyFrom > 0) {
@@ -109,6 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'origin' => $origin !== '' ? $origin : null,
             'active' => $active,
         ]);
+        AuditLogger::platformEvent('tenant_updated', $id, ['name' => $name, 'origin' => $origin, 'active' => (bool)$active]);
         header('Location: tenants.php?id=' . $id . '&saved=1');
         exit;
     }
@@ -141,6 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     elseif ($action === 'regenerate_secret' && $id !== null) {
         $newSecret = bin2hex(openssl_random_pseudo_bytes(32));
         $tenantRepo->updateApiSecret($id, $newSecret);
+        AuditLogger::platformEvent('api_secret_regenerated', $id);
         $_SESSION['flash'] = ['new_api_secret' => $newSecret];
         header('Location: tenants.php?id=' . $id . '&secret_regenerated=1');
         exit;
@@ -168,6 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     'username'      => $username,
                     'password_hash' => $hash,
                 ]);
+                AuditLogger::platformEvent('tenant_admin_created', $id, ['target' => $username]);
                 $_SESSION['flash'] = [
                     'new_password'   => $plainPass,
                     'admin_username' => $username,
@@ -189,6 +193,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $adminId = (int)($_POST['admin_id'] ?? 0);
         $active  = (bool)(int)($_POST['active'] ?? 0);
         $adminRepo->toggleActive($adminId, $active);
+        AuditLogger::platformEvent($active ? 'tenant_admin_activated' : 'tenant_admin_deactivated', $id, ['admin_id' => $adminId]);
         header('Location: tenants.php?id=' . $id);
         exit;
     }
@@ -210,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $plainPass = bin2hex(random_bytes(8)); // generate a secure random password
         $hash      = password_hash($plainPass, PASSWORD_BCRYPT);
         $adminRepo->resetPassword($adminId, $hash);
+        AuditLogger::platformEvent('tenant_admin_password_reset', $id, ['admin_id' => $adminId]);
         $_SESSION['flash'] = ['new_password' => $plainPass];
         header('Location: tenants.php?id=' . $id . '&password_reset=1');
         exit;

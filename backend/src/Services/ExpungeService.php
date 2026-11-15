@@ -58,6 +58,10 @@ class ExpungeService
             }
         }
 
+        if ($deletedIds !== []) {
+            AuditLogger::expunged('auto', $deletedIds);
+        }
+
         // Log the expunge
         error_log(sprintf(
             'Auto-expunge: Deleted %d archived entries older than %d days: [%s]',
@@ -109,12 +113,18 @@ class ExpungeService
     public function manualExpunge(array $ids): int
     {
         $deletedCount = 0;
+        $deletedIds = [];
 
         foreach ($ids as $id) {
             if ($this->repository->hardDelete($id)) {
                 $this->uploadCleanup->deleteForAnmeldung($id);
+                $deletedIds[] = $id;
                 $deletedCount++;
             }
+        }
+
+        if ($deletedIds !== []) {
+            AuditLogger::expunged('manual', $deletedIds);
         }
 
         error_log(sprintf(

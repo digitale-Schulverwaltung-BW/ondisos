@@ -76,6 +76,8 @@ class DownloadController
         $extension = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
         $mimeType  = $this->getMimeType($extension);
 
+        \App\Services\AuditLogger::fileDownloaded($fileName, $inline);
+
         // Send headers
         header('Content-Type: ' . $mimeType);
 

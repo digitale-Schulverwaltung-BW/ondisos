@@ -133,9 +133,63 @@ class AuditLogger
         self::log('upload_cleanup_failed', ['anmeldung_id' => $anmeldungId, 'file' => $filename, 'reason' => $reason]);
     }
 
-    public static function exportRun(string $formular, int $count): void
+    /**
+     * Excel export. A selection (checkboxes, single record) names its IDs; a full export only the count.
+     *
+     * @param int[] $ids
+     */
+    public static function exportRun(string $formular, int $count, array $ids = []): void
     {
-        self::log('export', ['formular' => $formular ?: 'all', 'count' => $count]);
+        $details = ['formular' => $formular ?: 'all', 'count' => $count];
+        if ($ids !== []) {
+            $details['ids'] = array_values($ids);
+        }
+        self::log('export', $details);
+    }
+
+    // -------------------------------------------------------------------------
+    // Access to personal data: who opened, downloaded or deleted what (IDs and file names, never contents)
+    // -------------------------------------------------------------------------
+
+    public static function recordViewed(int $anmeldungId): void
+    {
+        self::log('record_viewed', ['id' => $anmeldungId]);
+    }
+
+    public static function fileDownloaded(string $filename, bool $inline): void
+    {
+        self::log('file_downloaded', ['file' => $filename, 'mode' => $inline ? 'view' : 'download']);
+    }
+
+    public static function pdfDownloaded(int $anmeldungId): void
+    {
+        self::log('pdf_downloaded', ['id' => $anmeldungId]);
+    }
+
+    public static function recordHardDeleted(int $anmeldungId): void
+    {
+        self::log('hard_delete', ['id' => $anmeldungId]);
+    }
+
+    /**
+     * Registrations removed for good by the retention rule (auto) or from the trash (manual).
+     *
+     * @param int[] $ids
+     */
+    public static function expunged(string $kind, array $ids): void
+    {
+        self::log('expunge', ['kind' => $kind, 'ids' => array_values($ids), 'count' => count($ids)]);
+    }
+
+    /**
+     * Platform administration in tenants.php: tenant_created, tenant_updated, api_secret_regenerated,
+     * tenant_admin_created, tenant_admin_activated, tenant_admin_deactivated, tenant_admin_password_reset.
+     *
+     * @param array<string,mixed> $details no passwords, no secrets
+     */
+    public static function platformEvent(string $event, int $targetTenantId, array $details = []): void
+    {
+        self::log($event, ['target_tenant_id' => $targetTenantId] + $details);
     }
 
     /**

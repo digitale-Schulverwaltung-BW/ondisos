@@ -242,6 +242,11 @@ Sie gilt nicht für `/api/*` (durch Signatur geschützt) und den PDF-Download pe
 **Sicherheitsereignisse im Audit-Log** (Auszug; Feld `event`): `login_failed`, `login_blocked` (Drosselung), `login_network_denied` und `admin_network_denied` (Netz-Allowlist), `two_factor_failed`, `two_factor_success`, `recovery_code_used`, `two_factor_enabled`, `two_factor_removed`, `two_factor_reset`,
 `recovery_codes_regenerated`, `admin_networks_changed`, `api_legacy_signature` (Frontend sendet noch das alte Signaturformat), `idor_attempt`. Auffällig oft `two_factor_failed` oder `login_network_denied` aus fremden Adressen lohnt einen Blick ([notfall.md](notfall.md#4-verdacht-auf-kompromittierung)).
 
+**Zugriffe auf Anmeldedaten im Audit-Log** (Feld `event`; mit Benutzer, Adresse und Schule, ohne Inhalte): `record_viewed` (Detailansicht geöffnet), `file_downloaded` (hochgeladene Datei angesehen oder heruntergeladen), `pdf_downloaded` (PDF aus der Verwaltung),
+`export` (Excel-Export: Anzahl, bei einer Auswahl auch die IDs), `hard_delete` (endgültig gelöscht aus dem Papierkorb), `expunge` (endgültig gelöscht durch die Aufbewahrungsfrist, `kind: auto`). Ohne Login (`AUTH_ENABLED=false`) fehlt der Benutzer; es bleibt die Adresse.
+**Plattform-Verwaltung** (`tenants.php`): `tenant_created`, `tenant_updated`, `tenant_deleted`, `api_secret_regenerated`, `tenant_admin_created`, `tenant_admin_activated`, `tenant_admin_deactivated`, `tenant_admin_password_reset` (jeweils mit `target_tenant_id`, nie mit Passwort oder Schlüssel).
+Weil jede geöffnete Detailansicht eine Zeile schreibt, wächst das Log schneller als vor 3.2.0; `AUDIT_LOG_RETENTION_DAYS` begrenzt es.
+
 `logs/` und `cache/` liegen in eigenen Docker-Volumes. Docker-Logs begrenzen Sie in `/etc/docker/daemon.json` (`{"log-driver":"json-file","log-opts":{"max-size":"10m","max-file":"3"}}`, danach Docker neu starten).
 Eine Überwachung (z. B. Uptime-Check auf `/api/health.php`) ist sinnvoll; sie gehört zum Betreiber, nicht zum Projekt.
 
