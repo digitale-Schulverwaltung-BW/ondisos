@@ -82,6 +82,7 @@ class LoginService
      *
      * Only returns a non-null result when:
      *   - A row with the given username exists in tenant_admins
+     *   - The admin account is active (ta.active = 1; "deaktivieren" in tenants.php)
      *   - The joined tenant is active (t.active = 1)
      *   - password_verify passes against the stored password_hash
      *
@@ -95,7 +96,7 @@ class LoginService
         $sql = 'SELECT ta.id, ta.username, ta.password_hash, ta.tenant_id, t.active
                 FROM tenant_admins ta
                 JOIN tenants t ON ta.tenant_id = t.id
-                WHERE ta.username = ? AND t.active = 1
+                WHERE ta.username = ? AND ta.active = 1 AND t.active = 1
                 LIMIT 1';
 
         $stmt = $db->prepare($sql);
@@ -137,7 +138,7 @@ class LoginService
         $id = (int)substr($adminKey, strlen('tenant:'));
         $stmt = $db->prepare(
             'SELECT ta.password_hash FROM tenant_admins ta JOIN tenants t ON ta.tenant_id = t.id
-             WHERE ta.id = ? AND t.active = 1 LIMIT 1'
+             WHERE ta.id = ? AND ta.active = 1 AND t.active = 1 LIMIT 1'
         );
         $stmt->bind_param('i', $id);
         $stmt->execute();

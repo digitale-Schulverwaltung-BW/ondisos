@@ -230,6 +230,60 @@ class LoginTest extends TestCase
         $this->assertNull($result, 'Tenant admin login should return null when user not found');
     }
 
+    /**
+     * A deactivated admin (tenants.php, toggle_admin) must not be able to log in. The mocks cannot
+     * evaluate SQL, so the tests assert that the queries filter on the admin's own active flag.
+     */
+    public function testTenantAdminLoginQueryFiltersOnAdminActiveFlag(): void
+    {
+        $db = $this->queryCapturingDb();
+
+        (new LoginService())->attemptTenantAdminLogin('deactivated', 'password', $db);
+
+        $this->assertCount(1, $db->queries);
+        $this->assertStringContainsString('ta.active = 1', $db->queries[0]);
+        $this->assertStringContainsString('t.active = 1', $db->queries[0]);
+    }
+
+    public function testPasswordConfirmationQueryFiltersOnAdminActiveFlag(): void
+    {
+        $db = $this->queryCapturingDb();
+
+        $ok = (new LoginService())->verifyPasswordForKey('tenant:7', 'password', $db);
+
+        $this->assertFalse($ok);
+        $this->assertCount(1, $db->queries);
+        $this->assertStringContainsString('ta.active = 1', $db->queries[0]);
+    }
+
+    /** mysqli stand-in that records every prepared query and finds no row. */
+    private function queryCapturingDb(): \mysqli
+    {
+        $mockResult = new class extends \mysqli_result {
+            public function __construct() {}
+            public function fetch_assoc(): ?array { return null; }
+        };
+
+        $mockStmt = new class($mockResult) extends \mysqli_stmt {
+            public function __construct(private \mysqli_result $result) {}
+            public function bind_param(string $types, mixed &...$vars): bool { return true; }
+            public function execute(?array $params = null): bool { return true; }
+            public function get_result(): \mysqli_result { return $this->result; }
+            public function close(): bool { return true; }
+        };
+
+        return new class($mockStmt) extends \mysqli {
+            /** @var list<string> */
+            public array $queries = [];
+            public function __construct(private \mysqli_stmt $stmt) {}
+            public function prepare(string $query): \mysqli_stmt|false
+            {
+                $this->queries[] = $query;
+                return $this->stmt;
+            }
+        };
+    }
+
     // =========================================================================
     // Login form structure (AUTH-03)
     // =========================================================================
