@@ -83,4 +83,4 @@ sind an einer Testinstanz geprüft, ein im grafischen Editor erstelltes Formular
 
 - **Passkeys (WebAuthn)** als weiterer zweiter Faktor ([PLAN-3.1.2.md](../plans/PLAN-3.1.2.md#ap4--passkeys-webauthn-verschoben-auf-313)).
 - WordPress-Plugin ohne Shell ([PLAN-3.1.1.md](../plans/PLAN-3.1.1.md)), SMTP-Versand, Abschaffung des Datei-Fallbacks für Surveys.
-- Bekannte Einschränkungen: [CLAUDE.md](../../../CLAUDE.md#bekannte-einschränkungen) und [sicherheit.md](../sicherheit.md).
+- Bekannte Einschränkungen: [Einstieg für Entwicklung](../README.md#bekannte-einschränkungen) und [sicherheit.md](../sicherheit.md).

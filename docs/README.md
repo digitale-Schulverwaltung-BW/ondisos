@@ -69,7 +69,8 @@ Architektur, Tests, Pipeline, Planung.
 
 | Dokument | Inhalt |
 |---|---|
-| [../CLAUDE.md](../CLAUDE.md) | Einstieg für Entwicklung: Kernkonzepte, Orientierung, Befehle, Konventionen, Dokumentationskarte |
+| [Einstieg für Entwicklung](entwicklung/README.md) | Kernkonzepte, Orientierung im Repository, Tenant-Kontext, Befehle, Konventionen, bekannte Einschränkungen, Geplantes, Dokumentationskarte |
+| [../CLAUDE.md](../CLAUDE.md) | Kurzfassung der Arbeitsregeln für KI-Assistenten (Claude Code) |
 | [architektur.md](entwicklung/architektur.md) | Architektur, Dateiliste, Datenfluss, Datenbankschema, Funktionsumfang, Status-Ablauf |
 | [konfiguration.md](entwicklung/konfiguration.md) | Referenz: Einstellungen von Backend und Frontend, Formular-Konfiguration |
 | [pdf-system.md](entwicklung/pdf-system.md) | PDF-Download: Token, Proxy, Komponenten |

@@ -14,7 +14,7 @@ namespace App\Services;
  *      ihre Nonce darf nicht schon verwendet worden sein (Replay-Schutz).
  *   v1 (nur X-Signature): das bisherige Format ohne Zeit und Nonce.
  *
- * Modus "compat" (Standard) akzeptiert beide, "strict" nur v2. Ein v2-Header mit ungültiger Signatur
+ * Modus "strict" (Standard seit 3.2.0) akzeptiert nur v2, "compat" beide. Ein v2-Header mit ungültiger Signatur
  * wird nie auf v1 zurückgestuft.
  */
 class SignatureVerifier

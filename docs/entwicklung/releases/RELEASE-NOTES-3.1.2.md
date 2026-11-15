@@ -67,4 +67,4 @@ Rückfall: `git checkout v3.1.1` und neu bauen. Die Migration ist rein additiv (
 
 - **Passkeys (WebAuthn)** als weiterer zweiter Faktor ([PLAN-3.1.2.md](../plans/PLAN-3.1.2.md#ap4--passkeys-webauthn-verschoben-auf-313)).
 - `API_SIGNATURE_MODE=strict` als Standard.
-- Bekannte Einschränkungen: [CLAUDE.md](../../../CLAUDE.md#bekannte-einschränkungen) und [sicherheit.md](../sicherheit.md).
+- Bekannte Einschränkungen: [Einstieg für Entwicklung](../README.md#bekannte-einschränkungen) und [sicherheit.md](../sicherheit.md).

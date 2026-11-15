@@ -53,7 +53,7 @@ im geschützten Backend, druckt sie aus oder lädt sie als Excel-Datei herunter 
 | **Redaktion / Schul-Admin** | Formulare anlegen und ändern, Logo und PDF-Bestätigung pflegen | [Formulare pflegen](docs/README.md#redaktion) |
 | **Schul-IT / WordPress-Admin** | das Formular auf der Schulwebsite einbinden | [WordPress-Plugin](wordpress-plugin/INSTALL.md) · [Standalone-Frontend](docs/schul-it/standalone-frontend.md) |
 | **Betreiber (Medienzentrum, Schulträger)** | das Backend installieren, Schulen einrichten, betreiben | [Betriebsmodell](docs/betreiber/betriebsmodell.md) · [Betreiber-Dokumentation](docs/README.md#betreiber) |
-| **Entwickler\*in** | Architektur verstehen, Tests ausführen, mitarbeiten | [Entwicklung](docs/README.md#entwicklung) · [Architektur](docs/entwicklung/architektur.md) · [CLAUDE.md](CLAUDE.md) |
+| **Entwickler\*in** | Architektur verstehen, Tests ausführen, mitarbeiten | [Entwicklung](docs/README.md#entwicklung) · [Einstieg](docs/entwicklung/README.md) · [Architektur](docs/entwicklung/architektur.md) |
 
 Das vollständige Verzeichnis aller Dokumente steht in **[docs/README.md](docs/README.md)**.
 
@@ -103,7 +103,7 @@ Die Unit-Tests lesen auch Dateien außerhalb von `backend/` (Surveys, `frontend/
 `docker-compose.override.yml` diese Verzeichnisse nur lesend in den Dev-Container ein. Im Produktivbetrieb
 (`-f docker-compose.yml -f docker-compose.prod.yml`) wird sie nicht geladen; dort bleibt der Backend-Container ohne `frontend/` und `docs/`.
 
-Konventionen und Struktur: [CLAUDE.md](CLAUDE.md) · Tests: [tests.md](docs/entwicklung/tests.md), [backend/UNITTESTS.md](backend/UNITTESTS.md).
+Konventionen und Struktur: [Einstieg für Entwicklung](docs/entwicklung/README.md) · Tests: [tests.md](docs/entwicklung/tests.md), [backend/UNITTESTS.md](backend/UNITTESTS.md).
 
 ## Sicherheit
 
