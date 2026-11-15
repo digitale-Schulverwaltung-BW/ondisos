@@ -21,6 +21,8 @@ class PdfTokenServiceTest extends TestCase
 {
     private PdfTokenService $tokenService;
     private string $originalSecret;
+    /** @var array{env: mixed, server: mixed, getenv: string|false} */
+    private array $originalAppEnv;
 
     protected function setUp(): void
     {
@@ -28,6 +30,15 @@ class PdfTokenServiceTest extends TestCase
 
         // Save original secret
         $this->originalSecret = getenv('PDF_TOKEN_SECRET') ?: '';
+
+        // EnvLoader reads $_ENV and $_SERVER before getenv(); in CI APP_ENV is a real
+        // environment variable there and would hide the putenv() calls of the tests.
+        $this->originalAppEnv = [
+            'env' => $_ENV['APP_ENV'] ?? null,
+            'server' => $_SERVER['APP_ENV'] ?? null,
+            'getenv' => getenv('APP_ENV'),
+        ];
+        unset($_ENV['APP_ENV'], $_SERVER['APP_ENV']);
 
         // Set test secret (min 32 chars)
         putenv('PDF_TOKEN_SECRET=test-secret-key-for-unit-tests-min-32-chars-long');
@@ -39,7 +50,14 @@ class PdfTokenServiceTest extends TestCase
     {
         parent::tearDown();
 
-        putenv('APP_ENV=testing');
+        $original = $this->originalAppEnv;
+        $original['getenv'] === false ? putenv('APP_ENV') : putenv('APP_ENV=' . $original['getenv']);
+        if ($original['env'] !== null) {
+            $_ENV['APP_ENV'] = $original['env'];
+        }
+        if ($original['server'] !== null) {
+            $_SERVER['APP_ENV'] = $original['server'];
+        }
 
         // Restore original secret
         if (!empty($this->originalSecret)) {
