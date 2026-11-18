@@ -11,12 +11,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../inc/bootstrap.php';
 
 use Frontend\Services\MessageService;
+use Frontend\Utils\AssetVersion;
 use Frontend\Utils\ContentSecurityPolicy;
 
 $messages = MessageService::getAll()['signature'] ?? [];
 $t = static fn(string $key): string => htmlspecialchars((string)($messages[$key] ?? $key), ENT_QUOTES);
-// Cache busting: a phone that kept an old copy gets the new file after an update
-$v = static fn(string $file): string => $file . '?v=' . (string)@filemtime(__DIR__ . '/' . $file);
+// Cache busting (all files, SurveyJS too): a phone that kept an old copy gets the new file after an update
+$v = static fn(string $file): string => $file . '?v=' . AssetVersion::of(__DIR__ . '/' . $file);
 
 header('Cache-Control: no-store');
 header('Referrer-Policy: no-referrer');
@@ -31,9 +32,9 @@ ContentSecurityPolicy::send();
     <!-- No zoom: Safari kept zooming in on rotation or a double tap while signing; the page holds only the pad -->
     <meta name="robots" content="noindex, nofollow">
     <title><?= $t('page_title') ?></title>
-    <link href="assets/survey-core.min.css" rel="stylesheet">
-    <script src="assets/survey.core.min.js"></script>
-    <script src="assets/survey-js-ui.min.js"></script>
+    <link href="<?= $v('assets/survey-core.min.css') ?>" rel="stylesheet">
+    <script src="<?= $v('assets/survey.core.min.js') ?>"></script>
+    <script src="<?= $v('assets/survey-js-ui.min.js') ?>"></script>
     <link href="<?= $v('assets/sign-page.css') ?>" rel="stylesheet">
 </head>
 <body>

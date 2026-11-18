@@ -109,7 +109,8 @@ class Signature_Handler
         $messages = self::messages();
         $t = static fn(string $key): string => esc_html((string)($messages[$key] ?? $key));
         $assets = Plugin::get_instance()->get_assets();
-        $version = rawurlencode(ONDISOS_PLUGIN_VERSION);
+        // ?v=: plugin version plus modification time, so a phone never mixes old and new SurveyJS files
+        $v = static fn(string $path): string => rawurlencode($assets->frontend_version($path));
 
         nocache_headers();
         header('Content-Type: text/html; charset=utf-8');
@@ -126,10 +127,10 @@ class Signature_Handler
     <!-- No zoom: Safari kept zooming in on rotation or a double tap while signing; the page holds only the pad -->
     <meta name="robots" content="noindex, nofollow">
     <title><?php echo $t('page_title'); ?></title>
-    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'survey-core.min.css?v=' . $version); ?>" rel="stylesheet">
-    <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey.core.min.js?v=' . $version); ?>"></script>
-    <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey-js-ui.min.js?v=' . $version); ?>"></script>
-    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'sign-page.css?v=' . $version); ?>" rel="stylesheet">
+    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'survey-core.min.css?v=' . $v('assets/survey-core.min.css')); ?>" rel="stylesheet">
+    <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey.core.min.js?v=' . $v('assets/survey.core.min.js')); ?>"></script>
+    <script src="<?php echo esc_url($assets->frontend_assets_url() . 'survey-js-ui.min.js?v=' . $v('assets/survey-js-ui.min.js')); ?>"></script>
+    <link href="<?php echo esc_url($assets->frontend_assets_url() . 'sign-page.css?v=' . $v('assets/sign-page.css')); ?>" rel="stylesheet">
 </head>
 <body>
     <main class="sign">
@@ -151,7 +152,7 @@ class Signature_Handler
         <p class="sign__status" id="signStatus" role="status" aria-live="polite"><?php echo $t('loading'); ?></p>
     </main>
 
-    <script src="<?php echo esc_url($assets->frontend_js_url() . 'sign-page.js?v=' . $version); ?>"></script>
+    <script src="<?php echo esc_url($assets->frontend_js_url() . 'sign-page.js?v=' . $v('js/sign-page.js')); ?>"></script>
     <script nonce="<?php echo esc_attr(ContentSecurityPolicy::nonce()); ?>">
         SignPage.start({
             endpoint: <?php echo wp_json_encode(self::relay_url()); ?>,

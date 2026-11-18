@@ -12,6 +12,8 @@ declare(strict_types=1);
 
 namespace Ondisos;
 
+use Frontend\Utils\AssetVersion;
+
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;
@@ -72,6 +74,21 @@ class Assets
     }
 
     /**
+     * ?v= value of a file in frontend/public/ (e.g. 'assets/survey-core.min.css'): plugin version
+     * plus modification time, so a browser fetches every new copy even under the same plugin version.
+     */
+    public function frontend_version(string $relative_path): string
+    {
+        return AssetVersion::of(ONDISOS_FRONTEND_DIR . 'public/' . $relative_path, ONDISOS_PLUGIN_VERSION);
+    }
+
+    /** ?v= value of a file in the plugin directory (e.g. 'assets/js/survey-handler-wp.js'). */
+    private function plugin_version(string $relative_path): string
+    {
+        return AssetVersion::of(ONDISOS_PLUGIN_DIR . $relative_path, ONDISOS_PLUGIN_VERSION);
+    }
+
+    /**
      * Flag to track if assets should be loaded
      */
     private bool $should_load_assets = false;
@@ -107,7 +124,7 @@ class Assets
             'surveyjs-core',
             $this->frontend_assets_url . 'survey-core.min.css',
             [],
-            ONDISOS_PLUGIN_VERSION
+            $this->frontend_version('assets/survey-core.min.css')
         );
 
         // Add custom fonts (DSGVO-compliant)
@@ -118,7 +135,7 @@ class Assets
             'surveyjs-core',
             $this->frontend_assets_url . 'survey.core.min.js',
             [],
-            ONDISOS_PLUGIN_VERSION,
+            $this->frontend_version('assets/survey.core.min.js'),
             true // Load in footer
         );
 
@@ -127,7 +144,7 @@ class Assets
             'surveyjs-ui',
             $this->frontend_assets_url . 'survey-js-ui.min.js',
             ['surveyjs-core'],
-            ONDISOS_PLUGIN_VERSION,
+            $this->frontend_version('assets/survey-js-ui.min.js'),
             true
         );
 
@@ -136,7 +153,7 @@ class Assets
             'surveyjs-locale-de',
             $this->frontend_assets_url . 'i18n/german.min.js',
             ['surveyjs-core'],
-            ONDISOS_PLUGIN_VERSION,
+            $this->frontend_version('assets/i18n/german.min.js'),
             true
         );
 
@@ -145,7 +162,7 @@ class Assets
             'ondisos-survey-handler-base',
             $this->frontend_js_url . 'survey-handler-base.js',
             ['surveyjs-core', 'surveyjs-ui', 'surveyjs-locale-de'],
-            ONDISOS_PLUGIN_VERSION,
+            $this->frontend_version('js/survey-handler-base.js'),
             true
         );
 
@@ -154,7 +171,7 @@ class Assets
             'ondisos-survey-handler',
             ONDISOS_PLUGIN_URL . 'assets/js/survey-handler-wp.js',
             ['surveyjs-core', 'surveyjs-ui', 'ondisos-survey-handler-base'],
-            ONDISOS_PLUGIN_VERSION,
+            $this->plugin_version('assets/js/survey-handler-wp.js'),
             true
         );
 
@@ -164,7 +181,7 @@ class Assets
                 'ondisos',
                 ONDISOS_PLUGIN_URL . 'assets/css/ondisos.css',
                 ['surveyjs-core'],
-                ONDISOS_PLUGIN_VERSION
+                $this->plugin_version('assets/css/ondisos.css')
             );
         }
     }

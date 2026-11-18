@@ -10,6 +10,7 @@ use Frontend\Config\FormConfig;
 use Frontend\Config\FormConfigLoader;
 use Frontend\Config\SurveySource;
 use Frontend\Services\MessageService as M;
+use Frontend\Utils\AssetVersion;
 use Frontend\Utils\CsrfProtection;
 
 // Get form key from request
@@ -151,10 +152,11 @@ $csrfToken = CsrfProtection::getToken();
     <title><?= htmlspecialchars($formKey) ?> - Anmeldung</title>
     
     <!-- SurveyJS Core -->
-    <link href="assets/survey-core.min.css" rel="stylesheet">
-    <script src="assets/survey.core.min.js"></script>
-    <script src="assets/survey-js-ui.min.js"></script>
-    <script src="assets/i18n/german.min.js"></script>
+    <?php // ?v= (modification time): after an update the browser loads the new files, never an old/new mix ?>
+    <link href="assets/survey-core.min.css?v=<?= AssetVersion::of(__DIR__ . '/assets/survey-core.min.css') ?>" rel="stylesheet">
+    <script src="assets/survey.core.min.js?v=<?= AssetVersion::of(__DIR__ . '/assets/survey.core.min.js') ?>"></script>
+    <script src="assets/survey-js-ui.min.js?v=<?= AssetVersion::of(__DIR__ . '/assets/survey-js-ui.min.js') ?>"></script>
+    <script src="assets/i18n/german.min.js?v=<?= AssetVersion::of(__DIR__ . '/assets/i18n/german.min.js') ?>"></script>
     
     <!-- Custom Fonts (DSGVO-konform) -->
     <style>
@@ -214,9 +216,8 @@ $csrfToken = CsrfProtection::getToken();
     <div id="surveyContainer"></div>
 
     <!-- Survey Handler (base class must load first) -->
-    <?php // ?v=: after an update the browser loads the new handlers instead of a cached copy ?>
-    <script src="js/survey-handler-base.js?v=<?= (int)@filemtime(__DIR__ . '/js/survey-handler-base.js') ?>"></script>
-    <script src="js/survey-handler.js?v=<?= (int)@filemtime(__DIR__ . '/js/survey-handler.js') ?>"></script>
+    <script src="js/survey-handler-base.js?v=<?= AssetVersion::of(__DIR__ . '/js/survey-handler-base.js') ?>"></script>
+    <script src="js/survey-handler.js?v=<?= AssetVersion::of(__DIR__ . '/js/survey-handler.js') ?>"></script>
     
     <script nonce="<?= \Frontend\Utils\ContentSecurityPolicy::nonce() ?>">
         // Configure survey
