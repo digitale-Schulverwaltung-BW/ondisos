@@ -24,7 +24,7 @@ Zum Zeitpunkt der Abnahme noch offen (nur manuell prüfbar):
 
 - [x] Backend-Oberfläche: Bootstrap 5.3.8 lokal unter `backend/public/assets/bootstrap/` (kein CDN mehr; DataTables war ungenutzt und entfällt)
 - [ ] Upload im Browser-Formular (Datei auswählen; der Server-Teil ist verifiziert)
-- [ ] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests
+- [x] Endpoint-Skripte (`submit.php`, `upload.php`, `form-config.php`, `pdf/download.php`) haben keine Unit-Tests. Kein Abnahmepunkt: als Testlücke in [TODO.md](../TODO.md#testlücken) geführt
 
 ## v3.1.0
 
@@ -46,7 +46,7 @@ Zum Zeitpunkt der Abnahme noch offen (nur manuell prüfbar):
 - [x] WordPress-Plugin: Verbindungsstatus-Seite (*Einstellungen → Ondisos*) im Browser mit den neuen Zeilen „Secret passt" / „0 Formulare"
 - [x] Breitenumschalter der Vorschau (Handy/Tablet) in einem echten Browser
 - [x] Docker-Image neu bauen und Vorschau gegen das frisch gebaute Image prüfen (in der Demo wurde die Apache-Konfiguration im laufenden Container ersetzt)
-- [ ] Endpoint-Skripte `forms.php` und `form-config.php?with=survey` haben keine Unit-Tests (ihre Logik liegt in getesteten Services; strukturelle Tests prüfen Reihenfolge und Abhängigkeiten)
+- [x] Endpoint-Skripte `forms.php` und `form-config.php?with=survey` haben keine Unit-Tests (ihre Logik liegt in getesteten Services; strukturelle Tests prüfen Reihenfolge und Abhängigkeiten). Kein Abnahmepunkt: als Testlücke in [TODO.md](../TODO.md#testlücken) geführt
 
 ## v3.1.2
 
@@ -72,7 +72,7 @@ Automatisiert: 1194 Unit-Tests (`vendor/bin/phpunit --testsuite=Unit`), dazu die
 - [ ] Update nach den Release Notes: `Migration complete`, vorhandene Daten und Anmeldungen unverändert, bestehende Sitzungen/Zugänge funktionieren
 - [x] Platform-Admin im Mehrschul-Betrieb: Hinweis, Einrichtung mit **echter Authenticator-App** (QR-Code scannen), Anmeldung mit Code; Recovery-Code und `reset-2fa.php`
 - [ ] Netz-Allowlist hinter dem **echten Reverse-Proxy** (mit und ohne `TRUSTED_PROXIES`): erlaubtes und gesperrtes Netz; Hinweis in *Tenants*, wenn `X-Forwarded-For` ignoriert wird
-- [ ] Betrieb ohne Login (`AUTH_ENABLED=false`) mit `PLATFORM_ADMIN_ALLOWED_NETWORKS`: Zugriff aus Verwaltungsnetz und von außen
+- [x] Betrieb ohne Login (`AUTH_ENABLED=false`) mit `PLATFORM_ADMIN_ALLOWED_NETWORKS`: Zugriff aus Verwaltungsnetz und von außen
 - [x] Layout und Bedienbarkeit der neuen Seiten im Browser (Assistent, „Mein Konto“, Karte in *Tenants*), auch auf dem Handy; Druck der Recovery-Codes
 - [x] Content-Security-Policy: keine Verstöße in der Browser-Konsole auf den Backend-Seiten und der Formularseite (sonst `CSP_MODE=report-only`)
 - [ ] Frontend/Plugin 3.1.2 gegen Backend 3.1.2: Anmeldung absenden, Upload, PDF-Download; danach `api_legacy_signature` im Audit-Log prüfen
@@ -99,7 +99,7 @@ Automatisiert: 1274 Unit-Tests, dazu `SignatureHandoffRepositoryTest` (6, Tenant
 - [x] iPhone (Safari) im WLAN per QR-Code: Ablauf funktioniert. **Funde:** (1) Im Querformat wurde die Fläche kleiner (Safaris Leisten nehmen Höhe, iOS vergrößert die Schrift); (2) Striche, die knapp außerhalb der Fläche beginnen, markierten Text der Seite (wie bei DocuSeal). Behoben: Fläche richtet sich nur nach der eigenen Höhe (Seite darf scrollen, Countdown bleibt sichtbar), `text-size-adjust: 100%`, keine Textauswahl und kein Kontextmenü auf der Handy-Seite, Rahmen der Fläche mit `touch-action: none`
 - [x] Zweiter Durchgang iPhone: Brave (Chromium) im Querformat gut; **Safari zoomte die Seite** (Fläche beim 300 × 200-Feld klein, 400 × 150-Feld verschoben). Behoben: kein Zoom auf der Handy-Seite (`maximum-scale=1`, `touch-action: manipulation`); im Querformat stehen Countdown und ein kompakter ✓-Button neben der Fläche, die damit die volle Höhe bekommt (Vorschlag aus dem Test)
 - [x] Nach den Korrekturen erneut auf dem iPhone (Safari): passt (Querformat, ✓-Button)
-- [ ] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
+- [x] Android (Chrome) per QR-Code im **Mobilfunknetz**; Zeichnen mit dem Finger, Drehen während des Unterschreibens, Querformat-Button
 - [x] Rechner mit Touchscreen und Tablet: Button erscheint bzw. fehlt wie beschrieben
 - [x] Code läuft ab (10 Minuten): Meldung auf dem Smartphone vor dem Unterschreiben und im Dialog, „Neuen Code erzeugen“
 - [x] Hinter dem **echten Reverse-Proxy**: Adresse im QR-Code (https, öffentlicher Host)
