@@ -150,7 +150,7 @@ auch Einstellungen, die die grafische Ansicht nicht kennt. Der Verlauf zeigt des
 
 ### Aufbau und Eigenschaften
 
-Links steht der **Aufbau**: oben die Zeile **Formular** (Einstellungen der ganzen Survey), darunter die Seiten mit ihren Gruppen und Elementen, jeweils mit Typ und Titel.
+Links steht der **Aufbau**: oben die Zeile **Formular** (Einstellungen der ganzen Survey), darunter die Seiten mit ihren Gruppen und Elementen, jeweils mit Titel und einem Symbol für den Typ (dasselbe wie im Menü *Element hinzufügen*; den Namen des Typs zeigt der Tooltip und, nach dem Anklicken, die Überschrift rechts).
 Pflichtfelder tragen ein Sternchen hinter dem Typ. Seiten und Gruppen lassen sich auf- und zuklappen. Ein Element mit einer Meldung der letzten Prüfung ist markiert;
 nach einer Änderung gelten die Meldungen als veraltet, bis Sie erneut prüfen.
 

@@ -116,3 +116,10 @@ test('a broken block value is refused, not written', () => {
     assert.equal(insertBlock(load(EMPTY), PAGE, 0, null).code, 'path');
     assert.equal(insertBlock(load(EMPTY), PAGE, 0, { type: 'paneldynamic', name: 'x' }).code, 'unknownType');
 });
+
+test('every building block and every template or example has an icon, and there are no icons for ones that do not exist', async () => {
+    const { BLOCK_ICONS, TEMPLATE_ICONS } = await import('../../public/assets/survey-builder/icons.js');
+    const manifest = JSON.parse(readFileSync(new URL('../../resources/survey-templates/manifest.json', import.meta.url), 'utf8'));
+    assert.deepEqual(Object.keys(BLOCK_ICONS).sort(), [...new Set(BLOCKS.map((b) => b.block))].sort());
+    assert.deepEqual(Object.keys(TEMPLATE_ICONS).sort(), [...manifest.templates, ...manifest.examples].map((e) => e.key).sort());
+});

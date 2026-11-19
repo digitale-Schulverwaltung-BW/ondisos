@@ -20,7 +20,7 @@ import { valueAt } from './json-doc.js';
 import { findReferences, validateName } from './names.js';
 import { buildProperties } from './ui-props.js';
 import { fieldsOf } from './conditions.js';
-import { typeIcon } from './icons.js';
+import { typeIcon, treeIcon, blockIcon, templateIcon } from './icons.js';
 import { createHistory } from './history.js';
 
 const EMPTY_SURVEY = '{\n  "pages": [\n    {\n      "name": "page1",\n      "elements": []\n    }\n  ]\n}';
@@ -85,8 +85,8 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
         if (!inGroup.length) { continue; }
         blockMenu.append(h('li', {}, h('h6', { class: 'dropdown-header' }, t(`blocks.group.${group}`))));
         for (const b of inGroup) {
-            blockMenu.append(h('li', {}, h('button', { type: 'button', class: 'dropdown-item sb-block-item', 'data-block': b.key, title: t(`blocks.${b.block}.description`) },
-                t(`blocks.${b.block}.title`, { n: b.param ?? '' }))));
+            blockMenu.append(h('li', {}, h('button', { type: 'button', class: 'dropdown-item sb-palette-item sb-block-item', 'data-block': b.key, title: t(`blocks.${b.block}.description`) },
+                blockIcon(b.block), t(`blocks.${b.block}.title`, { n: b.param ?? '' }))));
         }
     }
     blockMenu.addEventListener('click', (event) => {
@@ -226,6 +226,13 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             h('span', { 'aria-hidden': 'true' }, '*'), h('span', { class: 'visually-hidden' }, ` (${t('prop.isRequired')})`));
     }
 
+    function typeCell(icon, typeLabel, required) {
+        const mark = required ? requiredMark() : null;
+        return icon
+            ? h('span', { class: 'sb-type sb-type-icon', title: typeLabel }, icon, h('span', { class: 'visually-hidden' }, typeLabel), mark)
+            : h('span', { class: 'sb-type' }, typeLabel, mark);
+    }
+
     function renderTree() {
         const hadFocus = tree.contains(document.activeElement);
         const list = rows();
@@ -249,7 +256,8 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
                 title: own.map((f) => f.message).join('\n') || null,
             },
             r.children ? h('span', { class: 'sb-toggle', 'aria-hidden': 'true', 'data-toggle': k }, r.open ? '▾' : '▸') : h('span', { class: 'sb-toggle', 'aria-hidden': 'true' }, ''),
-            h('span', { class: 'sb-type' }, typeLabel, value?.isRequired === true ? requiredMark() : null),
+            // the kind as an icon (its name as tooltip and for screen readers); as text where there is no icon
+            typeCell(r.kind === 'element' ? typeIcon(r.type) : treeIcon(r.kind), typeLabel, value?.isRequired === true),
             h('span', { class: 'sb-label' }, text),
             r.kind === 'page' || r.kind === 'choice' ? h('span', { class: 'sb-count text-muted' }, t('elements_count', { count: r.children })) : null,
             own.length ? h('span', { class: 'sb-mark', 'aria-label': t('findings.here') }, own.some((f) => f.severity === 'error') ? '✖' : '⚠') : null);
@@ -527,10 +535,10 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
             if (!inKind.length) { continue; }
             box.append(h('p', { class: 'small text-muted mb-1 mt-2' }, t(`templates.group.${kind}`)));
             box.append(h('div', { class: 'list-group' }, inKind.map((tpl) => h('button', {
-                type: 'button', class: 'list-group-item list-group-item-action', 'data-template': tpl.key,
+                type: 'button', class: 'list-group-item list-group-item-action sb-template-item', 'data-template': tpl.key,
                 onclick: () => useTemplate(tpl),
-            }, h('div', { class: 'fw-semibold' }, t(`templates.${tpl.key}.title`)),
-            h('div', { class: 'small text-muted' }, t(`templates.${tpl.key}.description`))))));
+            }, templateIcon(tpl.key), h('div', {}, h('div', { class: 'fw-semibold' }, t(`templates.${tpl.key}.title`)),
+                h('div', { class: 'small text-muted' }, t(`templates.${tpl.key}.description`)))))));
         }
         box.append(h('p', { class: 'form-text mb-0 mt-2' }, t('templates.hint')));
         return box;
