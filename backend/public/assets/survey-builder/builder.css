@@ -5,6 +5,7 @@
     grid-template-columns: minmax(18rem, 5fr) minmax(20rem, 7fr);
     gap: 1.5rem;
     align-items: start;
+    margin-bottom: 1.5rem; /* room before the buttons "Prüfen", "Entwurf speichern" … below the editor */
 }
 
 @media (max-width: 991.98px) {
@@ -114,6 +115,9 @@
 }
 .sb-tip[hidden] { display: none; }
 .sb-field .sb-tip { top: 2.6rem; }
+.sb-hints { display: flex; flex-wrap: wrap; column-gap: 1.25rem; row-gap: .25rem; position: relative; }
+.sb-hint { display: inline-flex; align-items: center; gap: .35rem; }
+.sb-hints .sb-tip { left: 0; right: auto; max-width: 100%; }
 .sb-required .sb-tip { top: calc(100% + .25rem); left: 0; right: auto; max-width: 20rem; }
 
 /* The survey itself: the first row of the tree (its settings; without pages also the container of the elements). */
@@ -149,3 +153,7 @@
 .sb-cond-warn { margin: .25rem 0 0; padding-left: 1.1rem; color: var(--bs-warning-text-emphasis); }
 .sb-cond-warn[hidden], .sb-cond-reads[hidden] { display: none; }
 .sb-used-in .sb-tip { top: calc(100% + .25rem); left: 0; right: auto; }
+
+/* Survey editor page: the box "JSON aus einem anderen Werkzeug" opens and closes on its header. */
+.se-howto > summary { cursor: pointer; }
+.se-howto:not([open]) > summary { border-bottom: 0; }

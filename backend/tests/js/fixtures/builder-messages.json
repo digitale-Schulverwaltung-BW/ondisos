@@ -132,6 +132,11 @@
     "keys_hint": "Pfeiltasten: Auswahl · Alt + ↑/↓: verschieben, am Rand in die nächste Gruppe oder Seite · Alt + →: in die Gruppe darüber · Alt + ←: aus der Gruppe oder Antwort · Strg + D: duplizieren · Strg + Z: rückgängig · Entf: löschen · Enter: Eigenschaften · Esc: zurück zur Liste (auf dem Mac ⌘ statt Strg)",
     "drag_hint": "Mit der Maus: Elemente und Seiten ziehen. Auf eine Seite gezogen landet ein Element an deren Anfang, auf die Mitte einer Gruppe gezogen in der Gruppe.",
     "add_hint": "Neue Elemente erscheinen hinter dem gewählten Element, bei einer Seite oder Gruppe an deren Ende. Bausteine kommen auch hinter eine gewählte Gruppe, nicht hinein.",
+    "hints": {
+        "keys": "Tastatursteuerung",
+        "drag": "Drag & Drop",
+        "add": "Neue Elemente"
+    },
     "size": "Größe: {{kb}} KB von {{max}} KB · {{count}} von {{max_elements}} Elementen",
     "size_warn": "Die Survey nähert sich der Obergrenze des Servers.",
     "invalid": "Das JSON ist nicht lesbar: {{message}} (Zeile {{line}}, Spalte {{column}}). Bitte im Tab „JSON\" korrigieren.",

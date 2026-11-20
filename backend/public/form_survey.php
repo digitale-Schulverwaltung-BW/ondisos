@@ -318,36 +318,35 @@ require __DIR__ . '/../inc/header.php';
         </div>
     </form>
 
-    <div class="d-flex flex-wrap gap-4 mb-4">
-        <form method="post" action="<?= ff_e($self) ?>" enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+    <?php if ($view['draft'] !== null): ?>
+        <form method="post" action="<?= ff_e($self) ?>" class="mb-4" data-confirm="<?= ff_e(M::get('survey_editor.discard_confirm', 'Den Entwurf wirklich verwerfen?')) ?>">
             <?php csrf_field(); ?>
-            <input type="hidden" name="action" value="upload">
-            <input type="file" name="survey_file" accept=".json,application/json" class="form-control form-control-sm" required>
-            <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap"><?= ff_e(M::get('survey_editor.btn.upload', 'Datei laden')) ?></button>
+            <input type="hidden" name="action" value="discard">
+            <button type="submit" class="btn btn-sm btn-outline-danger"><?= ff_e(M::get('survey_editor.btn.discard', 'Entwurf verwerfen')) ?></button>
         </form>
-        <?php if ($view['draft'] !== null): ?>
-            <form method="post" action="<?= ff_e($self) ?>" data-confirm="<?= ff_e(M::get('survey_editor.discard_confirm', 'Den Entwurf wirklich verwerfen?')) ?>">
-                <?php csrf_field(); ?>
-                <input type="hidden" name="action" value="discard">
-                <button type="submit" class="btn btn-sm btn-outline-danger"><?= ff_e(M::get('survey_editor.btn.discard', 'Entwurf verwerfen')) ?></button>
-            </form>
-        <?php endif; ?>
-    </div>
+    <?php endif; ?>
 
     <!-- Help -------------------------------------------------------------------------------------------------->
-    <div class="card mb-4">
-        <div class="card-header"><h5 class="mb-0"><?= ff_e(M::get('survey_editor.howto.title', 'JSON aus einem anderen Werkzeug')) ?></h5></div>
+    <details class="card mb-4 se-howto"<?= $uploadNotice !== null && $uploadNotice[0] === 'danger' ? ' open' : '' ?>>
+        <summary class="card-header"><h5 class="mb-0 d-inline"><?= ff_e(M::get('survey_editor.howto.title', 'JSON aus einem anderen Werkzeug')) ?></h5></summary>
         <div class="card-body">
-            <ol class="mb-2">
+            <ol class="mb-3">
                 <li><?= ff_e(M::get('survey_editor.howto.1', 'Die Survey im anderen Werkzeug entwerfen, z. B. im SurveyJS Creator (Online-Version):')) ?>
                     <a href="https://surveyjs.io/create-free-survey" target="_blank" rel="noopener noreferrer">surveyjs.io/create-free-survey</a></li>
-                <li><?= ff_e(M::get('survey_editor.howto.2', 'Dort das JSON kopieren (im Creator: Reiter „JSON Editor").')) ?></li>
-                <li><?= ff_e(M::get('survey_editor.howto.3', 'Hier im Reiter „JSON" alles ersetzen, „Prüfen", Hinweise lesen, dann „Entwurf speichern" und „Veröffentlichen". Danach lässt sich die Survey auch grafisch weiterbearbeiten.')) ?></li>
+                <li><?= ff_e(M::get('survey_editor.howto.2', 'Dort das JSON kopieren (im Creator: Reiter „JSON Editor") oder als Datei speichern.')) ?></li>
+                <li><?= ff_e(M::get('survey_editor.howto.3', 'Hier im Reiter „JSON" alles ersetzen oder die Datei unten laden, „Prüfen", Hinweise lesen, dann „Entwurf speichern" und „Veröffentlichen". Danach lässt sich die Survey auch grafisch weiterbearbeiten.')) ?></li>
                 <li><?= ff_e(M::get('survey_editor.howto.4', 'Um eine bestehende Survey dort weiterzubearbeiten: „JSON kopieren" und im anderen Werkzeug einfügen.')) ?></li>
             </ol>
+            <form method="post" action="<?= ff_e($self) ?>" enctype="multipart/form-data" class="d-flex flex-wrap gap-2 align-items-center mb-3">
+                <?php csrf_field(); ?>
+                <input type="hidden" name="action" value="upload">
+                <label class="form-label mb-0" for="survey-file"><?= ff_e(M::get('survey_editor.howto.upload', 'JSON-Datei:')) ?></label>
+                <input type="file" id="survey-file" name="survey_file" accept=".json,application/json" class="form-control form-control-sm w-auto" required>
+                <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap"><?= ff_e(M::get('survey_editor.btn.upload', 'Datei laden')) ?></button>
+            </form>
             <p class="small text-muted mb-0"><?= ff_e(M::get('survey_editor.howto.license', 'Der Creator gehört nicht zu Ondisos; die Online-Version von surveyjs.io wird von SurveyJS betrieben.')) ?></p>
         </div>
-    </div>
+    </details>
 
     <!-- History ----------------------------------------------------------------------------------------------->
     <?php if ($view['revisions'] !== []): ?>

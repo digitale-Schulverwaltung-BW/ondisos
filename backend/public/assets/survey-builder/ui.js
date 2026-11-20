@@ -18,7 +18,7 @@ import {
 import { palette, typeDef } from './registry.js';
 import { valueAt } from './json-doc.js';
 import { findReferences, validateName } from './names.js';
-import { buildProperties } from './ui-props.js';
+import { buildProperties, infoTip } from './ui-props.js';
 import { fieldsOf } from './conditions.js';
 import { typeIcon, treeIcon, blockIcon, templateIcon } from './icons.js';
 import { createHistory } from './history.js';
@@ -99,8 +99,11 @@ export function createBuilder({ root, bridge, config, page = null, onSelect = ()
 
     const toolbar = h('div', { class: 'sb-toolbar d-flex flex-wrap gap-2 align-items-center mb-3', role: 'toolbar', 'aria-label': t('toolbar.label') },
         addElementBtn, ...(blocks.length ? [addBlockBtn] : []), addPageBtn, upBtn, downBtn, dupBtn, delBtn, h('span', { class: 'vr' }), undoBtn, redoBtn, size);
-    const hints = h('div', { class: 'form-text mt-2' }, h('p', { class: 'mb-1' }, t('keys_hint')), h('p', { class: 'mb-1' }, t('drag_hint')),
-        h('p', { class: 'mb-0' }, t('add_hint')));
+    // How to work the tree: three short labels, each with its explanation behind an (i)
+    const hints = h('div', { class: 'sb-hints form-text mt-2' }, ...['keys', 'drag', 'add'].flatMap((topic) => {
+        const tip = infoTip({ t }, `sb-hint-${topic}`, t(`${topic}_hint`));
+        return [h('span', { class: 'sb-hint' }, t(`hints.${topic}`), tip.button), tip.el];
+    }));
     const main = h('div', { class: 'sb-main' },
         h('div', { class: 'sb-tree-col' }, h('h2', { class: 'h6 text-muted' }, t('structure')), tree, hints),
         h('div', { class: 'sb-props-col' }, props));

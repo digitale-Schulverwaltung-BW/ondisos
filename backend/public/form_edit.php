@@ -204,11 +204,13 @@ require __DIR__ . '/../inc/header.php';
         <div class="d-flex gap-2 pb-2">
             <button type="submit" form="config-form" class="btn btn-primary"><?= ff_e(M::get('forms.save', 'Speichern')) ?></button>
             <a href="forms.php" class="btn btn-outline-secondary"><?= ff_e(M::get('forms.cancel', 'Abbrechen')) ?></a>
+            <a href="form_survey.php?form=<?= urlencode($formKey) ?>" class="btn btn-outline-primary"><?= ff_e(M::get('forms.survey.edit', 'Survey bearbeiten')) ?></a>
         </div>
     </div>
 
     <?php // The config form is itself a .tab-content, so the Info tab (with forms of its own) can sit outside of it. ?>
-    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="config-form" class="tab-content">
+    <form method="post" action="form_edit.php?form=<?= urlencode($formKey) ?>" id="config-form" class="tab-content"
+          data-unsaved-warning<?= $posted !== null ? ' data-unsaved="1"' : '' ?>>
         <?php csrf_field(); ?>
         <input type="hidden" name="action" value="save">
         <input type="hidden" name="sha256" value="<?= ff_e($form['sha256']) ?>">
@@ -300,7 +302,6 @@ require __DIR__ . '/../inc/header.php';
                 <p class="text-muted mb-0"><?= ff_e(M::get('forms.survey.import_hint', 'Diese Survey liegt als Datei im Frontend. Mit „php import-surveys.php" lässt sie sich ins Backend übernehmen (siehe docs/betreiber/MIGRATION-3.1.md).')) ?></p>
             <?php endif; ?>
             <?php if ($form['has_draft']): ?><p class="mb-0 mt-2"><span class="badge text-bg-warning"><?= ff_e(M::get('forms.draft', 'Entwurf')) ?></span></p><?php endif; ?>
-            <a href="form_survey.php?form=<?= urlencode($formKey) ?>" class="btn btn-outline-primary mt-3"><?= ff_e(M::get('forms.survey.edit', 'Survey bearbeiten')) ?></a>
             <?php if ($form['survey_source'] === 'database' || $form['has_draft']): ?>
                 <a href="form_preview.php?form=<?= urlencode($formKey) ?>&source=<?= $form['has_draft'] ? 'draft' : 'live' ?>" class="btn btn-outline-secondary mt-3"><?= ff_e(M::get('survey_editor.btn.preview', 'Vorschau')) ?></a>
             <?php endif; ?>

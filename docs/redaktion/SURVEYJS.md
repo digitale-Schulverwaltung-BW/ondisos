@@ -60,7 +60,7 @@ Eine Änderung im einen Reiter steht sofort im anderen. Gespeichert und veröffe
    WordPress-Shortcode `[ondisos form="<schlüssel>"]` und lässt sich später nicht mehr ändern. Der Formular-Editor öffnet sich.
 2. Im Reiter **Allgemein** die Konfiguration ausfüllen: **Benachrichtigung an** (Empfänger), **Anmeldungen im Backend speichern** (standardmäßig an), ggf. **Felder für Vorausfüll-Links**;
    weitere Reiter siehe [unten](#zusammenhang-formular-konfiguration--survey). Die Version steht zunächst auf `1.0.0`; Survey- und Theme-Datei (`<schlüssel>.json`, `survey_theme.json`) betreffen nur Plattform-Admins.
-3. **Survey bearbeiten** (Button in der Formularliste oder im Reiter **Info**): Der leere Editor bietet **Mit einer Vorlage beginnen** an:
+3. **Survey bearbeiten** (Button in der Formularliste oder im Formular-Editor neben **Speichern**): Der leere Editor bietet **Mit einer Vorlage beginnen** an:
 
    | Vorlage | Inhalt |
    |---|---|
@@ -177,6 +177,8 @@ Eine Änderung gilt, sobald Sie das Feld verlassen oder Enter drücken. Enter in
 Das neue Element kommt hinter das gewählte Element, in eine gewählte Gruppe oder ans Ende der gewählten Seite. Es bekommt einen freien Namen (`question1`, `question2` …), den Sie danach
 ändern können ([Feldnamen](#feldnamen)). **Seite hinzufügen** setzt eine neue Seite hinter die gewählte.
 
+Unter dem Aufbau fassen **Tastatursteuerung**, **Drag & Drop** und **Neue Elemente** das Wichtigste zusammen; das (i) daneben zeigt die Erklärung.
+
 | Aktion | Knopf | Tastatur | Maus |
 |---|---|---|---|
 | Auswählen | | ↑ / ↓ | Klick |
@@ -278,11 +280,11 @@ Ist der Text im Reiter **JSON** gerade kein gültiges JSON, sperrt der Editor di
 
 ## JSON und SurveyJS Creator
 
-Der Reiter **JSON** zeigt den vollständigen Text der Survey in einem Code-Editor mit Zeilennummern und Fehlermarkierung. **Datei laden** holt eine JSON-Datei von Ihrem Rechner in den Editor,
-**JSON kopieren** legt den Text in die Zwischenablage. Prüfen, Speichern und Veröffentlichen funktionieren wie im grafischen Editor.
+Der Reiter **JSON** zeigt den vollständigen Text der Survey in einem Code-Editor mit Zeilennummern und Fehlermarkierung. **JSON kopieren** legt den Text in die Zwischenablage.
+Unter dem Editor klappt der Kasten **JSON aus einem anderen Werkzeug** die Anleitung auf; dort holt **Datei laden** eine JSON-Datei von Ihrem Rechner in den Editor (noch ungespeichert). Prüfen, Speichern und Veröffentlichen funktionieren wie im grafischen Editor.
 
 Sie können eine Survey auch mit einem anderen Werkzeug entwerfen, das SurveyJS-JSON erzeugt, z. B. dem **SurveyJS Creator** auf der Website von SurveyJS (https://surveyjs.io/create-free-survey):
-dort im *JSON Editor* einfügen, im *Designer* bearbeiten, das JSON zurückkopieren und im Reiter **JSON** ersetzen. Danach lässt sich die Survey grafisch weiterbearbeiten.
+dort im *JSON Editor* einfügen, im *Designer* bearbeiten, das JSON zurückkopieren und im Reiter **JSON** ersetzen oder als Datei speichern und mit **Datei laden** holen. Danach lässt sich die Survey grafisch weiterbearbeiten.
 Der Creator kennt Elementtypen, die der grafische Editor nicht bearbeitet; die Prüfung des Servers gilt für beide Wege gleich.
 
 ### Lizenzhinweis
