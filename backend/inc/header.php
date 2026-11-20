@@ -18,16 +18,14 @@ require_once __DIR__ . '/csrf.php';
             padding-top: 4.5rem;
         }
         .navbar-brand {
-            font-weight: 700;
-            font-size: 1.35rem;
-            letter-spacing: .02em;
+            padding-top: 0;
+            padding-bottom: 0;
         }
-        .navbar-brand .brand-sub {
-            font-weight: 400;
-            font-size: .75rem;
-            letter-spacing: 0;
-            opacity: .65;
-            margin-left: .6rem;
+        .navbar-brand img {
+            display: block;
+            height: 2.5rem;
+            width: auto;
+            transform: translateY(-1px); /* the logo's text baseline on the one of the menu links */
         }
     </style>
 </head>
@@ -35,7 +33,7 @@ require_once __DIR__ . '/csrf.php';
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
     <div class="container-fluid">
-        <a class="navbar-brand" href="index.php" title="ondisos">ondisos<span class="brand-sub">Anmeldungen</span></a>
+        <a class="navbar-brand" href="index.php"><img src="assets/img/ondisos-logo-dark.png" alt="ondisos" width="102" height="40"></a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
