@@ -430,7 +430,7 @@ class FormPublishServiceTest extends FormEditorTestCase
         $this->assertTrue($this->service->deleteForm('bs', 'u')->ok());
     }
 
-    public function testDeleteRemovesConfigAndDraftButKeepsHistoryAndPublishedSurvey(): void
+    public function testDeleteRemovesConfigDraftAndPublishedSurveyButKeepsHistory(): void
     {
         $this->createBs();
         $this->service->saveDraft('bs', $this->surveyJson('x', 'email'), 'u');
@@ -441,9 +441,57 @@ class FormPublishServiceTest extends FormEditorTestCase
 
         $this->assertNull($this->configs->find('bs'));
         $this->assertNull($this->drafts->find('bs'));
-        $this->assertNotNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
+        $this->assertNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
         $this->assertNotEmpty($this->revisions->list('bs'));
-        $this->assertSame('form_deleted', end($this->auditEvents)[0]);
+        $this->assertSame(['form_deleted', 'bs'], array_slice(end($this->auditEvents), 0, 2));
+        $this->assertSame('bs.json', end($this->auditEvents)[2]['survey_deleted'] ?? null);
+    }
+
+    public function testFormCreatedAgainStartsWithoutSurveyAndCanRestoreItFromHistory(): void
+    {
+        $this->createBs();
+        $this->service->saveDraft('bs', $this->surveyJson('x', 'email'), 'u');
+        $this->service->publish('bs', 'u');
+        $published = $this->resources->find(Res::KIND_SURVEY, 'bs.json')['content'];
+        $this->service->deleteForm('bs', 'u');
+
+        $this->createBs();
+
+        $this->assertNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
+        $surveyRevision = $this->revisions->latest('bs', Rev::KIND_SURVEY);
+        $this->assertNotNull($surveyRevision);
+        $this->assertTrue($this->service->restoreRevision('bs', (int)$surveyRevision['id'], S::ROLE_TENANT, 'u')->ok());
+        $this->assertSame($published, $this->resources->find(Res::KIND_SURVEY, 'bs.json')['content']);
+    }
+
+    public function testDeleteKeepsSurveyThatAnotherFormUses(): void
+    {
+        $this->createBs();
+        $this->service->saveDraft('bs', $this->surveyJson('x', 'email'), 'u');
+        $this->service->publish('bs', 'u');
+        $this->assertTrue($this->service->createForm('bs-kopie', ['form' => 'bs.json'], S::ROLE_PLATFORM, 'u')->ok());
+
+        $this->assertTrue($this->service->deleteForm('bs', 'u')->ok());
+
+        $this->assertNotNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
+        $this->assertArrayNotHasKey('survey_deleted', end($this->auditEvents)[2]);
+    }
+
+    public function testDeleteKeepsSameNamedSurveyOfAnotherTenant(): void
+    {
+        $this->createBs();
+        $this->service->saveDraft('bs', $this->surveyJson('x', 'email'), 'u');
+        $this->service->publish('bs', 'u');
+        $this->asTenant($this->tenantB);
+        $this->createBs();
+        $this->service->saveDraft('bs', $this->surveyJson('y', 'email'), 'u');
+        $this->service->publish('bs', 'u');
+        $this->asTenant($this->tenantA);
+
+        $this->service->deleteForm('bs', 'u');
+
+        $this->asTenant($this->tenantB);
+        $this->assertNotNull($this->resources->find(Res::KIND_SURVEY, 'bs.json'));
     }
 
     public function testDeleteOfUnknownOrForeignFormIsNotFound(): void

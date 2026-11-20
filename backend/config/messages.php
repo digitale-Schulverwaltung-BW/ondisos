@@ -406,7 +406,7 @@ return [
         ],
         'delete' => [
             'title' => 'Formular löschen',
-            'help' => 'Das Formular ist dann nicht mehr erreichbar. Der Verlauf bleibt erhalten.',
+            'help' => 'Das Formular ist dann nicht mehr erreichbar, seine Survey wird mitgelöscht. Der Verlauf bleibt erhalten: Legen Sie ein Formular mit demselben Schlüssel neu an, lässt sich die Survey dort wiederherstellen.',
             'confirm' => 'Dieses Formular wirklich löschen?',
             'button' => 'Löschen',
             'refused' => 'Zu diesem Formular gibt es {{count}} Anmeldung(en); es kann nicht gelöscht werden.',

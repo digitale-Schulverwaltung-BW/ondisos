@@ -79,6 +79,8 @@ Eine Änderung im einen Reiter steht sofort im anderen. Gespeichert und veröffe
 5. Einbetten: Standalone `…/index.php?form=<schlüssel>`, WordPress `[ondisos form="<schlüssel>"]`.
 
 Im Reiter **Info** finden Sie außerdem den Verlauf der Konfiguration und **Formular löschen** (nur möglich, solange keine Anmeldungen zum Formular vorliegen).
+Beim Löschen geht die Survey mit, außer ein anderes Formular nutzt sie. Der Verlauf bleibt erhalten: Ein neu angelegtes Formular mit demselben Schlüssel
+beginnt mit leerem Editor, die alte Survey lässt sich dort unter **Verlauf** wiederherstellen.
 
 Eine neue Schule kann stattdessen mit den Formularen einer anderen Schule beginnen (*Formulare übernehmen von …* beim Anlegen der Schule durch den Betreiber, siehe [MULTI-TENANT.md](../betreiber/MULTI-TENANT.md)).
 Empfänger-Adressen und Logo werden dabei nie kopiert.

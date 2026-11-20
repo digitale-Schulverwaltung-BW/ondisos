@@ -144,7 +144,9 @@ class FormPublishService
 
     /**
      * Delete a form's config and draft. Refused while submissions exist for it.
-     * Published surveys and the revision history are kept (cheap, and they make an undo possible).
+     * Its published survey goes too, unless another form of the tenant uses the same survey name: a new form with
+     * the same key would otherwise pick up the old survey. The revision history is kept (with the survey's last
+     * stand), so a form created again under the same key can restore it from there.
      *
      * @throws NotFoundException
      */
@@ -160,10 +162,12 @@ class FormPublishService
             }
 
             $this->ensureRevision($formKey, FormRevisionRepository::KIND_CONFIG, null, $current['json'], 'Stand vor dem Löschen', $user);
+            $survey = $this->surveyName($current['config']);
+            $surveyDeleted = $survey !== null && !$this->surveyUsedByOtherForm($survey, $formKey) && $this->deleteSurvey($formKey, $survey, $user);
             $this->drafts->delete($formKey);
             $this->configs->delete($formKey);
 
-            ($this->audit)('form_deleted', $formKey, ['sha256' => $current['sha256']]);
+            ($this->audit)('form_deleted', $formKey, ['sha256' => $current['sha256']] + ($surveyDeleted ? ['survey_deleted' => $survey] : []));
             FormConfig::reset();
 
             return new ServiceResult(new ValidationResult());
@@ -349,6 +353,28 @@ class FormPublishService
         if ($latest === null || !hash_equals($latest['sha256'], hash('sha256', $content))) {
             $this->revisions->add($formKey, $kind, $name, $content, $note, $user);
         }
+    }
+
+    /** Whether a form of the tenant other than $formKey names this survey. */
+    private function surveyUsedByOtherForm(string $survey, string $formKey): bool
+    {
+        foreach ($this->configs->listKeys() as $key) {
+            if ($key !== $formKey && $this->surveyName($this->configs->find($key)['config'] ?? []) === $survey) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Delete a published survey, its last stand kept in the form's history. False if there was none. */
+    private function deleteSurvey(string $formKey, string $survey, string $user): bool
+    {
+        $live = $this->resources->find(FormResourceRepository::KIND_SURVEY, $survey, forUpdate: true);
+        if ($live === null) {
+            return false;
+        }
+        $this->ensureRevision($formKey, FormRevisionRepository::KIND_SURVEY, $survey, $live['content'], 'Stand vor dem Löschen', $user);
+        return $this->resources->delete(FormResourceRepository::KIND_SURVEY, $survey);
     }
 
     /** @param array<string,mixed> $config */
