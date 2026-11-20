@@ -179,7 +179,7 @@ $csrfToken = $_SESSION['csrf_token'];
     <link href="assets/bootstrap/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #f4f4f6 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -195,20 +195,24 @@ $csrfToken = $_SESSION['csrf_token'];
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }
         .card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #667eea 0%, #24305c 100%);
             color: white;
             border-radius: 15px 15px 0 0 !important;
             padding: 1.5rem;
         }
+        .login-logo {
+            max-width: 100%;
+            height: auto;
+        }
         .btn-login {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #355f36 0%, #7fae35 100%);
             border: none;
             padding: 0.75rem;
             font-weight: 500;
         }
         .btn-login:hover {
             opacity: 0.9;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #355f36 0%, #9dcb49 100%);
         }
     </style>
 </head>
@@ -216,8 +220,8 @@ $csrfToken = $_SESSION['csrf_token'];
     <div class="login-card">
         <div class="card">
             <div class="card-header text-center">
-                <h1 class="mb-0 fw-bold" style="font-size: 2.2rem; letter-spacing: .03em;">ondisos</h1>
-                <small>Anmeldungssystem · Admin-Bereich</small>
+                <h1 class="mb-1"><img src="assets/img/ondisos-logo-dark.png" alt="ondisos" width="205" height="80" class="login-logo"></h1>
+                <small>Admin-Bereich</small>
             </div>
             <div class="card-body p-4">
                 <?php if ($error): ?>
@@ -268,7 +272,7 @@ $csrfToken = $_SESSION['csrf_token'];
                 </form>
             </div>
             <div class="card-footer text-center text-muted">
-                <small>ondisos – Anmeldungssystem</small>
+                <small>ondisos</small>
             </div>
         </div>
     </div>
