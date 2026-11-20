@@ -32,6 +32,7 @@ Alle Änderungen im Einzelnen: [Changelog](../changelog.md#320).
 - **PDF-Bestätigung gegliedert:** Seitentitel als Überschriften, Fragetitel statt Feldnamen (abschaltbar im Reiter *PDF-Bestätigung*; ältere Anmeldungen bleiben wie bisher).
 - **Anmeldeliste:** bis zu acht Felder der Survey als zusätzliche Spalten, Auswahlfelder filterbar ([Sekretariat](../../sekretariat/README.md#2-sehen-was-neu-ist)).
 - **Vorschau im Backend:** Leiste zum Springen auf jede Seite, ohne Pflichtfelder zu prüfen.
+- **Backend:** ondisos-Logo in Anmelde-Dialog und Kopfleiste; die Einstellungen eines Formulars warnen vor dem Verlassen mit ungespeicherten Änderungen.
 
 ## Sicherheit
 
@@ -53,6 +54,7 @@ Alle Änderungen im Einzelnen: [Changelog](../changelog.md#320).
 - Fragen in Auswahloptionen fehlten in PDF, E-Mail, Vorausfüllen und Upload-Prüfung.
 - Docker: Nach einem `git pull` mit neuen Composer-Paketen fehlten diese im Container (`Class "BaconQrCode\Writer" not found`); der Start installiert sie jetzt.
 - Ein neues Formular ohne Survey meldete „das Formular nutzt die Datei im Frontend“, auch ohne Datei.
+- Ein gelöschtes Formular ließ seine Survey zurück; ein neues Formular mit gleichem Schlüssel bekam sie wieder. Jetzt wird sie mitgelöscht (außer ein anderes Formular nutzt sie) und bleibt im Verlauf.
 
 ## Upgrade von 3.1.2
 
